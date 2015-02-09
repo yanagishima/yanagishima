@@ -1,10 +1,18 @@
 package yanagishima.server;
 
+import java.util.EnumSet;
+
+import javax.servlet.DispatcherType;
+
 import org.eclipse.jetty.server.Server;
+import org.eclipse.jetty.servlet.DefaultServlet;
 import org.eclipse.jetty.servlet.ServletContextHandler;
-import org.eclipse.jetty.servlet.ServletHolder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.google.inject.Guice;
+import com.google.inject.Injector;
+import com.google.inject.servlet.GuiceFilter;
 
 public class YanagishimaServer {
 
@@ -12,15 +20,20 @@ public class YanagishimaServer {
 			.getLogger(YanagishimaServer.class);
 
 	public static void main(String[] args) throws Exception {
+		
+		PrestoServiceModule prestoServiceModule = new PrestoServiceModule();
+		PrestoServletModule prestoServletModule = new PrestoServletModule();
+		Injector injector = Guice.createInjector(prestoServiceModule, prestoServletModule);
+		
 		int port = 8080;
 		Server server = new Server(port);
 
-		ServletContextHandler context = new ServletContextHandler(
-				ServletContextHandler.SESSIONS);
-		context.setContextPath("/");
-		server.setHandler(context);
+		ServletContextHandler servletContextHandler = new ServletContextHandler(
+				server, "/", ServletContextHandler.SESSIONS);
+		servletContextHandler.addFilter(GuiceFilter.class, "/*",
+				EnumSet.allOf(DispatcherType.class));
 
-		context.addServlet(new ServletHolder(new PrestoServlet()), "/presto");
+		servletContextHandler.addServlet(DefaultServlet.class, "/");
 
 		LOGGER.info("Yanagishima Server started...");
 
