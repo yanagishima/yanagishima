@@ -34,6 +34,8 @@ public class YanagishimaServer {
 				EnumSet.allOf(DispatcherType.class));
 
 		servletContextHandler.addServlet(DefaultServlet.class, "/");
+		
+		servletContextHandler.setResourceBase("web");
 
 		LOGGER.info("Yanagishima Server started...");
 

@@ -27,6 +27,11 @@ task createDirs() << {
   file('build/package').mkdirs()
 }
 
+task copyWeb(type: Copy) {
+  from('web')
+  into('build/package/web')
+}
+
 task copyDeps(type: Copy, dependsOn: 'build') {
   from(configurations.compile)
   into('build/package/lib')
@@ -44,6 +49,7 @@ task copyPackage(type: Copy) {
 
 task copy(dependsOn: [
       'createDirs',
+      'copyWeb',
       'copyDeps',
       'copyLibs',
       'copyPackage']) {
@@ -70,6 +76,7 @@ dependencies {
     compile 'com.facebook.presto:presto-jdbc:0.92'
     compile 'com.google.inject:guice:3.0'
     compile 'com.google.inject.extensions:guice-servlet:3.0'
+    compile 'org.apache.velocity:velocity:1.7'
 
     // Declare the dependency for your favourite test framework you want to use in your tests.
     // TestNG is also supported by the Gradle Test task. Just change the

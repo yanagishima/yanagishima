@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>yanagishima</title>
+  <script src="$context/js/lib/jquery.js"></script>
+  <script src="$context/js/lib/json2.js"></script>
+  <script src="$context/js/lib/underscore.js"></script>
+  <script src="$context/js/lib/backbone.js"></script>
+  <script src="$context/js/view/index.js"></script>
+</head>
+<body>
+  <form id="query-form">
+    <textarea id="query" rows=30 cols=100></textarea>
+    <button type="button" id="query-submit">execute</button>
+  </form>
+  
+  <div id="msg"></div>
+  
+  $test
+
+</body>
+</html>
