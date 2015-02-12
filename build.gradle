@@ -77,6 +77,8 @@ dependencies {
     compile 'com.google.inject:guice:3.0'
     compile 'com.google.inject.extensions:guice-servlet:3.0'
     compile 'org.apache.velocity:velocity:1.7'
+    compile('org.codehaus.jackson:jackson-core-asl:1.9.13')
+    compile('org.codehaus.jackson:jackson-mapper-asl:1.9.13')
 
     // Declare the dependency for your favourite test framework you want to use in your tests.
     // TestNG is also supported by the Gradle Test task. Just change the

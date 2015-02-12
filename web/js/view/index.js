@@ -11,14 +11,21 @@ IndexView = Backbone.View.extend({
 
   handleExecute: function(evt) {
     var query = $("#query").val();
-    
-    var contextURL = ""
     var requestURL = contextURL + "/presto";
      var requestData = {
+        "ajax": query,
         "query": query
       };
       var successHandler = function(data) {
-        console.log(data)
+        console.log(data);
+        var results = data.results
+        for (var i = 0; i < results.length; ++i) {
+          var tr = document.createElement("tr");
+          var td = document.createElement("td");
+          $(td).text(results[i]);
+          $(tr).append(td);
+          $("#query-results").append(tr);
+        }
       };
       $.get(requestURL, requestData, successHandler, "json");
 

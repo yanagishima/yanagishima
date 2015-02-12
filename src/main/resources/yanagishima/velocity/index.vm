@@ -7,6 +7,9 @@
   <script src="$context/js/lib/underscore.js"></script>
   <script src="$context/js/lib/backbone.js"></script>
   <script src="$context/js/view/index.js"></script>
+  <script type="text/javascript">
+    var contextURL = "${context}";
+  </script>
 </head>
 <body>
   <form id="query-form">
@@ -14,9 +17,9 @@
     <button type="button" id="query-submit">execute</button>
   </form>
   
-  <div id="msg"></div>
+  <table id="query-results"></table>
   
-  $test
+  
 
 </body>
 </html>
