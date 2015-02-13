@@ -12,13 +12,19 @@ public class YanagishimaConfig {
 	
 	private String schema;
 	
+	private String user;
+	
+	private String source;
+	
 	public YanagishimaConfig(int jettyPort, String webResourceDir,
-			String prestoCoordinatorServer, String catalog, String schema) {
+			String prestoCoordinatorServer, String catalog, String schema, String user, String source) {
 		this.jettyPort = jettyPort;
 		this.webResourceDir = webResourceDir;
 		this.prestoCoordinatorServer = prestoCoordinatorServer;
 		this.catalog = catalog;
 		this.schema = schema;
+		this.user = user;
+		this.source = source;
 	}
 	
 	public int getJettyPort() {
@@ -39,6 +45,14 @@ public class YanagishimaConfig {
 
 	public String getSchema() {
 		return schema;
+	}
+	
+	public String getUser() {
+		return user;
+	}
+	
+	public String getSource() {
+		return source;
 	}
 
 }

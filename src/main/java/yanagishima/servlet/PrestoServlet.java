@@ -2,6 +2,7 @@ package yanagishima.servlet;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
@@ -14,11 +15,16 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.codehaus.jackson.map.ObjectMapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import yanagishima.service.PrestoService;
 
 @Singleton
 public class PrestoServlet extends HttpServlet {
+	
+	private static Logger LOGGER = LoggerFactory
+			.getLogger(PrestoServlet.class);
 
 	private static final long serialVersionUID = 1L;
 
@@ -35,9 +41,16 @@ public class PrestoServlet extends HttpServlet {
 
 		Optional<String> queryOptional = Optional.ofNullable(request.getParameter("query"));
 		queryOptional.ifPresent(query -> {
-			List<String> list = prestoService.doQuery(query);
+
 			HashMap<String, Object> retVal = new HashMap<String, Object>();
-			retVal.put("results", list);
+			try {
+				List<List<Object>> rowDataList = prestoService.doQuery(query);
+				retVal.put("results", rowDataList);
+			} catch (SQLException e) {
+				LOGGER.error(e.getMessage(), e);
+				retVal.put("error", e.getMessage());
+			}
+			
 			try {
 				writeJSON(response, retVal);
 			} catch (IOException e) {

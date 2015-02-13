@@ -74,13 +74,15 @@ dependencies {
     compile 'log4j:log4j:1.2.17'
     compile 'org.eclipse.jetty.aggregate:jetty-all:9.2.7.v20150116'
     compile 'javax.servlet:javax.servlet-api:3.1.0'
-    compile 'com.facebook.presto:presto-jdbc:0.92'
+    compile 'com.facebook.presto:presto-client:0.93'
     compile 'com.google.inject:guice:3.0'
     compile 'com.google.inject.extensions:guice-servlet:3.0'
     compile 'org.apache.velocity:velocity:1.7'
-    compile('org.codehaus.jackson:jackson-core-asl:1.9.13')
-    compile('org.codehaus.jackson:jackson-mapper-asl:1.9.13')
-    compile('net.sf.jopt-simple:jopt-simple:4.8')
+    compile 'org.codehaus.jackson:jackson-core-asl:1.9.13'
+    compile 'org.codehaus.jackson:jackson-mapper-asl:1.9.13'
+    compile 'net.sf.jopt-simple:jopt-simple:4.8'
+    compile 'io.airlift:http-client:0.101'
+    compile 'io.airlift:json:0.101'
 
     // Declare the dependency for your favourite test framework you want to use in your tests.
     // TestNG is also supported by the Gradle Test task. Just change the

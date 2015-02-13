@@ -42,8 +42,10 @@ public class YanagishimaServer {
 		String prestoCoordinatorServer = properties.getProperty("presto.coordinator.server");
 		String catalog = properties.getProperty("catalog");
 		String schema = properties.getProperty("schema");
+		String user = properties.getProperty("user");
+		String source = properties.getProperty("source");
 		
-		PrestoServiceModule prestoServiceModule = new PrestoServiceModule(jettyPort, webResourceDir, prestoCoordinatorServer, catalog, schema);
+		PrestoServiceModule prestoServiceModule = new PrestoServiceModule(jettyPort, webResourceDir, prestoCoordinatorServer, catalog, schema, user, source);
 		PrestoServletModule prestoServletModule = new PrestoServletModule();
 		@SuppressWarnings("unused")
 		Injector injector = Guice.createInjector(prestoServiceModule,

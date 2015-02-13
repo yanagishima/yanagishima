@@ -6,7 +6,7 @@ IndexView = Backbone.View.extend({
   },
 
   initialize: function(settings) {
-    $('#msg').hide();
+    $('#error-msg').hide();
   },
 
   handleExecute: function(evt) {
@@ -17,13 +17,23 @@ IndexView = Backbone.View.extend({
       };
       var successHandler = function(data) {
         console.log(data);
-        var results = data.results
-        for (var i = 0; i < results.length; ++i) {
-          var tr = document.createElement("tr");
-          var td = document.createElement("td");
-          $(td).text(results[i]);
-          $(tr).append(td);
-          $("#query-results").append(tr);
+        if (data.error) {
+          $('#error-msg').text(data.error);
+          $('#error-msg').slideDown('fast');
+        } else {
+          $('#error-msg').hide();
+          var rows = data.results;
+          $("#query-results").empty();
+          for (var i = 0; i < rows.length; ++i) {
+            var tr = document.createElement("tr");
+            var columns = rows[i];
+            for (var j = 0; j < columns.length; ++j) {
+              var td = document.createElement("td");
+              $(td).text(columns[j]);
+              $(tr).append(td);
+            }
+            $("#query-results").append(tr);
+          }
         }
       };
       $.get(requestURL, requestData, successHandler, "json");
