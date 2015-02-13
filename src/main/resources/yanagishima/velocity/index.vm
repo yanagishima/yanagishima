@@ -2,10 +2,12 @@
 <html>
 <head>
   <title>yanagishima</title>
+  <link href="$context/css/bootstrap.min.css" rel="stylesheet">
   <script src="$context/js/lib/jquery.js"></script>
   <script src="$context/js/lib/json2.js"></script>
   <script src="$context/js/lib/underscore.js"></script>
   <script src="$context/js/lib/backbone.js"></script>
+  <script src="$context/js/lib/bootstrap.min.js"></script>
   <script src="$context/js/view/index.js"></script>
   <script type="text/javascript">
     var contextURL = "${context}";
@@ -13,11 +15,12 @@
 </head>
 <body>
   <form id="query-form">
-    <textarea id="query" rows=30 cols=100></textarea>
+    <textarea class="span12" id="query" rows="20"></textarea>
     <button type="button" id="query-submit">execute</button>
   </form>
+  <div class="alert alert-error" id="error-msg"></div>
   
-  <table id="query-results"></table>
+  <table class="table table-bordered" id="query-results"></table>
   
   
 
