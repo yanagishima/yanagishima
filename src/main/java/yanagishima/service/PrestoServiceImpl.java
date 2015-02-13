@@ -15,6 +15,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.TimeZone;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 import javax.inject.Inject;
 
@@ -34,28 +35,20 @@ public class PrestoServiceImpl implements PrestoService {
 	public PrestoServiceImpl(YanagishimaConfig yanagishimaConfig) {
 		this.yanagishimaConfig = yanagishimaConfig;
 	}
+	
+	@Override
+	public List<String> getHeaders(String query) throws SQLException {
+		try (StatementClient client = getStatementClient(query)) {
+			List<Column> columns = getColumns(client);
+			List<String> headers = columns.stream().map(column -> column.getName()).collect(Collectors.toList());
+			return headers;
+		}
+	}
 
 	@Override
-	public List<List<Object>> doQuery(String query) throws SQLException {
-		String prestoCoordinatorServer = yanagishimaConfig
-				.getPrestoCoordinatorServer();
-		String catalog = yanagishimaConfig.getCatalog();
-		String schema = yanagishimaConfig.getSchema();
-		String user = yanagishimaConfig.getUser();
-		String source = yanagishimaConfig.getSource();
+	public List<List<Object>> doQuery(String query) {
 
-		HttpClientConfig httpClientConfig = new HttpClientConfig()
-				.setConnectTimeout(new Duration(10, TimeUnit.SECONDS));
-		JettyHttpClient httpClient = new JettyHttpClient(httpClientConfig);
-		JsonCodec<QueryResults> jsonCodec = jsonCodec(QueryResults.class);
-
-		ClientSession clientSession = new ClientSession(
-				URI.create(prestoCoordinatorServer), user, source, catalog,
-				schema, TimeZone.getDefault().getID(), Locale.getDefault(),
-				new HashMap<String, String>(), false);
-		try (StatementClient client = new StatementClient(httpClient,
-				jsonCodec, clientSession, query)) {
-			List<Column> columns = getColumns(client);
+		try (StatementClient client = getStatementClient(query)) {
 			List<List<Object>> rowDataList = new ArrayList<List<Object>>();
 			while (client.isValid()) {
 				Iterable<List<Object>> data = client.current().getData();
@@ -72,6 +65,27 @@ public class PrestoServiceImpl implements PrestoService {
 			}
 			return rowDataList;
 		}
+	}
+	
+	private StatementClient getStatementClient(String query) {
+		String prestoCoordinatorServer = yanagishimaConfig
+				.getPrestoCoordinatorServer();
+		String catalog = yanagishimaConfig.getCatalog();
+		String schema = yanagishimaConfig.getSchema();
+		String user = yanagishimaConfig.getUser();
+		String source = yanagishimaConfig.getSource();
+
+		HttpClientConfig httpClientConfig = new HttpClientConfig()
+				.setConnectTimeout(new Duration(10, TimeUnit.SECONDS));
+		JettyHttpClient httpClient = new JettyHttpClient(httpClientConfig);
+		JsonCodec<QueryResults> jsonCodec = jsonCodec(QueryResults.class);
+
+		ClientSession clientSession = new ClientSession(
+				URI.create(prestoCoordinatorServer), user, source, catalog,
+				schema, TimeZone.getDefault().getID(), Locale.getDefault(),
+				new HashMap<String, String>(), false);
+		return new StatementClient(httpClient,
+				jsonCodec, clientSession, query);
 	}
 
 	private List<Column> getColumns(StatementClient client) throws SQLException {

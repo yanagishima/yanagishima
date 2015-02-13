@@ -44,6 +44,8 @@ public class PrestoServlet extends HttpServlet {
 
 			HashMap<String, Object> retVal = new HashMap<String, Object>();
 			try {
+				List<String> headers = prestoService.getHeaders(query);
+				retVal.put("headers", headers);
 				List<List<Object>> rowDataList = prestoService.doQuery(query);
 				retVal.put("results", rowDataList);
 			} catch (SQLException e) {

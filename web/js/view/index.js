@@ -22,8 +22,16 @@ IndexView = Backbone.View.extend({
           $('#error-msg').slideDown('fast');
         } else {
           $('#error-msg').hide();
-          var rows = data.results;
           $("#query-results").empty();
+          var headers = data.headers;
+          var tr = document.createElement("tr");
+          for (var i = 0; i < headers.length; ++i) {
+            var th = document.createElement("th");
+            $(th).text(headers[i]);
+            $(tr).append(th);
+          }
+          $("#query-results").append(tr);
+          var rows = data.results;
           for (var i = 0; i < rows.length; ++i) {
             var tr = document.createElement("tr");
             var columns = rows[i];
