@@ -53,7 +53,7 @@ public class YanagishimaServer {
 
 		servletContextHandler.addServlet(DefaultServlet.class, "/");
 		
-		servletContextHandler.setResourceBase("web");
+		servletContextHandler.setResourceBase(properties.getProperty("web.resource.dir"));
 
 		LOGGER.info("Yanagishima Server started...");
 
