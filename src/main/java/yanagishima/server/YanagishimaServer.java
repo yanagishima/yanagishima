@@ -26,6 +26,7 @@ public class YanagishimaServer {
 		
 		PrestoServiceModule prestoServiceModule = new PrestoServiceModule();
 		PrestoServletModule prestoServletModule = new PrestoServletModule();
+		@SuppressWarnings("unused")
 		Injector injector = Guice.createInjector(prestoServiceModule, prestoServletModule);
 		
 		int port = 8080;
