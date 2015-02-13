@@ -13,7 +13,6 @@ IndexView = Backbone.View.extend({
     var query = $("#query").val();
     var requestURL = contextURL + "/presto";
      var requestData = {
-        "ajax": query,
         "query": query
       };
       var successHandler = function(data) {
