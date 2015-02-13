@@ -1,8 +1,20 @@
 package yanagishima.server;
 
+import java.io.BufferedInputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.Arrays;
 import java.util.EnumSet;
+import java.util.Properties;
 
 import javax.servlet.DispatcherType;
+
+import joptsimple.OptionParser;
+import joptsimple.OptionSet;
+import joptsimple.OptionSpec;
 
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.servlet.DefaultServlet;
@@ -27,9 +39,11 @@ public class YanagishimaServer {
 		PrestoServiceModule prestoServiceModule = new PrestoServiceModule();
 		PrestoServletModule prestoServletModule = new PrestoServletModule();
 		@SuppressWarnings("unused")
-		Injector injector = Guice.createInjector(prestoServiceModule, prestoServletModule);
-		
-		int port = 8080;
+		Injector injector = Guice.createInjector(prestoServiceModule,
+				prestoServletModule);
+
+		Properties properties = loadProps(args, new OptionParser());
+		int port = Integer.parseInt(properties.getProperty("jetty.port"));
 		Server server = new Server(port);
 
 		ServletContextHandler servletContextHandler = new ServletContextHandler(
@@ -59,6 +73,57 @@ public class YanagishimaServer {
 			}
 		});
 		LOGGER.info("Yanagishima Server running port " + port + ".");
+	}
+
+	public static Properties loadProps(String[] args, OptionParser parser) {
+		OptionSpec<String> configDirectory = parser
+				.acceptsAll(Arrays.asList("c", "conf"),
+						"The conf directory for Yanagishima.")
+				.withRequiredArg().describedAs("conf").ofType(String.class);
+
+		OptionSet options = parser.parse(args);
+
+		if (options.has(configDirectory)) {
+			String path = options.valueOf(configDirectory);
+			LOGGER.info("Loading yanagishima settings file from " + path);
+			File dir = new File(path);
+			if (!dir.exists()) {
+				throw new RuntimeException("Conf directory " + path
+						+ " doesn't exist.");
+			} else if (!dir.isDirectory()) {
+				throw new RuntimeException("Conf directory " + path
+						+ " isn't a directory.");
+			} else {
+				Properties yanagishimaSettings = loadYanagishimaConfigurationFromDirectory(dir);
+				return yanagishimaSettings;
+			}
+		} else {
+			throw new RuntimeException("Conf parameter not set.");
+		}
+
+	}
+
+	private static Properties loadYanagishimaConfigurationFromDirectory(File dir) {
+
+		File yanagishimaPropertiesFile = new File(dir, "yanagishima.properties");
+
+		if (yanagishimaPropertiesFile.exists()
+				&& yanagishimaPropertiesFile.isFile()) {
+			LOGGER.info("Loading yanagishima properties file");
+			try (InputStream inputStream = new BufferedInputStream(
+					new FileInputStream(yanagishimaPropertiesFile))) {
+				Properties properties = new Properties();
+				properties.load(inputStream);
+				return properties;
+			} catch (FileNotFoundException e) {
+				throw new RuntimeException(e);
+			} catch (IOException e) {
+				throw new RuntimeException(e);
+			}
+		} else {
+			throw new RuntimeException("yanagishima.properties is not found.");
+		}
+
 	}
 
 }
