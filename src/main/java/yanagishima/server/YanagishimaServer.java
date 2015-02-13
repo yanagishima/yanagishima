@@ -36,15 +36,21 @@ public class YanagishimaServer {
 
 	public static void main(String[] args) throws Exception {
 		
-		PrestoServiceModule prestoServiceModule = new PrestoServiceModule();
+		Properties properties = loadProps(args, new OptionParser());
+		int jettyPort = Integer.parseInt(properties.getProperty("jetty.port"));
+		String webResourceDir = properties.getProperty("web.resource.dir");
+		String prestoCoordinatorServer = properties.getProperty("presto.coordinator.server");
+		String catalog = properties.getProperty("catalog");
+		String schema = properties.getProperty("schema");
+		
+		PrestoServiceModule prestoServiceModule = new PrestoServiceModule(jettyPort, webResourceDir, prestoCoordinatorServer, catalog, schema);
 		PrestoServletModule prestoServletModule = new PrestoServletModule();
 		@SuppressWarnings("unused")
 		Injector injector = Guice.createInjector(prestoServiceModule,
 				prestoServletModule);
 
-		Properties properties = loadProps(args, new OptionParser());
-		int port = Integer.parseInt(properties.getProperty("jetty.port"));
-		Server server = new Server(port);
+
+		Server server = new Server(jettyPort);
 
 		ServletContextHandler servletContextHandler = new ServletContextHandler(
 				server, "/", ServletContextHandler.SESSIONS);
@@ -53,7 +59,7 @@ public class YanagishimaServer {
 
 		servletContextHandler.addServlet(DefaultServlet.class, "/");
 		
-		servletContextHandler.setResourceBase(properties.getProperty("web.resource.dir"));
+		servletContextHandler.setResourceBase(webResourceDir);
 
 		LOGGER.info("Yanagishima Server started...");
 
@@ -72,7 +78,7 @@ public class YanagishimaServer {
 				}
 			}
 		});
-		LOGGER.info("Yanagishima Server running port " + port + ".");
+		LOGGER.info("Yanagishima Server running port " + jettyPort + ".");
 	}
 
 	public static Properties loadProps(String[] args, OptionParser parser) {
