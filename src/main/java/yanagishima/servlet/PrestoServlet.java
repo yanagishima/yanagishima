@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Optional;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
@@ -32,11 +33,17 @@ public class PrestoServlet extends HttpServlet {
 	protected void doGet(HttpServletRequest request,
 			HttpServletResponse response) throws ServletException, IOException {
 
-		HashMap<String, Object> retVal = new HashMap<String, Object>();
-		String query = getParam(request, "query");
-		List<String> list = prestoService.doQuery(query);
-		retVal.put("results", list);
-		writeJSON(response, retVal);
+		Optional<String> queryOptional = Optional.ofNullable(request.getParameter("query"));
+		queryOptional.ifPresent(query -> {
+			List<String> list = prestoService.doQuery(query);
+			HashMap<String, Object> retVal = new HashMap<String, Object>();
+			retVal.put("results", list);
+			try {
+				writeJSON(response, retVal);
+			} catch (IOException e) {
+				throw new RuntimeException(e);
+			}
+		});
 
 	}
 
@@ -47,15 +54,5 @@ public class PrestoServlet extends HttpServlet {
 		OutputStream stream = resp.getOutputStream();
 		mapper.writeValue(stream, obj);
 	}
-
-	private String getParam(HttpServletRequest request, String name)
-			throws ServletException {
-		String p = request.getParameter(name);
-		if (p == null)
-			throw new ServletException("Missing required parameter '" + name
-					+ "'.");
-		else
-			return p;
-	}
-
+	
 }
