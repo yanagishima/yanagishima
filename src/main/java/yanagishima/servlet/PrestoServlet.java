@@ -1,4 +1,4 @@
-package yanagishima.server;
+package yanagishima.servlet;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -13,6 +13,8 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.codehaus.jackson.map.ObjectMapper;
+
+import yanagishima.service.PrestoService;
 
 @Singleton
 public class PrestoServlet extends HttpServlet {

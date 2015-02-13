@@ -1,4 +1,7 @@
-package yanagishima.server;
+package yanagishima.module;
+
+import yanagishima.service.PrestoService;
+import yanagishima.service.PrestoServiceImpl;
 
 import com.google.inject.AbstractModule;
 

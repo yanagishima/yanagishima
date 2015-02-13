@@ -1,4 +1,4 @@
-package yanagishima.server;
+package yanagishima.service;
 
 import java.util.List;
 

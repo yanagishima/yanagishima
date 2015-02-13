@@ -1,4 +1,4 @@
-package yanagishima.server;
+package yanagishima.servlet;
 
 import java.io.IOException;
 

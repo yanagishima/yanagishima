@@ -1,4 +1,7 @@
-package yanagishima.server;
+package yanagishima.module;
+
+import yanagishima.servlet.IndexServlet;
+import yanagishima.servlet.PrestoServlet;
 
 import com.google.inject.servlet.ServletModule;
 
