@@ -43,14 +43,19 @@ public class PrestoServlet extends HttpServlet {
 		queryOptional.ifPresent(query -> {
 
 			HashMap<String, Object> retVal = new HashMap<String, Object>();
-			try {
-				List<String> headers = prestoService.getHeaders(query);
-				retVal.put("headers", headers);
-				List<List<Object>> rowDataList = prestoService.doQuery(query);
-				retVal.put("results", rowDataList);
-			} catch (SQLException e) {
-				LOGGER.error(e.getMessage(), e);
-				retVal.put("error", e.getMessage());
+			
+			if(query.trim().substring(0, 4).toLowerCase().equals("drop")) {
+				retVal.put("error", "drop operation is not allowed.");
+			} else {
+				try {
+					List<String> headers = prestoService.getHeaders(query);
+					retVal.put("headers", headers);
+					List<List<Object>> rowDataList = prestoService.doQuery(query);
+					retVal.put("results", rowDataList);
+				} catch (SQLException e) {
+					LOGGER.error(e.getMessage(), e);
+					retVal.put("error", e.getMessage());
+				}
 			}
 			
 			try {
