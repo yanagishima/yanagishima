@@ -29,6 +29,7 @@ IndexView = Backbone.View.extend({
         if (data.error) {
           $('#error-msg').text(data.error);
           $('#error-msg').slideDown('fast');
+          $("#query-results").empty();
         } else {
           $('#error-msg').hide();
           $("#query-results").empty();
