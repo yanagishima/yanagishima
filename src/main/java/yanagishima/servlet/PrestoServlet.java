@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.sql.SQLException;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Optional;
 
 import javax.inject.Inject;
@@ -18,6 +17,7 @@ import org.codehaus.jackson.map.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import yanagishima.result.PrestoQueryResult;
 import yanagishima.service.PrestoService;
 
 @Singleton
@@ -48,10 +48,11 @@ public class PrestoServlet extends HttpServlet {
 				retVal.put("error", "drop operation is not allowed.");
 			} else {
 				try {
-					List<String> headers = prestoService.getHeaders(query);
-					retVal.put("headers", headers);
-					List<List<Object>> rowDataList = prestoService.doQuery(query);
-					retVal.put("results", rowDataList);
+					PrestoQueryResult prestoQueryResult = prestoService.doQuery(query);
+					if (prestoQueryResult.getUpdateType() == null) {//select
+						retVal.put("headers", prestoQueryResult.getColumns());
+						retVal.put("results", prestoQueryResult.getRecords());
+					}
 				} catch (SQLException e) {
 					LOGGER.error(e.getMessage(), e);
 					retVal.put("error", e.getMessage());
