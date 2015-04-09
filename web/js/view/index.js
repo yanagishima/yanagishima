@@ -10,12 +10,21 @@ IndexView = Backbone.View.extend({
   },
 
   handleExecute: function(evt) {
+    $('#query-submit').attr("disabled", "disabled");
+    var tr = document.createElement("tr");
+    var td = document.createElement("td");
+    var img = document.createElement("img");
+    $(img).attr("src", "img/loading_long_48.gif");
+    $(td).append(img);
+    $(tr).append(td);
+    $("#query-results").append(tr);
     var query = $("#query").val();
     var requestURL = contextURL + "/presto";
      var requestData = {
         "query": query
       };
       var successHandler = function(data) {
+        $('#query-submit').removeAttr('disabled');
         console.log(data);
         if (data.error) {
           $('#error-msg').text(data.error);
