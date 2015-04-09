@@ -2,15 +2,16 @@ var indexView;
 IndexView = Backbone.View.extend({
   events: {
     "click #query-submit": "handleExecute",
-    'keypress input': 'handleKeyPress'
+    "keypress input": "handleKeyPress"
   },
 
   initialize: function(settings) {
-    $('#error-msg').hide();
+    $("#error-msg").hide();
   },
 
   handleExecute: function(evt) {
-    $('#query-submit').attr("disabled", "disabled");
+    $("#query-submit").attr("disabled", "disabled");
+    $("#query-results").empty();
     var tr = document.createElement("tr");
     var td = document.createElement("td");
     var img = document.createElement("img");
@@ -24,14 +25,14 @@ IndexView = Backbone.View.extend({
         "query": query
       };
       var successHandler = function(data) {
-        $('#query-submit').removeAttr('disabled');
+        $("#query-submit").removeAttr("disabled");
         console.log(data);
         if (data.error) {
-          $('#error-msg').text(data.error);
-          $('#error-msg').slideDown('fast');
+          $("#error-msg").text(data.error);
+          $("#error-msg").slideDown("fast");
           $("#query-results").empty();
         } else {
-          $('#error-msg').hide();
+          $("#error-msg").hide();
           $("#query-results").empty();
           var headers = data.headers;
           var tr = document.createElement("tr");
@@ -69,5 +70,5 @@ IndexView = Backbone.View.extend({
 });
 
 $(function() {
-  indexView = new IndexView({el: $('#query-form')});
+  indexView = new IndexView({el: $("#query-form")});
 });
