@@ -39,7 +39,7 @@ public class PrestoServiceImpl implements PrestoService {
 	}
 
 	@Override
-	public PrestoQueryResult doQuery(String query) throws SQLException {
+	public PrestoQueryResult doQuery(String query, int limit) throws SQLException {
 
 		try (StatementClient client = getStatementClient(query)) {
 			while (client.isValid() && (client.current().getData() == null)) {
@@ -65,7 +65,6 @@ public class PrestoServiceImpl implements PrestoService {
 					List<List<Object>> rowDataList = new ArrayList<List<Object>>();
 					while (client.isValid()) {
 						Iterable<List<Object>> data = client.current().getData();
-						client.advance();
 						if (data != null) {
 							data.forEach(row -> {
 								List<Object> columnDataList = row.stream().collect(
@@ -73,6 +72,11 @@ public class PrestoServiceImpl implements PrestoService {
 								rowDataList.add(columnDataList);
 							});
 						}
+						if(rowDataList.size() >= limit) {
+							prestoQueryResult.setWarningMessage(String.format("now fetch size is %d. This is more than %d. So, fetch operation stopped.", rowDataList.size(), limit));
+							break;
+						}
+						client.advance();
 					}
 					prestoQueryResult.setRecords(rowDataList);
 					return prestoQueryResult;

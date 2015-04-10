@@ -22,9 +22,8 @@ import yanagishima.service.PrestoService;
 
 @Singleton
 public class PrestoServlet extends HttpServlet {
-	
-	private static Logger LOGGER = LoggerFactory
-			.getLogger(PrestoServlet.class);
+
+	private static Logger LOGGER = LoggerFactory.getLogger(PrestoServlet.class);
 
 	private static final long serialVersionUID = 1L;
 
@@ -39,32 +38,39 @@ public class PrestoServlet extends HttpServlet {
 	protected void doGet(HttpServletRequest request,
 			HttpServletResponse response) throws ServletException, IOException {
 
-		Optional<String> queryOptional = Optional.ofNullable(request.getParameter("query"));
+		Optional<String> queryOptional = Optional.ofNullable(request
+				.getParameter("query"));
 		queryOptional.ifPresent(query -> {
 
 			HashMap<String, Object> retVal = new HashMap<String, Object>();
-			
-			if(query.trim().substring(0, 4).toLowerCase().equals("drop")) {
+
+			if (query.trim().substring(0, 4).toLowerCase().equals("drop")) {
 				retVal.put("error", "drop operation is not allowed.");
 			} else {
 				try {
-					PrestoQueryResult prestoQueryResult = prestoService.doQuery(query);
-					if (prestoQueryResult.getUpdateType() == null) {//select
-						retVal.put("headers", prestoQueryResult.getColumns());
-						retVal.put("results", prestoQueryResult.getRecords());
-					}
-				} catch (SQLException e) {
-					LOGGER.error(e.getMessage(), e);
-					retVal.put("error", e.getMessage());
+					PrestoQueryResult prestoQueryResult = prestoService
+							.doQuery(query, 10000);
+					if (prestoQueryResult.getUpdateType() == null) {// select
+					retVal.put("headers", prestoQueryResult.getColumns());
+					retVal.put("results", prestoQueryResult.getRecords());
+					Optional<String> warningMessageOptinal = Optional
+							.ofNullable(prestoQueryResult.getWarningMessage());
+					warningMessageOptinal.ifPresent(warningMessage -> {
+						retVal.put("warn", warningMessage);
+					});
 				}
+			} catch (SQLException e) {
+				LOGGER.error(e.getMessage(), e);
+				retVal.put("error", e.getMessage());
 			}
-			
-			try {
-				writeJSON(response, retVal);
-			} catch (IOException e) {
-				throw new RuntimeException(e);
-			}
-		});
+		}
+
+		try {
+			writeJSON(response, retVal);
+		} catch (IOException e) {
+			throw new RuntimeException(e);
+		}
+	})	;
 
 	}
 
@@ -75,5 +81,5 @@ public class PrestoServlet extends HttpServlet {
 		OutputStream stream = resp.getOutputStream();
 		mapper.writeValue(stream, obj);
 	}
-	
+
 }

@@ -9,6 +9,8 @@ public class PrestoQueryResult {
 	private List<String> columns;
 	
 	private List<List<Object>> records;
+	
+	private String warningMessage;
 
 	public String getUpdateType() {
 		return updateType;
@@ -32,6 +34,14 @@ public class PrestoQueryResult {
 
 	public void setRecords(List<List<Object>> records) {
 		this.records = records;
+	}
+
+	public String getWarningMessage() {
+		return warningMessage;
+	}
+
+	public void setWarningMessage(String warningMessage) {
+		this.warningMessage = warningMessage;
 	}
 
 }

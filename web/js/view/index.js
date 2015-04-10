@@ -7,11 +7,14 @@ IndexView = Backbone.View.extend({
 
   initialize: function(settings) {
     $("#error-msg").hide();
+    $("#warn-msg").hide();
   },
 
   handleExecute: function(evt) {
     $("#query-submit").attr("disabled", "disabled");
     $("#query-results").empty();
+    $("#error-msg").hide();
+    $("#warn-msg").hide();
     var tr = document.createElement("tr");
     var td = document.createElement("td");
     var img = document.createElement("img");
@@ -32,7 +35,10 @@ IndexView = Backbone.View.extend({
           $("#error-msg").slideDown("fast");
           $("#query-results").empty();
         } else {
-          $("#error-msg").hide();
+          if (data.warn) {
+            $("#warn-msg").text(data.warn);
+            $("#warn-msg").slideDown("fast");
+          }
           $("#query-results").empty();
           var headers = data.headers;
           var tr = document.createElement("tr");
