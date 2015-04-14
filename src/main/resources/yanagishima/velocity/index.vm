@@ -3,27 +3,98 @@
 <head>
   <title>yanagishima</title>
   <link href="$context/css/bootstrap.min.css" rel="stylesheet">
+  <link href="$context/css/ui.dynatree.css" rel="stylesheet">
   <script src="$context/js/lib/jquery.js"></script>
+  <script src="$context/js/lib/jquery-ui.min.js"></script>
   <script src="$context/js/lib/json2.js"></script>
   <script src="$context/js/lib/underscore.js"></script>
   <script src="$context/js/lib/backbone.js"></script>
   <script src="$context/js/lib/bootstrap.min.js"></script>
+  <script src="$context/js/lib/jquery.dynatree.min.js"></script>
   <script src="$context/js/view/index.js"></script>
   <script type="text/javascript">
     var contextURL = "${context}";
   </script>
+
 </head>
 <body>
-  <form id="query-form">
-    <textarea class="span12" id="query" rows="20"></textarea>
-    <button type="button" id="query-submit">execute</button>
-  </form>
-  <div class="alert alert-error" id="error-msg"></div>
-  <div class="alert alert-warn" id="warn-msg"></div>
-  
-  <table class="table table-bordered" id="query-results"></table>
-  
-  
+
+  <table class="table">
+    <tr>
+      <td rowspan="2">
+      
+        <div id="tree">
+        </div>
+        <script>
+          var tree = $("#tree").dynatree({
+            imagePath: "img",
+            initAjax: {
+              url: "presto?query=show+catalogs"
+            },
+            postProcess: function (data, dataType) {
+              headers = data["headers"];
+              results = data["results"];
+              if(headers == "Catalog") {
+                for(var i=0; i<results.length; i++) {
+                  var catalog = results[i][0];
+                  var rootNode = $("#tree").dynatree("getRoot");
+                  rootNode.addChild({ title: catalog,  key: catalog, isFolder: true, isLazy: true, catalog: catalog});
+                }
+              }
+            },
+            onLazyRead: function(node){
+              var param;
+              if(node.data.catalog) {
+                param = "show schemas from " + node.data.key;
+              } else if(node.parent.data.catalog) {
+                param = "show tables from " + node.parent.data.catalog + "." + node.data.key;
+              } else if(node.parent.data.schema) {
+                param = "show partitions from " + node.parent.parent.data.catalog + "." + node.parent.data.schema  + "." + node.data.key;
+              }
+              $.ajax({
+                    url: "presto",
+                    data: { query: param},
+                    type: "GET",
+                    dataType: "json"
+                }).done(function(data) {
+                        headers = data["headers"];
+                        results = data["results"];
+                        for(var i=0; i<results.length; i++) {
+                          var result = results[i][0];
+                          if(headers == "Schema") {
+                            node.addChild({title: result, key: result, isLazy: true, isFolder: true, schema: result});
+                          } else if(headers == "Table") {
+                            node.addChild({title: result, key: result, isLazy: true, isFolder: true, table: result});
+                          } else {
+                            node.addChild({title: headers + "=" + result, key: headers + "=" + result, isLazy: false, isFolder: true, partition: headers + "=" + result});
+                          }
+                        }
+                    node.setLazyNodeStatus(DTNodeStatus_Ok);
+                }).fail(function() {
+                    node.data.isLazy = false;
+                    node.setLazyNodeStatus(DTNodeStatus_Ok);
+                    node.render();
+                });
+              }
+          });
+        </script>
+      
+      </td>
+      <td>
+        <form id="query-form">
+          <textarea class="span12" id="query" rows="20"></textarea>
+          <button type="button" id="query-submit">execute</button>
+        </form>
+        <div class="alert alert-error" id="error-msg"></div>
+        <div class="alert alert-warn" id="warn-msg"></div>
+      </td>
+    </tr>
+    <tr>
+      <td>
+        <table class="table table-bordered" id="query-results"></table>
+      </td>
+    </tr>
+  </table>
 
 </body>
 </html>
