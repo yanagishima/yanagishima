@@ -4,6 +4,7 @@
   <title>yanagishima</title>
   <link href="$context/css/bootstrap.min.css" rel="stylesheet">
   <link href="$context/css/ui.dynatree.css" rel="stylesheet">
+  <link href="$context/css/jquery.contextMenu.css" rel="stylesheet">
   <script src="$context/js/lib/jquery.js"></script>
   <script src="$context/js/lib/jquery-ui.min.js"></script>
   <script src="$context/js/lib/json2.js"></script>
@@ -11,6 +12,7 @@
   <script src="$context/js/lib/backbone.js"></script>
   <script src="$context/js/lib/bootstrap.min.js"></script>
   <script src="$context/js/lib/jquery.dynatree.min.js"></script>
+  <script src="$context/js/lib/jquery.contextMenu-custom.js"></script>
   <script src="$context/js/view/index.js"></script>
   <script type="text/javascript">
     var contextURL = "${context}";
@@ -22,6 +24,10 @@
   <table class="table">
     <tr>
       <td rowspan="2">
+      
+        <ul id="myMenu" class="contextMenu">
+         <li><a href="">SELECT</a></li>
+        </ul>
       
         <div id="tree">
         </div>
@@ -75,7 +81,28 @@
                     node.setLazyNodeStatus(DTNodeStatus_Ok);
                     node.render();
                 });
+            },
+            onCreate: function(node, span){
+              if(node.data.partition || node.data.table) {
+                $(span).contextMenu({menu: "myMenu"}, function(action, el, pos) {
+                  var param;
+                  if(node.data.table) {
+                    table = node.data.table;
+                    schema = node.parent.data.schema;
+                    catalog = node.parent.parent.data.catalog;
+                    param = "SELECT * FROM " + catalog + "." + schema + "." + table + " LIMIT 100";
+                  } else if(node.data.partition) {
+                    partition = node.data.partition;
+                    table = node.parent.data.table;
+                    schema = node.parent.parent.data.schema;
+                    catalog = node.parent.parent.parent.data.catalog;
+                    param = "SELECT * FROM " + catalog + "." + schema + "." + table + " WHERE " + partition + " LIMIT 100";
+                  }
+                  $("#query").val(param);
+                  $("#query-submit").click();
+                });
               }
+            }
           });
         </script>
       
