@@ -75,10 +75,7 @@
                             var result = results[i][0];
                             node.addChild({title: result, key: result, isLazy: true, isFolder: true, table: result});
                           }
-                        } else {
-                            var catalog = node.parent.parent.data.catalog;
-                            var schema = node.parent.data.schema;
-                            var table = node.data.key;
+                        } else {//show partitions
                             var partition_header_result_array = [];
                             for(var i=0; i<results.length; i++) {
                               var header_result_array = [];
