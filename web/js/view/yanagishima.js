@@ -116,7 +116,7 @@ var yanagishima_tree = (function() {
             }
             schema = parent_node.parent.data.schema;
             catalog = parent_node.parent.parent.data.catalog;
-            param = "SELECT * FROM " + catalog + "." + schema + "." + table + " WHERE " + parent_partition_tree.join(" and ") + " LIMIT 100";
+            param = "SELECT * FROM " + catalog + "." + schema + "." + table + " WHERE " + parent_partition_tree.join(" and ") + " LIMIT 1000";
           }
           $("#query").val(param);
           $("#query-submit").click();
