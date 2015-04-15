@@ -16,8 +16,10 @@ public class YanagishimaConfig {
 	
 	private String source;
 	
+	private int selectLimit;
+	
 	public YanagishimaConfig(int jettyPort, String webResourceDir,
-			String prestoCoordinatorServer, String catalog, String schema, String user, String source) {
+			String prestoCoordinatorServer, String catalog, String schema, String user, String source, int selectLimit) {
 		this.jettyPort = jettyPort;
 		this.webResourceDir = webResourceDir;
 		this.prestoCoordinatorServer = prestoCoordinatorServer;
@@ -25,6 +27,7 @@ public class YanagishimaConfig {
 		this.schema = schema;
 		this.user = user;
 		this.source = source;
+		this.selectLimit = selectLimit;
 	}
 	
 	public int getJettyPort() {
@@ -53,6 +56,10 @@ public class YanagishimaConfig {
 	
 	public String getSource() {
 		return source;
+	}
+
+	public int getSelectLimit() {
+		return selectLimit;
 	}
 
 }

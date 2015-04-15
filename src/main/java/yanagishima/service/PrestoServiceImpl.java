@@ -39,7 +39,9 @@ public class PrestoServiceImpl implements PrestoService {
 	}
 
 	@Override
-	public PrestoQueryResult doQuery(String query, int limit) throws SQLException {
+	public PrestoQueryResult doQuery(String query) throws SQLException {
+		
+		int limit = yanagishimaConfig.getSelectLimit();
 
 		try (StatementClient client = getStatementClient(query)) {
 			while (client.isValid() && (client.current().getData() == null)) {

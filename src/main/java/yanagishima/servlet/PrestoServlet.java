@@ -49,7 +49,7 @@ public class PrestoServlet extends HttpServlet {
 			} else {
 				try {
 					PrestoQueryResult prestoQueryResult = prestoService
-							.doQuery(query, 10000);
+							.doQuery(query);
 					if (prestoQueryResult.getUpdateType() == null) {// select
 					retVal.put("headers", prestoQueryResult.getColumns());
 					retVal.put("results", prestoQueryResult.getRecords());

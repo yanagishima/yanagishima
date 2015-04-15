@@ -7,6 +7,6 @@ import yanagishima.result.PrestoQueryResult;
 
 public interface PrestoService {
 	
-	public PrestoQueryResult doQuery(String query, int limit) throws SQLException;
+	public PrestoQueryResult doQuery(String query) throws SQLException;
 
 }

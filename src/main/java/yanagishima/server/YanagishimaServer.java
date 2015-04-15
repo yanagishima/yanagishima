@@ -44,8 +44,9 @@ public class YanagishimaServer {
 		String schema = properties.getProperty("schema");
 		String user = properties.getProperty("user");
 		String source = properties.getProperty("source");
+		int selectLimit = Integer.parseInt(properties.getProperty("select.limit"));
 		
-		PrestoServiceModule prestoServiceModule = new PrestoServiceModule(jettyPort, webResourceDir, prestoCoordinatorServer, catalog, schema, user, source);
+		PrestoServiceModule prestoServiceModule = new PrestoServiceModule(jettyPort, webResourceDir, prestoCoordinatorServer, catalog, schema, user, source, selectLimit);
 		PrestoServletModule prestoServletModule = new PrestoServletModule();
 		@SuppressWarnings("unused")
 		Injector injector = Guice.createInjector(prestoServiceModule,
