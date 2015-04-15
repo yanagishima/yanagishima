@@ -30,6 +30,10 @@ var yanagishima_tree = (function() {
             type: "GET",
             dataType: "json"
         }).done(function(data) {
+                if(data["error"]) {
+                  console.log(data["error"]);
+                  return;
+                }
                 headers = data["headers"];
                 results = data["results"];
                 if(headers == "Schema") {
