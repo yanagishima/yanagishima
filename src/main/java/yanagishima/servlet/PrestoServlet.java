@@ -59,18 +59,19 @@ public class PrestoServlet extends HttpServlet {
 						retVal.put("warn", warningMessage);
 					});
 				}
-			} catch (SQLException e) {
-				LOGGER.error(e.getMessage(), e);
-				retVal.put("error", e.getMessage());
+				} catch (SQLException e) {
+					LOGGER.error(e.getMessage(), e);
+					retVal.put("error", e.getMessage());
+				}
 			}
-		}
 
-		try {
-			writeJSON(response, retVal);
-		} catch (IOException e) {
-			throw new RuntimeException(e);
-		}
-	})	;
+			try {
+				writeJSON(response, retVal);
+			} catch (IOException e) {
+				throw new RuntimeException(e);
+			}
+
+		});
 
 	}
 
