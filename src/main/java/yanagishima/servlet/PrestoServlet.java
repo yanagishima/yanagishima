@@ -44,13 +44,10 @@ public class PrestoServlet extends HttpServlet {
 
 			HashMap<String, Object> retVal = new HashMap<String, Object>();
 
-			if (query.trim().substring(0, 4).toLowerCase().equals("drop")) {
-				retVal.put("error", "drop operation is not allowed.");
-			} else {
-				try {
-					PrestoQueryResult prestoQueryResult = prestoService
-							.doQuery(query);
-					if (prestoQueryResult.getUpdateType() == null) {// select
+			try {
+				PrestoQueryResult prestoQueryResult = prestoService
+						.doQuery(query);
+				if (prestoQueryResult.getUpdateType() == null) {// select
 					retVal.put("headers", prestoQueryResult.getColumns());
 					retVal.put("results", prestoQueryResult.getRecords());
 					Optional<String> warningMessageOptinal = Optional
@@ -59,10 +56,9 @@ public class PrestoServlet extends HttpServlet {
 						retVal.put("warn", warningMessage);
 					});
 				}
-				} catch (SQLException e) {
-					LOGGER.error(e.getMessage(), e);
-					retVal.put("error", e.getMessage());
-				}
+			} catch (SQLException e) {
+				LOGGER.error(e.getMessage(), e);
+				retVal.put("error", e.getMessage());
 			}
 
 			try {
