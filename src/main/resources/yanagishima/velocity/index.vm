@@ -24,8 +24,7 @@
 
   <table class="table">
     <tr>
-      <td rowspan="2">
-      
+      <td>
         <ul id="myMenu" class="contextMenu">
          <li><a href="">SELECT</a></li>
         </ul>
@@ -34,10 +33,8 @@
         </div>
         
         <script>
-        var tree = yanagishima_tree();
-    </script>
-
-      
+          var tree = yanagishima_tree();
+        </script>
       </td>
       <td>
         <form id="query-form">
@@ -46,10 +43,6 @@
         </form>
         <div class="alert alert-error" id="error-msg"></div>
         <div class="alert alert-warn" id="warn-msg"></div>
-      </td>
-    </tr>
-    <tr>
-      <td>
         <table class="table table-bordered" id="query-results"></table>
       </td>
     </tr>
