@@ -77,7 +77,6 @@ dependencies {
     compile 'com.facebook.presto:presto-client:0.100'
     compile 'com.google.inject:guice:4.0-beta5'
     compile 'com.google.inject.extensions:guice-servlet:4.0-beta5'
-    compile 'org.apache.velocity:velocity:1.7'
     compile 'org.codehaus.jackson:jackson-core-asl:1.9.13'
     compile 'org.codehaus.jackson:jackson-mapper-asl:1.9.13'
     compile 'net.sf.jopt-simple:jopt-simple:4.8'

@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>yanagishima</title>
+  <link href="css/bootstrap.min.css" rel="stylesheet">
+  <link href="css/ui.dynatree.css" rel="stylesheet">
+  <link href="css/jquery.contextMenu.css" rel="stylesheet">
+  <script src="js/lib/jquery.js"></script>
+  <script src="js/lib/jquery-ui.min.js"></script>
+  <script src="js/lib/bootstrap.min.js"></script>
+  <script src="js/lib/jquery.dynatree.min.js"></script>
+  <script src="js/lib/jquery.contextMenu-custom.js"></script>
+  <script src="js/lib/yanagishima.js"></script>
+
+</head>
+<body>
+
+    <div class="navbar navbar-inverse navbar-static-top">
+      <div class="container-full">
+        <div class="navbar-header">
+          <div class="navbar-logo">
+            <a href="/">yanagishima</a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  <table class="table">
+    <tr>
+      <td>
+        <ul id="myMenu" class="contextMenu">
+         <li><a href="">SELECT</a></li>
+        </ul>
+      
+        <div id="tree">
+        </div>
+        
+        <script>
+          var tree = yanagishima_tree();
+        </script>
+      </td>
+      <td>
+        <form id="query-form">
+          <textarea style="height:300px; width:1500px; overflow:auto;" id="query"></textarea>
+          <button type="button" id="query-submit" onclick="handleExecute()">execute</button>
+        </form>
+        <div class="alert alert-error" id="error-msg"></div>
+        <div class="alert alert-warn" id="warn-msg"></div>
+        <script>
+          $("#error-msg").hide();
+          $("#warn-msg").hide();
+        </script>
+        <div style="height:500px; width:1500px; overflow:auto;">
+          <table class="table table-bordered" id="query-results"></table>
+        </div>
+      </td>
+    </tr>
+  </table>
+
+</body>
+</html>
