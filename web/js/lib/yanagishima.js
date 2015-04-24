@@ -151,6 +151,18 @@ var handleExecute = (function() {
     $(tr).append(td);
     $("#query-results").append(tr);
     var query = $("#query").val();
+    push_query(query);
+    $("#query-histories").empty();
+    var tbody = document.createElement("tbody");
+    var query_list = query_histories();
+    for(var i=0; i<query_list.length; i++) {
+      var tr = document.createElement("tr");
+      var td = document.createElement("td");
+      $(td).text(query_list[i]);
+      $(tr).append(td);
+      $(tbody).append(tr);
+    }
+    $("#query-histories").append(tbody);
     var requestURL = "/presto";
      var requestData = {
         "query": query
@@ -194,4 +206,33 @@ var handleExecute = (function() {
         }
       };
       $.get(requestURL, requestData, successHandler, "json");
+});
+
+var push_query = (function(query) {
+  if (! window.localStorage) return;
+  var list = query_histories();
+  list.unshift(query);
+  set_query_histories(list);
+});
+
+var query_histories = (function() {
+  if (! window.localStorage) return [];
+  var list = [];
+  try {
+    var listString = window.localStorage.query_histories;
+    if (listString && listString.length > 0)
+      list = JSON.parse(listString);
+  } catch (e) { set_query_histories([]); list = []; }
+  return list;
+});
+
+var set_query_histories = (function(list) {
+  if (! window.localStorage) return;
+  window.localStorage.query_histories = JSON.stringify(list);
+});
+
+var delete_query_histories = (function() {
+  $("#query-histories").empty();
+  if (! window.localStorage) return;
+  window.localStorage.removeItem("query_histories");
 });
