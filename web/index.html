@@ -18,9 +18,7 @@
     <div class="navbar navbar-inverse navbar-static-top">
       <div class="container-full">
         <div class="navbar-header">
-          <div class="navbar-logo">
-            <a href="/">yanagishima</a>
-          </div>
+          <a class="navbar-brand" href="#">yanagishima</a>
         </div>
       </div>
     </div>
@@ -40,9 +38,17 @@
         </script>
       </td>
       <td>
-        <form id="query-form">
-          <textarea style="height:300px; width:1500px; overflow:auto;" id="query"></textarea>
-          <button type="button" id="query-submit" onclick="handleExecute()">execute</button>
+        <form id="query-form" class="form-inline">
+          <div class="form-group">
+            <div class="col-sm-10">
+              <textarea class="form-control" style="height:300px; width:1500px; overflow:auto;" id="query"></textarea>
+            </div>
+          </div>
+          <div class="form-group">
+            <div class="col-sm-offset-2 col-sm-10">
+              <button type="button" id="query-submit" onclick="handleExecute()" class="btn btn-primary">execute</button>
+            </div>
+          </div>
         </form>
         <div class="alert alert-danger" id="error-msg"></div>
         <div class="alert alert-warning" id="warn-msg"></div>
