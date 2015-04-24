@@ -243,6 +243,13 @@ var update_query_histories_area = (function() {
     var td = document.createElement("td");
     $(td).append(a);
     $(tr).append(td);
+    var a = document.createElement("a");
+    $(a).text("delete");
+    $(a).attr("href", "#");
+    $(a).bind("click", {index: i}, delete_query);
+    var td = document.createElement("td");
+    $(td).append(a);
+    $(tr).append(td);
     $(tbody).append(tr);
   }
   $("#query-histories").append(tbody);
@@ -250,4 +257,13 @@ var update_query_histories_area = (function() {
 
 var copy_query = (function(event) {
   $("#query").val(event.data.query);
+});
+
+var delete_query = (function(event) {
+  if (! window.localStorage) return;
+  var query_list = query_histories();
+  query_list.splice(event.data.index, 1);
+  set_query_histories(query_list);
+  $("#query-histories").empty();
+  update_query_histories_area();
 });
