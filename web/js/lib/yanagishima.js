@@ -153,16 +153,7 @@ var handleExecute = (function() {
     var query = $("#query").val();
     push_query(query);
     $("#query-histories").empty();
-    var tbody = document.createElement("tbody");
-    var query_list = query_histories();
-    for(var i=0; i<query_list.length; i++) {
-      var tr = document.createElement("tr");
-      var td = document.createElement("td");
-      $(td).text(query_list[i]);
-      $(tr).append(td);
-      $(tbody).append(tr);
-    }
-    $("#query-histories").append(tbody);
+    update_query_histories_area();
     var requestURL = "/presto";
      var requestData = {
         "query": query
@@ -235,4 +226,17 @@ var delete_query_histories = (function() {
   $("#query-histories").empty();
   if (! window.localStorage) return;
   window.localStorage.removeItem("query_histories");
+});
+
+var update_query_histories_area = (function() {
+  var tbody = document.createElement("tbody");
+  var query_list = query_histories();
+  for(var i=0; i<query_list.length; i++) {
+    var tr = document.createElement("tr");
+    var td = document.createElement("td");
+    $(td).text(query_list[i]);
+    $(tr).append(td);
+    $(tbody).append(tr);
+  }
+  $("#query-histories").append(tbody);
 });
