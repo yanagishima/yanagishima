@@ -236,7 +236,18 @@ var update_query_histories_area = (function() {
     var td = document.createElement("td");
     $(td).text(query_list[i]);
     $(tr).append(td);
+    var a = document.createElement("a");
+    $(a).text("copy to query area");
+    $(a).attr("href", "#");
+    $(a).bind("click", {query: query_list[i]}, copy_query);
+    var td = document.createElement("td");
+    $(td).append(a);
+    $(tr).append(td);
     $(tbody).append(tr);
   }
   $("#query-histories").append(tbody);
+});
+
+var copy_query = (function(event) {
+  $("#query").val(event.data.query);
 });
