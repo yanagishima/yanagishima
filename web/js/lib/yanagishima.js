@@ -86,6 +86,13 @@ var yanagishima_tree = (function() {
                     partition_header_result_array.forEach(function(partition){
                       create_node(partition);
                     });
+                    partition_nodes.sort(
+                      function(a, b) {
+                        if(a.title < b.title) return -11;
+                        if(a.title > b.title) return 1;
+                        return 0;
+                      }
+                    );
                     node.addChild(partition_nodes);
   
                 }
