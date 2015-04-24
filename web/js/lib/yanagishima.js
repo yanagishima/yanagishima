@@ -157,7 +157,6 @@ var handleExecute = (function() {
       };
       var successHandler = function(data) {
         $("#query-submit").removeAttr("disabled");
-        console.log(data);
         if (data.error) {
           $("#error-msg").text(data.error);
           $("#error-msg").slideDown("fast");
