@@ -169,13 +169,16 @@ var handleExecute = (function() {
           }
           $("#query-results").empty();
           var headers = data.headers;
+          var thead = document.createElement("thead");
           var tr = document.createElement("tr");
           for (var i = 0; i < headers.length; ++i) {
             var th = document.createElement("th");
             $(th).text(headers[i]);
             $(tr).append(th);
           }
-          $("#query-results").append(tr);
+          $(thead).append(tr);
+          $("#query-results").append(thead);
+          var tbody = document.createElement("tbody");
           var rows = data.results;
           for (var i = 0; i < rows.length; ++i) {
             var tr = document.createElement("tr");
@@ -185,8 +188,10 @@ var handleExecute = (function() {
               $(td).text(columns[j]);
               $(tr).append(td);
             }
-            $("#query-results").append(tr);
+            $(tbody).append(tr);
           }
+          $("#query-results").append(tbody);
+          $("#query-results").tablesorter();
         }
       };
       $.get(requestURL, requestData, successHandler, "json");
