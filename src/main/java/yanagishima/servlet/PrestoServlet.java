@@ -37,20 +37,17 @@ public class PrestoServlet extends HttpServlet {
 	protected void doGet(HttpServletRequest request,
 			HttpServletResponse response) throws ServletException, IOException {
 
-		Optional<String> queryOptional = Optional.ofNullable(request
-				.getParameter("query"));
+		Optional<String> queryOptional = Optional.ofNullable(request.getParameter("query"));
 		queryOptional.ifPresent(query -> {
 
 			HashMap<String, Object> retVal = new HashMap<String, Object>();
 
 			try {
-				PrestoQueryResult prestoQueryResult = prestoService
-						.doQuery(query);
+				PrestoQueryResult prestoQueryResult = prestoService.doQuery(query);
 				if (prestoQueryResult.getUpdateType() == null) {// select
 					retVal.put("headers", prestoQueryResult.getColumns());
 					retVal.put("results", prestoQueryResult.getRecords());
-					Optional<String> warningMessageOptinal = Optional
-							.ofNullable(prestoQueryResult.getWarningMessage());
+					Optional<String> warningMessageOptinal = Optional.ofNullable(prestoQueryResult.getWarningMessage());
 					warningMessageOptinal.ifPresent(warningMessage -> {
 						retVal.put("warn", warningMessage);
 					});
@@ -70,8 +67,7 @@ public class PrestoServlet extends HttpServlet {
 
 	}
 
-	private void writeJSON(HttpServletResponse resp, Object obj)
-			throws IOException {
+	private void writeJSON(HttpServletResponse resp, Object obj) throws IOException {
 		resp.setContentType("application/json");
 		ObjectMapper mapper = new ObjectMapper();
 		OutputStream stream = resp.getOutputStream();
