@@ -2,7 +2,6 @@ package yanagishima.servlet;
 
 import java.io.IOException;
 import java.io.OutputStream;
-import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Optional;
 
