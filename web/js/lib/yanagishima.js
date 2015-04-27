@@ -162,43 +162,43 @@ var yanagishima_tree = (function() {
 });
 
 var handleExecute = (function() {
-    $("#query-submit").attr("disabled", "disabled");
-    $("#query-results").empty();
-    $("#error-msg").hide();
-    $("#warn-msg").hide();
-    var tr = document.createElement("tr");
-    var td = document.createElement("td");
-    var img = document.createElement("img");
-    $(img).attr("src", "img/loading_long_48.gif");
-    $(td).append(img);
-    $(tr).append(td);
-    $("#query-results").append(tr);
-    var query = $("#query").val();
-    push_query(query);
-    $("#query-histories").empty();
-    update_query_histories_area();
-    var requestURL = "/presto";
-     var requestData = {
-        "query": query
-      };
-      var successHandler = function(data) {
-        $("#query-submit").removeAttr("disabled");
-        if (data.error) {
-          $("#error-msg").text(data.error);
-          $("#error-msg").slideDown("fast");
-          $("#query-results").empty();
-        } else {
-          if (data.warn) {
-            $("#warn-msg").text(data.warn);
-            $("#warn-msg").slideDown("fast");
-          }
-          $("#query-results").empty();
-          var headers = data.headers;
-          var rows = data.results;
-          create_table("#query-results", headers, rows);
-        }
-      };
-      $.get(requestURL, requestData, successHandler, "json");
+  $("#query-submit").attr("disabled", "disabled");
+  $("#query-results").empty();
+  $("#error-msg").hide();
+  $("#warn-msg").hide();
+  var tr = document.createElement("tr");
+  var td = document.createElement("td");
+  var img = document.createElement("img");
+  $(img).attr("src", "img/loading_long_48.gif");
+  $(td).append(img);
+  $(tr).append(td);
+  $("#query-results").append(tr);
+  var query = $("#query").val();
+  push_query(query);
+  $("#query-histories").empty();
+  update_query_histories_area();
+  var requestURL = "/presto";
+  var requestData = {
+    "query": query
+  };
+  var successHandler = function(data) {
+    $("#query-submit").removeAttr("disabled");
+    if (data.error) {
+      $("#error-msg").text(data.error);
+      $("#error-msg").slideDown("fast");
+      $("#query-results").empty();
+    } else {
+      if (data.warn) {
+        $("#warn-msg").text(data.warn);
+        $("#warn-msg").slideDown("fast");
+      }
+      $("#query-results").empty();
+      var headers = data.headers;
+      var rows = data.results;
+      create_table("#query-results", headers, rows);
+    }
+  };
+  $.get(requestURL, requestData, successHandler, "json");
 });
 
 var push_query = (function(query) {
