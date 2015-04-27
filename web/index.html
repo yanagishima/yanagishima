@@ -27,16 +27,27 @@
   <table class="table">
     <tr>
       <td>
-        <ul id="myMenu" class="contextMenu">
+        <ul id="tableMenu" class="contextMenu">
+         <li><a href="#select">SELECT</a></li>
+         <li><a href="#describe">DESCRIBE</a></li>
+        </ul>
+        
+        <ul id="partitionMenu" class="contextMenu">
          <li><a href="">SELECT</a></li>
         </ul>
+        
       
-        <div id="tree">
+        <div id="tree" style="height:800px; width:500px; overflow:auto;">
         </div>
         
         <script>
           var tree = yanagishima_tree();
         </script>
+        
+        <div style="height:300px; width:500px; overflow:auto;">
+          <h4>table describe</h4>
+          <table class="table table-bordered" id="table-describe"></table>
+        </div>
       </td>
       <td>
         <form id="query-form" class="form-inline">
