@@ -29,15 +29,14 @@
       <td>
         <ul id="tableMenu" class="contextMenu">
          <li><a href="#select">SELECT</a></li>
-         <li><a href="#describe">DESCRIBE</a></li>
+         <li><a href="#columns">COLUMNS</a></li>
         </ul>
         
         <ul id="partitionMenu" class="contextMenu">
          <li><a href="">SELECT</a></li>
         </ul>
-        
       
-        <h4>catalog, schema, table, partition</h4>
+        <h4>show [catalogs|schemas|partitions]</h4>
         <div id="tree" style="height:800px; width:500px; overflow:auto;">
         </div>
         
@@ -46,8 +45,8 @@
         </script>
         
         <div style="height:300px; width:500px; overflow:auto;">
-          <h4>column</h4>
-          <table class="table table-bordered" id="table-describe"></table>
+          <h4>show columns</h4>
+          <table class="table table-bordered" id="show-columns"></table>
         </div>
       </td>
       <td>

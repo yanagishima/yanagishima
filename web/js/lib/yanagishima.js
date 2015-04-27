@@ -113,8 +113,8 @@ var yanagishima_tree = (function() {
             query = "SELECT * FROM " + catalog + "." + schema + "." + table + " LIMIT 100";
             $("#query").val(query);
             $("#query-submit").click();
-          } else if(action === "describe") {
-            query = "DESCRIBE " + catalog + "." + schema + "." + table;
+          } else if(action === "columns") {
+            query = "SHOW COLUMNS FROM " + catalog + "." + schema + "." + table;
             var requestURL = "/presto";
             var requestData = {
               "query": query
@@ -123,12 +123,12 @@ var yanagishima_tree = (function() {
               if (data.error) {
                 $("#error-msg").text(data.error);
                 $("#error-msg").slideDown("fast");
-                $("#table-describe").empty();
+                $("#show-columns").empty();
               } else {
-                $("#table-describe").empty();
+                $("#show-columns").empty();
                 var headers = data.headers;
                 var rows = data.results;
-                create_table("#table-describe", headers, rows);
+                create_table("#show-columns", headers, rows);
               }
             };
             $.get(requestURL, requestData, successHandler, "json");
