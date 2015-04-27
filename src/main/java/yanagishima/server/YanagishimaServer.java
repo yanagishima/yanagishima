@@ -38,7 +38,7 @@ public class YanagishimaServer {
 		
 		Properties properties = loadProps(args, new OptionParser());
 		int jettyPort = Integer.parseInt(properties.getProperty("jetty.port"));
-		String webResourceDir = properties.getProperty("web.resource.dir");
+		String webResourceDir = properties.getProperty("web.resource.dir", "web");
 		String prestoCoordinatorServer = properties.getProperty("presto.coordinator.server");
 		String catalog = properties.getProperty("catalog");
 		String schema = properties.getProperty("schema");
