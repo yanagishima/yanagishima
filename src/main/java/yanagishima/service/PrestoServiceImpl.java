@@ -48,17 +48,14 @@ public class PrestoServiceImpl implements PrestoService {
 				client.advance();
 			}
 
-			if ((!client.isFailed()) && (!client.isGone())
-					&& (!client.isClosed())) {
-				QueryResults results = client.isValid() ? client.current()
-						: client.finalResults();
+			if ((!client.isFailed()) && (!client.isGone()) && (!client.isClosed())) {
+				QueryResults results = client.isValid() ? client.current() : client.finalResults();
 				if (results.getUpdateType() != null) {
 					PrestoQueryResult prestoQueryResult = new PrestoQueryResult();
 					prestoQueryResult.setUpdateType(results.getUpdateType());
 					return prestoQueryResult;
 				} else if (results.getColumns() == null) {
-					throw new SQLException(format("Query %s has no columns\n",
-							results.getId()));
+					throw new SQLException(format("Query %s has no columns\n", results.getId()));
 				} else {
 					PrestoQueryResult prestoQueryResult = new PrestoQueryResult();
 					prestoQueryResult.setUpdateType(results.getUpdateType());
@@ -69,8 +66,7 @@ public class PrestoServiceImpl implements PrestoService {
 						Iterable<List<Object>> data = client.current().getData();
 						if (data != null) {
 							data.forEach(row -> {
-								List<Object> columnDataList = row.stream().collect(
-										Collectors.toList());
+								List<Object> columnDataList = row.stream().collect(Collectors.toList());
 								rowDataList.add(columnDataList);
 							});
 						}
@@ -106,8 +102,7 @@ public class PrestoServiceImpl implements PrestoService {
 		String user = yanagishimaConfig.getUser();
 		String source = yanagishimaConfig.getSource();
 
-		HttpClientConfig httpClientConfig = new HttpClientConfig()
-				.setConnectTimeout(new Duration(10, TimeUnit.SECONDS));
+		HttpClientConfig httpClientConfig = new HttpClientConfig().setConnectTimeout(new Duration(10, TimeUnit.SECONDS));
 		JettyHttpClient httpClient = new JettyHttpClient(httpClientConfig);
 		JsonCodec<QueryResults> jsonCodec = jsonCodec(QueryResults.class);
 
@@ -120,12 +115,9 @@ public class PrestoServiceImpl implements PrestoService {
 
 	private SQLException resultsException(QueryResults results) {
 		QueryError error = results.getError();
-		String message = format("Query failed (#%s): %s", results.getId(),
-				error.getMessage());
-		Throwable cause = (error.getFailureInfo() == null) ? null : error
-				.getFailureInfo().toException();
-		return new SQLException(message, error.getSqlState(),
-				error.getErrorCode(), cause);
+		String message = format("Query failed (#%s): %s", results.getId(), error.getMessage());
+		Throwable cause = (error.getFailureInfo() == null) ? null : error.getFailureInfo().toException();
+		return new SQLException(message, error.getSqlState(), error.getErrorCode(), cause);
 	}
 
 }
