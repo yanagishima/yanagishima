@@ -56,7 +56,7 @@ public class PrestoServlet extends HttpServlet {
 						retVal.put("warn", warningMessage);
 					});
 				}
-			} catch (SQLException e) {
+			} catch (Throwable e) {
 				LOGGER.error(e.getMessage(), e);
 				retVal.put("error", e.getMessage());
 			}
