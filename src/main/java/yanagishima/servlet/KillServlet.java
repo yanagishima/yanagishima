@@ -17,16 +17,16 @@ import org.slf4j.LoggerFactory;
 import yanagishima.config.YanagishimaConfig;
 
 @Singleton
-public class CancelServlet extends HttpServlet {
+public class KillServlet extends HttpServlet {
 
-	private static Logger LOGGER = LoggerFactory.getLogger(CancelServlet.class);
+	private static Logger LOGGER = LoggerFactory.getLogger(KillServlet.class);
 
 	private static final long serialVersionUID = 1L;
 
 	private YanagishimaConfig yanagishimaConfig;
 
 	@Inject
-	public CancelServlet(YanagishimaConfig yanagishimaConfig) {
+	public KillServlet(YanagishimaConfig yanagishimaConfig) {
 		this.yanagishimaConfig = yanagishimaConfig;
 	}
 

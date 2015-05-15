@@ -332,7 +332,7 @@ var renderRunningQueries = (function(queries) {
             .append('button')
             .text('Kill')
             .attr('type', 'button').on('click', function(query) {
-                d3.xhr("/cancel?queryId=" + query.queryId).send('GET');
+                d3.xhr("/kill?queryId=" + query.queryId).send('GET');
                 $(this).attr('disabled', 'disabled');
             });
 
