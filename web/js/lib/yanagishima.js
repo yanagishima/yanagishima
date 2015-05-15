@@ -328,7 +328,13 @@ var renderRunningQueries = (function(queries) {
 
     rows.enter()
             .append("tr")
-            .attr("class", "info");
+            .attr("class", "info")
+            .append('button')
+            .text('Kill')
+            .attr('type', 'button').on('click', function(query) {
+                d3.xhr("/cancel?queryId=" + query.queryId).send('GET');
+                $(this).attr('disabled', 'disabled');
+            });
 
     var cells = rows.selectAll("td")
             .data(function (queryInfo)

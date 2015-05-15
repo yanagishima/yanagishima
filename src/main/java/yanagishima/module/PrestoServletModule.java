@@ -1,5 +1,6 @@
 package yanagishima.module;
 
+import yanagishima.servlet.CancelServlet;
 import yanagishima.servlet.PrestoServlet;
 import yanagishima.servlet.QueryServlet;
 
@@ -10,9 +11,11 @@ public class PrestoServletModule extends ServletModule {
 	protected void configureServlets() {
 		bind(PrestoServlet.class);
 		bind(QueryServlet.class);
+		bind(CancelServlet.class);
 
 		serve("/presto").with(PrestoServlet.class);
 		serve("/query").with(QueryServlet.class);
+		serve("/cancel").with(CancelServlet.class);
 
 	}
 }
