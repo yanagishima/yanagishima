@@ -5,6 +5,7 @@
   <link href="css/bootstrap.min.css" rel="stylesheet">
   <link href="css/ui.dynatree.css" rel="stylesheet">
   <link href="css/jquery.contextMenu.css" rel="stylesheet">
+  <link href="css/jquery-ui.min.css" rel="stylesheet">
   <script src="js/lib/jquery.js"></script>
   <script src="js/lib/jquery-ui.min.js"></script>
   <script src="js/lib/bootstrap.min.js"></script>
@@ -71,9 +72,25 @@
           $("#warn-msg").hide();
         </script>
         
-        <h4>query results</h4>
-        <div style="height:600px; width:1500px; overflow:auto;">
-          <table class="table table-bordered" id="query-results"></table>
+        <script>
+          $(function() {
+            $( "#tab-query" ).tabs();
+          });
+        </script>
+        
+        <div id="tab-query">
+          <ul>
+            <li><a href="#query-results-tab">query results</a></li>
+            <li><a href="#query-runnings-tab">query runnings</a></li>
+          </ul>
+          
+          <div id="query-results-tab">
+            <h4>query results</h4>
+            <div style="height:600px; width:1500px; overflow:auto;">
+              <table class="table table-bordered" id="query-results"></table>
+            </div>
+          </div>
+          <div id="query-runnings-tab">query runnings</div>
         </div>
         
         <h4>query histories</h4>
