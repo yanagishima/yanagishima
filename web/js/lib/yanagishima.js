@@ -294,3 +294,151 @@ var create_table = (function(table_id, headers, rows) {
   $(table_id).append(tbody);
   $(table_id).tablesorter();
 });
+
+var redraw = (function() {
+    d3.json('/query', function (queries)
+    {
+        var runningQueries = [];
+        var doneQueries = [];
+        if (queries) {
+            runningQueries = queries.filter(function (query)
+            {
+                return query.state != 'FINISHED' && query.state != 'FAILED' && query.state != 'CANCELED';
+            });
+
+            doneQueries = queries.filter(function (query)
+            {
+                return query.state == 'FINISHED' || query.state == 'FAILED' || query.state == 'CANCELED';
+            });
+        }
+
+        renderRunningQueries(runningQueries);
+        renderDoneQueries(doneQueries);
+    });
+});
+
+var renderRunningQueries = (function(queries) {
+    var tbody = d3.select("#running").select("tbody");
+
+    var rows = tbody.selectAll("tr")
+            .data(queries, function (query) { return query.queryId; })
+
+    rows.exit()
+            .remove();
+
+    rows.enter()
+            .append("tr")
+            .attr("class", "info");
+
+    var cells = rows.selectAll("td")
+            .data(function (queryInfo)
+                  {
+                      var splits = queryInfo.totalDrivers;
+                      var completedSplits = queryInfo.completedDrivers;
+
+                      var runningSplits = queryInfo.runningDrivers;
+                      var queuedSplits = queryInfo.queuedDrivers;
+
+                      var query = queryInfo.query;
+                      if (query.length > 200) {
+                          query = query.substring(0, 200) + "...";
+                      }
+
+                      var progress = "N/A";
+                      if (queryInfo.scheduled) {
+                          progress = d3.format("%")(splits == 0 ? 0 : completedSplits / splits);
+                      }
+
+                      return [
+                          queryInfo.queryId,
+                          queryInfo.elapsedTime,
+                          query,
+                          queryInfo.session.source,
+                          queryInfo.session.user,
+                          queryInfo.state,
+                          progress,
+                          queuedSplits,
+                          runningSplits,
+                          completedSplits
+                      ]
+                  });
+
+    cells.text(function (d) { return d; });
+
+    cells.enter()
+            .append("td")
+            .text(function (d) { return d; });
+
+    tbody.selectAll("tr")
+            .sort(function (a, b) { return d3.descending(a.createTime, b.createTime); });
+});
+
+var renderDoneQueries = (function(queries) {
+    var tbody = d3.select("#done").select("tbody");
+
+    var rows = tbody.selectAll("tr")
+            .data(queries, function (query) { return query.queryId; });
+
+    rows.enter()
+            .append("tr")
+            .attr("class", function (query) {
+                          switch (query.state) {
+                          case "FINISHED":
+                              return "success";
+                          case "FAILED":
+                              return "danger";
+                          case "CANCELED":
+                              return "warning";
+                          default:
+                              return "info";
+                      }
+                  });
+
+    rows.exit()
+            .remove();
+
+    rows.selectAll("td")
+            .data(function (queryInfo) {
+                      var splits = queryInfo.totalDrivers;
+                      var completedSplits = queryInfo.completedDrivers;
+
+                      var query = queryInfo.query;
+                      if (query.length > 200) {
+                          query = query.substring(0, 200) + "...";
+                      }
+
+                      return [
+                          queryInfo.queryId,
+                          queryInfo.elapsedTime,
+                          query,
+                          queryInfo.session.source,
+                          queryInfo.session.user,
+                          queryInfo.state,
+                          shortErrorType(queryInfo.errorType),
+                          completedSplits,
+                          splits,
+                          d3.format("%")(splits == 0 ? 0 : completedSplits / splits)
+                      ]
+                  })
+            .enter()
+            .append("td")
+            .text(function (d)
+                  {
+                      return d;
+                  });
+
+    tbody.selectAll("tr")
+            .sort(function (a, b) { return d3.descending(a.endTime, b.endTime); });
+});
+
+var shortErrorType = (function(errorType) {
+    switch (errorType) {
+        case "USER_ERROR":
+            return "USER";
+        case "INTERNAL_ERROR":
+            return "INTERNAL";
+        case "INSUFFICIENT_RESOURCES":
+            return "RESOURCES";
+    }
+    return errorType;
+});
