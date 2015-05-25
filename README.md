@@ -11,7 +11,6 @@ yanagishima is a Web UI for presto like MySQL Workbench.
 
 # Limitation
 
-* query cancellation is not supported
 * paging results is not supported
 * exporting results is not supported
 
@@ -32,7 +31,7 @@ You need to edit conf/yanagishima.properties.
 ```
 jetty.port=8080 # yanagishima web port
 presto.coordinator.server=http://presto.coordinator:8080 # presto coordinator url
-select.limit=10000 # if query result exceeds this limit, rest of result is skipped
+select.limit=1000 # if query result exceeds this limit, rest of result is skipped
 catalog=hive # presto catalog name
 schema=default # presto schema name
 user=yanagishima # presto user name
