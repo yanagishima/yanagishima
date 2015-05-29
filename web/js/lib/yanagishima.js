@@ -254,9 +254,83 @@ var update_query_histories_area = (function() {
     var td = document.createElement("td");
     $(td).append(a);
     $(tr).append(td);
+    var a = document.createElement("a");
+    $(a).text("bookmark");
+    $(a).attr("href", "#");
+    $(a).bind("click", {query: query_list[i]}, add_bookmark);
+    var td = document.createElement("td");
+    $(td).append(a);
+    $(tr).append(td);
     $(tbody).append(tr);
   }
   $("#query-histories").append(tbody);
+});
+
+var update_query_bookmarks_area = (function() {
+  var tbody = document.createElement("tbody");
+  var query_list = query_bookmarks();
+  for(var i=0; i<query_list.length; i++) {
+    var tr = document.createElement("tr");
+    var td = document.createElement("td");
+    $(td).text(query_list[i]);
+    $(tr).append(td);
+    var a = document.createElement("a");
+    $(a).text("copy to query area");
+    $(a).attr("href", "#");
+    $(a).bind("click", {query: query_list[i]}, copy_query);
+    var td = document.createElement("td");
+    $(td).append(a);
+    $(tr).append(td);
+    var a = document.createElement("a");
+    $(a).text("delete");
+    $(a).attr("href", "#");
+    $(a).bind("click", {index: i}, delete_bookmark);
+    var td = document.createElement("td");
+    $(td).append(a);
+    $(tr).append(td);
+    $(tbody).append(tr);
+  }
+  $("#query-bookmarks").append(tbody);
+});
+
+var add_bookmark = (function(event) {
+  if (! window.localStorage) return;
+  var list = query_bookmarks();
+  list.unshift(event.data.query);
+  set_query_bookmarks(list);
+  $("#query-bookmarks").empty();
+  update_query_bookmarks_area();
+});
+
+var query_bookmarks = (function() {
+  if (! window.localStorage) return [];
+  var list = [];
+  try {
+    var listString = window.localStorage.query_bookmarks;
+    if (listString && listString.length > 0)
+      list = JSON.parse(listString);
+  } catch (e) { set_query_bookmarks([]); list = []; }
+  return list;
+});
+
+var set_query_bookmarks = (function(list) {
+  if (! window.localStorage) return;
+  window.localStorage.query_bookmarks = JSON.stringify(list);
+});
+
+var delete_bookmark = (function(event) {
+  if (! window.localStorage) return;
+  var query_list = query_bookmarks();
+  query_list.splice(event.data.index, 1);
+  set_query_bookmarks(query_list);
+  $("#query-bookmarks").empty();
+  update_query_bookmarks_area();
+});
+
+var delete_query_bookmarks = (function() {
+  $("#query-bookmarks").empty();
+  if (! window.localStorage) return;
+  window.localStorage.removeItem("query_bookmarks");
 });
 
 var copy_query = (function(event) {

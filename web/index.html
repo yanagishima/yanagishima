@@ -160,15 +160,37 @@
           </div>
         </div>
         
-        <h4>query histories</h4>
-        <button type="button" onclick="delete_query_histories()" class="btn btn-primary">delete all query histories</button>
-        <div style="height:200px; width:1500px; overflow:auto;">
-          <table class="table table-bordered" id="query-histories"></table>
-        </div>
         <script>
-          update_query_histories_area();
+          $(function() {
+            $( "#tab-bookmark" ).tabs();
+          });
         </script>
         
+        <h4>query histories/query bookmarks</h4>
+        <div id="tab-bookmark">
+          <ul>
+            <li><a href="#query-histories-tab">query histories</a></li>
+            <li><a href="#query-bookmarks-tab">query bookmarks</a></li>
+          </ul>
+          
+          <div id="query-histories-tab">
+            <button type="button" onclick="delete_query_histories()" class="btn btn-primary">delete all query histories</button>
+            <div style="height:200px; width:1500px; overflow:auto;">
+              <table class="table table-bordered" id="query-histories"></table>
+            </div>
+            <script>
+              update_query_histories_area();
+            </script>
+          </div>
+          <div id="query-bookmarks-tab">
+            <button type="button" onclick="delete_query_bookmarks()" class="btn btn-primary">delete all bookmarks</button>
+            <div style="height:200px; width:1500px; overflow:auto;">
+              <table class="table table-bordered" id="query-bookmarks"></table>
+            </div>
+            <script>
+              update_query_bookmarks_area();
+            </script>
+          </div
       </td>
     </tr>
   </table>
