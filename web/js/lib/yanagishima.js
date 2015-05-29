@@ -124,8 +124,10 @@ var yanagishima_tree = (function() {
                 $("#error-msg").text(data.error);
                 $("#error-msg").slideDown("fast");
                 $("#show-columns").empty();
+                $("#tableName").empty();
               } else {
                 $("#show-columns").empty();
+                $("#tableName").text(catalog + "." + schema + "." + table);
                 var headers = data.headers;
                 var rows = data.results;
                 create_table("#show-columns", headers, rows);
