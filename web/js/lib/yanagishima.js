@@ -198,6 +198,14 @@ var handleExecute = (function() {
       var headers = data.headers;
       var rows = data.results;
       create_table("#query-results", headers, rows);
+      for (var i = 0; i < headers.length; ++i) {
+        var option = document.createElement("option");
+        $(option).attr("value", i);
+        $(option).text(headers[i]);
+        $("#sort_columns").append(option);
+      }
+      $("#sort_columns").attr("style", "display:inline");
+      $("#sort_button").attr("style", "display:inline");
     }
   };
   $.get(requestURL, requestData, successHandler, "json");
@@ -368,6 +376,7 @@ var create_table = (function(table_id, headers, rows) {
     $(tbody).append(tr);
   }
   $(table_id).append(tbody);
+  $(table_id).fixedHeaderTable();
   $(table_id).tablesorter();
 });
 

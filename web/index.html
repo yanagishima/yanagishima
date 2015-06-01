@@ -6,12 +6,14 @@
   <link href="css/ui.dynatree.css" rel="stylesheet">
   <link href="css/jquery.contextMenu.css" rel="stylesheet">
   <link href="css/jquery-ui.min.css" rel="stylesheet">
+  <link href="css/defaultTheme.css" rel="stylesheet">
   <script src="js/lib/jquery.js"></script>
   <script src="js/lib/jquery-ui.min.js"></script>
   <script src="js/lib/bootstrap.min.js"></script>
   <script src="js/lib/jquery.dynatree.min.js"></script>
   <script src="js/lib/jquery.contextMenu-custom.js"></script>
   <script src="js/lib/jquery.tablesorter.min.js"></script>
+  <script src="js/lib/jquery.fixedheadertable.min.js"></script>
   <script src="js/lib/d3.min.js"></script>
   <script src="js/lib/yanagishima.js"></script>
 
@@ -89,6 +91,20 @@
           
           <div id="query-results-tab">
             <div style="height:600px; width:1500px; overflow:auto;">
+              <script>
+                $(function() {
+                  var r = $('#query-results').tablesorter({
+                    widgets: ['zebra']
+                  });
+
+                  $('#sort_button').click(function() {
+                    r.trigger('sorton', [ [[$('#sort_columns').val(), 0]] ]);
+                  });
+                });
+              </script>
+              <select id="sort_columns" style="display:none"></select>
+              <input id="sort_button" type="button" value="sort" style="display:none"/>
+              
               <table class="table table-bordered" id="query-results"></table>
             </div>
           </div>
