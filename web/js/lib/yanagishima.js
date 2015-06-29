@@ -121,6 +121,7 @@ var yanagishima_tree = (function() {
 
 var handleExecute = (function() {
   $("#query-submit").attr("disabled", "disabled");
+  $("#query-results").fixedHeaderTable("destroy");
   $("#query-results").empty();
   $("#error-msg").hide();
   $("#warn-msg").hide();
