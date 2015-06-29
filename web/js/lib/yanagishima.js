@@ -22,7 +22,7 @@ var yanagishima_tree = (function() {
       } else if(node.parent.data.catalog) {
         param = "show tables from " + node.parent.data.catalog + "." + node.data.key;
       } else if(node.parent.data.schema) {
-        param = "show partitions from " + node.parent.parent.data.catalog + "." + node.parent.data.schema  + "." + node.data.key;
+        param = "show columns from " + node.parent.parent.data.catalog + "." + node.parent.data.schema  + "." + node.data.key;
       }
       $.ajax({
             url: "presto",
@@ -46,55 +46,11 @@ var yanagishima_tree = (function() {
                     var result = results[i][0];
                     node.addChild({title: result, key: result, isLazy: true, isFolder: true, table: result});
                   }
-                } else {//show partitions
-                    var partition_header_result_array = [];
-                    for(var i=0; i<results.length; i++) {
-                      var header_result_array = [];
-                      for(var j=0; j<results[i].length; j++) {
-                        var result_data = results[i][j];
-                        if(typeof(result_data) == "string") {
-                          result_data = "'" + result_data + "'";
-                        }
-                        header_result_array.push(headers[j] + "=" + result_data);
-                      }
-                      partition_header_result_array.push(header_result_array.join("/"));
-                    }
-  
-                    var partition_nodes = [];
-                    var treenodes = {};
-  
-                    var create_node = function(partition, hasChildren){
-                      if (treenodes[partition])
-                        return treenodes[partition];
-                      var parts = partition.split('/');
-                      var leafName = parts.pop();
-                      var node = {title: leafName, key: leafName, isLazy: true, isFolder: true, partition: leafName};
-                      if (hasChildren) {
-                        node.children = [];
-                      }
-                      if (parts.length > 0) {
-                        var parent = create_node(parts.join('/'), true);
-                        parent.children.push(node);
-                      }
-                      else {
-                        partition_nodes.push(node);
-                      }
-                      treenodes[partition] = node;
-                      return node;
-                    };
-  
-                    partition_header_result_array.forEach(function(partition){
-                      create_node(partition);
-                    });
-                    partition_nodes.sort(
-                      function(a, b) {
-                        if(a.title < b.title) return -11;
-                        if(a.title > b.title) return 1;
-                        return 0;
-                      }
-                    );
-                    node.addChild(partition_nodes);
-  
+                } else {
+                  for(var i=0; i<results.length; i++) {
+                    var result = results[i][0];
+                    node.addChild({title: result, key: result, isLazy: true, isFolder: false});
+                  }
                 }
             node.setLazyNodeStatus(DTNodeStatus_Ok);
         }).fail(function() {
