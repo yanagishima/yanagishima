@@ -160,6 +160,59 @@ var handleExecute = (function() {
   $.get(requestURL, requestData, successHandler, "json");
 });
 
+var handleExplain = (function() {
+  $("#query-results").fixedHeaderTable("destroy");
+  $("#query-results").empty();
+  $("#error-msg").hide();
+  $("#warn-msg").hide();
+  var query = "explain " + $("#query").val();
+  var requestURL = "/presto";
+  var requestData = {
+    "query": query
+  };
+  var successHandler = function(data) {
+    if (data.error) {
+      $("#error-msg").text(data.error);
+      $("#error-msg").slideDown("fast");
+      $("#query-results").empty();
+    } else {
+      if (data.warn) {
+        $("#warn-msg").text(data.warn);
+        $("#warn-msg").slideDown("fast");
+      }
+      $("#query-results").empty();
+      var headers = data.headers;
+      var rows = data.results;
+      var thead = document.createElement("thead");
+      var tr = document.createElement("tr");
+      for (var i = 0; i < headers.length; ++i) {
+        var th = document.createElement("th");
+        $(th).text(headers[i]);
+        $(tr).append(th);
+      }
+      $(thead).append(tr);
+      $("#query-results").append(thead);
+      var tbody = document.createElement("tbody");
+      for (var i = 0; i < rows.length; ++i) {
+        var tr = document.createElement("tr");
+        var columns = rows[i];
+        for (var j = 0; j < columns.length; ++j) {
+          var pre = document.createElement("pre");
+          $(pre).text(columns[j]);
+          var td = document.createElement("td");
+          $(td).append(pre);
+          $(tr).append(td);
+        }
+        $(tbody).append(tr);
+      }
+      $("#query-results").append(tbody);
+      $("#query-results").fixedHeaderTable("destroy");
+      $("#query-results").fixedHeaderTable();
+    }
+  };
+  $.get(requestURL, requestData, successHandler, "json");
+});
+
 var push_query = (function(query) {
   if (! window.localStorage) return;
   var list = query_histories();
