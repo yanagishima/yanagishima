@@ -15,17 +15,17 @@
   <script src="js/lib/jquery.fixedheadertable.min.js"></script>
   <script src="js/lib/d3.min.js"></script>
   <script src="js/lib/yanagishima.js"></script>
-
 </head>
+
 <body>
 
-    <div class="navbar navbar-inverse navbar-static-top">
-      <div class="container-full">
-        <div class="navbar-header">
-          <a class="navbar-brand" href="#">yanagishima</a>
-        </div>
+  <div class="navbar navbar-inverse navbar-static-top">
+    <div class="container-full">
+      <div class="navbar-header">
+        <a class="navbar-brand" href="#">yanagishima</a>
       </div>
     </div>
+  </div>
 
   <table class="table">
     <tr>
@@ -75,104 +75,92 @@
           $("#warn-msg").hide();
         </script>
         
-        <script>
-          $(function() {
-            $( "#tab-query" ).tabs();
-          });
-        </script>
-        
-        <h4>query results/executions</h4>
-        <div id="tab-query">
-          <ul>
-            <li><a href="#query-results-tab">query results</a></li>
-            <li><a href="#query-executions-tab">query executions</a></li>
-          </ul>
-          
-          <div id="query-results-tab">
-            <div style="height:600px; width:1500px; overflow:auto;">
-              <table class="table table-bordered" id="query-results"></table>
-            </div>
-          </div>
-          <div id="query-executions-tab">
-            <div>
-
-                <table id="running" class="table table-striped">
-                    <colgroup>
-                        <col width="60px">
-                        <col width="90px">
-                        <col width="80px">
-                        <col width="auto">
-                        <col width="80px">
-                        <col width="80px">
-                        <col width="90px">
-                        <col width="60px">
-                        <col width="60px">
-                        <col width="60px">
-                        <col width="60px">
-                    </colgroup>
-                    <thead>
-                    <tr>
-                        <th>button</th>
-                        <th>Id</th>
-                        <th>Elapsed</th>
-                        <th>Query</th>
-                        <th>Source</th>
-                        <th>User</th>
-                        <th>State</th>
-                        <th>Progress</th>
-                        <th>Queued</th>
-                        <th>Running</th>
-                        <th>Done</th>
-                    </tr>
-                    </thead>
-                    <tbody></tbody>
-                </table>
-
-                <table id="done" class="table table-striped">
-                    <colgroup>
-                        <col width="90px">
-                        <col width="80px">
-                        <col width="auto">
-                        <col width="80px">
-                        <col width="80px">
-                        <col width="90px">
-                        <col width="80px">
-                        <col width="60px">
-                        <col width="60px">
-                        <col width="60px">
-                    </colgroup>
-                    <thead>
-                    <tr>
-                        <th>Id</th>
-                        <th>Elapsed</th>
-                        <th>Query</th>
-                        <th>Source</th>
-                        <th>User</th>
-                        <th>State</th>
-                        <th>Error</th>
-                        <th>Done</th>
-                        <th>Total</th>
-                        <th>Completion</th>
-                    </tr>
-                    </thead>
-                    <tbody></tbody>
-                </table>
-            </div>
+        <h4>query results</h4>
+        <div id="query-results-tab">
+          <div style="height:600px; width:1500px; overflow:auto;">
+            <table class="table table-bordered" id="query-results"></table>
           </div>
         </div>
         
         <script>
           $(function() {
-            $( "#tab-bookmark" ).tabs();
+            $( "#tabs" ).tabs();
           });
         </script>
         
-        <h4>query histories/query bookmarks</h4>
-        <div id="tab-bookmark">
+        <h4>query executions/query histories/query bookmarks</h4>
+        <div id="tabs">
           <ul>
+            <li><a href="#query-executions-tab">query executions</a></li>
             <li><a href="#query-histories-tab">query histories</a></li>
             <li><a href="#query-bookmarks-tab">query bookmarks</a></li>
           </ul>
+          
+          <div id="query-executions-tab">
+            <div>
+              <table id="running" class="table table-striped">
+                  <colgroup>
+                      <col width="60px">
+                      <col width="90px">
+                      <col width="80px">
+                      <col width="auto">
+                      <col width="80px">
+                      <col width="80px">
+                      <col width="90px">
+                      <col width="60px">
+                      <col width="60px">
+                      <col width="60px">
+                      <col width="60px">
+                  </colgroup>
+                  <thead>
+                  <tr>
+                      <th>button</th>
+                      <th>Id</th>
+                      <th>Elapsed</th>
+                      <th>Query</th>
+                      <th>Source</th>
+                      <th>User</th>
+                      <th>State</th>
+                      <th>Progress</th>
+                      <th>Queued</th>
+                      <th>Running</th>
+                      <th>Done</th>
+                  </tr>
+                  </thead>
+                  <tbody></tbody>
+              </table>
+
+              <table id="done" class="table table-striped">
+                  <colgroup>
+                      <col width="90px">
+                      <col width="80px">
+                      <col width="auto">
+                      <col width="80px">
+                      <col width="80px">
+                      <col width="90px">
+                      <col width="80px">
+                      <col width="60px">
+                      <col width="60px">
+                      <col width="60px">
+                  </colgroup>
+                  <thead>
+                  <tr>
+                      <th>Id</th>
+                      <th>Elapsed</th>
+                      <th>Query</th>
+                      <th>Source</th>
+                      <th>User</th>
+                      <th>State</th>
+                      <th>Error</th>
+                      <th>Done</th>
+                      <th>Total</th>
+                      <th>Completion</th>
+                  </tr>
+                  </thead>
+                  <tbody></tbody>
+              </table>
+            </div>
+          </div>
           
           <div id="query-histories-tab">
             <button type="button" onclick="delete_query_histories()" class="btn btn-primary">delete all query histories</button>
@@ -183,6 +171,7 @@
               update_query_histories_area();
             </script>
           </div>
+          
           <div id="query-bookmarks-tab">
             <button type="button" onclick="delete_query_bookmarks()" class="btn btn-primary">delete all bookmarks</button>
             <div style="height:200px; width:1500px; overflow:auto;">
@@ -191,7 +180,10 @@
             <script>
               update_query_bookmarks_area();
             </script>
-          </div
+          </div>
+
+        </div>
+
       </td>
     </tr>
   </table>
