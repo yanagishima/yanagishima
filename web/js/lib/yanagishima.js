@@ -123,7 +123,7 @@ var yanagishima_tree = (function() {
   return tree;
 });
 
-var handleExecute = (function() {
+var handle_execute = (function() {
   $("#query-submit").attr("disabled", "disabled");
   $("#query-results").fixedHeaderTable("destroy");
   $("#query-results").empty();
@@ -164,7 +164,7 @@ var handleExecute = (function() {
   $.get(requestURL, requestData, successHandler, "json");
 });
 
-var handleExplain = (function() {
+var handle_explain = (function() {
   $("#query-results").fixedHeaderTable("destroy");
   $("#query-results").empty();
   $("#error-msg").hide();
