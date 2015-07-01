@@ -217,6 +217,10 @@ var handleExplain = (function() {
   $.get(requestURL, requestData, successHandler, "json");
 });
 
+var query_clear = (function() {
+  $("#query").val("");
+});
+
 var push_query = (function(query) {
   if (! window.localStorage) return;
   var list = query_histories();
