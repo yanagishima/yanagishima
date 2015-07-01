@@ -125,6 +125,9 @@ var yanagishima_tree = (function() {
 
 var handle_execute = (function() {
   $("#query-submit").attr("disabled", "disabled");
+  $("#query-explain").attr("disabled", "disabled");
+  $("#query-clear").attr("disabled", "disabled");
+  $("#query-submit").attr("disabled", "disabled");
   $("#query-results").fixedHeaderTable("destroy");
   $("#query-results").empty();
   $("#error-msg").hide();
@@ -146,6 +149,8 @@ var handle_execute = (function() {
   };
   var successHandler = function(data) {
     $("#query-submit").removeAttr("disabled");
+    $("#query-explain").removeAttr("disabled");
+    $("#query-clear").removeAttr("disabled");
     if (data.error) {
       $("#error-msg").text(data.error);
       $("#error-msg").slideDown("fast");
