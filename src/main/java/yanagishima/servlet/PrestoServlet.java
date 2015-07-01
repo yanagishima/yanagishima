@@ -34,7 +34,7 @@ public class PrestoServlet extends HttpServlet {
 	}
 
 	@Override
-	protected void doGet(HttpServletRequest request,
+	protected void doPost(HttpServletRequest request,
 			HttpServletResponse response) throws ServletException, IOException {
 
 		Optional<String> queryOptional = Optional.ofNullable(request.getParameter("query"));

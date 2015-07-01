@@ -2,7 +2,9 @@ var yanagishima_tree = (function() {
   var tree = $("#tree").dynatree({
     imagePath: "img",
     initAjax: {
-      url: "presto?query=show+catalogs"
+      type: "POST",
+      url: "presto",
+      data: {"query":"show catalogs"}
     },
     postProcess: function (data, dataType) {
       headers = data["headers"];
@@ -27,7 +29,7 @@ var yanagishima_tree = (function() {
       $.ajax({
             url: "presto",
             data: { query: param},
-            type: "GET",
+            type: "POST",
             dataType: "json"
         }).done(function(data) {
                 if(data["error"]) {
@@ -89,7 +91,7 @@ var yanagishima_tree = (function() {
                 create_table("#show-columns", headers, rows);
               }
             };
-            $.get(requestURL, requestData, successHandler, "json");
+            $.post(requestURL, requestData, successHandler, "json");
           } else if(action === "partitions") {
             query = "SHOW PARTITIONS FROM " + catalog + "." + schema + "." + table;
             $("#query").val(query);
@@ -166,7 +168,7 @@ var handle_execute = (function() {
       create_table("#query-results", headers, rows);
     }
   };
-  $.get(requestURL, requestData, successHandler, "json");
+  $.post(requestURL, requestData, successHandler, "json");
 });
 
 var handle_explain = (function() {
@@ -219,7 +221,7 @@ var handle_explain = (function() {
       $("#query-results").fixedHeaderTable();
     }
   };
-  $.get(requestURL, requestData, successHandler, "json");
+  $.post(requestURL, requestData, successHandler, "json");
 });
 
 var query_clear = (function() {
