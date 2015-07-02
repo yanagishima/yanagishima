@@ -6,11 +6,14 @@ yanagishima is a Web UI for presto like MySQL Workbench.
 
 # Features
 * easy to install(no RDBMS)
-* easy to use like MySQL Workbench(for example, right click)
+* easy to use like MySQL Workbench(for example, right click operation)
 * query history for self by using local storage
 * query bookmark
 * show query execution list
 * kill running query
+* format query
+* show columns
+* show partitoins
 
 # Limitation
 
