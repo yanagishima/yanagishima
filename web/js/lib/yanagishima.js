@@ -143,9 +143,6 @@ var handle_execute = (function() {
   $(tr).append(td);
   $("#query-results").append(tr);
   var query = $("#query").val();
-  push_query(query);
-  $("#query-histories").empty();
-  update_query_histories_area();
   var requestURL = "/presto";
   var requestData = {
     "query": query
@@ -164,6 +161,9 @@ var handle_execute = (function() {
         $("#warn-msg").text(data.warn);
         $("#warn-msg").slideDown("fast");
       }
+      push_query(query);
+      $("#query-histories").empty();
+      update_query_histories_area();
       $("#query-results").empty();
       var headers = data.headers;
       var rows = data.results;
