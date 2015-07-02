@@ -1,5 +1,6 @@
 package yanagishima.module;
 
+import yanagishima.servlet.FormatSqlServlet;
 import yanagishima.servlet.KillServlet;
 import yanagishima.servlet.PrestoServlet;
 import yanagishima.servlet.QueryServlet;
@@ -16,6 +17,7 @@ public class PrestoServletModule extends ServletModule {
 		serve("/presto").with(PrestoServlet.class);
 		serve("/query").with(QueryServlet.class);
 		serve("/kill").with(KillServlet.class);
+		serve("/format").with(FormatSqlServlet.class);
 
 	}
 }

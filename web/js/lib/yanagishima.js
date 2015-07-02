@@ -129,6 +129,7 @@ var handle_execute = (function() {
   $("#query-submit").attr("disabled", "disabled");
   $("#query-explain").attr("disabled", "disabled");
   $("#query-clear").attr("disabled", "disabled");
+  $("#query-format").attr("disabled", "disabled");
   $("#query-submit").attr("disabled", "disabled");
   $("#query-results").fixedHeaderTable("destroy");
   $("#query-results").empty();
@@ -153,6 +154,7 @@ var handle_execute = (function() {
     $("#query-submit").removeAttr("disabled");
     $("#query-explain").removeAttr("disabled");
     $("#query-clear").removeAttr("disabled");
+    $("#query-format").removeAttr("disabled");
     if (data.error) {
       $("#error-msg").text(data.error);
       $("#error-msg").slideDown("fast");
@@ -226,6 +228,26 @@ var handle_explain = (function() {
 
 var query_clear = (function() {
   $("#query").val("");
+});
+
+var query_format = (function() {
+  $("#error-msg").hide();
+  $("#warn-msg").hide();
+  var query = $("#query").val();
+  var requestURL = "/format";
+  var requestData = {
+    "query": query
+  };
+  var successHandler = function(data) {
+    if (data.error) {
+      $("#error-msg").text(data.error);
+      $("#error-msg").slideDown("fast");
+    } else {
+      var format_query = data.formattedQuery;
+      $("#query").val(format_query);
+    }
+  };
+  $.post(requestURL, requestData, successHandler, "json");
 });
 
 var push_query = (function(query) {

@@ -1,7 +1,6 @@
 package yanagishima.servlet;
 
 import java.io.IOException;
-import java.io.OutputStream;
 import java.util.HashMap;
 import java.util.Optional;
 
@@ -12,12 +11,12 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.codehaus.jackson.map.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import yanagishima.result.PrestoQueryResult;
 import yanagishima.service.PrestoService;
+import yanagishima.util.JsonUtil;
 
 @Singleton
 public class PrestoServlet extends HttpServlet {
@@ -57,21 +56,10 @@ public class PrestoServlet extends HttpServlet {
 				retVal.put("error", e.getMessage());
 			}
 
-			try {
-				writeJSON(response, retVal);
-			} catch (IOException e) {
-				throw new RuntimeException(e);
-			}
+			JsonUtil.writeJSON(response, retVal);
 
 		});
 
-	}
-
-	private void writeJSON(HttpServletResponse resp, Object obj) throws IOException {
-		resp.setContentType("application/json");
-		ObjectMapper mapper = new ObjectMapper();
-		OutputStream stream = resp.getOutputStream();
-		mapper.writeValue(stream, obj);
 	}
 
 }
