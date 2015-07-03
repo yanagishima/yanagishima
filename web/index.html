@@ -43,7 +43,7 @@
         </ul>
       
         <h4>show [catalogs|schemas|partitions]</h4>
-        <div id="tree" style="height:800px; width:500px; overflow:auto;">
+        <div id="tree">
         </div>
         
         <script>
@@ -52,7 +52,7 @@
         
         <h4>show columns</h4>
         <div id="tableName"></div>
-        <div style="width:500px; overflow:auto;">
+        <div>
           <table class="table table-bordered" id="show-columns"></table>
         </div>
       </td>
@@ -88,7 +88,7 @@
         
         <h4>query results</h4>
         <div id="query-results-tab">
-          <div style="height:600px; width:1500px; overflow:auto;">
+          <div style="height:500px; overflow:auto;">
             <table class="table table-bordered" id="query-results"></table>
           </div>
         </div>
@@ -108,7 +108,7 @@
           </ul>
           
           <div id="query-executions-tab">
-            <div style="width:1500px; overflow:auto;">
+            <div>
               <table id="running" class="table table-striped">
                   <colgroup>
                       <col width="60px">
@@ -175,7 +175,7 @@
           
           <div id="query-histories-tab">
             <button type="button" onclick="delete_query_histories()" class="btn btn-primary">delete all query histories</button>
-            <div style="width:1500px; overflow:auto;">
+            <div>
               <table class="table table-bordered" id="query-histories"></table>
             </div>
             <script>
@@ -185,7 +185,7 @@
           
           <div id="query-bookmarks-tab">
             <button type="button" onclick="delete_query_bookmarks()" class="btn btn-primary">delete all bookmarks</button>
-            <div style="width:1500px; overflow:auto;">
+            <div>
               <table class="table table-bordered" id="query-bookmarks"></table>
             </div>
             <script>
