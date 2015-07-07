@@ -168,6 +168,8 @@ var handle_execute = (function() {
       var headers = data.headers;
       var rows = data.results;
       create_table("#query-results", headers, rows);
+      $("#tsv-download").removeAttr("disabled");
+      push_result(headers, rows);
     }
   };
   $.post(requestURL, requestData, successHandler, "json");
@@ -221,6 +223,8 @@ var handle_explain = (function() {
       $("#query-results").append(tbody);
       $("#query-results").fixedHeaderTable("destroy");
       $("#query-results").fixedHeaderTable();
+      $("#tsv-download").removeAttr("disabled");
+      push_result(headers, rows);
     }
   };
   $.post(requestURL, requestData, successHandler, "json");
@@ -248,6 +252,32 @@ var query_format = (function() {
     }
   };
   $.post(requestURL, requestData, successHandler, "json");
+});
+
+var push_result = (function(headers, rows) {
+  if (! window.sessionStorage) return;
+  window.sessionStorage.query_header = JSON.stringify(headers);
+  window.sessionStorage.query_result = JSON.stringify(rows);
+});
+
+var tsv_download = (function() {
+  var query_header_string = window.sessionStorage.query_header;
+  var query_result_string = window.sessionStorage.query_result;
+  var headers = JSON.parse(query_header_string);
+  var rows = JSON.parse(query_result_string);
+  var text = headers.join("\t");
+  text += "\n";
+  for (var i = 0; i < rows.length; ++i) {
+    var columns = rows[i];
+    text += columns.join("\t");
+    text += "\n";
+  }
+  var name = "result"
+  var blob = new Blob( [text], {type: 'text/plain'} )
+  var link = document.createElement('a')
+  link.href = URL.createObjectURL(blob)
+  link.download = name + '.tsv'
+  link.click()
 });
 
 var push_query = (function(query) {
