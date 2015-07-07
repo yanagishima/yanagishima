@@ -13,6 +13,7 @@ public class PrestoServletModule extends ServletModule {
 		bind(PrestoServlet.class);
 		bind(QueryServlet.class);
 		bind(KillServlet.class);
+		bind(FormatSqlServlet.class);
 
 		serve("/presto").with(PrestoServlet.class);
 		serve("/query").with(QueryServlet.class);
