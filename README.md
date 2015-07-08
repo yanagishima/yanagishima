@@ -14,17 +14,17 @@ yanagishima is a Web UI for presto like MySQL Workbench.
 * format query
 * show columns
 * show partitoins
+* TSV download by using session storage
 
 # Limitation
 
 * paging results is not supported
-* exporting results is not supported
 
 # Quick Start
 ```
-wget https://bintray.com/artifact/download/wyukawa/generic/yanagishima-[version].zip
-unzip yanagishima-[version].zip
-cd yanagishima-[version]
+wget https://bintray.com/artifact/download/wyukawa/generic/yanagishima-0.0.5.zip
+unzip yanagishima-0.0.5.zip
+cd yanagishima-0.0.5
 vim conf/yanagishima.properties
 bin/yanagishima-start.sh
 ```
