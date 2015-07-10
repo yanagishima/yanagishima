@@ -16,6 +16,7 @@ import org.slf4j.LoggerFactory;
 import yanagishima.util.JsonUtil;
 
 import com.facebook.presto.sql.SqlFormatter;
+import com.facebook.presto.sql.parser.ParsingException;
 import com.facebook.presto.sql.parser.SqlParser;
 import com.facebook.presto.sql.tree.Statement;
 
@@ -42,6 +43,10 @@ public class FormatSqlServlet extends HttpServlet {
 				Statement statement = sqlParser.createStatement(query);
 				String formattedQuery = SqlFormatter.formatSql(statement);
 				retVal.put("formattedQuery", formattedQuery);
+			} catch (ParsingException e) {
+				retVal.put("errorLineNumber", e.getLineNumber());
+				LOGGER.error(e.getMessage(), e);
+				retVal.put("error", e.getMessage());
 			} catch (Throwable e) {
 				LOGGER.error(e.getMessage(), e);
 				retVal.put("error", e.getMessage());

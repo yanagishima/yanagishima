@@ -14,6 +14,10 @@ import javax.servlet.http.HttpServletResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.facebook.presto.client.ErrorLocation;
+import com.facebook.presto.client.QueryError;
+
+import yanagishima.exception.QueryErrorException;
 import yanagishima.result.PrestoQueryResult;
 import yanagishima.service.PrestoService;
 import yanagishima.util.JsonUtil;
@@ -43,7 +47,7 @@ public class PrestoServlet extends HttpServlet {
 
 			try {
 				PrestoQueryResult prestoQueryResult = prestoService.doQuery(query);
-				if (prestoQueryResult.getUpdateType() == null) {// select
+				if (prestoQueryResult.getUpdateType() == null) {
 					retVal.put("headers", prestoQueryResult.getColumns());
 					retVal.put("results", prestoQueryResult.getRecords());
 					Optional<String> warningMessageOptinal = Optional.ofNullable(prestoQueryResult.getWarningMessage());
@@ -51,6 +55,17 @@ public class PrestoServlet extends HttpServlet {
 						retVal.put("warn", warningMessage);
 					});
 				}
+			} catch (QueryErrorException e) {
+				LOGGER.error(e.getMessage(), e);
+				Optional<QueryError> queryErrorOptional = Optional.ofNullable(e.getQueryError());
+				queryErrorOptional.ifPresent(queryError -> {
+					Optional<ErrorLocation> errorLocationOptional = Optional.ofNullable(queryError.getErrorLocation());
+					errorLocationOptional.ifPresent(errorLocation -> {
+						int errorLineNumber = errorLocation.getLineNumber();
+						retVal.put("errorLineNumber", errorLineNumber);
+					});
+				});
+				retVal.put("error", e.getCause().getMessage());
 			} catch (Throwable e) {
 				LOGGER.error(e.getMessage(), e);
 				retVal.put("error", e.getMessage());

@@ -1,12 +1,11 @@
 package yanagishima.service;
 
-import java.sql.SQLException;
-
+import yanagishima.exception.QueryErrorException;
 import yanagishima.result.PrestoQueryResult;
 
 
 public interface PrestoService {
 	
-	public PrestoQueryResult doQuery(String query) throws SQLException;
+	public PrestoQueryResult doQuery(String query) throws QueryErrorException;
 
 }

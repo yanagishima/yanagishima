@@ -20,6 +20,7 @@ import java.util.stream.Collectors;
 import javax.inject.Inject;
 
 import yanagishima.config.YanagishimaConfig;
+import yanagishima.exception.QueryErrorException;
 import yanagishima.result.PrestoQueryResult;
 
 import com.facebook.presto.client.ClientSession;
@@ -39,7 +40,7 @@ public class PrestoServiceImpl implements PrestoService {
 	}
 
 	@Override
-	public PrestoQueryResult doQuery(String query) throws SQLException {
+	public PrestoQueryResult doQuery(String query) throws QueryErrorException {
 		
 		int limit = yanagishimaConfig.getSelectLimit();
 
@@ -55,7 +56,7 @@ public class PrestoServiceImpl implements PrestoService {
 					prestoQueryResult.setUpdateType(results.getUpdateType());
 					return prestoQueryResult;
 				} else if (results.getColumns() == null) {
-					throw new SQLException(format("Query %s has no columns\n", results.getId()));
+					throw new QueryErrorException(new SQLException(format("Query %s has no columns\n", results.getId())));
 				} else {
 					PrestoQueryResult prestoQueryResult = new PrestoQueryResult();
 					prestoQueryResult.setUpdateType(results.getUpdateType());
@@ -113,11 +114,11 @@ public class PrestoServiceImpl implements PrestoService {
 		return new StatementClient(httpClient, jsonCodec, clientSession, query);
 	}
 
-	private SQLException resultsException(QueryResults results) {
+	private QueryErrorException resultsException(QueryResults results) {
 		QueryError error = results.getError();
 		String message = format("Query failed (#%s): %s", results.getId(), error.getMessage());
 		Throwable cause = (error.getFailureInfo() == null) ? null : error.getFailureInfo().toException();
-		return new SQLException(message, error.getSqlState(), error.getErrorCode(), cause);
+		return new QueryErrorException(error, new SQLException(message, error.getSqlState(), error.getErrorCode(), cause));
 	}
 
 }

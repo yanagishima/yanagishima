@@ -125,6 +125,12 @@ var yanagishima_tree = (function() {
   return tree;
 });
 
+var selectLine = (function(n) {
+    if (n<1) return false;
+    $(".codelines .lineno.lineselect").removeClass("lineselect");
+    $(".codelines .lineno").eq(n-1).addClass("lineselect");
+});
+
 var handle_execute = (function() {
   $("#query-submit").attr("disabled", "disabled");
   $("#query-explain").attr("disabled", "disabled");
@@ -156,11 +162,13 @@ var handle_execute = (function() {
       $("#error-msg").text(data.error);
       $("#error-msg").slideDown("fast");
       $("#query-results").empty();
+      selectLine(data.errorLineNumber);
     } else {
       if (data.warn) {
         $("#warn-msg").text(data.warn);
         $("#warn-msg").slideDown("fast");
       }
+      $(".codelines .lineno.lineselect").removeClass("lineselect");
       push_query(query);
       $("#query-histories").empty();
       update_query_histories_area();
@@ -190,11 +198,13 @@ var handle_explain = (function() {
       $("#error-msg").text(data.error);
       $("#error-msg").slideDown("fast");
       $("#query-results").empty();
+      selectLine(data.errorLineNumber);
     } else {
       if (data.warn) {
         $("#warn-msg").text(data.warn);
         $("#warn-msg").slideDown("fast");
       }
+      $(".codelines .lineno.lineselect").removeClass("lineselect");
       $("#query-results").empty();
       var headers = data.headers;
       var rows = data.results;
@@ -246,7 +256,9 @@ var query_format = (function() {
     if (data.error) {
       $("#error-msg").text(data.error);
       $("#error-msg").slideDown("fast");
+      selectLine(data.errorLineNumber);
     } else {
+      $(".codelines .lineno.lineselect").removeClass("lineselect");
       var format_query = data.formattedQuery;
       $("#query").val(format_query);
     }
