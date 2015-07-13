@@ -39,41 +39,41 @@ public class PrestoServlet extends HttpServlet {
 	@Override
 	protected void doPost(HttpServletRequest request,
 			HttpServletResponse response) throws ServletException, IOException {
-
-		Optional<String> queryOptional = Optional.ofNullable(request.getParameter("query"));
-		queryOptional.ifPresent(query -> {
-
-			HashMap<String, Object> retVal = new HashMap<String, Object>();
-
-			try {
-				PrestoQueryResult prestoQueryResult = prestoService.doQuery(query);
-				if (prestoQueryResult.getUpdateType() == null) {
-					retVal.put("headers", prestoQueryResult.getColumns());
-					retVal.put("results", prestoQueryResult.getRecords());
-					Optional<String> warningMessageOptinal = Optional.ofNullable(prestoQueryResult.getWarningMessage());
-					warningMessageOptinal.ifPresent(warningMessage -> {
-						retVal.put("warn", warningMessage);
+		
+		HashMap<String, Object> retVal = new HashMap<String, Object>();
+		
+		try {
+			Optional<String> queryOptional = Optional.ofNullable(request.getParameter("query"));
+			queryOptional.ifPresent(query -> {
+				try {
+					PrestoQueryResult prestoQueryResult = prestoService.doQuery(query);
+					if (prestoQueryResult.getUpdateType() == null) {
+						retVal.put("headers", prestoQueryResult.getColumns());
+						retVal.put("results", prestoQueryResult.getRecords());
+						Optional<String> warningMessageOptinal = Optional.ofNullable(prestoQueryResult.getWarningMessage());
+						warningMessageOptinal.ifPresent(warningMessage -> {
+							retVal.put("warn", warningMessage);
+						});
+					}
+				} catch (QueryErrorException e) {
+					LOGGER.error(e.getMessage(), e);
+					Optional<QueryError> queryErrorOptional = Optional.ofNullable(e.getQueryError());
+					queryErrorOptional.ifPresent(queryError -> {
+						Optional<ErrorLocation> errorLocationOptional = Optional.ofNullable(queryError.getErrorLocation());
+						errorLocationOptional.ifPresent(errorLocation -> {
+							int errorLineNumber = errorLocation.getLineNumber();
+							retVal.put("errorLineNumber", errorLineNumber);
+						});
 					});
+					retVal.put("error", e.getCause().getMessage());
 				}
-			} catch (QueryErrorException e) {
-				LOGGER.error(e.getMessage(), e);
-				Optional<QueryError> queryErrorOptional = Optional.ofNullable(e.getQueryError());
-				queryErrorOptional.ifPresent(queryError -> {
-					Optional<ErrorLocation> errorLocationOptional = Optional.ofNullable(queryError.getErrorLocation());
-					errorLocationOptional.ifPresent(errorLocation -> {
-						int errorLineNumber = errorLocation.getLineNumber();
-						retVal.put("errorLineNumber", errorLineNumber);
-					});
-				});
-				retVal.put("error", e.getCause().getMessage());
-			} catch (Throwable e) {
-				LOGGER.error(e.getMessage(), e);
-				retVal.put("error", e.getMessage());
-			}
+			});
+		} catch (Throwable e) {
+			LOGGER.error(e.getMessage(), e);
+			retVal.put("error", e.getMessage());
+		}
 
-			JsonUtil.writeJSON(response, retVal);
-
-		});
+		JsonUtil.writeJSON(response, retVal);
 
 	}
 
