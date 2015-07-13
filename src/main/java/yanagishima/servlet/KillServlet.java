@@ -36,14 +36,12 @@ public class KillServlet extends HttpServlet {
 
 		Optional<String> queryIdOptinal = Optional.ofNullable(request.getParameter("queryId"));
 		queryIdOptinal.ifPresent(queryId -> {
-
 			String prestoCoordinatorServer = yanagishimaConfig.getPrestoCoordinatorServer();
 			try {
 				Request.Delete(prestoCoordinatorServer + "/v1/query/" + queryId).execute();
 			} catch (IOException e) {
 				throw new RuntimeException(e);
 			}
-
 		});
 
 	}

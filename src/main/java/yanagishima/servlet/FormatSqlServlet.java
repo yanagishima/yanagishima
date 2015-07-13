@@ -37,7 +37,6 @@ public class FormatSqlServlet extends HttpServlet {
 		try {
 			Optional<String> queryOptional = Optional.ofNullable(request.getParameter("query"));
 			queryOptional.ifPresent(query -> {
-
 				try {
 					SqlParser sqlParser = new SqlParser();
 					Statement statement = sqlParser.createStatement(query);
@@ -48,7 +47,6 @@ public class FormatSqlServlet extends HttpServlet {
 					LOGGER.error(e.getMessage(), e);
 					retVal.put("error", e.getMessage());
 				}
-
 			});
 		} catch (Throwable e) {
 			LOGGER.error(e.getMessage(), e);
