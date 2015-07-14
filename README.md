@@ -22,11 +22,11 @@ yanagishima is a Web UI for presto like MySQL Workbench.
 
 # Quick Start
 ```
-wget https://bintray.com/artifact/download/wyukawa/generic/yanagishima-0.0.5.zip
-unzip yanagishima-0.0.5.zip
-cd yanagishima-0.0.5
+wget https://bintray.com/artifact/download/wyukawa/generic/yanagishima-0.0.6.zip
+unzip yanagishima-0.0.6.zip
+cd yanagishima-0.0.6
 vim conf/yanagishima.properties
-bin/yanagishima-start.sh
+nohup bin/yanagishima-start.sh >y.log 2>&1 &
 ```
 see http://localhost:8080/
 
@@ -34,6 +34,7 @@ see http://localhost:8080/
 
 You need to edit conf/yanagishima.properties.
 
+At least, you need to edit ```presto.coordinator.server``` and ```catalog``` and ```schema```.
 ```
 jetty.port=8080 # yanagishima web port
 presto.coordinator.server=http://presto.coordinator:8080 # presto coordinator url
