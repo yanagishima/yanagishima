@@ -71,7 +71,7 @@ var yanagishima_tree = (function() {
             query = "SELECT * FROM " + catalog + "." + schema + "." + table + " LIMIT 100";
             $("#query").val(query);
             $("#query-submit").click();
-          } else if(action === "select_partition") {
+          } else if(action === "select_where") {
             partition_query = "SHOW PARTITIONS FROM " + catalog + "." + schema + "." + table;
             var requestURL = "/presto";
             var requestData = {
