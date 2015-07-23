@@ -78,7 +78,10 @@ var yanagishima_tree = (function() {
               "query": partition_query
             };
             var successHandler = function(data) {
-              if (!data.error) {
+              if (data.error) {
+                $("#error-msg").text(data.error);
+                $("#error-msg").slideDown("fast");
+              } else {
                 var partition_column = data.headers;
                 if(partition_column.length == 0) {
                   query = "SELECT * FROM " + catalog + "." + schema + "." + table + " LIMIT 100";
