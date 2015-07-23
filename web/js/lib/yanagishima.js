@@ -71,6 +71,47 @@ var yanagishima_tree = (function() {
             query = "SELECT * FROM " + catalog + "." + schema + "." + table + " LIMIT 100";
             $("#query").val(query);
             $("#query-submit").click();
+          } else if(action === "select_partition") {
+            partition_query = "SHOW PARTITIONS FROM " + catalog + "." + schema + "." + table;
+            var requestURL = "/presto";
+            var requestData = {
+              "query": partition_query
+            };
+            var successHandler = function(data) {
+              if (!data.error) {
+                var partition_column = data.headers;
+                if(partition_column.length == 0) {
+                  query = "SELECT * FROM " + catalog + "." + schema + "." + table + " LIMIT 100";
+                  $("#query").val(query);
+                  $("#query-submit").click();
+                  return;
+                }
+                var rows = data.results;
+                rows.sort(
+                    function(a, b) {
+                      if(a < b) return -1;
+                      if(a > b) return 1;
+                      return 0;
+                    }
+                );
+                var latest_partition = rows[rows.length-1];
+                var where = " WHERE ";
+                for (var i = 0; i < partition_column.length; ++i) {
+                  if(typeof latest_partition[i] === "string") {
+                    where += partition_column[i] + "=" + "'" + latest_partition[i] + "'";
+                  } else {
+                    where += partition_column[i] + "=" + latest_partition[i];
+                  }
+                  if (i != partition_column.length - 1) {
+                    where += " AND "
+                  }
+                }
+                query = "SELECT * FROM " + catalog + "." + schema + "." + table + where + " LIMIT 100";
+                $("#query").val(query);
+                $("#query-submit").click();
+              }
+            };
+            $.post(requestURL, requestData, successHandler, "json");
           } else if(action === "columns") {
             query = "SHOW COLUMNS FROM " + catalog + "." + schema + "." + table;
             var requestURL = "/presto";
