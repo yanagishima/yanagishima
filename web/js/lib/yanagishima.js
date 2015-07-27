@@ -90,13 +90,6 @@ var yanagishima_tree = (function() {
                   return;
                 }
                 var rows = data.results;
-                rows.sort(
-                    function(a, b) {
-                      if(a < b) return -1;
-                      if(a > b) return 1;
-                      return 0;
-                    }
-                );
                 var latest_partition = rows[rows.length-1];
                 var where = " WHERE ";
                 for (var i = 0; i < partition_column.length; ++i) {
