@@ -363,9 +363,6 @@ var update_query_histories_area = (function() {
   var query_list = query_histories();
   for(var i=0; i<query_list.length; i++) {
     var tr = document.createElement("tr");
-    var td = document.createElement("td");
-    $(td).text(query_list[i]);
-    $(tr).append(td);
     var copy_button = document.createElement("button");
     $(copy_button).attr("type", "button");
     $(copy_button).attr("class", "btn btn-success");
@@ -390,6 +387,9 @@ var update_query_histories_area = (function() {
     var td = document.createElement("td");
     $(td).append(bookmark_button);
     $(tr).append(td);
+    var td = document.createElement("td");
+    $(td).text(query_list[i]);
+    $(tr).append(td);
     $(tbody).append(tr);
   }
   $("#query-histories").append(tbody);
@@ -400,9 +400,6 @@ var update_query_bookmarks_area = (function() {
   var query_list = query_bookmarks();
   for(var i=0; i<query_list.length; i++) {
     var tr = document.createElement("tr");
-    var td = document.createElement("td");
-    $(td).text(query_list[i]);
-    $(tr).append(td);
     var copy_button = document.createElement("button");
     $(copy_button).attr("type", "button");
     $(copy_button).attr("class", "btn btn-success");
@@ -418,6 +415,9 @@ var update_query_bookmarks_area = (function() {
     $(delete_button).click({index: i}, delete_bookmark);
     var td = document.createElement("td");
     $(td).append(delete_button);
+    $(tr).append(td);
+    var td = document.createElement("td");
+    $(td).text(query_list[i]);
     $(tr).append(td);
     $(tbody).append(tr);
   }
