@@ -53,6 +53,8 @@ var yanagishima_tree = (function() {
                     var result = results[i][0];
                     node.addChild({title: result, key: result, isLazy: true, isFolder: false});
                   }
+                  $("#show-columns").empty();
+                  create_table("#show-columns", headers, results);
                 }
             node.setLazyNodeStatus(DTNodeStatus_Ok);
         }).fail(function() {
@@ -105,27 +107,6 @@ var yanagishima_tree = (function() {
                 query = "SELECT * FROM " + catalog + "." + schema + "." + table + where + " LIMIT 100";
                 $("#query").val(query);
                 $("#query-submit").click();
-              }
-            };
-            $.post(requestURL, requestData, successHandler, "json");
-          } else if(action === "columns") {
-            query = "SHOW COLUMNS FROM " + catalog + "." + schema + "." + table;
-            var requestURL = "/presto";
-            var requestData = {
-              "query": query
-            };
-            var successHandler = function(data) {
-              if (data.error) {
-                $("#error-msg").text(data.error);
-                $("#error-msg").slideDown("fast");
-                $("#show-columns").empty();
-                $("#tableName").empty();
-              } else {
-                $("#show-columns").empty();
-                $("#tableName").text(catalog + "." + schema + "." + table);
-                var headers = data.headers;
-                var rows = data.results;
-                create_table("#show-columns", headers, rows);
               }
             };
             $.post(requestURL, requestData, successHandler, "json");
