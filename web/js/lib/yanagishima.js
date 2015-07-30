@@ -74,42 +74,9 @@ var yanagishima_tree = (function() {
             $("#query").val(query);
             $("#query-submit").click();
           } else if(action === "select_where") {
-            partition_query = "SHOW PARTITIONS FROM " + catalog + "." + schema + "." + table;
-            var requestURL = "/presto";
-            var requestData = {
-              "query": partition_query
-            };
-            var successHandler = function(data) {
-              if (data.error) {
-                $("#error-msg").text(data.error);
-                $("#error-msg").slideDown("fast");
-              } else {
-                var partition_column = data.headers;
-                if(partition_column.length == 0) {
-                  query = "SELECT * FROM " + catalog + "." + schema + "." + table + " LIMIT 100";
-                  $("#query").val(query);
-                  $("#query-submit").click();
-                  return;
-                }
-                var rows = data.results;
-                var latest_partition = rows[rows.length-1];
-                var where = " WHERE ";
-                for (var i = 0; i < partition_column.length; ++i) {
-                  if(typeof latest_partition[i] === "string") {
-                    where += partition_column[i] + "=" + "'" + latest_partition[i] + "'";
-                  } else {
-                    where += partition_column[i] + "=" + latest_partition[i];
-                  }
-                  if (i != partition_column.length - 1) {
-                    where += " AND "
-                  }
-                }
-                query = "SELECT * FROM " + catalog + "." + schema + "." + table + where + " LIMIT 100";
-                $("#query").val(query);
-                $("#query-submit").click();
-              }
-            };
-            $.post(requestURL, requestData, successHandler, "json");
+            select_data("SELECT * FROM", catalog, schema, table);
+          } else if(action === "select_count_where") {
+            select_data("SELECT COUNT(*) FROM", catalog, schema, table);
           } else if(action === "partitions") {
             query = "SHOW PARTITIONS FROM " + catalog + "." + schema + "." + table;
             $("#query").val(query);
@@ -141,6 +108,45 @@ var yanagishima_tree = (function() {
     }
   });
   return tree;
+});
+
+var select_data = (function(select_query, catalog, schema, table){
+  partition_query = "SHOW PARTITIONS FROM " + catalog + "." + schema + "." + table;
+  var requestURL = "/presto";
+  var requestData = {
+    "query": partition_query
+  };
+  var successHandler = function(data) {
+    if (data.error) {
+      $("#error-msg").text(data.error);
+      $("#error-msg").slideDown("fast");
+    } else {
+      var partition_column = data.headers;
+      if(partition_column.length == 0) {
+        query = select_query + " " + catalog + "." + schema + "." + table + " LIMIT 100";
+        $("#query").val(query);
+        $("#query-submit").click();
+        return;
+      }
+      var rows = data.results;
+      var latest_partition = rows[rows.length-1];
+      var where = " WHERE ";
+      for (var i = 0; i < partition_column.length; ++i) {
+        if(typeof latest_partition[i] === "string") {
+          where += partition_column[i] + "=" + "'" + latest_partition[i] + "'";
+        } else {
+          where += partition_column[i] + "=" + latest_partition[i];
+        }
+        if (i != partition_column.length - 1) {
+          where += " AND "
+        }
+      }
+      query = select_query + " " + catalog + "." + schema + "." + table + where + " LIMIT 100";
+      $("#query").val(query);
+      $("#query-submit").click();
+    }
+  };
+  $.post(requestURL, requestData, successHandler, "json");
 });
 
 var selectLine = (function(n) {
