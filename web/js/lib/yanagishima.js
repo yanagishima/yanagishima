@@ -82,6 +82,8 @@ var yanagishima_tree = (function() {
             select_data("SELECT * FROM", catalog, schema, table, false);
           } else if(action === "select_count_where") {
             select_data("SELECT COUNT(*) FROM", catalog, schema, table, true);
+          } else if(action === "select_count_where_no_execute") {
+            select_data("SELECT COUNT(*) FROM", catalog, schema, table, false);
           } else if(action === "partitions") {
             query = "SHOW PARTITIONS FROM " + catalog + "." + schema + "." + table;
             $("#query").val(query);
