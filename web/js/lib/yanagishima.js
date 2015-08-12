@@ -73,10 +73,15 @@ var yanagishima_tree = (function() {
             query = "SELECT * FROM " + catalog + "." + schema + "." + table + " LIMIT 100";
             $("#query").val(query);
             $("#query-submit").click();
+          } else if(action === "select_no_execute") {
+            query = "SELECT * FROM " + catalog + "." + schema + "." + table + " LIMIT 100";
+            $("#query").val(query);
           } else if(action === "select_where") {
-            select_data("SELECT * FROM", catalog, schema, table);
+            select_data("SELECT * FROM", catalog, schema, table, true);
+          } else if(action === "select_where_no_execute") {
+            select_data("SELECT * FROM", catalog, schema, table, false);
           } else if(action === "select_count_where") {
-            select_data("SELECT COUNT(*) FROM", catalog, schema, table);
+            select_data("SELECT COUNT(*) FROM", catalog, schema, table, true);
           } else if(action === "partitions") {
             query = "SHOW PARTITIONS FROM " + catalog + "." + schema + "." + table;
             $("#query").val(query);
@@ -110,7 +115,7 @@ var yanagishima_tree = (function() {
   return tree;
 });
 
-var select_data = (function(select_query, catalog, schema, table){
+var select_data = (function(select_query, catalog, schema, table, execute_flag){
   partition_query = "SHOW PARTITIONS FROM " + catalog + "." + schema + "." + table;
   var requestURL = "/presto";
   var requestData = {
@@ -143,7 +148,9 @@ var select_data = (function(select_query, catalog, schema, table){
       }
       query = select_query + " " + catalog + "." + schema + "." + table + where + " LIMIT 100";
       $("#query").val(query);
-      $("#query-submit").click();
+      if(execute_flag) {
+        $("#query-submit").click();
+      }
     }
   };
   $.post(requestURL, requestData, successHandler, "json");
