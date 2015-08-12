@@ -215,11 +215,24 @@ var handle_execute = (function() {
 });
 
 var handle_explain = (function() {
+  explain(false);
+});
+
+var handle_explain_distributed = (function() {
+  explain(true);
+});
+
+var explain = (function(distributed) {
   $("#query-results").fixedHeaderTable("destroy");
   $("#query-results").empty();
   $("#error-msg").hide();
   $("#warn-msg").hide();
-  var query = "explain " + $("#query").val();
+  var query;
+  if(distributed) {
+    query = "explain (type distributed) " + $("#query").val();
+  } else {
+    query = "explain " + $("#query").val();
+  }
   var requestURL = "/presto";
   var requestData = {
     "query": query
