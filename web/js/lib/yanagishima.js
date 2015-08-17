@@ -167,6 +167,7 @@ var selectLine = (function(n) {
 var handle_execute = (function() {
   $("#query-submit").attr("disabled", "disabled");
   $("#query-explain").attr("disabled", "disabled");
+  $("#query-explain-distributed").attr("disabled", "disabled");
   $("#query-clear").attr("disabled", "disabled");
   $("#query-format").attr("disabled", "disabled");
   $("#query-submit").attr("disabled", "disabled");
@@ -189,6 +190,7 @@ var handle_execute = (function() {
   var successHandler = function(data) {
     $("#query-submit").removeAttr("disabled");
     $("#query-explain").removeAttr("disabled");
+    $("#query-explain-distributed").removeAttr("disabled");
     $("#query-clear").removeAttr("disabled");
     $("#query-format").removeAttr("disabled");
     if (data.error) {
