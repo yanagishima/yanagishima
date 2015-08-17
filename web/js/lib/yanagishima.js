@@ -170,7 +170,7 @@ var handle_execute = (function() {
   $("#query-explain-distributed").attr("disabled", "disabled");
   $("#query-clear").attr("disabled", "disabled");
   $("#query-format").attr("disabled", "disabled");
-  $("#query-submit").attr("disabled", "disabled");
+  $("#tsv-download").attr("disabled", "disabled");
   $("#query-results").fixedHeaderTable("destroy");
   $("#query-results").empty();
   $("#error-msg").hide();
