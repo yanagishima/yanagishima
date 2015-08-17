@@ -329,7 +329,16 @@ var tsv_download = (function() {
   text += "\n";
   for (var i = 0; i < rows.length; ++i) {
     var columns = rows[i];
-    text += columns.join("\t");
+    for (var j = 0; j < columns.length; ++j) {
+      if (typeof columns[j] == "object") {
+        text += JSON.stringify(columns[j]);
+      } else {
+        text += columns[j];
+      }
+      if (j != columns.length - 1) {
+        text += "\t";
+      }
+    }
     text += "\n";
   }
   var name = "result"
