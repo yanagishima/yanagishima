@@ -502,7 +502,11 @@ var create_table = (function(table_id, headers, rows) {
     var columns = rows[i];
     for (var j = 0; j < columns.length; ++j) {
       var td = document.createElement("td");
-      $(td).text(columns[j]);
+      if (typeof columns[j] == "object") {
+        $(td).text(JSON.stringify(columns[j]));
+      } else {
+        $(td).text(columns[j]);
+      }
       $(tr).append(td);
     }
     $(tbody).append(tr);
