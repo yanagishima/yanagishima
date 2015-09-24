@@ -44,7 +44,23 @@ public class PrestoServiceImpl implements PrestoService {
 		
 		int limit = yanagishimaConfig.getSelectLimit();
 
-		try (StatementClient client = getStatementClient(query)) {
+		String prestoCoordinatorServer = yanagishimaConfig.getPrestoCoordinatorServer();
+		String catalog = yanagishimaConfig.getCatalog();
+		String schema = yanagishimaConfig.getSchema();
+		String user = yanagishimaConfig.getUser();
+		String source = yanagishimaConfig.getSource();
+
+		HttpClientConfig httpClientConfig = new HttpClientConfig().setConnectTimeout(new Duration(10, TimeUnit.SECONDS));
+		JettyHttpClient httpClient = new JettyHttpClient(httpClientConfig);
+		JsonCodec<QueryResults> jsonCodec = jsonCodec(QueryResults.class);
+
+		ClientSession clientSession = new ClientSession(
+				URI.create(prestoCoordinatorServer), user, source, catalog,
+				schema, TimeZone.getDefault().getID(), Locale.getDefault(),
+				new HashMap<String, String>(), false);
+		StatementClient client = new StatementClient(httpClient, jsonCodec, clientSession, query);
+
+		try {
 			while (client.isValid() && (client.current().getData() == null)) {
 				client.advance();
 			}
@@ -90,28 +106,12 @@ public class PrestoServiceImpl implements PrestoService {
 				throw resultsException(client.finalResults());
 			}
 			
+		} finally {
+			client.close();
+			httpClient.close();
 		}
 		throw new RuntimeException("should not reach");
 
-	}
-
-	private StatementClient getStatementClient(String query) {
-		String prestoCoordinatorServer = yanagishimaConfig
-				.getPrestoCoordinatorServer();
-		String catalog = yanagishimaConfig.getCatalog();
-		String schema = yanagishimaConfig.getSchema();
-		String user = yanagishimaConfig.getUser();
-		String source = yanagishimaConfig.getSource();
-
-		HttpClientConfig httpClientConfig = new HttpClientConfig().setConnectTimeout(new Duration(10, TimeUnit.SECONDS));
-		JettyHttpClient httpClient = new JettyHttpClient(httpClientConfig);
-		JsonCodec<QueryResults> jsonCodec = jsonCodec(QueryResults.class);
-
-		ClientSession clientSession = new ClientSession(
-				URI.create(prestoCoordinatorServer), user, source, catalog,
-				schema, TimeZone.getDefault().getID(), Locale.getDefault(),
-				new HashMap<String, String>(), false);
-		return new StatementClient(httpClient, jsonCodec, clientSession, query);
 	}
 
 	private QueryErrorException resultsException(QueryResults results) {
