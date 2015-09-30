@@ -34,9 +34,13 @@ public class PrestoServiceImpl implements PrestoService {
 
 	private YanagishimaConfig yanagishimaConfig;
 
+	private JettyHttpClient httpClient;
+
 	@Inject
 	public PrestoServiceImpl(YanagishimaConfig yanagishimaConfig) {
 		this.yanagishimaConfig = yanagishimaConfig;
+		HttpClientConfig httpClientConfig = new HttpClientConfig().setConnectTimeout(new Duration(10, TimeUnit.SECONDS));
+		this.httpClient = new JettyHttpClient(httpClientConfig);
 	}
 
 	@Override
@@ -103,8 +107,6 @@ public class PrestoServiceImpl implements PrestoService {
 		String user = yanagishimaConfig.getUser();
 		String source = yanagishimaConfig.getSource();
 
-		HttpClientConfig httpClientConfig = new HttpClientConfig().setConnectTimeout(new Duration(10, TimeUnit.SECONDS));
-		JettyHttpClient httpClient = new JettyHttpClient(httpClientConfig);
 		JsonCodec<QueryResults> jsonCodec = jsonCodec(QueryResults.class);
 
 		ClientSession clientSession = new ClientSession(
