@@ -1,214 +1,236 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>yanagishima</title>
-  <link href="css/bootstrap.min.css" rel="stylesheet">
-  <link href="css/ui.dynatree.css" rel="stylesheet">
-  <link href="css/jquery.contextMenu.css" rel="stylesheet">
-  <link href="css/jquery-ui.min.css" rel="stylesheet">
-  <link href="css/defaultTheme.css" rel="stylesheet">
-  <link href="css/jquery-linedtextarea.css" rel="stylesheet">
-  <script src="js/lib/jquery.js"></script>
-  <script src="js/lib/jquery-ui.min.js"></script>
-  <script src="js/lib/bootstrap.min.js"></script>
-  <script src="js/lib/jquery.dynatree.min.js"></script>
-  <script src="js/lib/jquery.contextMenu-custom.js"></script>
-  <script src="js/lib/jquery.fixedheadertable.min.js"></script>
-  <script src="js/lib/d3.min.js"></script>
-  <script src="js/lib/yanagishima.js"></script>
-  <script src="js/lib/jquery-linedtextarea.js"></script>
+    <title>yanagishima</title>
+    <link href="css/bootstrap.min.css" rel="stylesheet">
+    <link href="css/ui.dynatree.css" rel="stylesheet">
+    <link href="css/jquery.contextMenu.css" rel="stylesheet">
+    <link href="css/jquery-ui.min.css" rel="stylesheet">
+    <link href="css/defaultTheme.css" rel="stylesheet">
+    <link href="css/jquery-linedtextarea.css" rel="stylesheet">
+    <script src="js/lib/jquery.js"></script>
+    <script src="js/lib/jquery-ui.min.js"></script>
+    <script src="js/lib/bootstrap.min.js"></script>
+    <script src="js/lib/jquery.dynatree.min.js"></script>
+    <script src="js/lib/jquery.contextMenu-custom.js"></script>
+    <script src="js/lib/jquery.fixedheadertable.min.js"></script>
+    <script src="js/lib/d3.min.js"></script>
+    <script src="js/lib/yanagishima.js"></script>
+    <script src="js/lib/jquery-linedtextarea.js"></script>
 </head>
 
 <body>
 
-  <div class="navbar navbar-inverse navbar-static-top">
+<div class="navbar navbar-inverse navbar-static-top">
     <div class="container-full">
-      <div class="navbar-header">
-        <a class="navbar-brand" href="#">yanagishima</a>
-      </div>
+        <div class="navbar-header">
+            <a class="navbar-brand" href="#">yanagishima</a>
+        </div>
     </div>
-  </div>
+</div>
 
-  <table class="table">
+<table class="table">
     <tr>
-      <td>
-        <ul id="tableMenu" class="contextMenu">
-         <li><a href="#select">SELECT ... LIMIT 100</a></li>
-         <li><a href="#select_no_execute">SELECT ... LIMIT 100(no execute)</a></li>
-         <li><a href="#select_where">SELECT ... WHERE LATEST PARTITION LIMIT 100</a></li>
-         <li><a href="#select_where_no_execute">SELECT ... WHERE LATEST PARTITION LIMIT 100(no execute)</a></li>
-         <li><a href="#select_count_where">SELECT COUNT(*) WHERE LATEST PARTITION LIMIT 100</a></li>
-         <li><a href="#select_count_where_no_execute">SELECT COUNT(*) WHERE LATEST PARTITION LIMIT 100(no execute)</a></li>
-         <li><a href="#partitions">SHOW PARTITIONS</a></li>
-        </ul>
-      
-        <h4>show [catalogs|schemas|partitions]</h4>
-        <div id="tree">
-        </div>
-        
-        <script>
-          var tree = yanagishima_tree();
-        </script>
-        
-        <h4>show columns</h4>
-        <div id="tableName"></div>
-        <div>
-          <table class="table table-bordered" id="show-columns"></table>
-        </div>
-      </td>
-      <td>
-        <form id="query-form" class="form-horizontal">
-          <div class="form-group">
-            <div class="col-sm-10">
-              <h4>query</h4>
-              <a href="https://prestodb.io/docs/current/" target="_blank">presto document</a>
-              <textarea class="lined" rows="10" cols="150" id="query"></textarea>
-              <script>
-                $(function() {
-                  $("#query").linedtextarea();
+        <td>
+            <ul id="tableMenu" class="contextMenu">
+                <li><a href="#select">SELECT ... LIMIT 100</a></li>
+                <li><a href="#select_no_execute">SELECT ... LIMIT 100(no execute)</a></li>
+                <li><a href="#select_where">SELECT ... WHERE LATEST PARTITION LIMIT 100</a></li>
+                <li><a href="#select_where_no_execute">SELECT ... WHERE LATEST PARTITION LIMIT 100(no execute)</a></li>
+                <li><a href="#select_count_where">SELECT COUNT(*) WHERE LATEST PARTITION LIMIT 100</a></li>
+                <li><a href="#select_count_where_no_execute">SELECT COUNT(*) WHERE LATEST PARTITION LIMIT 100(no
+                    execute)</a></li>
+                <li><a href="#partitions">SHOW PARTITIONS</a></li>
+            </ul>
+
+            <h4>show [catalogs|schemas|partitions]</h4>
+
+            <div id="tree">
+            </div>
+
+            <script>
+                var tree = yanagishima_tree();
+            </script>
+
+            <h4>show columns</h4>
+
+            <div id="tableName"></div>
+            <div>
+                <table class="table table-bordered" id="show-columns"></table>
+            </div>
+        </td>
+        <td>
+            <form id="query-form" class="form-horizontal">
+                <div class="form-group">
+                    <div class="col-sm-10">
+                        <h4>query</h4>
+                        <a href="https://prestodb.io/docs/current/" target="_blank">presto document</a>
+                        <textarea class="lined" rows="10" cols="150" id="query"></textarea>
+                        <script>
+                            $(function () {
+                                $("#query").linedtextarea();
+                            });
+                        </script>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="col-sm-10">
+                        <button type="button" id="query-submit" onclick="handle_execute()" class="btn btn-primary">
+                            execute
+                        </button>
+                        <button type="button" id="query-explain" onclick="handle_explain()" class="btn btn-success">
+                            explain
+                        </button>
+                        <button type="button" id="query-explain-distributed" onclick="handle_explain_distributed()"
+                                class="btn btn-success">explain(distributed)
+                        </button>
+                        <button type="button" id="query-clear" onclick="query_clear()" class="btn btn-info">clear
+                        </button>
+                        <button type="button" id="query-format" onclick="query_format()" class="btn btn-warning">
+                            format
+                        </button>
+                        <button type="button" id="tsv-download" onclick="tsv_download()" class="btn btn-default"
+                                disabled="disabled">download
+                        </button>
+                    </div>
+                </div>
+            </form>
+
+            <div class="alert alert-danger" id="error-msg"></div>
+            <div class="alert alert-warning" id="warn-msg"></div>
+            <script>
+                $("#error-msg").hide();
+                $("#warn-msg").hide();
+            </script>
+
+            <h4>query results</h4>
+
+            <div id="query-results-tab">
+                <div style="height:500px; overflow:auto;">
+                    <table class="table table-bordered" id="query-results"></table>
+                </div>
+            </div>
+
+            <script>
+                $(function () {
+                    $("#tabs").tabs();
                 });
-              </script>
-            </div>
-          </div>
-          <div class="form-group">
-            <div class="col-sm-10">
-              <button type="button" id="query-submit" onclick="handle_execute()" class="btn btn-primary">execute</button>
-              <button type="button" id="query-explain" onclick="handle_explain()" class="btn btn-success">explain</button>
-              <button type="button" id="query-explain-distributed" onclick="handle_explain_distributed()" class="btn btn-success">explain(distributed)</button>
-              <button type="button" id="query-clear" onclick="query_clear()" class="btn btn-info">clear</button>
-              <button type="button" id="query-format" onclick="query_format()" class="btn btn-warning">format</button>
-              <button type="button" id="tsv-download" onclick="tsv_download()" class="btn btn-default" disabled="disabled">download</button>
-            </div>
-          </div>
-        </form>
-        
-        <div class="alert alert-danger" id="error-msg"></div>
-        <div class="alert alert-warning" id="warn-msg"></div>
-        <script>
-          $("#error-msg").hide();
-          $("#warn-msg").hide();
-        </script>
-        
-        <h4>query results</h4>
-        <div id="query-results-tab">
-          <div style="height:500px; overflow:auto;">
-            <table class="table table-bordered" id="query-results"></table>
-          </div>
-        </div>
-        
-        <script>
-          $(function() {
-            $( "#tabs" ).tabs();
-          });
-        </script>
-        
-        <h4>query executions/query histories/query bookmarks</h4>
-        <div id="tabs">
-          <ul>
-            <li><a href="#query-executions-tab">query executions</a></li>
-            <li><a href="#query-histories-tab">query histories</a></li>
-            <li><a href="#query-bookmarks-tab">query bookmarks</a></li>
-          </ul>
-          
-          <div id="query-executions-tab">
-            <div>
-              <table id="running" class="table table-striped">
-                  <colgroup>
-                      <col width="60px">
-                      <col width="90px">
-                      <col width="80px">
-                      <col width="auto">
-                      <col width="80px">
-                      <col width="80px">
-                      <col width="90px">
-                      <col width="60px">
-                      <col width="60px">
-                      <col width="60px">
-                      <col width="60px">
-                  </colgroup>
-                  <thead>
-                  <tr>
-                      <th>button</th>
-                      <th>Id</th>
-                      <th>Elapsed</th>
-                      <th>Query</th>
-                      <th>Source</th>
-                      <th>User</th>
-                      <th>State</th>
-                      <th>Progress</th>
-                      <th>Queued</th>
-                      <th>Running</th>
-                      <th>Done</th>
-                  </tr>
-                  </thead>
-                  <tbody></tbody>
-              </table>
-
-              <table id="done" class="table table-striped">
-                  <colgroup>
-                      <col width="90px">
-                      <col width="80px">
-                      <col width="auto">
-                      <col width="80px">
-                      <col width="80px">
-                      <col width="90px">
-                      <col width="80px">
-                      <col width="60px">
-                      <col width="60px">
-                      <col width="60px">
-                  </colgroup>
-                  <thead>
-                  <tr>
-                      <th>Id</th>
-                      <th>Elapsed</th>
-                      <th>Query</th>
-                      <th>Source</th>
-                      <th>User</th>
-                      <th>State</th>
-                      <th>Error</th>
-                      <th>Done</th>
-                      <th>Total</th>
-                      <th>Completion</th>
-                  </tr>
-                  </thead>
-                  <tbody></tbody>
-              </table>
-            </div>
-          </div>
-          
-          <div id="query-histories-tab">
-            <button type="button" onclick="delete_query_histories()" class="btn btn-primary">delete all query histories</button>
-            <div>
-              <table class="table table-bordered" id="query-histories"></table>
-            </div>
-            <script>
-              update_query_histories_area();
             </script>
-          </div>
-          
-          <div id="query-bookmarks-tab">
-            <button type="button" onclick="delete_query_bookmarks()" class="btn btn-primary">delete all bookmarks</button>
-            <div>
-              <table class="table table-bordered" id="query-bookmarks"></table>
+
+            <h4>query executions/query histories/query bookmarks</h4>
+
+            <div id="tabs">
+                <ul>
+                    <li><a href="#query-executions-tab">query executions</a></li>
+                    <li><a href="#query-histories-tab">query histories</a></li>
+                    <li><a href="#query-bookmarks-tab">query bookmarks</a></li>
+                </ul>
+
+                <div id="query-executions-tab">
+                    <div>
+                        <table id="running" class="table table-striped">
+                            <colgroup>
+                                <col width="60px">
+                                <col width="90px">
+                                <col width="80px">
+                                <col width="auto">
+                                <col width="80px">
+                                <col width="80px">
+                                <col width="90px">
+                                <col width="60px">
+                                <col width="60px">
+                                <col width="60px">
+                                <col width="60px">
+                            </colgroup>
+                            <thead>
+                            <tr>
+                                <th>button</th>
+                                <th>Id</th>
+                                <th>Elapsed</th>
+                                <th>Query</th>
+                                <th>Source</th>
+                                <th>User</th>
+                                <th>State</th>
+                                <th>Progress</th>
+                                <th>Queued</th>
+                                <th>Running</th>
+                                <th>Done</th>
+                            </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+
+                        <table id="done" class="table table-striped">
+                            <colgroup>
+                                <col width="90px">
+                                <col width="80px">
+                                <col width="auto">
+                                <col width="80px">
+                                <col width="80px">
+                                <col width="90px">
+                                <col width="80px">
+                                <col width="60px">
+                                <col width="60px">
+                                <col width="60px">
+                            </colgroup>
+                            <thead>
+                            <tr>
+                                <th>Id</th>
+                                <th>Elapsed</th>
+                                <th>Query</th>
+                                <th>Source</th>
+                                <th>User</th>
+                                <th>State</th>
+                                <th>Error</th>
+                                <th>Done</th>
+                                <th>Total</th>
+                                <th>Completion</th>
+                            </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div id="query-histories-tab">
+                    <button type="button" onclick="delete_query_histories()" class="btn btn-primary">delete all query
+                        histories
+                    </button>
+                    <div>
+                        <table class="table table-bordered" id="query-histories"></table>
+                    </div>
+                    <script>
+                        update_query_histories_area();
+                    </script>
+                </div>
+
+                <div id="query-bookmarks-tab">
+                    <button type="button" onclick="delete_query_bookmarks()" class="btn btn-primary">delete all
+                        bookmarks
+                    </button>
+                    <div>
+                        <table class="table table-bordered" id="query-bookmarks"></table>
+                    </div>
+                    <script>
+                        update_query_bookmarks_area();
+                    </script>
+                </div>
+
             </div>
-            <script>
-              update_query_bookmarks_area();
-            </script>
-          </div>
 
-        </div>
-
-      </td>
+        </td>
     </tr>
-  </table>
+</table>
 
 </body>
 
 <script>
 
-setInterval(function () { redraw(); }, 1000);
+    setInterval(function () {
+        redraw();
+    }, 1000);
 
-redraw();
+    redraw();
 
 </script>
 
