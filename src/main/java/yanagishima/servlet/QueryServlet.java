@@ -2,6 +2,7 @@ package yanagishima.servlet;
 
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.nio.charset.StandardCharsets;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
@@ -39,7 +40,7 @@ public class QueryServlet extends HttpServlet {
 		response.setContentType("application/json");
 		PrintWriter writer = response.getWriter();
 		writer.println(Request.Get(prestoCoordinatorServer + "/v1/query")
-				.execute().returnContent().asString());
+				.execute().returnContent().asString(StandardCharsets.UTF_8));
 
 	}
 
