@@ -570,8 +570,12 @@ var renderRunningQueries = (function (queries) {
         .append('button')
         .text('Kill')
         .attr('type', 'button').on('click', function (query) {
-            d3.xhr("/kill?queryId=" + query.queryId).send('GET');
-            $(this).attr('disabled', 'disabled');
+            if (query.session.user == 'yanagishima') {
+                d3.xhr("/kill?queryId=" + query.queryId).send('GET');
+                $(this).attr('disabled', 'disabled');
+            } else {
+                alert("You can kill the only query from yanagishima");
+            }
         });
 
     var cells = rows.selectAll("td")
