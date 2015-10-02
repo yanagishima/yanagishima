@@ -8,6 +8,7 @@
     <link href="css/jquery-ui.min.css" rel="stylesheet">
     <link href="css/defaultTheme.css" rel="stylesheet">
     <link href="css/jquery-linedtextarea.css" rel="stylesheet">
+    <link href="css/jquery.textcomplete.css" rel="stylesheet">
     <script src="js/lib/jquery.js"></script>
     <script src="js/lib/jquery-ui.min.js"></script>
     <script src="js/lib/bootstrap.min.js"></script>
@@ -17,6 +18,7 @@
     <script src="js/lib/d3.min.js"></script>
     <script src="js/lib/yanagishima.js"></script>
     <script src="js/lib/jquery-linedtextarea.js"></script>
+    <script src="js/lib/jquery.textcomplete.min.js"></script>
 </head>
 
 <body>
@@ -69,6 +71,22 @@
                         <script>
                             $(function () {
                                 $("#query").linedtextarea();
+                                $("#query").textcomplete([
+                                    {
+                                        context: function (text) { return text.toUpperCase(); },
+                                        words: ["SELECT", "FROM", "ADD", "AS", "ALL", "SOME", "ANY", "DISTINCT", "WHERE", "GROUP", "BY", "ORDER", "HAVING", "LIMIT", "APPROXIMATE", "AT", "CONFIDENCE", "OR", "AND", "IN", "NOT", "EXISTS", "BETWEEN", "LIKE", "IS", "NULL", "TRUE", "FALSE", "NULLS", "FIRST", "LAST", "ESCAPE", "ASC", "DESC", "SUBSTRING", "POSITION", "FOR", "DATE", "TIME", "TIMESTAMP", "INTERVAL", "YEAR", "MONTH", "DAY", "HOUR", "MINUTE", "SECOND", "ZONE", "CURRENT_DATE", "CURRENT_TIME", "CURRENT_TIMESTAMP", "LOCALTIME", "LOCALTIMESTAMP", "EXTRACT", "CASE", "WHEN", "THEN", "ELSE", "END", "JOIN", "CROSS", "OUTER", "INNER", "LEFT", "RIGHT", "FULL", "NATURAL", "USING", "ON", "OVER", "PARTITION", "RANGE", "ROWS", "UNBOUNDED", "PRECEDING", "FOLLOWING", "CURRENT", "ROW", "WITH", "RECURSIVE", "VALUES", "CREATE", "TABLE", "VIEW", "REPLACE", "INSERT", "DELETE", "INTO", "CONSTRAINT", "DESCRIBE", "EXPLAIN", "FORMAT", "TYPE", "TEXT", "GRAPHVIZ", "LOGICAL", "DISTRIBUTED", "CAST", "TRY_CAST", "SHOW", "TABLES", "SCHEMAS", "CATALOGS", "COLUMNS", "COLUMN", "USE", "PARTITIONS", "FUNCTIONS", "DROP", "UNION", "EXCEPT", "INTERSECT", "TO", "SYSTEM", "BERNOULLI", "POISSONIZED", "TABLESAMPLE", "RESCALED", "STRATIFY", "ALTER", "RENAME", "UNNEST", "ORDINALITY", "ARRAY", "MAP", "SET", "RESET", "SESSION", "NORMALIZE", "NFD", "NFC", "NFKD", "NFKC", "IF", "NULLIF", "COALESCE"],
+                                        match: /\b(\w{2,})$/i,
+                                        search: function (term, callback) {
+                                            callback($.map(this.words, function (word) {
+                                                return word.indexOf(term) === 0 ? word : null;
+                                            }));
+                                        },
+                                        index: 1,
+                                        replace: function (word) {
+                                            return word + ' ';
+                                        }
+                                    }
+                                ]);
                             });
                         </script>
                     </div>
