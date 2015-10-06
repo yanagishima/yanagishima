@@ -34,12 +34,12 @@ task copyWeb(type: Copy) {
   into('build/package/web')
 }
 
-task copyDeps(type: Copy, dependsOn: 'build') {
+task copyDeps(type: Copy) {
   from(configurations.compile)
   into('build/package/lib')
 }
 
-task copyLibs(type: Copy, dependsOn: 'build') {
+task copyLibs(type: Copy, dependsOn: 'jar') {
   from('build/libs')
   into('build/package/lib')
 }
@@ -66,7 +66,7 @@ distributions {
   }
 }
 
-distZip.dependsOn 'build', 'copy'
+distZip.dependsOn 'copy'
 
 // In this section you declare the dependencies for your production and test code
 dependencies {
