@@ -250,7 +250,7 @@
                         $('#search_query_histories').keyup(function(){
                             if ($(this).val()) {
                                 $('#query-histories tr').hide();
-                                $('#query-histories tr:contains(' + this.value + ')').show();
+                                $('#query-histories tr td:nth-child(4):contains(' + this.value + ')').parent().show();
                             } else {
                                 $('#query-histories tr').show();
                             }
@@ -273,7 +273,7 @@
                         $('#search_query_bookmarks').keyup(function(){
                             if ($(this).val()) {
                                 $('#query-bookmarks tr').hide();
-                                $('#query-bookmarks tr:contains(' + this.value + ')').show();
+                                $('#query-bookmarks tr td:nth-child(3):contains(' + this.value + ')').parent().show();
                             } else {
                                 $('#query-bookmarks tr').show();
                             }
