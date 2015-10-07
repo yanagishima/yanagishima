@@ -353,7 +353,7 @@ var push_query = (function (query) {
     if (!window.localStorage) return;
     var list = query_histories();
     list.unshift(query);
-    set_query_histories(list.slice(0, 100));
+    set_query_histories(list.slice(0, 1000000));
 });
 
 var query_histories = (function () {
@@ -451,7 +451,7 @@ var add_bookmark = (function (event) {
     if (!window.localStorage) return;
     var list = query_bookmarks();
     list.unshift(event.data.query);
-    set_query_bookmarks(list.slice(0, 100));
+    set_query_bookmarks(list.slice(0, 1000000));
     $("#query-bookmarks").empty();
     update_query_bookmarks_area();
 });
