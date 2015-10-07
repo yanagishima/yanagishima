@@ -245,6 +245,17 @@
                     <button type="button" onclick="delete_query_histories()" class="btn btn-primary">delete all query
                         histories
                     </button>
+                    <input type="text" size="20" id="search_query_histories">
+                    <script>
+                        $('#search_query_histories').keyup(function(){
+                            if ($(this).val()) {
+                                $('#query-histories tr').hide();
+                                $('#query-histories tr:contains(' + this.value + ')').show();
+                            } else {
+                                $('#query-histories tr').show();
+                            }
+                        });
+                    </script>
                     <div>
                         <table class="table table-bordered" id="query-histories"></table>
                     </div>
@@ -257,6 +268,17 @@
                     <button type="button" onclick="delete_query_bookmarks()" class="btn btn-primary">delete all
                         bookmarks
                     </button>
+                    <input type="text" size="20" id="search_query_bookmarks">
+                    <script>
+                        $('#search_query_bookmarks').keyup(function(){
+                            if ($(this).val()) {
+                                $('#query-bookmarks tr').hide();
+                                $('#query-bookmarks tr:contains(' + this.value + ')').show();
+                            } else {
+                                $('#query-bookmarks tr').show();
+                            }
+                        });
+                    </script>
                     <div>
                         <table class="table table-bordered" id="query-bookmarks"></table>
                     </div>
