@@ -89,7 +89,7 @@ var yanagishima_tree = (function () {
                         $("#query").val(query);
                         $("#query-submit").click();
                     } else if (action === "show_view_ddl") {
-                        query = "SELECT view_definition FROM hive.information_schema.views WHERE table_catalog='" + catalog + "' AND table_schema='" + schema + "' AND table_name='" + table + "'";
+                        query = "SELECT view_definition FROM " + catalog + ".information_schema.views WHERE table_catalog='" + catalog + "' AND table_schema='" + schema + "' AND table_name='" + table + "'";
                         $("#query").val(query);
                         $("#query-submit").click();
                     }
@@ -215,7 +215,7 @@ var handle_execute = (function () {
             var headers = data.headers;
             var rows = data.results;
             var view_ddl_flag=false;
-            if(query.indexOf("SELECT view_definition FROM hive.information_schema.views") != -1) {
+            if(query.match("SELECT view_definition FROM [a-zA-Z0-9]+\.information_schema\.views")) {
                 view_ddl_flag=true;
             }
             create_table("#query-results", headers, rows, view_ddl_flag);
