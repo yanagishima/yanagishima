@@ -88,6 +88,10 @@ var yanagishima_tree = (function () {
                         query = "SHOW PARTITIONS FROM " + catalog + "." + schema + "." + table;
                         $("#query").val(query);
                         $("#query-submit").click();
+                    } else if (action === "show_view_ddl") {
+                        query = "SELECT view_definition FROM hive.information_schema.views WHERE table_catalog='" + catalog + "' AND table_schema='" + schema + "' AND table_name='" + table + "'";
+                        $("#query").val(query);
+                        $("#query-submit").click();
                     }
                 });
             }
@@ -210,7 +214,11 @@ var handle_execute = (function () {
             $("#query-results").empty();
             var headers = data.headers;
             var rows = data.results;
-            create_table("#query-results", headers, rows);
+            var view_ddl_flag=false;
+            if(query.indexOf("SELECT view_definition FROM hive.information_schema.views") != -1) {
+                view_ddl_flag=true;
+            }
+            create_table("#query-results", headers, rows, view_ddl_flag);
             $("#tsv-download").removeAttr("disabled");
             push_result(headers, rows);
         }
@@ -503,7 +511,7 @@ var delete_query = (function (event) {
     update_query_histories_area();
 });
 
-var create_table = (function (table_id, headers, rows) {
+var create_table = (function (table_id, headers, rows, view_ddl_flag) {
     var thead = document.createElement("thead");
     var tr = document.createElement("tr");
     for (var i = 0; i < headers.length; ++i) {
@@ -522,7 +530,11 @@ var create_table = (function (table_id, headers, rows) {
             if (typeof columns[j] == "object") {
                 $(td).text(JSON.stringify(columns[j]));
             } else {
-                $(td).text(columns[j]);
+                if(view_ddl_flag == true) {
+                    $(td).html('<p>' + columns[j].replace(/\r?\n/g, "<br />") + '</p>');
+                } else {
+                    $(td).text(columns[j]);
+                }
             }
             $(tr).append(td);
         }
