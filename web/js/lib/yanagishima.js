@@ -362,12 +362,6 @@ var set_query_histories = (function (list) {
     window.localStorage.query_histories = JSON.stringify(list);
 });
 
-var delete_query_histories = (function () {
-    $("#query-histories").empty();
-    if (!window.localStorage) return;
-    window.localStorage.removeItem("query_histories");
-});
-
 var update_query_histories_area = (function () {
     var tbody = document.createElement("tbody");
     var query_list = query_histories();
@@ -469,12 +463,6 @@ var delete_bookmark = (function (event) {
     set_query_bookmarks(query_list);
     $("#query-bookmarks").empty();
     update_query_bookmarks_area();
-});
-
-var delete_query_bookmarks = (function () {
-    $("#query-bookmarks").empty();
-    if (!window.localStorage) return;
-    window.localStorage.removeItem("query_bookmarks");
 });
 
 var copy_query = (function (event) {
