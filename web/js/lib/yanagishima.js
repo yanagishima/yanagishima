@@ -95,27 +95,6 @@ var yanagishima_tree = (function () {
                     }
                 });
             }
-            if (node.data.partition) {
-                $(span).contextMenu({menu: "partitionMenu"}, function (action, el, pos) {
-                    var parent_partition_tree = [];
-                    partition = node.data.partition;
-                    parent_partition_tree.push(partition);
-                    parent_node = node.parent;
-                    table = parent_node.data.table;
-                    while (!table) {
-                        if (parent_node.data.partition) {
-                            parent_partition_tree.push(parent_node.data.partition);
-                        }
-                        parent_node = parent_node.parent
-                        table = parent_node.data.table;
-                    }
-                    schema = parent_node.parent.data.schema;
-                    catalog = parent_node.parent.parent.data.catalog;
-                    query = "SELECT * FROM " + catalog + "." + schema + "." + table + " WHERE " + parent_partition_tree.join(" and ") + " LIMIT 1000";
-                    $("#query").val(query);
-                    $("#query-submit").click();
-                });
-            }
         }
     });
     return tree;
