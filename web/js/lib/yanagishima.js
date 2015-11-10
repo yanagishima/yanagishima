@@ -154,7 +154,6 @@ var handle_execute = (function () {
     $("#query-clear").attr("disabled", "disabled");
     $("#query-format").attr("disabled", "disabled");
     $("#tsv-download").attr("disabled", "disabled");
-    $("#query-results").fixedHeaderTable("destroy");
     $("#query-results").empty();
     $("#error-msg").hide();
     $("#warn-msg").hide();
@@ -214,7 +213,6 @@ var handle_explain_distributed = (function () {
 });
 
 var explain = (function (distributed) {
-    $("#query-results").fixedHeaderTable("destroy");
     $("#query-results").empty();
     $("#error-msg").hide();
     $("#warn-msg").hide();
@@ -266,8 +264,6 @@ var explain = (function (distributed) {
                 $(tbody).append(tr);
             }
             $("#query-results").append(tbody);
-            $("#query-results").fixedHeaderTable("destroy");
-            $("#query-results").fixedHeaderTable();
             $("#tsv-download").removeAttr("disabled");
             push_result(headers, rows);
         }
@@ -508,8 +504,7 @@ var create_table = (function (table_id, headers, rows, view_ddl_flag) {
         $(tbody).append(tr);
     }
     $(table_id).append(tbody);
-    $(table_id).fixedHeaderTable("destroy");
-    $(table_id).fixedHeaderTable();
+    $(table_id).tablefix({height: 600, fixRows: 1});
 
 });
 
