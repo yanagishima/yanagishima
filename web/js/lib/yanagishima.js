@@ -53,7 +53,10 @@ var yanagishima_tree = (function () {
                         var result = results[i][0];
                         node.addChild({title: result, key: result, isLazy: true, isFolder: false});
                     }
-                    $("#show-columns").empty();
+                    $("#show-columns-div").remove();
+                    var div = $("<div></div>", {style: "height:500px; overflow:auto;", id: "show-columns-div"});
+                    div.append($("<table></table>", {class: "table table-bordered", id: "show-columns"}));
+                    $("#show-columns-parent-div").append(div);
                     create_table("#show-columns", headers, results);
                 }
                 node.setLazyNodeStatus(DTNodeStatus_Ok);
@@ -154,7 +157,10 @@ var handle_execute = (function () {
     $("#query-clear").attr("disabled", "disabled");
     $("#query-format").attr("disabled", "disabled");
     $("#tsv-download").attr("disabled", "disabled");
-    $("#query-results").empty();
+    $("#query-results-div").remove();
+    var div = $("<div></div>", {style: "height:500px; overflow:auto;", id: "query-results-div"});
+    div.append($("<table></table>", {class: "table table-bordered", id: "query-results"}));
+    $("#query-results-tab").append(div);
     $("#error-msg").hide();
     $("#warn-msg").hide();
     var tr = document.createElement("tr");
@@ -238,7 +244,10 @@ var explain = (function (distributed) {
                 $("#warn-msg").slideDown("fast");
             }
             $(".codelines .lineno.lineselect").removeClass("lineselect");
-            $("#query-results").empty();
+            $("#query-results-div").remove();
+            var div = $("<div></div>", {style: "height:500px; overflow:auto;", id: "query-results-div"});
+            div.append($("<table></table>", {class: "table table-bordered", id: "query-results"}));
+            $("#query-results-tab").append(div);
             var headers = data.headers;
             var rows = data.results;
             var thead = document.createElement("thead");
