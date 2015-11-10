@@ -15,6 +15,9 @@ yanagishima is a Web UI for presto like MySQL Workbench.
 * show columns
 * show partitoins
 * TSV download by using session storage
+* incremental search
+* show presto view ddl
+* autocomplete of query
 
 # Limitation
 
@@ -22,9 +25,9 @@ yanagishima is a Web UI for presto like MySQL Workbench.
 
 # Quick Start
 ```
-wget https://bintray.com/artifact/download/wyukawa/generic/yanagishima-0.0.9.zip
-unzip yanagishima-0.0.9.zip
-cd yanagishima-0.0.9
+wget https://bintray.com/artifact/download/wyukawa/generic/yanagishima-0.1.zip
+unzip yanagishima-0.1.zip
+cd yanagishima-0.1
 vim conf/yanagishima.properties
 nohup bin/yanagishima-start.sh >y.log 2>&1 &
 ```
