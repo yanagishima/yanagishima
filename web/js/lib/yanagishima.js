@@ -113,6 +113,9 @@ var select_data = (function (select_query, catalog, schema, table, execute_flag)
         if (data.error) {
             $("#error-msg").text(data.error);
             $("#error-msg").slideDown("fast");
+        } else if (data.warn) {
+            $("#warn-msg").text(data.warn);
+            $("#warn-msg").slideDown("fast");
         } else {
             var partition_column = data.headers;
             if (partition_column.length == 0) {
