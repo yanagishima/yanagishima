@@ -6,8 +6,8 @@
     <link href="css/ui.dynatree.css" rel="stylesheet">
     <link href="css/jquery.contextMenu.css" rel="stylesheet">
     <link href="css/jquery-ui.min.css" rel="stylesheet">
-    <link href="css/jquery-linedtextarea.css" rel="stylesheet">
     <link href="css/jquery.textcomplete.css" rel="stylesheet">
+    <link href="css/jquery.numberedtextarea.css" rel="stylesheet">
     <script src="js/lib/jquery.js"></script>
     <script src="js/lib/jquery-ui.min.js"></script>
     <script src="js/lib/bootstrap.min.js"></script>
@@ -15,9 +15,9 @@
     <script src="js/lib/jquery.contextMenu-custom.js"></script>
     <script src="js/lib/d3.min.js"></script>
     <script src="js/lib/yanagishima.js"></script>
-    <script src="js/lib/jquery-linedtextarea.js"></script>
     <script src="js/lib/jquery.textcomplete.min.js"></script>
     <script src="js/lib/jquery.tablefix_1.0.1.js"></script>
+    <script src="js/lib/jquery.numberedtextarea.js"></script>
 </head>
 
 <body>
@@ -65,10 +65,10 @@
                     <div class="col-sm-10">
                         <h4>query</h4>
                         <a href="https://prestodb.io/docs/current/" target="_blank">presto document</a>
-                        <textarea class="lined" rows="10" cols="150" id="query"></textarea>
+                        <textarea rows="10" cols="150" id="query"></textarea>
                         <script>
                             $(function () {
-                                $("#query").linedtextarea();
+                                $("#query").numberedtextarea();
                                 //presto/presto-parser//src/main/antlr4/com/facebook/presto/sql/parser/SqlBase.g4
                                 presto_words = ["SELECT", "FROM", "ADD", "AS", "ALL", "SOME", "ANY", "DISTINCT", "WHERE", "GROUP", "BY", "ORDER", "HAVING", "LIMIT", "APPROXIMATE", "AT", "CONFIDENCE", "OR", "AND", "IN", "NOT", "EXISTS", "BETWEEN", "LIKE", "IS", "NULL", "TRUE", "FALSE", "NULLS", "FIRST", "LAST", "ESCAPE", "ASC", "DESC", "FOR", "DATE", "TIME", "TIMESTAMP", "INTERVAL", "YEAR", "MONTH", "DAY", "HOUR", "MINUTE", "SECOND", "ZONE", "LOCALTIME", "LOCALTIMESTAMP", "EXTRACT", "CASE", "WHEN", "THEN", "ELSE", "END", "JOIN", "CROSS", "OUTER", "INNER", "LEFT", "RIGHT", "FULL", "NATURAL", "USING", "ON", "OVER", "PARTITION", "RANGE", "ROWS", "UNBOUNDED", "PRECEDING", "FOLLOWING", "CURRENT", "ROW", "WITH", "RECURSIVE", "VALUES", "CREATE", "TABLE", "VIEW", "REPLACE", "INSERT", "DELETE", "INTO", "CONSTRAINT", "DESCRIBE", "EXPLAIN", "FORMAT", "TYPE", "TEXT", "GRAPHVIZ", "LOGICAL", "DISTRIBUTED", "SHOW", "TABLES", "SCHEMAS", "CATALOGS", "COLUMNS", "COLUMN", "USE", "PARTITIONS", "FUNCTIONS", "DROP", "UNION", "EXCEPT", "INTERSECT", "TO", "SYSTEM", "BERNOULLI", "POISSONIZED", "TABLESAMPLE", "RESCALED", "STRATIFY", "ALTER", "RENAME", "UNNEST", "ORDINALITY", "ARRAY", "MAP", "SET", "RESET", "SESSION", "NFD", "NFC", "NFKD", "NFKC"];
                                 //https://prestodb.io/docs/current/functions/conditional.html

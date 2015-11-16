@@ -148,9 +148,7 @@ var select_data = (function (select_query, catalog, schema, table, execute_flag)
 });
 
 var selectLine = (function (n) {
-    if (n < 1) return false;
-    $(".codelines .lineno.lineselect").removeClass("lineselect");
-    $(".codelines .lineno").eq(n - 1).addClass("lineselect");
+    $(".numberedtextarea-number.numberedtextarea-number-" + n).css("background-color","#ff0000");
 });
 
 var handle_execute = (function () {
