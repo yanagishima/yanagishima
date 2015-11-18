@@ -53,11 +53,6 @@ var yanagishima_tree = (function () {
                         var result = results[i][0];
                         node.addChild({title: result, key: result, isLazy: true, isFolder: false});
                     }
-                    $("#show-columns-div").remove();
-                    var div = $("<div></div>", {style: "height:500px; overflow:auto;", id: "show-columns-div"});
-                    div.append($("<table></table>", {class: "table table-bordered", id: "show-columns"}));
-                    $("#show-columns-parent-div").append(div);
-                    create_table("#show-columns", headers, results);
                 }
                 node.setLazyNodeStatus(DTNodeStatus_Ok);
             }).fail(function () {
@@ -93,6 +88,10 @@ var yanagishima_tree = (function () {
                         $("#query-submit").click();
                     } else if (action === "show_view_ddl") {
                         query = "SELECT view_definition FROM " + catalog + ".information_schema.views WHERE table_catalog='" + catalog + "' AND table_schema='" + schema + "' AND table_name='" + table + "'";
+                        $("#query").val(query);
+                        $("#query-submit").click();
+                    } else if (action === "describe") {
+                        query = "DESCRIBE " + catalog + "." + schema + "." + table;
                         $("#query").val(query);
                         $("#query-submit").click();
                     }
