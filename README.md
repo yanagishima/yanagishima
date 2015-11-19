@@ -25,9 +25,9 @@ yanagishima is a Web UI for presto like MySQL Workbench.
 
 # Quick Start
 ```
-wget https://bintray.com/artifact/download/wyukawa/generic/yanagishima-0.1.zip
-unzip yanagishima-0.1.zip
-cd yanagishima-0.1
+wget https://bintray.com/artifact/download/wyukawa/generic/yanagishima-0.2.zip
+unzip yanagishima-0.2.zip
+cd yanagishima-0.2
 vim conf/yanagishima.properties
 nohup bin/yanagishima-start.sh >y.log 2>&1 &
 ```
@@ -44,8 +44,6 @@ presto.coordinator.server=http://presto.coordinator:8080 # presto coordinator ur
 select.limit=5000 # if query result exceeds this limit, rest of result is skipped
 catalog=hive # presto catalog name
 schema=default # presto schema name
-user=yanagishima # presto user name
-source=yanagishima # presto source name
 ```
 
 # Start
