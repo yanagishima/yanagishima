@@ -550,7 +550,7 @@ var renderRunningQueries = (function (queries) {
         .append('button')
         .text('Kill')
         .attr('type', 'button').on('click', function (query) {
-            if (query.session.user == 'yanagishima') {
+            if (query.session.user == 'yanagishima' && query.session.source == 'yanagishima') {
                 d3.xhr("/kill?queryId=" + query.queryId).send('GET');
                 $(this).attr('disabled', 'disabled');
             } else {

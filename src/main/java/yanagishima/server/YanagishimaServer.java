@@ -42,8 +42,8 @@ public class YanagishimaServer {
 		String prestoCoordinatorServer = properties.getProperty("presto.coordinator.server");
 		String catalog = properties.getProperty("catalog");
 		String schema = properties.getProperty("schema");
-		String user = properties.getProperty("user");
-		String source = properties.getProperty("source");
+		String user = "yanagishima";
+		String source = "yanagishima";
 		int selectLimit = Integer.parseInt(properties.getProperty("select.limit"));
 		
 		PrestoServiceModule prestoServiceModule = new PrestoServiceModule(jettyPort, webResourceDir, prestoCoordinatorServer, catalog, schema, user, source, selectLimit);
