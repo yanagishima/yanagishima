@@ -49,12 +49,18 @@ task copyPackage(type: Copy) {
   into('build/package')
 }
 
+task copyData(type: Copy) {
+    from('data')
+    into('build/package/data')
+}
+
 task copy(dependsOn: [
       'createDirs',
       'copyWeb',
       'copyDeps',
       'copyLibs',
-      'copyPackage']) {
+      'copyPackage',
+      'copyData']) {
   }
 
 distributions {
