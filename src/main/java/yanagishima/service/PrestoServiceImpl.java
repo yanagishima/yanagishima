@@ -61,19 +61,22 @@ public class PrestoServiceImpl implements PrestoService {
 
 			if ((!client.isFailed()) && (!client.isGone()) && (!client.isClosed())) {
 				QueryResults results = client.isValid() ? client.current() : client.finalResults();
+				String queryId = results.getId();
 				db.insert(Query.class)
-						.value("query_id", results.getId())
+						.value("query_id", queryId)
 						.value("fetch_result_time_string", ZonedDateTime.now().toString())
 						.value("query_string", query)
 						.execute();
 				if (results.getUpdateType() != null) {
 					PrestoQueryResult prestoQueryResult = new PrestoQueryResult();
+					prestoQueryResult.setQueryId(queryId);
 					prestoQueryResult.setUpdateType(results.getUpdateType());
 					return prestoQueryResult;
 				} else if (results.getColumns() == null) {
 					throw new QueryErrorException(new SQLException(format("Query %s has no columns\n", results.getId())));
 				} else {
 					PrestoQueryResult prestoQueryResult = new PrestoQueryResult();
+					prestoQueryResult.setQueryId(queryId);
 					prestoQueryResult.setUpdateType(results.getUpdateType());
 					 List<String> columns = Lists.transform(results.getColumns(), Column::getName);
 					 prestoQueryResult.setColumns(columns);

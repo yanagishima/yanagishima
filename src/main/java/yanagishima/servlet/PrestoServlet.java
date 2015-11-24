@@ -50,6 +50,7 @@ public class PrestoServlet extends HttpServlet {
 					if (prestoQueryResult.getUpdateType() == null) {
 						retVal.put("headers", prestoQueryResult.getColumns());
 						retVal.put("results", prestoQueryResult.getRecords());
+						retVal.put("queryid", prestoQueryResult.getQueryId());
 						Optional<String> warningMessageOptinal = Optional.ofNullable(prestoQueryResult.getWarningMessage());
 						warningMessageOptinal.ifPresent(warningMessage -> {
 							retVal.put("warn", warningMessage);

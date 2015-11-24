@@ -41,8 +41,10 @@ public class HistoryServlet extends HttpServlet {
 			Optional<String> queryidOptional = Optional.ofNullable(request.getParameter("queryid"));
 			queryidOptional.ifPresent(queryid -> {
 				try {
-					Optional<Query> query = db.single(Query.class).where("query_id=?", queryid).execute();
-					retVal.put("queryString", query.get().getQueryString());
+					Optional<Query> queryOptional = db.single(Query.class).where("query_id=?", queryid).execute();
+					queryOptional.ifPresent(query -> {
+						retVal.put("queryString", query.getQueryString());
+					});
 				} catch (Throwable e) {
 					LOGGER.error(e.getMessage(), e);
 					retVal.put("error", e.getMessage());

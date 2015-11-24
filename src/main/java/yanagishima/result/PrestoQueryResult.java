@@ -12,6 +12,8 @@ public class PrestoQueryResult {
 	
 	private String warningMessage;
 
+	private String queryId;
+
 	public String getUpdateType() {
 		return updateType;
 	}
@@ -43,5 +45,9 @@ public class PrestoQueryResult {
 	public void setWarningMessage(String warningMessage) {
 		this.warningMessage = warningMessage;
 	}
+
+	public String getQueryId() { return queryId; }
+
+	public void setQueryId(String queryId) { this.queryId = queryId; }
 
 }

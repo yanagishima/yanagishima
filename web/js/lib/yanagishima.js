@@ -191,6 +191,7 @@ var handle_execute = (function () {
                 $("#warn-msg").text(data.warn);
                 $("#warn-msg").slideDown("fast");
             }
+            update_history_by_query(data.queryid);
             push_query(query);
             $("#query-histories").empty();
             update_query_histories_area();
@@ -678,3 +679,29 @@ var shortErrorType = (function (errorType) {
     }
     return errorType;
 });
+
+function update_history_by_query(queryid) {
+    if (! window.history.pushState ) // if pushState not ready
+        return;
+    if (queryid === null) {
+        window.history.pushState('','', '/');
+        return;
+    }
+    window.history.pushState(queryid, '', '?queryid=' + queryid);
+};
+
+function follow_current_uri() {
+    var param = document.location.search.substring(1);
+    console.log(param);
+    if (param === null) {
+        return;
+    }
+    var element = param.split('=');
+    follow_current_uri_query(element[1]);
+};
+
+function follow_current_uri_query(queryid){
+    $.get("/history", {queryid: queryid}, function (data) {
+        $("#query").val(data.queryString);
+    });
+};

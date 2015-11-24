@@ -19,6 +19,18 @@
     <script src="js/lib/jquery.tablefix_1.0.1.js"></script>
     <script src="js/lib/jquery.numberedtextarea.js"></script>
     <script src="js/lib/autosize.min.js"></script>
+    <script>
+        $(function(){
+            follow_current_uri();
+            window.addEventListener("popstate", function (event) {
+                if (event.state === null || event.state === undefined || event.state.length < 27) {
+                    return;
+                }
+                var queryid = event.state;
+                follow_current_uri_query(queryid);
+            }, false);
+        });
+    </script>
 </head>
 
 <body>
@@ -26,7 +38,7 @@
 <div class="navbar navbar-inverse navbar-static-top">
     <div class="container-full">
         <div class="navbar-header">
-            <a class="navbar-brand" href="">yanagishima</a>
+            <a class="navbar-brand" href="/">yanagishima</a>
         </div>
     </div>
 </div>
