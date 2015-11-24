@@ -9,6 +9,7 @@ import io.airlift.units.Duration;
 
 import java.net.URI;
 import java.sql.SQLException;
+import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -19,6 +20,7 @@ import java.util.stream.Collectors;
 
 import javax.inject.Inject;
 
+import me.geso.tinyorm.TinyORM;
 import yanagishima.config.YanagishimaConfig;
 import yanagishima.exception.QueryErrorException;
 import yanagishima.result.PrestoQueryResult;
@@ -29,12 +31,16 @@ import com.facebook.presto.client.QueryError;
 import com.facebook.presto.client.QueryResults;
 import com.facebook.presto.client.StatementClient;
 import com.google.common.collect.Lists;
+import yanagishima.row.Query;
 
 public class PrestoServiceImpl implements PrestoService {
 
 	private YanagishimaConfig yanagishimaConfig;
 
 	private JettyHttpClient httpClient;
+
+	@Inject
+	private TinyORM db;
 
 	@Inject
 	public PrestoServiceImpl(YanagishimaConfig yanagishimaConfig) {
@@ -55,6 +61,11 @@ public class PrestoServiceImpl implements PrestoService {
 
 			if ((!client.isFailed()) && (!client.isGone()) && (!client.isClosed())) {
 				QueryResults results = client.isValid() ? client.current() : client.finalResults();
+				db.insert(Query.class)
+						.value("query_id", results.getId())
+						.value("fetch_result_time_string", ZonedDateTime.now().toString())
+						.value("query_string", query)
+						.execute();
 				if (results.getUpdateType() != null) {
 					PrestoQueryResult prestoQueryResult = new PrestoQueryResult();
 					prestoQueryResult.setUpdateType(results.getUpdateType());

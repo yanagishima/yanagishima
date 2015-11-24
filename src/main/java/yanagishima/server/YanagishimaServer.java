@@ -6,6 +6,8 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.sql.Connection;
+import java.sql.Statement;
 import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.Properties;
@@ -16,12 +18,14 @@ import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
 
+import me.geso.tinyorm.TinyORM;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.servlet.DefaultServlet;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import yanagishima.module.DbModule;
 import yanagishima.module.PrestoServiceModule;
 import yanagishima.module.PrestoServletModule;
 
@@ -48,10 +52,17 @@ public class YanagishimaServer {
 		
 		PrestoServiceModule prestoServiceModule = new PrestoServiceModule(jettyPort, webResourceDir, prestoCoordinatorServer, catalog, schema, user, source, selectLimit);
 		PrestoServletModule prestoServletModule = new PrestoServletModule();
+		DbModule dbModule = new DbModule();
 		@SuppressWarnings("unused")
 		Injector injector = Guice.createInjector(prestoServiceModule,
-				prestoServletModule);
+				prestoServletModule, dbModule);
 
+		TinyORM tinyORM = injector.getInstance(TinyORM.class);
+		try(Connection connection = tinyORM.getConnection()) {
+			try(Statement statement = connection.createStatement()) {
+				statement.executeUpdate("create table if not exists query (query_id text primary key, fetch_result_time_string text, query_string text)");
+			}
+		}
 
 		Server server = new Server(jettyPort);
 

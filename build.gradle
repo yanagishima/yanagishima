@@ -86,6 +86,9 @@ dependencies {
     compile 'io.airlift:http-client:0.118'
     compile 'io.airlift:json:0.118'
     compile 'org.apache.httpcomponents:fluent-hc:4.4.1'
+    compile 'org.xerial:sqlite-jdbc:3.8.11.2'
+    compile 'me.geso:tinyorm:1.10.0'
+    compile 'org.projectlombok:lombok:1.16.6'
 
     // Declare the dependency for your favourite test framework you want to use in your tests.
     // TestNG is also supported by the Gradle Test task. Just change the
