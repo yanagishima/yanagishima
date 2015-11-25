@@ -6,8 +6,8 @@
     <link href="css/ui.dynatree.css" rel="stylesheet">
     <link href="css/jquery.contextMenu.css" rel="stylesheet">
     <link href="css/jquery-ui.min.css" rel="stylesheet">
-    <link href="css/jquery.textcomplete.css" rel="stylesheet">
-    <link href="css/jquery.numberedtextarea.css" rel="stylesheet">
+    <link href="css/codemirror.css" rel="stylesheet">
+    <link href="css/show-hint.css" rel="stylesheet">
     <script src="js/lib/jquery.js"></script>
     <script src="js/lib/jquery-ui.min.js"></script>
     <script src="js/lib/bootstrap.min.js"></script>
@@ -15,10 +15,11 @@
     <script src="js/lib/jquery.contextMenu-custom.js"></script>
     <script src="js/lib/d3.min.js"></script>
     <script src="js/lib/yanagishima.js"></script>
-    <script src="js/lib/jquery.textcomplete.min.js"></script>
     <script src="js/lib/jquery.tablefix_1.0.1.js"></script>
-    <script src="js/lib/jquery.numberedtextarea.js"></script>
-    <script src="js/lib/autosize.min.js"></script>
+    <script src="js/lib/codemirror.js"></script>
+    <script src="js/lib/show-hint.js"></script>
+    <script src="js/lib/sql-hint.js"></script>
+    <script src="js/lib/sql.js"></script>
     <script>
         $(function(){
             follow_current_uri();
@@ -77,55 +78,11 @@
                         <textarea rows="10" cols="150" id="query"></textarea>
                         <script>
                             $(function () {
-                                autosize($("#query"));
-                                $("#query").numberedtextarea();
-                                //presto/presto-parser//src/main/antlr4/com/facebook/presto/sql/parser/SqlBase.g4
-                                presto_words = ["SELECT", "FROM", "ADD", "AS", "ALL", "SOME", "ANY", "DISTINCT", "WHERE", "GROUP", "BY", "ORDER", "HAVING", "LIMIT", "APPROXIMATE", "AT", "CONFIDENCE", "OR", "AND", "IN", "NOT", "EXISTS", "BETWEEN", "LIKE", "IS", "NULL", "TRUE", "FALSE", "NULLS", "FIRST", "LAST", "ESCAPE", "ASC", "DESC", "FOR", "DATE", "TIME", "TIMESTAMP", "INTERVAL", "YEAR", "MONTH", "DAY", "HOUR", "MINUTE", "SECOND", "ZONE", "LOCALTIME", "LOCALTIMESTAMP", "EXTRACT", "CASE", "WHEN", "THEN", "ELSE", "END", "JOIN", "CROSS", "OUTER", "INNER", "LEFT", "RIGHT", "FULL", "NATURAL", "USING", "ON", "OVER", "PARTITION", "RANGE", "ROWS", "UNBOUNDED", "PRECEDING", "FOLLOWING", "CURRENT", "ROW", "WITH", "RECURSIVE", "VALUES", "CREATE", "TABLE", "VIEW", "REPLACE", "INSERT", "DELETE", "INTO", "CONSTRAINT", "DESCRIBE", "EXPLAIN", "FORMAT", "TYPE", "TEXT", "GRAPHVIZ", "LOGICAL", "DISTRIBUTED", "SHOW", "TABLES", "SCHEMAS", "CATALOGS", "COLUMNS", "COLUMN", "USE", "PARTITIONS", "FUNCTIONS", "DROP", "UNION", "EXCEPT", "INTERSECT", "TO", "SYSTEM", "BERNOULLI", "POISSONIZED", "TABLESAMPLE", "RESCALED", "STRATIFY", "ALTER", "RENAME", "UNNEST", "ORDINALITY", "ARRAY", "MAP", "SET", "RESET", "SESSION", "NFD", "NFC", "NFKD", "NFKC"];
-                                //https://prestodb.io/docs/current/functions/conditional.html
-                                presto_conditional = ["IF", "COALESCE", "NULLIF"];
-                                //https://prestodb.io/docs/current/functions/conversion.html
-                                presto_conversion = ["CAST", "TRY_CAST"];
-                                //https://prestodb.io/docs/current/functions/string.html
-                                presto_string = ["SUBSTRING", "POSITION", "NORMALIZE"];
-                                //show functions
-                                presto_functions = ["ABS", "ACOS", "APPROX_DISTINCT", "APPROX_PERCENTILE", "APPROX_SET", "ARBITRARY", "ARRAY_AGG", "ARRAY_DISTINCT", "ARRAY_INTERSECT", "ARRAY_JOIN", "ARRAY_MAX", "ARRAY_MIN", "ARRAY_POSITION", "ARRAY_REMOVE", "ARRAY_SORT", "ASIN", "ATAN", "ATAN2", "AT_TIMEZONE", "AVG", "BAR", "BOOL_AND", "BOOL_OR", "CARDINALITY", "CBRT", "CEIL", "CEILING", "CHECKSUM", "CHR", "CLASSIFY", "COLOR", "CONCAT", "CONTAINS", "CORR", "COS", "COSH", "COUNT", "COUNT_IF", "COVAR_POP", "COVAR_SAMP", "CUME_DIST", "CURRENT_DATE", "CURRENT_TIME", "CURRENT_TIMESTAMP", "CURRENT_TIMEZONE", "DATE_ADD", "DATE_DIFF", "DATE_FORMAT", "DATE_PARSE", "DATE_TRUNC", "DAY", "DAY_OF_MONTH", "DAY_OF_WEEK", "DAY_OF_YEAR", "DEGREES", "DENSE_RANK", "DOW", "DOY", "E", "ELEMENT_AT", "EVALUATE_CLASSIFIER_PREDICTIONS", "EVERY", "EXP", "FAIL", "FEATURES", "FIRST_VALUE", "FLOOR", "FORMAT_DATETIME", "FROM_BASE", "FROM_BASE64", "FROM_BASE64URL", "FROM_HEX", "FROM_ISO8601_DATE", "FROM_ISO8601_TIMESTAMP", "FROM_UNIXTIME", "FROM_UTF8", "GEOMETRIC_MEAN", "GREATEST", "HISTOGRAM", "HOUR", "INFINITY", "IS_FINITE", "IS_INFINITE", "IS_NAN", "JSON_ARRAY_CONTAINS", "JSON_ARRAY_GET", "JSON_ARRAY_LENGTH", "JSON_EXTRACT", "JSON_EXTRACT_SCALAR", "JSON_FORMAT", "JSON_PARSE", "JSON_SIZE", "LAG", "LAST_VALUE", "LEAD", "LEARN_CLASSIFIER", "LEARN_LIBSVM_CLASSIFIER", "LEARN_LIBSVM_REGRESSOR", "LEARN_REGRESSOR", "LEAST", "LENGTH", "LIKE_PATTERN", "LN", "LOCALTIME", "LOCALTIMESTAMP", "LOG", "LOG10", "LOG2", "LOWER", "LTRIM", "MAP", "MAP_AGG", "MAP_KEYS", "MAP_VALUES", "MAX", "MAX_BY", "MD5", "MERGE", "MIN", "MIN_BY", "MINUTE", "MOD", "MONTH", "MULTIMAP_AGG", "NAN", "NORMALIZE", "NOW", "NTH_VALUE", "NTILE", "NUMERIC_HISTOGRAM", "PARSE_DATETIME", "PERCENT_RANK", "PI", "POW", "POWER", "QUARTER", "RADIANS", "RAND", "RANDOM", "RANK", "REGEXP_EXTRACT", "REGEXP_EXTRACT_ALL", "REGEXP_LIKE", "REGEXP_REPLACE", "REGEXP_SPLIT", "REGRESS", "REGR_INTERCEPT", "REGR_SLOPE", "RENDER", "REPLACE", "REVERSE", "RGB", "ROUND", "ROW_NUMBER", "RTRIM", "SECOND", "SHA1", "SHA256", "SHA512", "SIN", "SLICE", "SPLIT", "SPLIT_PART", "SQRT", "STDDEV", "STDDEV_POP", "STDDEV_SAMP", "STRPOS", "SUBSTR", "SUM", "TAN", "TANH", "TIMEZONE_HOUR", "TIMEZONE_MINUTE", "TO_BASE", "TO_BASE64", "TO_BASE64URL", "TO_HEX", "TO_ISO8601", "TO_UNIXTIME", "TO_UTF8", "TRIM", "UPPER", "URL_DECODE", "URL_ENCODE", "URL_EXTRACT_FRAGMENT", "URL_EXTRACT_HOST", "URL_EXTRACT_PARAMETER", "URL_EXTRACT_PATH", "URL_EXTRACT_PORT", "URL_EXTRACT_PROTOCOL", "URL_EXTRACT_QUERY", "VARIANCE", "VAR_POP", "VAR_SAMP", "WEEK", "WEEK_OF_YEAR", "YEAR", "YEAR_OF_WEEK", "YOW"];
-                                var auto_complete_words = [];
-                                for(var i=0; i<presto_words.length; i++) {
-                                    auto_complete_words.push(presto_words[i]);
-                                }
-                                for(var i=0; i<presto_conditional.length; i++) {
-                                    auto_complete_words.push(presto_conditional[i]);
-                                }
-                                for(var i=0; i<presto_conversion.length; i++) {
-                                    auto_complete_words.push(presto_conversion[i]);
-                                }
-                                for(var i=0; i<presto_string.length; i++) {
-                                    auto_complete_words.push(presto_string[i]);
-                                }
-                                for(var i=0; i<presto_functions.length; i++) {
-                                    auto_complete_words.push(presto_functions[i]);
-                                }
-                                $("#query").textcomplete([
-                                    {
-                                        context: function (text) { return text.toUpperCase(); },
-                                        words: auto_complete_words,
-                                        match: /\b(\w{4,})$/i,
-                                        search: function (term, callback) {
-                                            callback($.map(this.words, function (word) {
-                                                return word.indexOf(term) === 0 ? word : null;
-                                            }));
-                                        },
-                                        index: 1,
-                                        replace: function (word) {
-                                            if($.inArray(word, presto_words) >= 0) {
-                                                return word + ' ';
-                                            }
-                                            if($.inArray(word, presto_conditional) >= 0 || $.inArray(word, presto_conversion) >= 0 || $.inArray(word, presto_string) >= 0 || $.inArray(word, presto_functions) >= 0) {
-                                                return word + '()';
-                                            }
-                                        }
-                                    }
-                                ]);
+                                window.editor = CodeMirror.fromTextArea(document.getElementById('query'), {
+                                    mode: "text/x-mysql",
+                                    lineNumbers: true,
+                                    extraKeys: {"Ctrl-Space": "autocomplete"},
+                                });
                             });
                         </script>
                     </div>

@@ -69,11 +69,11 @@ var yanagishima_tree = (function () {
                     catalog = node.parent.parent.data.catalog;
                     if (action === "select") {
                         query = "SELECT * FROM " + catalog + "." + schema + "." + table + " LIMIT 100";
-                        $("#query").val(query);
+                        window.editor.setValue(query);
                         $("#query-submit").click();
                     } else if (action === "select_no_execute") {
                         query = "SELECT * FROM " + catalog + "." + schema + "." + table + " LIMIT 100";
-                        $("#query").val(query);
+                        window.editor.setValue(query);
                     } else if (action === "select_where") {
                         select_data("SELECT * FROM", catalog, schema, table, true);
                     } else if (action === "select_where_no_execute") {
@@ -84,15 +84,15 @@ var yanagishima_tree = (function () {
                         select_data("SELECT COUNT(*) FROM", catalog, schema, table, false);
                     } else if (action === "partitions") {
                         query = "SHOW PARTITIONS FROM " + catalog + "." + schema + "." + table;
-                        $("#query").val(query);
+                        window.editor.setValue(query);
                         $("#query-submit").click();
                     } else if (action === "show_view_ddl") {
                         query = "SELECT view_definition FROM " + catalog + ".information_schema.views WHERE table_catalog='" + catalog + "' AND table_schema='" + schema + "' AND table_name='" + table + "'";
-                        $("#query").val(query);
+                        window.editor.setValue(query);
                         $("#query-submit").click();
                     } else if (action === "describe") {
                         query = "DESCRIBE " + catalog + "." + schema + "." + table;
-                        $("#query").val(query);
+                        window.editor.setValue(query);
                         $("#query-submit").click();
                     }
                 });
@@ -119,7 +119,7 @@ var select_data = (function (select_query, catalog, schema, table, execute_flag)
             var partition_column = data.headers;
             if (partition_column.length == 0) {
                 query = select_query + " " + catalog + "." + schema + "." + table + " LIMIT 100";
-                $("#query").val(query);
+                window.editor.setValue(query);
                 $("#query-submit").click();
                 return;
             }
@@ -137,7 +137,7 @@ var select_data = (function (select_query, catalog, schema, table, execute_flag)
                 }
             }
             query = select_query + " " + catalog + "." + schema + "." + table + where + " LIMIT 100";
-            $("#query").val(query);
+            window.editor.setValue(query);
             if (execute_flag) {
                 $("#query-submit").click();
             }
@@ -170,7 +170,7 @@ var handle_execute = (function () {
     $(td).append(img);
     $(tr).append(td);
     $("#query-results").append(tr);
-    var query = $("#query").val();
+    var query = window.editor.getValue();
     var requestURL = "/presto";
     var requestData = {
         "query": query
@@ -224,9 +224,9 @@ var explain = (function (distributed) {
     $("#warn-msg").hide();
     var query;
     if (distributed) {
-        query = "explain (type distributed) " + $("#query").val();
+        query = "explain (type distributed) " + window.editor.getValue();
     } else {
-        query = "explain " + $("#query").val();
+        query = "explain " + window.editor.getValue();
     }
     var requestURL = "/presto";
     var requestData = {
@@ -280,13 +280,13 @@ var explain = (function (distributed) {
 });
 
 var query_clear = (function () {
-    $("#query").val("");
+    window.editor.setValue("");
 });
 
 var query_format = (function () {
     $("#error-msg").hide();
     $("#warn-msg").hide();
-    var query = $("#query").val();
+    var query = window.editor.getValue();
     var requestURL = "/format";
     var requestData = {
         "query": query
@@ -298,7 +298,7 @@ var query_format = (function () {
             selectLine(data.errorLineNumber);
         } else {
             var format_query = data.formattedQuery;
-            $("#query").val(format_query);
+            window.editor.setValue(format_query);
         }
     };
     $.post(requestURL, requestData, successHandler, "json");
@@ -469,7 +469,7 @@ var delete_bookmark = (function (event) {
 });
 
 var copy_query = (function (event) {
-    $("#query").val(event.data.query);
+    window.editor.setValue(event.data.query);
 });
 
 var delete_query = (function (event) {
@@ -702,6 +702,6 @@ function follow_current_uri() {
 
 function follow_current_uri_query(queryid){
     $.get("/history", {queryid: queryid}, function (data) {
-        $("#query").val(data.queryString);
+        window.editor.setValue(data.queryString);
     });
 };
