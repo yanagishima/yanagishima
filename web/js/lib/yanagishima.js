@@ -692,7 +692,6 @@ function update_history_by_query(queryid) {
 
 function follow_current_uri() {
     var param = document.location.search.substring(1);
-    console.log(param);
     if (param === null) {
         return;
     }
