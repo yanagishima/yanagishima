@@ -147,7 +147,7 @@ var select_data = (function (select_query, catalog, schema, table, execute_flag)
 });
 
 var selectLine = (function (n) {
-    $(".numberedtextarea-number.numberedtextarea-number-" + n).css("background-color","#ff0000");
+    window.editor.addLineClass(n-1, 'wrap', 'CodeMirror-activeline-background')
 });
 
 var handle_execute = (function () {
