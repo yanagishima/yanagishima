@@ -11,7 +11,7 @@
 apply plugin: 'java'
 apply plugin: 'distribution'
 
-version = '0.2'
+version = '0.3'
 
 // In this section you declare where to find the dependencies of your project
 repositories {
