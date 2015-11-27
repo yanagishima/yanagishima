@@ -147,11 +147,11 @@ var select_data = (function (select_query, catalog, schema, table, execute_flag)
 });
 
 var selectLine = (function (n) {
-    window.editor.addLineClass(n-1, 'wrap', 'CodeMirror-activeline-background')
+    window.editor.addLineClass(n-1, 'wrap', 'CodeMirror-errorline-background')
 });
 
 var handle_execute = (function () {
-    window.editor.removeLineClass(window.editor.listSelections()[0].head.line, 'wrap', 'CodeMirror-activeline-background');
+    window.editor.removeLineClass(window.editor.listSelections()[0].head.line, 'wrap', 'CodeMirror-errorline-background');
     $("#query-submit").attr("disabled", "disabled");
     $("#query-explain").attr("disabled", "disabled");
     $("#query-explain-distributed").attr("disabled", "disabled");
@@ -220,7 +220,7 @@ var handle_explain_distributed = (function () {
 });
 
 var explain = (function (distributed) {
-    window.editor.removeLineClass(window.editor.listSelections()[0].head.line, 'wrap', 'CodeMirror-activeline-background');
+    window.editor.removeLineClass(window.editor.listSelections()[0].head.line, 'wrap', 'CodeMirror-errorline-background');
     $("#query-results").empty();
     $("#error-msg").hide();
     $("#warn-msg").hide();
@@ -286,7 +286,7 @@ var query_clear = (function () {
 });
 
 var query_format = (function () {
-    window.editor.removeLineClass(window.editor.listSelections()[0].head.line, 'wrap', 'CodeMirror-activeline-background');
+    window.editor.removeLineClass(window.editor.listSelections()[0].head.line, 'wrap', 'CodeMirror-errorline-background');
     $("#error-msg").hide();
     $("#warn-msg").hide();
     var query = window.editor.getValue();
