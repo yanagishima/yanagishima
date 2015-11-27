@@ -6,3 +6,5 @@ build/
 .gradle/
 .idea/
 yanagishima.iml
+data/yanagishima.db
+yanagishima.log
