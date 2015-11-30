@@ -150,6 +150,12 @@ var selectLine = (function (n) {
     window.editor.addLineClass(n-1, 'wrap', 'CodeMirror-errorline-background')
 });
 
+var table_search = (function () {
+    query = "SELECT table_cat AS catalog, table_schem AS schema, table_name AS table_name FROM system.jdbc.tables WHERE table_name LIKE '%" + $("#table_name").val() + "%'";
+    window.editor.setValue(query);
+    $("#query-submit").click();
+});
+
 var handle_execute = (function () {
     window.editor.removeLineClass(window.editor.listSelections()[0].head.line, 'wrap', 'CodeMirror-errorline-background');
     $("#query-submit").attr("disabled", "disabled");
