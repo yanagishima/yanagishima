@@ -137,7 +137,7 @@ div.CodeMirror span.CodeMirror-matchingbracket {color: #0f0;}
 div.CodeMirror span.CodeMirror-nonmatchingbracket {color: #f22;}
 .CodeMirror-matchingtag { background: rgba(255, 150, 0, .3); }
 .CodeMirror-activeline-background {background: #e8f2ff;}
-.CodeMirror-errorline-background {background: #ff0000;}
+.CodeMirror-errorline-background {background: rgba(255, 144, 139, 0.52);}
 
 /* STOP */
 
