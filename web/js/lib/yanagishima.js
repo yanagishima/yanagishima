@@ -157,7 +157,10 @@ var table_search = (function () {
 });
 
 var handle_execute = (function () {
-    window.editor.removeLineClass(window.editor.listSelections()[0].head.line, 'wrap', 'CodeMirror-errorline-background');
+    var line_count = window.editor.lineCount();
+    for (var i=0; i<line_count; i++) {
+        window.editor.removeLineClass(i, 'wrap', 'CodeMirror-errorline-background');
+    }
     $("#query-submit").attr("disabled", "disabled");
     $("#query-explain").attr("disabled", "disabled");
     $("#query-explain-distributed").attr("disabled", "disabled");
