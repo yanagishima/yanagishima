@@ -212,12 +212,69 @@ var handle_execute = (function () {
             if(query.match("SELECT view_definition FROM [a-zA-Z0-9]+\.information_schema\.views")) {
                 view_ddl_flag=true;
             }
-            create_table("#query-results", headers, rows, view_ddl_flag);
+            if(query.startsWith("SELECT table_cat AS catalog, table_schem AS schema, table_name AS table_name FROM system.jdbc.tables WHERE table_type='TABLE' and table_name LIKE")) {
+                var thead = document.createElement("thead");
+                var tr = document.createElement("tr");
+                var th = document.createElement("th");
+                $(th).text("");
+                $(tr).append(th);
+                var th = document.createElement("th");
+                $(th).text("");
+                $(tr).append(th);
+                for (var i = 0; i < headers.length; ++i) {
+                    var th = document.createElement("th");
+                    $(th).text(headers[i]);
+                    $(tr).append(th);
+                }
+                $(thead).append(tr);
+                $("#query-results").append(thead);
+                var tbody = document.createElement("tbody");
+                for (var i = 0; i < rows.length; ++i) {
+                    var columns = rows[i];
+                    var tr = document.createElement("tr");
+                    var td = document.createElement("td");
+                    var select_button = document.createElement("button");
+                    $(select_button).attr("type", "button");
+                    $(select_button).attr("class", "btn btn-success");
+                    $(select_button).text("select");
+                    var select_query = "SELECT * FROM " + columns[0] + "." + columns[1] + "." + columns[2] + " LIMIT 100";
+                    $(select_button).click({query: select_query}, execute_select_query);
+                    $(td).append(select_button);
+                    $(tr).append(td);
+                    var td = document.createElement("td");
+                    var select_button = document.createElement("button");
+                    $(select_button).attr("type", "button");
+                    $(select_button).attr("class", "btn btn-success");
+                    $(select_button).text("select latest partition");
+                    $(select_button).click({catalog: columns[0], schema: columns[1], table: columns[2]}, execute_select_query_latest_partition);
+                    $(td).append(select_button);
+                    $(tr).append(td);
+                    for (var j = 0; j < columns.length; ++j) {
+                        var td = document.createElement("td");
+                        $(td).text(columns[j]);
+                        $(tr).append(td);
+                    }
+                    $(tbody).append(tr);
+                }
+                $("#query-results").append(tbody);
+                //$("#query-results").tablefix({height: 600, fixRows: 1});
+            } else {
+                create_table("#query-results", headers, rows, view_ddl_flag);
+            }
             $("#tsv-download").removeAttr("disabled");
             push_result(headers, rows);
         }
     };
     $.post(requestURL, requestData, successHandler, "json");
+});
+
+var execute_select_query = (function (event) {
+    window.editor.setValue(event.data.query);
+    $("#query-submit").click();
+});
+
+var execute_select_query_latest_partition = (function (event) {
+    select_data("SELECT * FROM", event.data.catalog, event.data.schema, event.data.table, true);
 });
 
 var handle_explain = (function () {
