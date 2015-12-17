@@ -151,7 +151,7 @@ var selectLine = (function (n) {
 });
 
 var table_search = (function () {
-    query = "SELECT table_cat AS catalog, table_schem AS schema, table_name AS table_name FROM system.jdbc.tables WHERE table_name LIKE '%" + $("#table_name").val() + "%'";
+    query = "SELECT table_cat AS catalog, table_schem AS schema, table_name AS table_name FROM system.jdbc.tables WHERE table_type='TABLE' and table_name LIKE '%" + $("#table_name").val() + "%'";
     window.editor.setValue(query);
     $("#query-submit").click();
 });
