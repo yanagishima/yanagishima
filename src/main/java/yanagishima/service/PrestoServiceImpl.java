@@ -2,6 +2,8 @@ package yanagishima.service;
 
 import static io.airlift.json.JsonCodec.jsonCodec;
 import static java.lang.String.format;
+import static java.util.concurrent.TimeUnit.MINUTES;
+
 import io.airlift.http.client.HttpClientConfig;
 import io.airlift.http.client.jetty.JettyHttpClient;
 import io.airlift.json.JsonCodec;
@@ -126,7 +128,7 @@ public class PrestoServiceImpl implements PrestoService {
 		ClientSession clientSession = new ClientSession(
 				URI.create(prestoCoordinatorServer), user, source, catalog,
 				schema, TimeZone.getDefault().getID(), Locale.getDefault(),
-				new HashMap<String, String>(), false);
+				new HashMap<String, String>(), null, false, new Duration(2, MINUTES));
 		return new StatementClient(httpClient, jsonCodec, clientSession, query);
 	}
 
