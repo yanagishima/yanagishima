@@ -228,6 +228,9 @@ var handle_execute = (function () {
                 var th = document.createElement("th");
                 $(th).text("");
                 $(tr).append(th);
+                var th = document.createElement("th");
+                $(th).text("");
+                $(tr).append(th);
                 for (var i = 0; i < headers.length; ++i) {
                     var th = document.createElement("th");
                     $(th).text(headers[i]);
@@ -256,6 +259,15 @@ var handle_execute = (function () {
                     $(select_button).click({catalog: columns[0], schema: columns[1], table: columns[2]}, execute_select_query_latest_partition);
                     $(td).append(select_button);
                     $(tr).append(td);
+                    var td = document.createElement("td");
+                    var show_fields_button = document.createElement("button");
+                    $(show_fields_button).attr("type", "button");
+                    $(show_fields_button).attr("class", "btn btn-success");
+                    $(show_fields_button).attr("data-load", "/presto");
+                    $(show_fields_button).text("show fields");
+                    $(show_fields_button).click({catalog: columns[0], schema: columns[1], table: columns[2]}, show_fields);
+                    $(td).append(show_fields_button);
+                    $(tr).append(td);
                     for (var j = 0; j < columns.length; ++j) {
                         var td = document.createElement("td");
                         $(td).text(columns[j]);
@@ -264,7 +276,6 @@ var handle_execute = (function () {
                     $(tbody).append(tr);
                 }
                 $("#query-results").append(tbody);
-                //$("#query-results").tablefix({height: 600, fixRows: 1});
             } else {
                 create_table("#query-results", headers, rows, view_ddl_flag);
             }
@@ -282,6 +293,33 @@ var execute_select_query = (function (event) {
 
 var execute_select_query_latest_partition = (function (event) {
     select_data("SELECT * FROM", event.data.catalog, event.data.schema, event.data.table, true);
+});
+
+var show_fields = (function (event) {
+    var query = "DESCRIBE " + event.data.catalog + "." + event.data.schema + "." + event.data.table;
+    var requestData = {
+        "query": query
+    };
+    var button = $(this);
+    if (! button.data('loaded')) {
+        $.post(button.data('load'), requestData, function(data){
+            var field_rows_html = data.results.map(function(t){
+                return '<tr style="border:none;"><td>' + t[0] + '</td><td>' + t[1] + '</td></tr>';
+            }).join('');
+            var table_html = '<table class="target-fields" style="border: 0; width: 100%;">'
+                + '<tr><th>field</th><th>type</th></tr>'
+                + field_rows_html
+                + '</table>';
+            button.attr('data-loaded', 'true');
+            button.popover({
+                html: true,
+                template: '<div class="popover" role="tooltip" style="overflow-y: scroll;"><div class="arrow"></div><h3 class="popover-title"></h3><div class="popover-content"></div></div>',
+                content: table_html
+            }).popover('toggle');
+            $('table.target-fields').closest('div').css('padding', '0');
+        });
+        event.preventDefault();
+    }
 });
 
 var handle_explain = (function () {
