@@ -682,9 +682,9 @@ var renderRunningQueries = (function (queries) {
             var queuedSplits = queryInfo.queuedDrivers;
 
             var query = queryInfo.query;
-            if (query.length > 200) {
-                query = query.substring(0, 200) + "...";
-            }
+            //if (query.length > 200) {
+            //    query = query.substring(0, 200) + "...";
+            //}
 
             var progress = "N/A";
             if (queryInfo.scheduled) {
@@ -753,9 +753,9 @@ var renderDoneQueries = (function (queries) {
             var completedSplits = queryInfo.completedDrivers;
 
             var query = queryInfo.query;
-            if (query.length > 200) {
-                query = query.substring(0, 200) + "...";
-            }
+            //if (query.length > 200) {
+            //    query = query.substring(0, 200) + "...";
+            //}
 
             return [
                 queryInfo.queryId,
