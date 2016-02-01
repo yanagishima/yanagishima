@@ -222,29 +222,34 @@ var handle_execute = (function () {
             if(query.startsWith("SELECT table_cat AS catalog, table_schem AS schema, table_name AS table_name FROM system.jdbc.tables WHERE table_type='TABLE' and table_name LIKE")) {
                 var thead = document.createElement("thead");
                 var tr = document.createElement("tr");
-                var th = document.createElement("th");
-                $(th).text("");
-                $(tr).append(th);
-                var th = document.createElement("th");
-                $(th).text("");
-                $(tr).append(th);
-                var th = document.createElement("th");
-                $(th).text("");
-                $(tr).append(th);
-                var th = document.createElement("th");
-                $(th).text("");
-                $(tr).append(th);
                 for (var i = 0; i < headers.length; ++i) {
                     var th = document.createElement("th");
                     $(th).text(headers[i]);
                     $(tr).append(th);
                 }
+                var th = document.createElement("th");
+                $(th).text("");
+                $(tr).append(th);
+                var th = document.createElement("th");
+                $(th).text("");
+                $(tr).append(th);
+                var th = document.createElement("th");
+                $(th).text("");
+                $(tr).append(th);
+                var th = document.createElement("th");
+                $(th).text("");
+                $(tr).append(th);
                 $(thead).append(tr);
                 $("#query-results").append(thead);
                 var tbody = document.createElement("tbody");
                 for (var i = 0; i < rows.length; ++i) {
                     var columns = rows[i];
                     var tr = document.createElement("tr");
+                    for (var j = 0; j < columns.length; ++j) {
+                        var td = document.createElement("td");
+                        $(td).text(columns[j]);
+                        $(tr).append(td);
+                    }
                     var td = document.createElement("td");
                     var select_button = document.createElement("button");
                     $(select_button).attr("type", "button");
@@ -279,11 +284,6 @@ var handle_execute = (function () {
                     $(show_presto_view_ddl_button).click({catalog: columns[0], schema: columns[1], table: columns[2]}, show_presto_view_ddl);
                     $(td).append(show_presto_view_ddl_button);
                     $(tr).append(td);
-                    for (var j = 0; j < columns.length; ++j) {
-                        var td = document.createElement("td");
-                        $(td).text(columns[j]);
-                        $(tr).append(td);
-                    }
                     $(tbody).append(tr);
                 }
                 $("#query-results").append(tbody);
