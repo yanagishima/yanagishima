@@ -231,6 +231,9 @@ var handle_execute = (function () {
                 var th = document.createElement("th");
                 $(th).text("");
                 $(tr).append(th);
+                var th = document.createElement("th");
+                $(th).text("");
+                $(tr).append(th);
                 for (var i = 0; i < headers.length; ++i) {
                     var th = document.createElement("th");
                     $(th).text(headers[i]);
@@ -267,6 +270,14 @@ var handle_execute = (function () {
                     $(show_columns_button).text("show columns");
                     $(show_columns_button).click({catalog: columns[0], schema: columns[1], table: columns[2]}, show_columns);
                     $(td).append(show_columns_button);
+                    $(tr).append(td);
+                    var td = document.createElement("td");
+                    var show_presto_view_ddl_button = document.createElement("button");
+                    $(show_presto_view_ddl_button).attr("type", "button");
+                    $(show_presto_view_ddl_button).attr("class", "btn btn-success");
+                    $(show_presto_view_ddl_button).text("show presto view ddl");
+                    $(show_presto_view_ddl_button).click({catalog: columns[0], schema: columns[1], table: columns[2]}, show_presto_view_ddl);
+                    $(td).append(show_presto_view_ddl_button);
                     $(tr).append(td);
                     for (var j = 0; j < columns.length; ++j) {
                         var td = document.createElement("td");
@@ -320,6 +331,12 @@ var show_columns = (function (event) {
         });
         event.preventDefault();
     }
+});
+
+var show_presto_view_ddl = (function (event) {
+    query = "SELECT view_definition FROM " + event.data.catalog + ".information_schema.views WHERE table_catalog='" + event.data.catalog + "' AND table_schema='" + event.data.schema + "' AND table_name='" + event.data.table + "'";
+    window.editor.setValue(query);
+    $("#query-submit").click();
 });
 
 var handle_explain = (function () {
