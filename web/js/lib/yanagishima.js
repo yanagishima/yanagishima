@@ -689,16 +689,6 @@ var renderRunningQueries = (function (queries) {
                 alert("You can kill the only query from yanagishima");
             }
         })
-        .append("td")
-        .append('a')
-        .attr("href", function (query) {
-            return "/queryDetail?queryId=" + query.queryId;
-        })
-        .attr("target", "_blank")
-        .attr("style", "color: #337ab7")
-        .text(function (query) {
-            return query.queryId;
-        });
 
     var cells = rows.selectAll("td")
         .data(function (queryInfo) {
@@ -719,6 +709,7 @@ var renderRunningQueries = (function (queries) {
             }
 
             return [
+                queryInfo.queryId,
                 queryInfo.elapsedTime,
                 query,
                 queryInfo.session.source,
@@ -794,6 +785,7 @@ var renderDoneQueries = (function (queries) {
             //}
 
             return [
+                queryInfo.queryId,
                 queryInfo.elapsedTime,
                 query,
                 queryInfo.session.source,
