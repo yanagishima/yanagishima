@@ -14,6 +14,8 @@ public class PrestoServiceModule extends AbstractModule {
 
 	private String prestoCoordinatorServer;
 
+	private String prestoRedirectServer;
+
 	private String catalog;
 
 	private String schema;
@@ -25,11 +27,12 @@ public class PrestoServiceModule extends AbstractModule {
 	private int selectLimit;
 
 	public PrestoServiceModule(int jettyPort, String webResourceDir,
-			String prestoCoordinatorServer, String catalog, String schema,
+			String prestoCoordinatorServer, String prestoRedirectServer, String catalog, String schema,
 			String user, String source, int selectLimit) {
 		this.jettyPort = jettyPort;
 		this.webResourceDir = webResourceDir;
 		this.prestoCoordinatorServer = prestoCoordinatorServer;
+		this.prestoRedirectServer = prestoRedirectServer;
 		this.catalog = catalog;
 		this.schema = schema;
 		this.user = user;
@@ -42,7 +45,7 @@ public class PrestoServiceModule extends AbstractModule {
 		bind(YanagishimaConfig.class)
 				.toInstance(
 						new YanagishimaConfig(jettyPort, webResourceDir,
-								prestoCoordinatorServer, catalog, schema, user,
+								prestoCoordinatorServer, prestoRedirectServer, catalog, schema, user,
 								source, selectLimit));
 	}
 }

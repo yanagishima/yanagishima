@@ -44,13 +44,14 @@ public class YanagishimaServer {
 		int jettyPort = Integer.parseInt(properties.getProperty("jetty.port"));
 		String webResourceDir = properties.getProperty("web.resource.dir", "web");
 		String prestoCoordinatorServer = properties.getProperty("presto.coordinator.server");
+		String prestoRedirectServer = properties.getProperty("presto.redirect.server");
 		String catalog = properties.getProperty("catalog");
 		String schema = properties.getProperty("schema");
 		String user = "yanagishima";
 		String source = "yanagishima";
 		int selectLimit = Integer.parseInt(properties.getProperty("select.limit"));
 		
-		PrestoServiceModule prestoServiceModule = new PrestoServiceModule(jettyPort, webResourceDir, prestoCoordinatorServer, catalog, schema, user, source, selectLimit);
+		PrestoServiceModule prestoServiceModule = new PrestoServiceModule(jettyPort, webResourceDir, prestoCoordinatorServer, prestoRedirectServer, catalog, schema, user, source, selectLimit);
 		PrestoServletModule prestoServletModule = new PrestoServletModule();
 		DbModule dbModule = new DbModule();
 		@SuppressWarnings("unused")

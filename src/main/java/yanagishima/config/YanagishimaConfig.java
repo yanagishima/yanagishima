@@ -7,6 +7,8 @@ public class YanagishimaConfig {
 	private String webResourceDir;
 
 	private String prestoCoordinatorServer;
+
+	private String prestoRedirectServer;
 	
 	private String catalog;
 	
@@ -19,10 +21,11 @@ public class YanagishimaConfig {
 	private int selectLimit;
 	
 	public YanagishimaConfig(int jettyPort, String webResourceDir,
-			String prestoCoordinatorServer, String catalog, String schema, String user, String source, int selectLimit) {
+			String prestoCoordinatorServer, String prestoRedirectServer, String catalog, String schema, String user, String source, int selectLimit) {
 		this.jettyPort = jettyPort;
 		this.webResourceDir = webResourceDir;
 		this.prestoCoordinatorServer = prestoCoordinatorServer;
+		this.prestoRedirectServer = prestoRedirectServer;
 		this.catalog = catalog;
 		this.schema = schema;
 		this.user = user;
@@ -41,6 +44,8 @@ public class YanagishimaConfig {
 	public String getPrestoCoordinatorServer() {
 		return prestoCoordinatorServer;
 	}
+
+	public String getPrestoRedirectServer() { return prestoRedirectServer; }
 
 	public String getCatalog() {
 		return catalog;
