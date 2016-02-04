@@ -44,6 +44,7 @@ At least, you need to edit ```presto.coordinator.server``` and ```catalog``` and
 ```
 jetty.port=8080 # yanagishima web port
 presto.coordinator.server=http://presto.coordinator:8080 # presto coordinator url
+presto.redirect.server=http://presto.coordinator:8080 # almost same as presto coordinator url. If you use reverse proxy, specify it
 select.limit=5000 # if query result exceeds this limit, rest of result is skipped
 catalog=hive # presto catalog name
 schema=default # presto schema name
