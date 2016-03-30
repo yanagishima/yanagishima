@@ -87,7 +87,15 @@ public class PrestoServiceImpl implements PrestoService {
 						Iterable<List<Object>> data = client.current().getData();
 						if (data != null) {
 							data.forEach(row -> {
-								List<Object> columnDataList = row.stream().map(Object::toString).collect(Collectors.toList());
+								List<Object> columnDataList = new ArrayList<>();
+								List<Object> tmpColumnDataList = row.stream().collect(Collectors.toList());
+								for (Object tmpColumnData : tmpColumnDataList) {
+									if(tmpColumnData instanceof Long) {
+										columnDataList.add(((Long) tmpColumnData).toString());
+									} else {
+										columnDataList.add(tmpColumnData);
+									}
+								}
 								rowDataList.add(columnDataList);
 							});
 						}
