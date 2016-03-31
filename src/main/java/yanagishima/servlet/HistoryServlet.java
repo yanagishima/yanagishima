@@ -6,6 +6,7 @@ import org.slf4j.LoggerFactory;
 import yanagishima.config.YanagishimaConfig;
 import yanagishima.row.Query;
 import yanagishima.util.JsonUtil;
+import yanagishima.util.PathUtil;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
@@ -14,12 +15,9 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.BufferedReader;
-import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.*;
 
 @Singleton
@@ -63,11 +61,8 @@ public class HistoryServlet extends HttpServlet {
 
     private void setResults(HashMap<String, Object> retVal, String queryid) {
         int limit = yanagishimaConfig.getSelectLimit();
-        String currentPath = new File(".").getAbsolutePath();
-        String yyyymmdd = queryid.substring(0, 8);
-        Path src = Paths.get(String.format("%s/result/%s/%s.tsv", currentPath, yyyymmdd, queryid));
         List<List<String>> rowDataList = new ArrayList<List<String>>();
-        try (BufferedReader br = Files.newBufferedReader(src, StandardCharsets.UTF_8)) {
+        try (BufferedReader br = Files.newBufferedReader(PathUtil.getResultFilePath(queryid), StandardCharsets.UTF_8)) {
             String line = br.readLine();
             int lineNumber = 0;
             while (line != null) {
