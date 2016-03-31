@@ -347,6 +347,7 @@ var handle_explain_distributed = (function () {
 });
 
 var explain = (function (distributed) {
+    $("#tsv-download").attr("disabled", "disabled");
     window.editor.removeLineClass(window.editor.listSelections()[0].head.line, 'wrap', 'CodeMirror-errorline-background');
     $("#query-results").empty();
     $("#error-msg").hide();
@@ -401,7 +402,6 @@ var explain = (function (distributed) {
                 $(tbody).append(tr);
             }
             $("#query-results").append(tbody);
-            $("#tsv-download").removeAttr("disabled");
         }
     };
     $.post(requestURL, requestData, successHandler, "json");
