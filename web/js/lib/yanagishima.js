@@ -845,5 +845,10 @@ function follow_current_uri() {
 function follow_current_uri_query(queryid){
     $.get("/history", {queryid: queryid}, function (data) {
         window.editor.setValue(data.queryString);
+        if (data.warn) {
+            $("#warn-msg").text(data.warn);
+            $("#warn-msg").slideDown("fast");
+        }
+        create_table("#query-results", data.headers, data.results, false);
     });
 };
