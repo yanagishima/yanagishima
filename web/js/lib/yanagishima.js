@@ -844,11 +844,16 @@ function follow_current_uri() {
 
 function follow_current_uri_query(queryid){
     $.get("/history", {queryid: queryid}, function (data) {
-        window.editor.setValue(data.queryString);
-        if (data.warn) {
-            $("#warn-msg").text(data.warn);
-            $("#warn-msg").slideDown("fast");
+        if (data.error) {
+            $("#error-msg").text(data.error);
+            $("#error-msg").slideDown("fast");
+        } else {
+            if (data.warn) {
+                $("#warn-msg").text(data.warn);
+                $("#warn-msg").slideDown("fast");
+            }
+            window.editor.setValue(data.queryString);
+            create_table("#query-results", data.headers, data.results, false);
         }
-        create_table("#query-results", data.headers, data.results, false);
     });
 };
