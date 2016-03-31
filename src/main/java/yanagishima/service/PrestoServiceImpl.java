@@ -9,7 +9,14 @@ import io.airlift.http.client.jetty.JettyHttpClient;
 import io.airlift.json.JsonCodec;
 import io.airlift.units.Duration;
 
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.IOException;
 import java.net.URI;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.sql.SQLException;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
@@ -19,6 +26,7 @@ import java.util.Locale;
 import java.util.TimeZone;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
+import java.nio.file.Files;
 
 import javax.inject.Inject;
 
@@ -53,8 +61,6 @@ public class PrestoServiceImpl implements PrestoService {
 
 	@Override
 	public PrestoQueryResult doQuery(String query) throws QueryErrorException {
-		
-		int limit = yanagishimaConfig.getSelectLimit();
 
 		try (StatementClient client = getStatementClient(query)) {
 			while (client.isValid() && (client.current().getData() == null)) {
@@ -80,31 +86,10 @@ public class PrestoServiceImpl implements PrestoService {
 					PrestoQueryResult prestoQueryResult = new PrestoQueryResult();
 					prestoQueryResult.setQueryId(queryId);
 					prestoQueryResult.setUpdateType(results.getUpdateType());
-					 List<String> columns = Lists.transform(results.getColumns(), Column::getName);
-					 prestoQueryResult.setColumns(columns);
-					List<List<Object>> rowDataList = new ArrayList<List<Object>>();
-					while (client.isValid()) {
-						Iterable<List<Object>> data = client.current().getData();
-						if (data != null) {
-							data.forEach(row -> {
-								List<Object> columnDataList = new ArrayList<>();
-								List<Object> tmpColumnDataList = row.stream().collect(Collectors.toList());
-								for (Object tmpColumnData : tmpColumnDataList) {
-									if(tmpColumnData instanceof Long) {
-										columnDataList.add(((Long) tmpColumnData).toString());
-									} else {
-										columnDataList.add(tmpColumnData);
-									}
-								}
-								rowDataList.add(columnDataList);
-							});
-						}
-						if(rowDataList.size() >= limit) {
-							prestoQueryResult.setWarningMessage(String.format("now fetch size is %d. This is more than %d. So, fetch operation stopped.", rowDataList.size(), limit));
-							break;
-						}
-						client.advance();
-					}
+					List<String> columns = Lists.transform(results.getColumns(), Column::getName);
+					prestoQueryResult.setColumns(columns);
+					List<List<String>> rowDataList = new ArrayList<List<String>>();
+					processData(client, queryId, prestoQueryResult, columns, rowDataList);
 					prestoQueryResult.setRecords(rowDataList);
 					return prestoQueryResult;
 				}
@@ -121,6 +106,55 @@ public class PrestoServiceImpl implements PrestoService {
 		}
 		throw new RuntimeException("should not reach");
 
+	}
+
+	private void processData(StatementClient client, String queryId, PrestoQueryResult prestoQueryResult, List<String> columns, List<List<String>> rowDataList) {
+		int limit = yanagishimaConfig.getSelectLimit();
+		String currentPath = new File(".").getAbsolutePath();
+		String yyyymmdd = queryId.substring(0, 8);
+		File yyyymmddDir = new File(String.format("%s/result/%s", currentPath, yyyymmdd));
+		if(!yyyymmddDir.isDirectory()) {
+			yyyymmddDir.mkdir();
+		}
+		Path dst = Paths.get(String.format("%s/result/%s/%s.tsv", currentPath, yyyymmdd, queryId));
+		try (BufferedWriter bw = Files.newBufferedWriter(dst, StandardCharsets.UTF_8)) {
+            bw.write(String.join("\t", columns));
+            bw.write("\n");
+            while (client.isValid()) {
+                Iterable<List<Object>> data = client.current().getData();
+                if (data != null) {
+                    data.forEach(row -> {
+                        List<String> columnDataList = new ArrayList<>();
+                        List<Object> tmpColumnDataList = row.stream().collect(Collectors.toList());
+                        for (Object tmpColumnData : tmpColumnDataList) {
+                            if(tmpColumnData instanceof Long) {
+                                columnDataList.add(((Long) tmpColumnData).toString());
+                            } else {
+                                if(tmpColumnData == null) {
+                                    columnDataList.add(null);
+                                } else{
+                                    columnDataList.add(tmpColumnData.toString());
+                                }
+                            }
+                        }
+                        try {
+                            bw.write(String.join("\t", columnDataList));
+                            bw.write("\n");
+                        } catch (IOException e) {
+                            throw new RuntimeException(e);
+                        }
+						if(rowDataList.size() < limit) {
+							rowDataList.add(columnDataList);
+						} else {
+							prestoQueryResult.setWarningMessage(String.format("now fetch size is %d. This is more than %d. So, fetch operation stopped.", rowDataList.size(), limit));
+						}
+                    });
+                }
+                client.advance();
+            }
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
 	}
 
 	private StatementClient getStatementClient(String query) {

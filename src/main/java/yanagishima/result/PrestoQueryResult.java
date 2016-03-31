@@ -8,7 +8,7 @@ public class PrestoQueryResult {
 	
 	private List<String> columns;
 	
-	private List<List<Object>> records;
+	private List<List<String>> records;
 	
 	private String warningMessage;
 
@@ -30,11 +30,11 @@ public class PrestoQueryResult {
 		this.columns = columns;
 	}
 
-	public List<List<Object>> getRecords() {
+	public List<List<String>> getRecords() {
 		return records;
 	}
 
-	public void setRecords(List<List<Object>> records) {
+	public void setRecords(List<List<String>> records) {
 		this.records = records;
 	}
 
