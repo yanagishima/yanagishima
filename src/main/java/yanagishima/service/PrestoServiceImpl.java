@@ -131,7 +131,7 @@ public class PrestoServiceImpl implements PrestoService {
                         } catch (IOException e) {
                             throw new RuntimeException(e);
                         }
-                        if (rowDataList.size() < limit) {
+                        if (client.getQuery().toLowerCase().startsWith("show") || rowDataList.size() < limit) {
                             rowDataList.add(columnDataList);
                         } else {
                             prestoQueryResult.setWarningMessage(String.format("now fetch size is %d. This is more than %d. So, fetch operation stopped.", rowDataList.size(), limit));
