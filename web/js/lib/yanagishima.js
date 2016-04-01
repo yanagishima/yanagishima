@@ -818,6 +818,7 @@ function follow_current_uri() {
 
 function follow_current_uri_query(queryid){
     $.get("/history", {queryid: queryid}, function (data) {
+        window.editor.setValue(data.queryString);
         if (data.error) {
             $("#error-msg").text(data.error);
             $("#error-msg").slideDown("fast");
@@ -826,7 +827,6 @@ function follow_current_uri_query(queryid){
                 $("#warn-msg").text(data.warn);
                 $("#warn-msg").slideDown("fast");
             }
-            window.editor.setValue(data.queryString);
             create_table("#query-results", data.headers, data.results, false);
             $("#tsv-download").removeAttr("disabled");
         }
