@@ -5,7 +5,7 @@ yanagishima is a Web UI for presto like MySQL Workbench.
 ![yanagishima](screenshot/yanagishima.png)
 
 # Features
-* easy to install(no RDBMS)
+* easy to install
 * easy to use like MySQL Workbench(for example, right click operation)
 * query history for self by using local storage
 * query bookmark
@@ -13,8 +13,8 @@ yanagishima is a Web UI for presto like MySQL Workbench.
 * kill running query
 * format query
 * show columns
-* show partitoins
-* TSV download by using session storage
+* show partitions
+* TSV download
 * incremental search
 * show presto view ddl
 * complete of query(Ctrl+Space)
@@ -28,9 +28,9 @@ yanagishima is a Web UI for presto like MySQL Workbench.
 
 # Quick Start
 ```
-wget https://bintray.com/artifact/download/wyukawa/generic/yanagishima-0.7.zip
-unzip yanagishima-0.7.zip
-cd yanagishima-0.7
+wget https://bintray.com/artifact/download/wyukawa/generic/yanagishima-0.8.zip
+unzip yanagishima-0.8.zip
+cd yanagishima-0.8
 vim conf/yanagishima.properties
 nohup bin/yanagishima-start.sh >y.log 2>&1 &
 ```
@@ -45,7 +45,7 @@ At least, you need to edit ```presto.coordinator.server``` and ```catalog``` and
 jetty.port=8080 # yanagishima web port
 presto.coordinator.server=http://presto.coordinator:8080 # presto coordinator url
 presto.redirect.server=http://presto.coordinator:8080 # almost same as presto coordinator url. If you use reverse proxy, specify it
-select.limit=5000 # if query result exceeds this limit, rest of result is skipped
+select.limit=500 # if query result exceeds this limit, to show rest of result is skipped
 catalog=hive # presto catalog name
 schema=default # presto schema name
 ```
