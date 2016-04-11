@@ -66,6 +66,7 @@ public class YanagishimaServer {
 		}
 
 		Server server = new Server(jettyPort);
+		server.setAttribute("org.eclipse.jetty.server.Request.maxFormContentSize", -1);
 
 		ServletContextHandler servletContextHandler = new ServletContextHandler(
 				server, "/", ServletContextHandler.SESSIONS);
