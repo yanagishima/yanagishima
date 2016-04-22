@@ -44,7 +44,7 @@ public class QueryHistoryServlet extends HttpServlet {
                     row.add(query.getFetchResultTimeString());
                     rowDataList.add(row);
                 }
-                retVal.put("headers", Arrays.asList("queryId", "query", "time"));
+                retVal.put("headers", Arrays.asList("Id", "Query", "Time"));
                 retVal.put("results", rowDataList);
             });
 
