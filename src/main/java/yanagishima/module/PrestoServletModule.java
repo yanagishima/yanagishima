@@ -5,6 +5,7 @@ import yanagishima.servlet.HistoryServlet;
 import yanagishima.servlet.KillServlet;
 import yanagishima.servlet.PrestoServlet;
 import yanagishima.servlet.QueryServlet;
+import yanagishima.servlet.QueryHistoryServlet;
 import yanagishima.servlet.QueryDetailServlet;
 import yanagishima.servlet.DownloadServlet;
 
@@ -20,6 +21,8 @@ public class PrestoServletModule extends ServletModule {
 		bind(HistoryServlet.class);
 		bind(QueryDetailServlet.class);
 		bind(DownloadServlet.class);
+		bind(QueryHistoryServlet.class);
+
 
 		serve("/presto").with(PrestoServlet.class);
 		serve("/query").with(QueryServlet.class);
@@ -28,6 +31,7 @@ public class PrestoServletModule extends ServletModule {
 		serve("/history").with(HistoryServlet.class);
 		serve("/queryDetail").with(QueryDetailServlet.class);
 		serve("/download").with(DownloadServlet.class);
+		serve("/queryHistory").with(QueryHistoryServlet.class);
 
 	}
 }

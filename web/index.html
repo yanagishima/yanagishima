@@ -143,13 +143,14 @@
                 });
             </script>
 
-            <h4>query executions/query histories/query bookmarks</h4>
+            <h4>query executions/query histories/query bookmarks/yanagishima query histories</h4>
 
             <div id="tabs">
                 <ul>
                     <li><a href="#query-executions-tab">query executions</a></li>
                     <li><a href="#query-histories-tab">query histories</a></li>
                     <li><a href="#query-bookmarks-tab">query bookmarks</a></li>
+                    <li><a href="#yanagishima-query-histories-tab">yanagishima query histories</a></li>
                 </ul>
 
                 <div id="query-executions-tab">
@@ -255,6 +256,26 @@
                     </div>
                     <script>
                         update_query_bookmarks_area();
+                    </script>
+                </div>
+
+                <div id="yanagishima-query-histories-tab">
+                    <input type="text" size="20" id="search_yanagishima_query_histories">
+                    <script>
+                        $('#search_yanagishima_query_histories').keyup(function(){
+                            if ($(this).val()) {
+                                $('#yanagishima-query-histories tr').hide();
+                                $('#yanagishima-query-histories tr td:nth-child(2):contains(' + this.value + ')').parent().show();
+                            } else {
+                                $('#yanagishima-query-histories tr').show();
+                            }
+                        });
+                    </script>
+                    <div>
+                        <table class="table table-bordered" id="yanagishima-query-histories"></table>
+                    </div>
+                    <script>
+                        update_yanagishima_query_histories_area();
                     </script>
                 </div>
 

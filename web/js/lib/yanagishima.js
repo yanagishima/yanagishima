@@ -211,7 +211,9 @@ var handle_execute = (function () {
             update_history_by_query(data.queryid);
             push_query(query);
             $("#query-histories").empty();
+            $("#yanagishima-query-histories").empty();
             update_query_histories_area();
+            update_yanagishima_query_histories_area();
             $("#query-results").empty();
             var headers = data.headers;
             var rows = data.results;
@@ -536,6 +538,53 @@ var update_query_bookmarks_area = (function () {
         $(tbody).append(tr);
     }
     $("#query-bookmarks").append(tbody);
+});
+
+var update_yanagishima_query_histories_area = (function () {
+
+    var requestData = {
+        "limit": 100
+    };
+
+    var successHandler = function (data) {
+        if (data.error) {
+            $("#error-msg").text(data.error);
+            $("#error-msg").slideDown("fast");
+        } else {
+            var headers = data.headers;
+            var rows = data.results;
+            var thead = document.createElement("thead");
+            var tr = document.createElement("tr");
+            for (var i = 0; i < headers.length; i++) {
+                var th = document.createElement("th");
+                $(th).text(headers[i]);
+                $(tr).append(th);
+            }
+            $(thead).append(tr);
+            $("#yanagishima-query-histories").append(thead);
+            var tbody = document.createElement("tbody");
+            for (var i = 0; i < rows.length; i++) {
+                var tr = document.createElement("tr");
+                var columns = rows[i];
+                for (var j = 0; j < columns.length; j++) {
+                    var td = document.createElement("td");
+                    if(j==0) {
+                        var link = document.createElement('a')
+                        link.href = "?queryid=" + columns[j];
+                        link.text = columns[j];
+                        link.style = "color: #337ab7";
+                        $(td).append(link);
+                    } else {
+                        $(td).text(columns[j]);
+                    }
+                    $(tr).append(td);
+                }
+                $(tbody).append(tr);
+            }
+            $("#yanagishima-query-histories").append(tbody);
+        }
+    };
+    $.get("/queryHistory", requestData, successHandler, "json");
 });
 
 var add_bookmark = (function (event) {

@@ -58,11 +58,13 @@ public class PrestoServiceImpl implements PrestoService {
             if ((!client.isFailed()) && (!client.isGone()) && (!client.isClosed())) {
                 QueryResults results = client.isValid() ? client.current() : client.finalResults();
                 String queryId = results.getId();
-                db.insert(Query.class)
-                        .value("query_id", queryId)
-                        .value("fetch_result_time_string", ZonedDateTime.now().toString())
-                        .value("query_string", query)
-                        .execute();
+                if(!query.toLowerCase().startsWith("show") && !query.toLowerCase().startsWith("explain")) {
+                    db.insert(Query.class)
+                            .value("query_id", queryId)
+                            .value("fetch_result_time_string", ZonedDateTime.now().toString())
+                            .value("query_string", query)
+                            .execute();
+                }
                 if (results.getUpdateType() != null) {
                     PrestoQueryResult prestoQueryResult = new PrestoQueryResult();
                     prestoQueryResult.setQueryId(queryId);
