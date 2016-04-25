@@ -7,7 +7,7 @@ yanagishima is a Web UI for presto like MySQL Workbench.
 # Features
 * easy to install
 * easy to use like MySQL Workbench(for example, right click operation)
-* query history for self by using local storage
+* query history
 * query bookmark
 * show query execution list
 * kill running query
@@ -28,9 +28,9 @@ yanagishima is a Web UI for presto like MySQL Workbench.
 
 # Quick Start
 ```
-wget https://bintray.com/artifact/download/wyukawa/generic/yanagishima-0.8.zip
-unzip yanagishima-0.8.zip
-cd yanagishima-0.8
+wget https://bintray.com/artifact/download/wyukawa/generic/yanagishima-0.9.zip
+unzip yanagishima-0.9.zip
+cd yanagishima-0.9
 vim conf/yanagishima.properties
 nohup bin/yanagishima-start.sh >y.log 2>&1 &
 ```
