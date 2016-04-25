@@ -341,22 +341,28 @@ var show_presto_view_ddl = (function (event) {
 });
 
 var handle_explain = (function () {
-    explain(false);
+    explain("");
 });
 
 var handle_explain_distributed = (function () {
-    explain(true);
+    explain("distributed");
 });
 
-var explain = (function (distributed) {
+var handle_explain_analyze = (function () {
+    explain("analyze");
+});
+
+var explain = (function (kind) {
     $("#tsv-download").attr("disabled", "disabled");
     window.editor.removeLineClass(window.editor.listSelections()[0].head.line, 'wrap', 'CodeMirror-errorline-background');
     $("#query-results").empty();
     $("#error-msg").hide();
     $("#warn-msg").hide();
     var query;
-    if (distributed) {
+    if (kind == "distributed") {
         query = "explain (type distributed) " + window.editor.getValue();
+    } else if (kind == "analyze") {
+        query = "explain analyze " + window.editor.getValue();
     } else {
         query = "explain " + window.editor.getValue();
     }
