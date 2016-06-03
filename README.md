@@ -28,9 +28,9 @@ yanagishima is a Web UI for presto like MySQL Workbench.
 
 # Quick Start
 ```
-wget https://bintray.com/artifact/download/wyukawa/generic/yanagishima-0.9.zip
-unzip yanagishima-0.9.zip
-cd yanagishima-0.9
+wget https://bintray.com/artifact/download/wyukawa/generic/yanagishima-1.0.zip
+unzip yanagishima-1.0.zip
+cd yanagishima-1.0
 vim conf/yanagishima.properties
 nohup bin/yanagishima-start.sh >y.log 2>&1 &
 ```
