@@ -94,6 +94,10 @@ var yanagishima_tree = (function () {
                         query = "DESCRIBE " + catalog + "." + schema + "." + table;
                         window.editor.setValue(query);
                         $("#query-submit").click();
+                    } else if (action === "show_create_table") {
+                        query = "SHOW CREATE TABLE " + catalog + "." + schema + "." + table;
+                        window.editor.setValue(query);
+                        $("#query-submit").click();
                     }
                 });
             }
@@ -217,9 +221,12 @@ var handle_execute = (function () {
             $("#query-results").empty();
             var headers = data.headers;
             var rows = data.results;
-            var view_ddl_flag=false;
+            var show_ddl_flag=false;
             if(query.match("SELECT view_definition FROM [a-zA-Z0-9]+\.information_schema\.views")) {
-                view_ddl_flag=true;
+                show_ddl_flag=true;
+            }
+            if(query.startsWith("SHOW CREATE TABLE")) {
+                show_ddl_flag=true;
             }
             if(query.startsWith("SELECT table_cat AS catalog, table_schem AS schema, table_name AS table_name FROM system.jdbc.tables WHERE table_type='TABLE' and table_name LIKE")) {
                 var thead = document.createElement("thead");
@@ -290,7 +297,7 @@ var handle_execute = (function () {
                 }
                 $("#query-results").append(tbody);
             } else {
-                create_table("#query-results", headers, rows, view_ddl_flag);
+                create_table("#query-results", headers, rows, show_ddl_flag);
             }
             $("#tsv-download").removeAttr("disabled");
         }
@@ -643,7 +650,7 @@ var delete_query = (function (event) {
     update_query_histories_area();
 });
 
-var create_table = (function (table_id, headers, rows, view_ddl_flag) {
+var create_table = (function (table_id, headers, rows, show_ddl_flag) {
     var thead = document.createElement("thead");
     var tr = document.createElement("tr");
     for (var i = 0; i < headers.length; ++i) {
@@ -662,7 +669,7 @@ var create_table = (function (table_id, headers, rows, view_ddl_flag) {
             if (typeof columns[j] == "object") {
                 $(td).text(JSON.stringify(columns[j]));
             } else {
-                if(view_ddl_flag == true) {
+                if(show_ddl_flag == true) {
                     $(td).html('<p>' + columns[j].replace(/\r?\n/g, "<br />") + '</p>');
                 } else {
                     $(td).text(columns[j]);
