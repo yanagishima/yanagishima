@@ -17,6 +17,7 @@ import org.slf4j.LoggerFactory;
 import com.facebook.presto.client.ErrorLocation;
 import com.facebook.presto.client.QueryError;
 
+import yanagishima.config.YanagishimaConfig;
 import yanagishima.exception.QueryErrorException;
 import yanagishima.result.PrestoQueryResult;
 import yanagishima.service.PrestoService;
@@ -31,9 +32,12 @@ public class PrestoServlet extends HttpServlet {
 
 	private final PrestoService prestoService;
 
+	private final YanagishimaConfig yanagishimaConfig;
+
 	@Inject
-	public PrestoServlet(PrestoService prestoService) {
+	public PrestoServlet(PrestoService prestoService, YanagishimaConfig yanagishimaConfig) {
 		this.prestoService = prestoService;
+		this.yanagishimaConfig = yanagishimaConfig;
 	}
 
 	@Override
@@ -45,6 +49,10 @@ public class PrestoServlet extends HttpServlet {
 		try {
 			Optional<String> queryOptional = Optional.ofNullable(request.getParameter("query"));
 			queryOptional.ifPresent(query -> {
+				String userData = request.getHeader(yanagishimaConfig.getAuditHttpHeaderName());
+				if(userData != null) {
+					LOGGER.info(String.format("%s executed %s", userData, query));
+				}
 				try {
 					PrestoQueryResult prestoQueryResult = prestoService.doQuery(query);
 					retVal.put("queryid", prestoQueryResult.getQueryId());

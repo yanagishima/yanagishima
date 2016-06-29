@@ -50,8 +50,9 @@ public class YanagishimaServer {
 		String user = "yanagishima";
 		String source = "yanagishima";
 		int selectLimit = Integer.parseInt(properties.getProperty("select.limit"));
+		String auditHttpHeaderName = properties.getProperty("audit.http.header.name");
 		
-		PrestoServiceModule prestoServiceModule = new PrestoServiceModule(jettyPort, webResourceDir, prestoCoordinatorServer, prestoRedirectServer, catalog, schema, user, source, selectLimit);
+		PrestoServiceModule prestoServiceModule = new PrestoServiceModule(jettyPort, webResourceDir, prestoCoordinatorServer, prestoRedirectServer, catalog, schema, user, source, selectLimit, auditHttpHeaderName);
 		PrestoServletModule prestoServletModule = new PrestoServletModule();
 		DbModule dbModule = new DbModule();
 		@SuppressWarnings("unused")
