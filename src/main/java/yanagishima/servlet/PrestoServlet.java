@@ -49,16 +49,18 @@ public class PrestoServlet extends HttpServlet {
 		try {
 			Optional<String> queryOptional = Optional.ofNullable(request.getParameter("query"));
 			queryOptional.ifPresent(query -> {
-				String userData = request.getHeader(yanagishimaConfig.getAuditHttpHeaderName());
-				if(userData != null) {
-					LOGGER.info(String.format("%s executed %s", userData, query));
+				String userName = request.getHeader(yanagishimaConfig.getAuditHttpHeaderName());
+				if(userName != null) {
+					LOGGER.info(String.format("%s executed %s", userName, query));
 				}
 				try {
-					PrestoQueryResult prestoQueryResult = prestoService.doQuery(query);
+					PrestoQueryResult prestoQueryResult = prestoService.doQuery(query, userName);
 					retVal.put("queryid", prestoQueryResult.getQueryId());
 					if (prestoQueryResult.getUpdateType() == null) {
 						retVal.put("headers", prestoQueryResult.getColumns());
 						retVal.put("results", prestoQueryResult.getRecords());
+						retVal.put("lineNumber", Integer.toString(prestoQueryResult.getLineNumber()));
+						retVal.put("rawDataSize", prestoQueryResult.getRawDataSize().toString());
 						Optional<String> warningMessageOptinal = Optional.ofNullable(prestoQueryResult.getWarningMessage());
 						warningMessageOptinal.ifPresent(warningMessage -> {
 							retVal.put("warn", warningMessage);

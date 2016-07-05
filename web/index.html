@@ -135,6 +135,11 @@
 
             <h4>query results</h4>
 
+            <div id="query-result-size-line"><span id="lineNumber"></span> lines, DataSize <span id="rawDataSize"></span></div>
+            <script>
+                $("#query-result-size-line").hide();
+            </script>
+
             <div id="query-results-tab">
                 <div style="height:500px; overflow:auto;" id="query-results-div">
                     <table class="table table-bordered" id="query-results"></table>

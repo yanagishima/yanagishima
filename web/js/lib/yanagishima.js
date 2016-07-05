@@ -184,6 +184,7 @@ var handle_execute = (function () {
     $("#query-results-tab").append(div);
     $("#error-msg").hide();
     $("#warn-msg").hide();
+    $("#query-result-size-line").hide();
     var tr = document.createElement("tr");
     var td = document.createElement("td");
     var img = document.createElement("img");
@@ -221,6 +222,11 @@ var handle_execute = (function () {
             $("#query-results").empty();
             var headers = data.headers;
             var rows = data.results;
+            if (data.rawDataSize && data.lineNumber) {
+                $("#rawDataSize").text(data.rawDataSize);
+                $("#lineNumber").text(data.lineNumber);
+                $("#query-result-size-line").show();
+            }
             var show_ddl_flag=false;
             if(query.match("SELECT view_definition FROM [a-zA-Z0-9]+\.information_schema\.views")) {
                 show_ddl_flag=true;
@@ -720,7 +726,7 @@ var renderRunningQueries = (function (queries) {
         .append('button')
         .text('Kill')
         .attr('type', 'button').on('click', function (query) {
-            if (query.session.user == 'yanagishima' && query.session.source == 'yanagishima') {
+            if (query.session.source == 'yanagishima') {
                 d3.xhr("/kill?queryId=" + query.queryId).send('GET');
                 $(this).attr('disabled', 'disabled');
             } else {
@@ -888,6 +894,11 @@ function follow_current_uri_query(queryid){
             if (data.warn) {
                 $("#warn-msg").text(data.warn);
                 $("#warn-msg").slideDown("fast");
+            }
+            if (data.rawDataSize && data.lineNumber) {
+                $("#rawDataSize").text(data.rawDataSize);
+                $("#lineNumber").text(data.lineNumber);
+                $("#query-result-size-line").show();
             }
             create_table("#query-results", data.headers, data.results, false);
             $("#tsv-download").removeAttr("disabled");

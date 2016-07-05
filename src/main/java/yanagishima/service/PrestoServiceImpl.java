@@ -6,6 +6,7 @@ import io.airlift.http.client.HttpClientConfig;
 import io.airlift.http.client.jetty.JettyHttpClient;
 import io.airlift.json.JsonCodec;
 import io.airlift.units.Duration;
+import io.airlift.units.DataSize;
 import me.geso.tinyorm.TinyORM;
 import yanagishima.config.YanagishimaConfig;
 import yanagishima.exception.QueryErrorException;
@@ -48,9 +49,9 @@ public class PrestoServiceImpl implements PrestoService {
     }
 
     @Override
-    public PrestoQueryResult doQuery(String query) throws QueryErrorException {
+    public PrestoQueryResult doQuery(String query, String userName) throws QueryErrorException {
 
-        try (StatementClient client = getStatementClient(query)) {
+        try (StatementClient client = getStatementClient(query, userName)) {
             while (client.isValid() && (client.current().getData() == null)) {
                 client.advance();
             }
@@ -107,13 +108,15 @@ public class PrestoServiceImpl implements PrestoService {
             yyyymmddDir.mkdir();
         }
         Path dst = Paths.get(String.format("%s/result/%s/%s.tsv", currentPath, yyyymmdd, queryId));
+        int lineNumber = 0;
         try (BufferedWriter bw = Files.newBufferedWriter(dst, StandardCharsets.UTF_8)) {
             bw.write(String.join("\t", columns));
             bw.write("\n");
+            lineNumber++;
             while (client.isValid()) {
                 Iterable<List<Object>> data = client.current().getData();
                 if (data != null) {
-                    data.forEach(row -> {
+                    for(List<Object> row : data) {
                         List<String> columnDataList = new ArrayList<>();
                         List<Object> tmpColumnDataList = row.stream().collect(Collectors.toList());
                         for (Object tmpColumnData : tmpColumnDataList) {
@@ -130,6 +133,7 @@ public class PrestoServiceImpl implements PrestoService {
                         try {
                             bw.write(String.join("\t", columnDataList));
                             bw.write("\n");
+                            lineNumber++;
                         } catch (IOException e) {
                             throw new RuntimeException(e);
                         }
@@ -138,21 +142,35 @@ public class PrestoServiceImpl implements PrestoService {
                         } else {
                             prestoQueryResult.setWarningMessage(String.format("now fetch size is %d. This is more than %d. So, fetch operation stopped.", rowDataList.size(), limit));
                         }
-                    });
+                    }
                 }
                 client.advance();
             }
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+
+        prestoQueryResult.setLineNumber(lineNumber);
+        try {
+            long size = Files.size(dst);
+            DataSize rawDataSize = new DataSize(size, DataSize.Unit.BYTE);
+            prestoQueryResult.setRawDataSize(rawDataSize.convertToMostSuccinctDataSize());
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
-    private StatementClient getStatementClient(String query) {
+    private StatementClient getStatementClient(String query, String userName) {
         String prestoCoordinatorServer = yanagishimaConfig
                 .getPrestoCoordinatorServer();
         String catalog = yanagishimaConfig.getCatalog();
         String schema = yanagishimaConfig.getSchema();
-        String user = yanagishimaConfig.getUser();
+        String user = null;
+        if(userName == null ) {
+            user = yanagishimaConfig.getUser();
+        } else {
+            user = userName;
+        }
         String source = yanagishimaConfig.getSource();
 
         JsonCodec<QueryResults> jsonCodec = jsonCodec(QueryResults.class);
