@@ -14,23 +14,29 @@ yanagishima is a Web UI for presto like MySQL Workbench.
 * format query
 * show columns
 * show partitions
+* show query result data size
+* show query result line number
 * TSV download
-* incremental search
+* incremental search for query history
 * show presto view ddl
+* show ddl
 * complete of query(Ctrl+Space)
 * share query
+* share query result
 * syntax highlight
 * search table
 
 # Limitation
 
 * paging results is not supported
+* Access Control
+* Authentication
 
 # Quick Start
 ```
-wget https://bintray.com/artifact/download/wyukawa/generic/yanagishima-1.0.zip
-unzip yanagishima-1.0.zip
-cd yanagishima-1.0
+wget https://bintray.com/artifact/download/wyukawa/generic/yanagishima-1.1.zip
+unzip yanagishima-1.1.zip
+cd yanagishima-1.1
 vim conf/yanagishima.properties
 nohup bin/yanagishima-start.sh >y.log 2>&1 &
 ```
@@ -48,7 +54,13 @@ presto.redirect.server=http://presto.coordinator:8080 # almost same as presto co
 select.limit=500 # if query result exceeds this limit, to show rest of result is skipped
 catalog=hive # presto catalog name
 schema=default # presto schema name
+audit.http.header.name=some.auth.header # http header name for audit log
 ```
+
+# Audit Logging
+yanagishima doesn't have authentication feature.
+but, if you use reverse proxy server like Nginx for authentication, you can add audit logging.
+In this case, please specify ```audit.http.header.name``` which is http header name to be passed through nginx
 
 # Start
 ```
