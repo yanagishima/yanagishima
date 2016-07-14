@@ -60,7 +60,7 @@ audit.http.header.name=some.auth.header # http header name for audit log
 # Audit Logging
 yanagishima doesn't have authentication feature.
 but, if you use reverse proxy server like Nginx for authentication, you can add audit logging.
-In this case, please specify ```audit.http.header.name``` which is http header name to be passed through nginx
+In this case, please specify ```audit.http.header.name``` which is http header name to be passed through Nginx.
 
 # Start
 ```
