@@ -730,7 +730,10 @@ var renderRunningQueries = (function (queries) {
                 d3.xhr("/kill?queryId=" + query.queryId).send('GET');
                 $(this).attr('disabled', 'disabled');
             } else {
-                alert("You can kill the only query from yanagishima");
+                if(confirm("You are killing the query from non yanagishima user.\nIs it OK?")) {
+                    d3.xhr("/kill?queryId=" + query.queryId).send('GET');
+                    $(this).attr('disabled', 'disabled');
+                }
             }
         })
 
