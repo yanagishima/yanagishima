@@ -208,6 +208,7 @@ var handle_execute = (function () {
             $("#error-msg").slideDown("fast");
             $("#query-results").empty();
             selectLine(data.errorLineNumber);
+            update_history_by_query(data.queryid);
         } else {
             if (data.warn) {
                 $("#warn-msg").text(data.warn);

@@ -32,7 +32,7 @@ public class DownloadServlet extends HttpServlet {
             response.setContentType("application/octet-stream");
             response.setHeader("Content-Disposition", "inline; filename=\"" + fileName + "\"");
             try (OutputStream out = response.getOutputStream()) {
-                try (InputStream in = Files.newInputStream(PathUtil.getResultFilePath(queryid))) {
+                try (InputStream in = Files.newInputStream(PathUtil.getResultFilePath(queryid, false))) {
                     byte[] buff = new byte[1024];
                     int len = 0;
                     while ((len = in.read(buff, 0, buff.length)) != -1) {

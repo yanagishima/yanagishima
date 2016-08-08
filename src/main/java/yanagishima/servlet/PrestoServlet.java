@@ -77,6 +77,7 @@ public class PrestoServlet extends HttpServlet {
 						});
 					});
 					retVal.put("error", e.getCause().getMessage());
+					retVal.put("queryid", e.getQueryId());
 				}
 			});
 		} catch (Throwable e) {

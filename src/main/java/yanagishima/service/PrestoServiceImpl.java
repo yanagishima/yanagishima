@@ -91,7 +91,24 @@ public class PrestoServiceImpl implements PrestoService {
             } else if (client.isGone()) {
                 throw new RuntimeException("Query is gone (server restarted?)");
             } else if (client.isFailed()) {
-                throw resultsException(client.finalResults());
+                QueryResults results = client.finalResults();
+                String queryId = results.getId();
+                db.insert(Query.class)
+                        .value("query_id", queryId)
+                        .value("fetch_result_time_string", ZonedDateTime.now().toString())
+                        .value("query_string", query)
+                        .execute();
+                Path dst = getResultFilePath(queryId, true);
+                QueryError error = results.getError();
+                String message = format("Query failed (#%s): %s", results.getId(), error.getMessage());
+                try {
+                    try (BufferedWriter bw = Files.newBufferedWriter(dst, StandardCharsets.UTF_8)) {
+                        bw.write(message);
+                    }
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+                throw resultsException(results);
             }
 
         }
@@ -101,13 +118,7 @@ public class PrestoServiceImpl implements PrestoService {
 
     private void processData(StatementClient client, String queryId, PrestoQueryResult prestoQueryResult, List<String> columns, List<List<String>> rowDataList) {
         int limit = yanagishimaConfig.getSelectLimit();
-        String currentPath = new File(".").getAbsolutePath();
-        String yyyymmdd = queryId.substring(0, 8);
-        File yyyymmddDir = new File(String.format("%s/result/%s", currentPath, yyyymmdd));
-        if (!yyyymmddDir.isDirectory()) {
-            yyyymmddDir.mkdir();
-        }
-        Path dst = Paths.get(String.format("%s/result/%s/%s.tsv", currentPath, yyyymmdd, queryId));
+        Path dst = getResultFilePath(queryId, false);
         int lineNumber = 0;
         try (BufferedWriter bw = Files.newBufferedWriter(dst, StandardCharsets.UTF_8)) {
             bw.write(String.join("\t", columns));
@@ -160,6 +171,20 @@ public class PrestoServiceImpl implements PrestoService {
         }
     }
 
+    private Path getResultFilePath(String queryId, boolean error) {
+        String currentPath = new File(".").getAbsolutePath();
+        String yyyymmdd = queryId.substring(0, 8);
+        File yyyymmddDir = new File(String.format("%s/result/%s", currentPath, yyyymmdd));
+        if (!yyyymmddDir.isDirectory()) {
+            yyyymmddDir.mkdir();
+        }
+        if(error) {
+            return Paths.get(String.format("%s/result/%s/%s.err", currentPath, yyyymmdd, queryId));
+        } else {
+            return Paths.get(String.format("%s/result/%s/%s.tsv", currentPath, yyyymmdd, queryId));
+        }
+    }
+
     private StatementClient getStatementClient(String query, String userName) {
         String prestoCoordinatorServer = yanagishimaConfig
                 .getPrestoCoordinatorServer();
@@ -186,7 +211,7 @@ public class PrestoServiceImpl implements PrestoService {
         QueryError error = results.getError();
         String message = format("Query failed (#%s): %s", results.getId(), error.getMessage());
         Throwable cause = (error.getFailureInfo() == null) ? null : error.getFailureInfo().toException();
-        return new QueryErrorException(error, new SQLException(message, error.getSqlState(), error.getErrorCode(), cause));
+        return new QueryErrorException(results.getId(), error, new SQLException(message, error.getSqlState(), error.getErrorCode(), cause));
     }
 
 }
