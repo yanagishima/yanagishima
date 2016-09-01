@@ -42,10 +42,17 @@ public class IkasanServlet extends HttpServlet {
         Optional<String> queryidOptional = Optional.ofNullable(request.getParameter("queryid"));
         queryidOptional.ifPresent(queryid -> {
             try {
+                String userName = request.getHeader(yanagishimaConfig.getAuditHttpHeaderName());
+                String user = null;
+                if(userName == null ) {
+                    user = yanagishimaConfig.getUser();
+                } else {
+                    user = userName;
+                }
                 HttpResponse httpResponse = Request.Post(yanagishimaConfig.getIkasanUrl() + "/notice").bodyForm(Form.form().add("channel", yanagishimaConfig.getIkasanChannel())
                         .add("nickname", "yanagishima")
                         .add("color", "green")
-                        .add("message", request.getRequestURL().substring(0, request.getRequestURL().length() - "/ikasan".length()) + "?queryid=" + queryid)
+                        .add("message", user + " shares " + request.getRequestURL().substring(0, request.getRequestURL().length() - "/ikasan".length()) + "?queryid=" + queryid)
                         .build()).execute().returnResponse();
 
                 if(httpResponse.getStatusLine().getStatusCode() != HttpStatus.SC_OK) {
