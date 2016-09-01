@@ -178,6 +178,7 @@ var handle_execute = (function () {
     $("#query-clear").attr("disabled", "disabled");
     $("#query-format").attr("disabled", "disabled");
     $("#tsv-download").attr("disabled", "disabled");
+    $("#send-ikasan").attr("disabled", "disabled");
     $("#query-results-div").remove();
     var div = $("<div></div>", {style: "height:500px; overflow:auto;", id: "query-results-div"});
     div.append($("<table></table>", {class: "table table-bordered", id: "query-results"}));
@@ -307,6 +308,7 @@ var handle_execute = (function () {
                 create_table("#query-results", headers, rows, show_ddl_flag);
             }
             $("#tsv-download").removeAttr("disabled");
+            $("#send-ikasan").removeAttr("disabled");
         }
     };
     $.post(requestURL, requestData, successHandler, "json");
@@ -368,6 +370,7 @@ var handle_explain_analyze = (function () {
 
 var explain = (function (kind) {
     $("#tsv-download").attr("disabled", "disabled");
+    $("#send-ikasan").attr("disabled", "disabled");
     window.editor.removeLineClass(window.editor.listSelections()[0].head.line, 'wrap', 'CodeMirror-errorline-background');
     $("#query-results").empty();
     $("#error-msg").hide();
@@ -466,6 +469,25 @@ var tsv_download = (function () {
     var link = document.createElement('a')
     link.href = "/download?queryid=" + queryid;
     link.click();
+});
+
+var send_ikasan = (function () {
+    var param = document.location.search.substring(1);
+    if (param === null) {
+        return;
+    }
+    var element = param.split('=');
+    var queryid = element[1];
+
+    var successHandler = function (data) {
+        if (data.error) {
+            $("#error-msg").text(data.error);
+            $("#error-msg").slideDown("fast");
+        }
+    };
+
+    $.get("/ikasan", {"queryid": queryid}, successHandler);
+
 });
 
 var push_query = (function (query) {
@@ -906,6 +928,7 @@ function follow_current_uri_query(queryid){
             }
             create_table("#query-results", data.headers, data.results, false);
             $("#tsv-download").removeAttr("disabled");
+            $("#send-ikasan").removeAttr("disabled");
         }
     });
 };

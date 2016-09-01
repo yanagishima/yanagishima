@@ -1,13 +1,6 @@
 package yanagishima.module;
 
-import yanagishima.servlet.FormatSqlServlet;
-import yanagishima.servlet.HistoryServlet;
-import yanagishima.servlet.KillServlet;
-import yanagishima.servlet.PrestoServlet;
-import yanagishima.servlet.QueryServlet;
-import yanagishima.servlet.QueryHistoryServlet;
-import yanagishima.servlet.QueryDetailServlet;
-import yanagishima.servlet.DownloadServlet;
+import yanagishima.servlet.*;
 
 import com.google.inject.servlet.ServletModule;
 
@@ -22,6 +15,7 @@ public class PrestoServletModule extends ServletModule {
 		bind(QueryDetailServlet.class);
 		bind(DownloadServlet.class);
 		bind(QueryHistoryServlet.class);
+		bind(IkasanServlet.class);
 
 
 		serve("/presto").with(PrestoServlet.class);
@@ -32,6 +26,7 @@ public class PrestoServletModule extends ServletModule {
 		serve("/queryDetail").with(QueryDetailServlet.class);
 		serve("/download").with(DownloadServlet.class);
 		serve("/queryHistory").with(QueryHistoryServlet.class);
+		serve("/ikasan").with(IkasanServlet.class);
 
 	}
 }
