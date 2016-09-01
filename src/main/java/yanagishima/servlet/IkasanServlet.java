@@ -45,7 +45,7 @@ public class IkasanServlet extends HttpServlet {
                 HttpResponse httpResponse = Request.Post(yanagishimaConfig.getIkasanUrl() + "/notice").bodyForm(Form.form().add("channel", yanagishimaConfig.getIkasanChannel())
                         .add("nickname", "yanagishima")
                         .add("color", "green")
-                        .add("message", yanagishimaConfig.getPrestoRedirectServer() + "query.html?" + queryid)
+                        .add("message", request.getRequestURL().substring(0, request.getRequestURL().length() - "/ikasan".length()) + "?queryid=" + queryid)
                         .build()).execute().returnResponse();
 
                 if(httpResponse.getStatusLine().getStatusCode() != HttpStatus.SC_OK) {
