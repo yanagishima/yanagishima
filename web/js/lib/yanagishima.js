@@ -486,7 +486,7 @@ var send_ikasan = (function () {
         }
     };
 
-    $.get("/ikasan", {"queryid": queryid}, successHandler);
+    $.get("/ikasan", {"hostname": document.location.hostname, "port": document.location.port, "queryid": queryid}, successHandler);
 
 });
 

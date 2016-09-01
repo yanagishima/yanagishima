@@ -49,10 +49,19 @@ public class IkasanServlet extends HttpServlet {
                 } else {
                     user = userName;
                 }
+                String hostname = request.getParameter("hostname");
+                String port = request.getParameter("port");
+                String url = null;
+                if(port == null || port.length() == 0) {
+                    url = "http://" + hostname;
+                } else {
+                    url = "http://" + hostname + ":" + port;
+                }
+
                 HttpResponse httpResponse = Request.Post(yanagishimaConfig.getIkasanUrl() + "/notice").bodyForm(Form.form().add("channel", yanagishimaConfig.getIkasanChannel())
                         .add("nickname", "yanagishima")
                         .add("color", "green")
-                        .add("message", user + " shares " + request.getRequestURL().substring(0, request.getRequestURL().length() - "/ikasan".length()) + "?queryid=" + queryid)
+                        .add("message", user + " shares " + url + "?queryid=" + queryid)
                         .build()).execute().returnResponse();
 
                 if(httpResponse.getStatusLine().getStatusCode() != HttpStatus.SC_OK) {
