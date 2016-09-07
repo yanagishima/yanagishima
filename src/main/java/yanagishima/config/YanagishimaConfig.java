@@ -21,9 +21,13 @@ public class YanagishimaConfig {
 	private int selectLimit;
 
 	private String auditHttpHeaderName;
-	
+
+	private String ikasanUrl;
+
+	private String ikasanChannel;
+
 	public YanagishimaConfig(int jettyPort, String webResourceDir,
-			String prestoCoordinatorServer, String prestoRedirectServer, String catalog, String schema, String user, String source, int selectLimit, String auditHttpHeaderName) {
+			String prestoCoordinatorServer, String prestoRedirectServer, String catalog, String schema, String user, String source, int selectLimit, String auditHttpHeaderName, String ikasanUrl, String ikasanChannel) {
 		this.jettyPort = jettyPort;
 		this.webResourceDir = webResourceDir;
 		this.prestoCoordinatorServer = prestoCoordinatorServer;
@@ -34,6 +38,8 @@ public class YanagishimaConfig {
 		this.source = source;
 		this.selectLimit = selectLimit;
 		this.auditHttpHeaderName = auditHttpHeaderName;
+		this.ikasanUrl = ikasanUrl;
+		this.ikasanChannel = ikasanChannel;
 	}
 	
 	public int getJettyPort() {
@@ -73,5 +79,9 @@ public class YanagishimaConfig {
 	public String getAuditHttpHeaderName() {
 		return auditHttpHeaderName;
 	}
+
+	public String getIkasanUrl() { return ikasanUrl; }
+
+	public String getIkasanChannel() { return ikasanChannel; }
 
 }

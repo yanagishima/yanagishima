@@ -28,9 +28,13 @@ public class PrestoServiceModule extends AbstractModule {
 
 	private String auditHttpHeaderName;
 
+	private String ikasanUrl;
+
+	private String ikasanChannel;
+
 	public PrestoServiceModule(int jettyPort, String webResourceDir,
 			String prestoCoordinatorServer, String prestoRedirectServer, String catalog, String schema,
-			String user, String source, int selectLimit, String auditHttpHeaderName) {
+			String user, String source, int selectLimit, String auditHttpHeaderName, String ikasanUrl, String ikasanChannel) {
 		this.jettyPort = jettyPort;
 		this.webResourceDir = webResourceDir;
 		this.prestoCoordinatorServer = prestoCoordinatorServer;
@@ -41,6 +45,8 @@ public class PrestoServiceModule extends AbstractModule {
 		this.source = source;
 		this.selectLimit = selectLimit;
 		this.auditHttpHeaderName = auditHttpHeaderName;
+		this.ikasanUrl = ikasanUrl;
+		this.ikasanChannel = ikasanChannel;
 	}
 
 	protected void configure() {
@@ -49,6 +55,6 @@ public class PrestoServiceModule extends AbstractModule {
 				.toInstance(
 						new YanagishimaConfig(jettyPort, webResourceDir,
 								prestoCoordinatorServer, prestoRedirectServer, catalog, schema, user,
-								source, selectLimit, auditHttpHeaderName));
+								source, selectLimit, auditHttpHeaderName, ikasanUrl, ikasanChannel));
 	}
 }
