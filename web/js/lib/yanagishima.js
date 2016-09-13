@@ -735,77 +735,93 @@ var redraw = (function () {
 var renderRunningQueries = (function (queries) {
     var tbody = d3.select("#running").select("tbody");
 
-    var rows = tbody.selectAll("tr")
-        .data(queries, function (query) {
-            return query.queryId;
-        })
+    tbody.remove();
 
-    rows.exit()
-        .remove();
+    for (var i = 0; i < queries.length; i++) {
+        var tr = document.createElement("tr");
+        $(tr).attr("class", "info");
 
-    rows.enter()
-        .append("tr")
-        .attr("class", "info")
-        .append('button')
-        .text('Kill')
-        .attr('type', 'button').on('click', function (query) {
-            if (query.session.source == 'yanagishima') {
-                d3.xhr("/kill?queryId=" + query.queryId).send('GET');
-                $(this).attr('disabled', 'disabled');
-            } else {
-                if(confirm("You are killing the query from non yanagishima user.\nIs it OK?")) {
-                    d3.xhr("/kill?queryId=" + query.queryId).send('GET');
-                    $(this).attr('disabled', 'disabled');
-                }
-            }
-        })
+        queryInfo = queries[i];
+        var splits = queryInfo.totalDrivers;
+        var completedSplits = queryInfo.completedDrivers;
 
-    var cells = rows.selectAll("td")
-        .data(function (queryInfo) {
-            var splits = queryInfo.totalDrivers;
-            var completedSplits = queryInfo.completedDrivers;
+        var runningSplits = queryInfo.runningDrivers;
+        var queuedSplits = queryInfo.queuedDrivers;
 
-            var runningSplits = queryInfo.runningDrivers;
-            var queuedSplits = queryInfo.queuedDrivers;
+        var query = queryInfo.query;
 
-            var query = queryInfo.query;
-            //if (query.length > 200) {
-            //    query = query.substring(0, 200) + "...";
-            //}
+        var progress = "N/A";
+        if (queryInfo.scheduled) {
+            progress = d3.format("%")(splits == 0 ? 0 : completedSplits / splits);
+        }
 
-            var progress = "N/A";
-            if (queryInfo.scheduled) {
-                progress = d3.format("%")(splits == 0 ? 0 : completedSplits / splits);
-            }
+        var kill_td = document.createElement("td");
+        var kill_button = document.createElement("button");
+        $(kill_button).attr("type", "button");
+        $(kill_button).text("kill");
+        $(kill_button).click({query: queryInfo}, kill_query);
+        $(kill_td).append(kill_button);
+        $(tr).append(kill_td);
 
-            return [
-                queryInfo.queryId,
-                formatDuration(queryInfo.elapsedTimeMillis),
-                query,
-                queryInfo.session.source,
-                queryInfo.session.user,
-                queryInfo.state,
-                progress,
-                queuedSplits,
-                runningSplits,
-                completedSplits
-            ]
-        });
+        var queryid_td = document.createElement("td");
+        var link = document.createElement('a')
+        link.href = "/queryDetail?queryId=" + queryInfo.queryId;
+        link.text = queryInfo.queryId;
+        link.style = "color: #337ab7";
+        $(queryid_td).append(link);
+        $(tr).append(queryid_td);
 
-    cells.text(function (d) {
-        return d;
-    });
+        var elapsed_td = document.createElement("td");
+        $(elapsed_td).text(formatDuration(queryInfo.elapsedTimeMillis));
+        $(tr).append(elapsed_td);
 
-    cells.enter()
-        .append("td")
-        .text(function (d) {
-            return d;
-        });
+        var query_td = document.createElement("td");
+        $(query_td).text(query);
+        $(tr).append(query_td);
 
-    tbody.selectAll("tr")
-        .sort(function (a, b) {
-            return d3.descending(a.createTime, b.createTime);
-        });
+        var source_td = document.createElement("td");
+        $(source_td).text(queryInfo.session.source);
+        $(tr).append(source_td);
+
+        var user_td = document.createElement("td");
+        $(user_td).text(queryInfo.session.user);
+        $(tr).append(user_td);
+
+        var state_td = document.createElement("td");
+        $(state_td).text(queryInfo.state);
+        $(tr).append(state_td);
+
+        var progress_td = document.createElement("td");
+        $(progress_td).text(progress);
+        $(tr).append(progress_td);
+
+        var queuedSplits_td = document.createElement("td");
+        $(queuedSplits_td).text(queuedSplits);
+        $(tr).append(queuedSplits_td);
+
+        var runningSplits_td = document.createElement("td");
+        $(runningSplits_td).text(runningSplits);
+        $(tr).append(runningSplits_td);
+
+        var completedSplits_td = document.createElement("td");
+        $(completedSplits_td).text(completedSplits);
+        $(tr).append(completedSplits_td);
+
+        $("#running").append(tr);
+
+    }
+
+});
+
+var kill_query = (function (event) {
+    query = event.data.query;
+    if (query.session.source == 'yanagishima') {
+        d3.xhr("/kill?queryId=" + query.queryId).send('GET');
+    } else {
+        if(confirm("You are killing the query from non yanagishima user.\nIs it OK?")) {
+            d3.xhr("/kill?queryId=" + query.queryId).send('GET');
+        }
+    }
 });
 
 var renderDoneQueries = (function (queries) {
