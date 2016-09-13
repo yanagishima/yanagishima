@@ -780,7 +780,7 @@ var renderRunningQueries = (function (queries) {
 
             return [
                 queryInfo.queryId,
-                queryInfo.elapsedTime,
+                formatDuration(queryInfo.elapsedTimeMillis),
                 query,
                 queryInfo.session.source,
                 queryInfo.session.user,
@@ -856,7 +856,7 @@ var renderDoneQueries = (function (queries) {
 
             return [
                 queryInfo.queryId,
-                queryInfo.elapsedTime,
+                formatDuration(queryInfo.elapsedTimeMillis),
                 query,
                 queryInfo.session.source,
                 queryInfo.session.user,
@@ -931,4 +931,39 @@ function follow_current_uri_query(queryid){
             $("#send-ikasan").removeAttr("disabled");
         }
     });
+};
+
+function precisionRound(n) {
+    if (n < 10) {
+        return n.toFixed(2);
+    }
+    if (n < 100) {
+        return n.toFixed(1);
+    }
+    return Math.round(n);
+};
+
+function formatDuration(duration) {
+    var unit = "ms";
+    if (duration > 1000) {
+        duration /= 1000;
+        unit = "s";
+    }
+    if (unit == "s" && duration > 60) {
+        duration /= 60;
+        unit = "m";
+    }
+    if (unit == "m" && duration > 60) {
+        duration /= 60;
+        unit = "h";
+    }
+    if (unit == "h" && duration > 24) {
+        duration /= 24;
+        unit = "d";
+    }
+    if (unit == "d" && duration > 7) {
+        duration /= 7;
+        unit = "w";
+    }
+    return precisionRound(duration) + unit;
 };
