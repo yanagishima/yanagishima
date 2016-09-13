@@ -25,6 +25,7 @@ yanagishima is a Web UI for presto like MySQL Workbench.
 * share query result
 * syntax highlight
 * search table
+* post to HipChat
 
 # Limitation
 
@@ -34,10 +35,9 @@ yanagishima is a Web UI for presto like MySQL Workbench.
 
 # Quick Start
 ```
-wget https://bintray.com/artifact/download/wyukawa/generic/yanagishima-1.1.zip
-unzip yanagishima-1.1.zip
-cd yanagishima-1.1
-mkdir result
+wget https://bintray.com/artifact/download/wyukawa/generic/yanagishima-1.2.zip
+unzip yanagishima-1.2.zip
+cd yanagishima-1.2
 vim conf/yanagishima.properties
 nohup bin/yanagishima-start.sh >y.log 2>&1 &
 ```
@@ -56,6 +56,8 @@ select.limit=500 # if query result exceeds this limit, to show rest of result is
 catalog=hive # presto catalog name
 schema=default # presto schema name
 audit.http.header.name=some.auth.header # http header name for audit log
+ikasan.url=http://ikachan.localhost/ # specify ikasan url. In detail, see https://github.com/studio3104/ikasan
+ikasan.channel=#test # HipChat room name
 ```
 
 # Audit Logging
