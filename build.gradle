@@ -101,6 +101,8 @@ dependencies {
     compile 'org.xerial:sqlite-jdbc:3.8.11.2'
     compile 'me.geso:tinyorm:1.10.0'
     compile 'org.projectlombok:lombok:1.16.6'
+    compile 'io.prometheus:simpleclient:0.0.16'
+    compile 'io.prometheus:simpleclient_servlet:0.0.16'
 
     // Declare the dependency for your favourite test framework you want to use in your tests.
     // TestNG is also supported by the Gradle Test task. Just change the

@@ -11,6 +11,8 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import io.prometheus.client.Counter;
+import io.prometheus.client.Summary;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -34,6 +36,16 @@ public class PrestoServlet extends HttpServlet {
 
 	private final YanagishimaConfig yanagishimaConfig;
 
+	static final Summary requestLatency = Summary.build()
+			.name("yanagishima_requests_latency_seconds")
+			.help("Request latency in seconds.").register();
+	static final Counter requestSuccesses = Counter.build()
+			.name("yanagishima_requests_successes_total")
+			.help("Request successes.").register();
+	static final Counter requestFailures = Counter.build()
+			.name("yanagishima_requests_failures_total")
+			.help("Request failures.").register();
+
 	@Inject
 	public PrestoServlet(PrestoService prestoService, YanagishimaConfig yanagishimaConfig) {
 		this.prestoService = prestoService;
@@ -43,6 +55,8 @@ public class PrestoServlet extends HttpServlet {
 	@Override
 	protected void doPost(HttpServletRequest request,
 			HttpServletResponse response) throws ServletException, IOException {
+
+		Summary.Timer requestTimer = requestLatency.startTimer();
 		
 		HashMap<String, Object> retVal = new HashMap<String, Object>();
 		
@@ -66,6 +80,7 @@ public class PrestoServlet extends HttpServlet {
 							retVal.put("warn", warningMessage);
 						});
 					}
+					requestSuccesses.inc();
 				} catch (QueryErrorException e) {
 					LOGGER.error(e.getMessage(), e);
 					Optional<QueryError> queryErrorOptional = Optional.ofNullable(e.getQueryError());
@@ -78,11 +93,15 @@ public class PrestoServlet extends HttpServlet {
 					});
 					retVal.put("error", e.getCause().getMessage());
 					retVal.put("queryid", e.getQueryId());
+					requestFailures.inc();
 				}
 			});
 		} catch (Throwable e) {
 			LOGGER.error(e.getMessage(), e);
 			retVal.put("error", e.getMessage());
+			requestFailures.inc();
+		} finally {
+			requestTimer.observeDuration();
 		}
 
 		JsonUtil.writeJSON(response, retVal);

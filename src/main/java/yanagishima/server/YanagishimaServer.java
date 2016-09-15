@@ -14,6 +14,7 @@ import java.util.Properties;
 
 import javax.servlet.DispatcherType;
 
+import io.prometheus.client.exporter.MetricsServlet;
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
@@ -79,6 +80,8 @@ public class YanagishimaServer {
 		servletContextHandler.addServlet(DefaultServlet.class, "/");
 		
 		servletContextHandler.setResourceBase(webResourceDir);
+
+		servletContextHandler.addServlet(MetricsServlet.class, "/metrics");
 
 		LOGGER.info("Yanagishima Server started...");
 
