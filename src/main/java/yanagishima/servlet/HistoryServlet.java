@@ -20,6 +20,11 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
 import java.util.*;
 
 @Singleton
@@ -91,6 +96,12 @@ public class HistoryServlet extends HttpServlet {
                             }
                             retVal.put("results", rowDataList);
                             retVal.put("lineNumber", Integer.toString(lineNumber));
+                            LocalDateTime submitTimeLdt = LocalDateTime.parse(queryid.substring(0, "yyyyMMdd_HHmmss".length()), DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss"));
+                            ZonedDateTime submitTimeZdt = submitTimeLdt.atZone(ZoneId.of("GMT", ZoneId.SHORT_IDS));
+                            String fetchResultTimeString = query.getFetchResultTimeString();
+                            ZonedDateTime fetchResultTime = ZonedDateTime.parse(fetchResultTimeString);
+                            long elapsedTimeMillis = ChronoUnit.MILLIS.between(submitTimeZdt, fetchResultTime);
+                            retVal.put("elapsedTimeMillis", elapsedTimeMillis);
                             try {
                                 long size = Files.size(PathUtil.getResultFilePath(queryid, false));
                                 DataSize rawDataSize = new DataSize(size, DataSize.Unit.BYTE);

@@ -59,17 +59,11 @@ public class PrestoServiceImpl implements PrestoService {
             if ((!client.isFailed()) && (!client.isGone()) && (!client.isClosed())) {
                 QueryResults results = client.isValid() ? client.current() : client.finalResults();
                 String queryId = results.getId();
-                if(!query.toLowerCase().startsWith("show") && !query.toLowerCase().startsWith("explain")) {
-                    db.insert(Query.class)
-                            .value("query_id", queryId)
-                            .value("fetch_result_time_string", ZonedDateTime.now().toString())
-                            .value("query_string", query)
-                            .execute();
-                }
                 if (results.getUpdateType() != null) {
                     PrestoQueryResult prestoQueryResult = new PrestoQueryResult();
                     prestoQueryResult.setQueryId(queryId);
                     prestoQueryResult.setUpdateType(results.getUpdateType());
+                    insertQueryHistory(query, queryId);
                     return prestoQueryResult;
                 } else if (results.getColumns() == null) {
                     throw new QueryErrorException(new SQLException(format("Query %s has no columns\n", results.getId())));
@@ -82,6 +76,7 @@ public class PrestoServiceImpl implements PrestoService {
                     List<List<String>> rowDataList = new ArrayList<List<String>>();
                     processData(client, queryId, prestoQueryResult, columns, rowDataList);
                     prestoQueryResult.setRecords(rowDataList);
+                    insertQueryHistory(query, queryId);
                     return prestoQueryResult;
                 }
             }
@@ -114,6 +109,16 @@ public class PrestoServiceImpl implements PrestoService {
         }
         throw new RuntimeException("should not reach");
 
+    }
+
+    private void insertQueryHistory(String query, String queryId) {
+        if(!query.toLowerCase().startsWith("show") && !query.toLowerCase().startsWith("explain")) {
+            db.insert(Query.class)
+                    .value("query_id", queryId)
+                    .value("fetch_result_time_string", ZonedDateTime.now().toString())
+                    .value("query_string", query)
+                    .execute();
+        }
     }
 
     private void processData(StatementClient client, String queryId, PrestoQueryResult prestoQueryResult, List<String> columns, List<List<String>> rowDataList) {

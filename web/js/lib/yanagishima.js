@@ -224,9 +224,10 @@ var handle_execute = (function () {
             $("#query-results").empty();
             var headers = data.headers;
             var rows = data.results;
-            if (data.rawDataSize && data.lineNumber) {
+            if (data.rawDataSize && data.lineNumber && data.elapsedTimeMillis) {
                 $("#rawDataSize").text(data.rawDataSize);
                 $("#lineNumber").text(data.lineNumber);
+                $("#elapsed").text(formatDuration(data.elapsedTimeMillis));
                 $("#query-result-size-line").show();
             }
             var show_ddl_flag=false;
@@ -937,9 +938,10 @@ function follow_current_uri_query(queryid){
                 $("#warn-msg").text(data.warn);
                 $("#warn-msg").slideDown("fast");
             }
-            if (data.rawDataSize && data.lineNumber) {
+            if (data.rawDataSize && data.lineNumber && data.elapsedTimeMillis) {
                 $("#rawDataSize").text(data.rawDataSize);
                 $("#lineNumber").text(data.lineNumber);
+                $("#elapsed").text(formatDuration(data.elapsedTimeMillis));
                 $("#query-result-size-line").show();
             }
             create_table("#query-results", data.headers, data.results, false);

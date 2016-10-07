@@ -1,6 +1,11 @@
 package yanagishima.servlet;
 
 import java.io.IOException;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
 import java.util.HashMap;
 import java.util.Optional;
 
@@ -13,6 +18,7 @@ import javax.servlet.http.HttpServletResponse;
 
 import io.prometheus.client.Counter;
 import io.prometheus.client.Summary;
+import me.geso.tinyorm.TinyORM;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -22,6 +28,7 @@ import com.facebook.presto.client.QueryError;
 import yanagishima.config.YanagishimaConfig;
 import yanagishima.exception.QueryErrorException;
 import yanagishima.result.PrestoQueryResult;
+import yanagishima.row.Query;
 import yanagishima.service.PrestoService;
 import yanagishima.util.JsonUtil;
 
@@ -47,6 +54,9 @@ public class PrestoServlet extends HttpServlet {
 			.help("Request failures.").register();
 
 	@Inject
+	private TinyORM db;
+
+	@Inject
 	public PrestoServlet(PrestoService prestoService, YanagishimaConfig yanagishimaConfig) {
 		this.prestoService = prestoService;
 		this.yanagishimaConfig = yanagishimaConfig;
@@ -69,7 +79,8 @@ public class PrestoServlet extends HttpServlet {
 				}
 				try {
 					PrestoQueryResult prestoQueryResult = prestoService.doQuery(query, userName);
-					retVal.put("queryid", prestoQueryResult.getQueryId());
+					String queryid = prestoQueryResult.getQueryId();
+					retVal.put("queryid", queryid);
 					if (prestoQueryResult.getUpdateType() == null) {
 						retVal.put("headers", prestoQueryResult.getColumns());
 						retVal.put("results", prestoQueryResult.getRecords());
@@ -78,6 +89,15 @@ public class PrestoServlet extends HttpServlet {
 						Optional<String> warningMessageOptinal = Optional.ofNullable(prestoQueryResult.getWarningMessage());
 						warningMessageOptinal.ifPresent(warningMessage -> {
 							retVal.put("warn", warningMessage);
+						});
+						Optional<Query> queryDataOptional = db.single(Query.class).where("query_id=?", queryid).execute();
+						queryDataOptional.ifPresent(queryData -> {
+							LocalDateTime submitTimeLdt = LocalDateTime.parse(queryid.substring(0, "yyyyMMdd_HHmmss".length()), DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss"));
+							ZonedDateTime submitTimeZdt = submitTimeLdt.atZone(ZoneId.of("GMT", ZoneId.SHORT_IDS));
+							String fetchResultTimeString = queryData.getFetchResultTimeString();
+							ZonedDateTime fetchResultTime = ZonedDateTime.parse(fetchResultTimeString);
+							long elapsedTimeMillis = ChronoUnit.MILLIS.between(submitTimeZdt, fetchResultTime);
+							retVal.put("elapsedTimeMillis", elapsedTimeMillis);
 						});
 					}
 					requestSuccesses.inc();
