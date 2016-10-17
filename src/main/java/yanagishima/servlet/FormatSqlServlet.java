@@ -40,7 +40,7 @@ public class FormatSqlServlet extends HttpServlet {
 				try {
 					SqlParser sqlParser = new SqlParser();
 					Statement statement = sqlParser.createStatement(query);
-					String formattedQuery = SqlFormatter.formatSql(statement);
+					String formattedQuery = SqlFormatter.formatSql(statement, Optional.empty());
 					retVal.put("formattedQuery", formattedQuery);
 				} catch (ParsingException e) {
 					retVal.put("errorLineNumber", e.getLineNumber());
