@@ -743,11 +743,11 @@ var renderRunningQueries = (function (queries) {
         $(tr).attr("class", "info");
 
         queryInfo = queries[i];
-        var splits = queryInfo.totalDrivers;
-        var completedSplits = queryInfo.completedDrivers;
+        var splits = queryInfo.queryStats.totalDrivers;
+        var completedSplits = queryInfo.queryStats.completedDrivers;
 
-        var runningSplits = queryInfo.runningDrivers;
-        var queuedSplits = queryInfo.queuedDrivers;
+        var runningSplits = queryInfo.queryStats.runningDrivers;
+        var queuedSplits = queryInfo.queryStats.queuedDrivers;
 
         var query = queryInfo.query;
 
@@ -773,7 +773,7 @@ var renderRunningQueries = (function (queries) {
         $(tr).append(queryid_td);
 
         var elapsed_td = document.createElement("td");
-        $(elapsed_td).text(formatDuration(queryInfo.elapsedTimeMillis));
+        $(elapsed_td).text(queryInfo.queryStats.elapsedTime);
         $(tr).append(elapsed_td);
 
         var query_td = document.createElement("td");
@@ -863,8 +863,8 @@ var renderDoneQueries = (function (queries) {
 
     rows.selectAll("td")
         .data(function (queryInfo) {
-            var splits = queryInfo.totalDrivers;
-            var completedSplits = queryInfo.completedDrivers;
+            var splits = queryInfo.queryStats.totalDrivers;
+            var completedSplits = queryInfo.queryStats.completedDrivers;
 
             var query = queryInfo.query;
             //if (query.length > 200) {
@@ -873,7 +873,7 @@ var renderDoneQueries = (function (queries) {
 
             return [
                 queryInfo.queryId,
-                formatDuration(queryInfo.elapsedTimeMillis),
+                queryInfo.queryStats.elapsedTime,
                 query,
                 queryInfo.session.source,
                 queryInfo.session.user,
@@ -892,7 +892,7 @@ var renderDoneQueries = (function (queries) {
 
     tbody.selectAll("tr")
         .sort(function (a, b) {
-            return d3.descending(a.endTime, b.endTime);
+            return d3.descending(a.queryStats.endTime, b.queryStats.endTime);
         });
 });
 
