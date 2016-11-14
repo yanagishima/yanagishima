@@ -630,6 +630,54 @@ var update_yanagishima_query_histories_area = (function () {
     $.get("/queryHistory", requestData, successHandler, "json");
 });
 
+var search_yanagishima_query_histories = (function () {
+
+    var requestData = {
+        "query":  $("#yanagishima_query").val()
+    };
+
+    var successHandler = function (data) {
+        if (data.error) {
+            $("#error-msg").text(data.error);
+            $("#error-msg").slideDown("fast");
+        } else {
+            $("#yanagishima-query-histories").empty();
+            var headers = data.headers;
+            var rows = data.results;
+            var thead = document.createElement("thead");
+            var tr = document.createElement("tr");
+            for (var i = 0; i < headers.length; i++) {
+                var th = document.createElement("th");
+                $(th).text(headers[i]);
+                $(tr).append(th);
+            }
+            $(thead).append(tr);
+            $("#yanagishima-query-histories").append(thead);
+            var tbody = document.createElement("tbody");
+            for (var i = 0; i < rows.length; i++) {
+                var tr = document.createElement("tr");
+                var columns = rows[i];
+                for (var j = 0; j < columns.length; j++) {
+                    var td = document.createElement("td");
+                    if(j==0) {
+                        var link = document.createElement('a')
+                        link.href = "?queryid=" + columns[j];
+                        link.text = columns[j];
+                        link.style = "color: #337ab7";
+                        $(td).append(link);
+                    } else {
+                        $(td).text(columns[j]);
+                    }
+                    $(tr).append(td);
+                }
+                $(tbody).append(tr);
+            }
+            $("#yanagishima-query-histories").append(tbody);
+        }
+    };
+    $.post("/yanagishimaQueryHistory", requestData, successHandler, "json");
+});
+
 var add_bookmark = (function (event) {
     if (!window.localStorage) return;
     var list = query_bookmarks();

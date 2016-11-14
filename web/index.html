@@ -272,17 +272,13 @@
                 </div>
 
                 <div id="yanagishima-query-histories-tab">
-                    <input type="text" size="20" id="search_yanagishima_query_histories">
-                    <script>
-                        $('#search_yanagishima_query_histories').keyup(function(){
-                            if ($(this).val()) {
-                                $('#yanagishima-query-histories tr').hide();
-                                $('#yanagishima-query-histories tr td:nth-child(2):contains(' + this.value + ')').parent().show();
-                            } else {
-                                $('#yanagishima-query-histories tr').show();
-                            }
-                        });
-                    </script>
+                    <form class="form-inline">
+                        <div class="form-group">
+                            Query
+                            <input type="text" class="form-control" id="yanagishima_query"/>
+                            <button type="button" class="btn btn-default" onclick="search_yanagishima_query_histories()">search</button>
+                        </div>
+                    </form>
                     <div>
                         <table class="table table-bordered" id="yanagishima-query-histories"></table>
                     </div>

@@ -16,6 +16,7 @@ public class PrestoServletModule extends ServletModule {
 		bind(DownloadServlet.class);
 		bind(QueryHistoryServlet.class);
 		bind(IkasanServlet.class);
+		bind(YanagishimaQueryHistoryServlet.class);
 
 
 		serve("/presto").with(PrestoServlet.class);
@@ -27,6 +28,7 @@ public class PrestoServletModule extends ServletModule {
 		serve("/download").with(DownloadServlet.class);
 		serve("/queryHistory").with(QueryHistoryServlet.class);
 		serve("/ikasan").with(IkasanServlet.class);
+		serve("/yanagishimaQueryHistory").with(YanagishimaQueryHistoryServlet.class);
 
 	}
 }
