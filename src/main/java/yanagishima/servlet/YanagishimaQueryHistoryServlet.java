@@ -35,7 +35,7 @@ public class YanagishimaQueryHistoryServlet extends HttpServlet {
         try {
             Optional<String> queryOptional = Optional.ofNullable(request.getParameter("query"));
             queryOptional.ifPresent(queryStr -> {
-                List<Query> queryList = db.search(Query.class).where("query_string LIKE '%' || ? || '%'", queryStr).execute();
+                List<Query> queryList = db.search(Query.class).where("query_string LIKE '%' || ? || '%'", queryStr).orderBy("query_id DESC").limit(1000).execute();
                 List<List<String>> rowDataList = new ArrayList<List<String>>();
                 for (Query query : queryList) {
                     List<String> row = new ArrayList<>();
