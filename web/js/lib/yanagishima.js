@@ -817,6 +817,7 @@ var renderRunningQueries = (function (queries) {
         link.href = "/queryDetail?queryId=" + queryInfo.queryId;
         link.text = queryInfo.queryId;
         link.style = "color: #337ab7";
+        link.target = "_blank";
         $(queryid_td).append(link);
         $(tr).append(queryid_td);
 
