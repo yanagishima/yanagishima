@@ -762,21 +762,26 @@ var create_table = (function (table_id, headers, rows, show_ddl_flag) {
 
 });
 
-var redraw = (function () {
+var redraw_running_queryies = (function () {
     d3.json('/query', function (queries) {
         var runningQueries = [];
-        var doneQueries = [];
         if (queries) {
             runningQueries = queries.filter(function (query) {
                 return query.state != 'FINISHED' && query.state != 'FAILED' && query.state != 'CANCELED';
             });
+        }
+        renderRunningQueries(runningQueries);
+    });
+});
 
+var redraw_done_queryies = (function () {
+    d3.json('/query', function (queries) {
+        var doneQueries = [];
+        if (queries) {
             doneQueries = queries.filter(function (query) {
                 return query.state == 'FINISHED' || query.state == 'FAILED' || query.state == 'CANCELED';
             });
         }
-
-        renderRunningQueries(runningQueries);
         renderDoneQueries(doneQueries);
     });
 });

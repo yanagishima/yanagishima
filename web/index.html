@@ -8,6 +8,7 @@
     <link href="css/jquery-ui.min.css" rel="stylesheet">
     <link href="css/codemirror.css" rel="stylesheet">
     <link href="css/show-hint.css" rel="stylesheet">
+    <link href="css/font-awesome.min.css" rel="stylesheet">
     <script src="js/lib/jquery.js"></script>
     <script src="js/lib/jquery-ui.min.js"></script>
     <script src="js/lib/bootstrap.min.js"></script>
@@ -155,17 +156,18 @@
                 });
             </script>
 
-            <h4>all query executions/your query histories/your query bookmarks/yanagishima query histories</h4>
+            <h4>running queries/done queries/your query histories/your query bookmarks/yanagishima query histories</h4>
 
             <div id="tabs">
                 <ul>
-                    <li><a href="#query-executions-tab">all query executions</a></li>
+                    <li><a href="#running-queries-tab">running queries</a></li>
+                    <li><a href="#done-queries-tab">done queries</a></li>
                     <li><a href="#query-histories-tab">your query histories</a></li>
                     <li><a href="#query-bookmarks-tab">your query bookmarks</a></li>
                     <li><a href="#yanagishima-query-histories-tab">yanagishima query histories</a></li>
                 </ul>
 
-                <div id="query-executions-tab">
+                <div id="running-queries-tab">
                     <div>
                         <table id="running" class="table table-striped">
                             <colgroup>
@@ -198,7 +200,26 @@
                             </thead>
                             <tbody></tbody>
                         </table>
+                    </div>
+                </div>
 
+                <div id="done-queries-tab">
+                    <div>
+                        <script>
+                            redraw_done_queryies();
+                        </script>
+                        <i class="fa fa-refresh" aria-hidden="true" onclick="redraw_done_queryies()"></i>
+                        <input type="text" size="20" id="search_done_queries">
+                        <script>
+                            $('#search_done_queries').keyup(function(){
+                                if ($(this).val()) {
+                                    $('#done tr').hide();
+                                    $('#done tr td:nth-child(3):contains(' + this.value + ')').parent().show();
+                                } else {
+                                    $('#done tr').show();
+                                }
+                            });
+                        </script>
                         <table id="done" class="table table-striped">
                             <colgroup>
                                 <col width="90px">
@@ -298,10 +319,10 @@
 <script>
 
     setInterval(function () {
-        redraw();
+        redraw_running_queryies();
     }, 1000);
 
-    redraw();
+    redraw_running_queryies();
 
 </script>
 
