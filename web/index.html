@@ -208,13 +208,33 @@
                         <script>
                             redraw_done_queryies();
                         </script>
-                        <i class="fa fa-refresh" aria-hidden="true" onclick="redraw_done_queryies()"></i>
-                        <input type="text" size="20" id="search_done_queries">
+                        <div>
+                            <i class="fa fa-refresh" aria-hidden="true" onclick="redraw_done_queryies()"></i>
+                        </div>
+                        <div>
+                            query:<input type="text" size="20" id="search_done_queries_by_query">
+                        </div>
                         <script>
-                            $('#search_done_queries').keyup(function(){
+                            $('#search_done_queries_by_query').keyup(function(){
                                 if ($(this).val()) {
                                     $('#done tr').hide();
                                     $('#done tr td:nth-child(3):contains(' + this.value + ')').parent().show();
+                                } else {
+                                    $('#done tr').show();
+                                }
+                            });
+                        </script>
+                        <div>
+                            or
+                        </div>
+                        <div>
+                            user:<input type="text" size="20" id="search_done_queries_by_user">
+                        </div>
+                        <script>
+                            $('#search_done_queries_by_user').keyup(function(){
+                                if ($(this).val()) {
+                                    $('#done tr').hide();
+                                    $('#done tr td:nth-child(5):contains(' + this.value + ')').parent().show();
                                 } else {
                                     $('#done tr').show();
                                 }
