@@ -49,13 +49,14 @@ var yanagishima_tree = (function () {
                         var table_schema = results[i][1];
                         var table_name = results[i][2];
                         var table_type = results[i][3];
-                        var table_class;
                         if(table_type === "BASE TABLE") {
-                            table_class = "fa fa-table"
+                            node.addChild({title: table_name, key: table_name, isLazy: true, isFolder: false, table: result, icon: false, addClass: "fa fa-table"});
                         } else if(table_type === "VIEW") {
-                            table_class = "fa fa-eye"
+                            node.addChild({title: table_name, key: table_name, isLazy: true, isFolder: false, table: result, icon: false, addClass: "fa fa-eye"});
+                        } else {
+                            console.log(table_type);
+                            node.addChild({title: VIEW, key: VIEW, isLazy: true, isFolder: true, table: result});
                         }
-                        node.addChild({title: table_name, key: table_name, isLazy: true, isFolder: false, table: result, icon: false, addClass: table_class});
                     }
                 } else {
                     for (var i = 0; i < results.length; i++) {
