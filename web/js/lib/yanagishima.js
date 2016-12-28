@@ -13,7 +13,7 @@ var yanagishima_tree = (function () {
                 for (var i = 0; i < results.length; i++) {
                     var catalog = results[i][0];
                     var rootNode = $("#tree").dynatree("getRoot");
-                    rootNode.addChild({title: catalog, key: catalog, isFolder: true, isLazy: true, catalog: catalog});
+                    rootNode.addChild({title: catalog, key: catalog, isFolder: false, isLazy: true, catalog: catalog, icon: false, addClass: "fa fa-server"});
                 }
             }
         },
@@ -22,7 +22,7 @@ var yanagishima_tree = (function () {
             if (node.data.catalog) {
                 param = "show schemas from " + node.data.key;
             } else if (node.parent.data.catalog) {
-                param = "show tables from " + node.parent.data.catalog + "." + node.data.key;
+                param = "SELECT table_catalog, table_schema, table_name, table_type FROM " + node.parent.data.catalog + ".information_schema.tables WHERE table_schema='" + node.data.key + "'";
             } else if (node.parent.data.schema) {
                 param = "show columns from " + node.parent.parent.data.catalog + "." + node.parent.data.schema + "." + node.data.key;
             }
@@ -41,12 +41,21 @@ var yanagishima_tree = (function () {
                 if (headers == "Schema") {
                     for (var i = 0; i < results.length; i++) {
                         var result = results[i][0];
-                        node.addChild({title: result, key: result, isLazy: true, isFolder: true, schema: result});
+                        node.addChild({title: result, key: result, isLazy: true, isFolder: false, schema: result, icon: false, addClass: "fa fa-database"});
                     }
-                } else if (headers == "Table") {
+                } else if (headers[0] == "table_catalog") {
                     for (var i = 0; i < results.length; i++) {
-                        var result = results[i][0];
-                        node.addChild({title: result, key: result, isLazy: true, isFolder: true, table: result});
+                        var table_catalog = results[i][0];
+                        var table_schema = results[i][1];
+                        var table_name = results[i][2];
+                        var table_type = results[i][3];
+                        var table_class;
+                        if(table_type === "BASE TABLE") {
+                            table_class = "fa fa-table"
+                        } else if(table_type === "VIEW") {
+                            table_class = "fa fa-eye"
+                        }
+                        node.addChild({title: table_name, key: table_name, isLazy: true, isFolder: false, table: result, icon: false, addClass: table_class});
                     }
                 } else {
                     for (var i = 0; i < results.length; i++) {
