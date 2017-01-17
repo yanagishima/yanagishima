@@ -21,6 +21,7 @@
     <script src="js/lib/show-hint.js"></script>
     <script src="js/lib/sql-hint.js"></script>
     <script src="js/lib/sql.js"></script>
+    <script src="js/lib/clipboard.min.js"></script>
     <script>
         $(function(){
             follow_current_uri();
@@ -98,6 +99,33 @@
                                     lineNumbers: true,
                                     extraKeys: {"Ctrl-Space": "autocomplete"},
                                 });
+
+                                new Clipboard('.clip-btn-native', {
+                                    text: function(trigger) {
+                                        return getCodeMirrorNative("#query").getDoc().getValue();
+                                    }
+                                });
+
+                                function getCodeMirrorNative(target) {
+                                    var _target = target;
+                                    if (typeof _target === 'string') {
+                                        _target = document.querySelector(_target);
+                                    }
+                                    if (_target === null || !_target.tagName === undefined) {
+                                        throw new Error('Element does not reference a CodeMirror instance.');
+                                    }
+
+                                    if (_target.className.indexOf('CodeMirror') > -1) {
+                                        return _target.CodeMirror;
+                                    }
+
+                                    if (_target.tagName === 'TEXTAREA') {
+                                        return _target.nextSibling.CodeMirror;
+                                    }
+
+                                    return null;
+                                };
+
                             });
                         </script>
                     </div>
@@ -127,6 +155,7 @@
                         <button type="button" id="send-ikasan" onclick="send_ikasan()" class="btn btn-default"
                                 disabled="disabled">share
                         </button>
+                        <button class="btn btn-default clip-btn-native">Copy to clipboard</button>
                     </div>
                 </div>
             </form>
