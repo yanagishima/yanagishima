@@ -206,7 +206,7 @@ public class PrestoServiceImpl implements PrestoService {
         JsonCodec<QueryResults> jsonCodec = jsonCodec(QueryResults.class);
 
         ClientSession clientSession = new ClientSession(
-                URI.create(prestoCoordinatorServer), user, source, catalog,
+                URI.create(prestoCoordinatorServer), user, source, null, catalog,
                 schema, TimeZone.getDefault().getID(), Locale.getDefault(),
                 new HashMap<String, String>(), null, false, new Duration(2, MINUTES));
         return new StatementClient(httpClient, jsonCodec, clientSession, query);
