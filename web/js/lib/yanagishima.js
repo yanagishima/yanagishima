@@ -226,7 +226,7 @@ var handle_execute = (function () {
                 $("#warn-msg").slideDown("fast");
             }
             update_history_by_query(data.queryid);
-            push_query(query);
+            push_query(query, data.queryid);
             $("#query-histories").empty();
             $("#yanagishima-query-histories").empty();
             update_query_histories_area();
@@ -501,11 +501,15 @@ var send_ikasan = (function () {
 
 });
 
-var push_query = (function (query) {
+var push_query = (function (query, queryid) {
     if (!window.localStorage) return;
     var list = query_histories();
     list.unshift(query);
     set_query_histories(list.slice(0, 1000000));
+
+    var yanagishima_queryid_list = your_yanagishima_queryid_histories();
+    yanagishima_queryid_list.unshift(queryid);
+    set_your_yanagishima_queryid_histories(yanagishima_queryid_list.slice(0, 1000000));
 });
 
 var query_histories = (function () {
@@ -527,11 +531,44 @@ var set_query_histories = (function (list) {
     window.localStorage.query_histories = JSON.stringify(list);
 });
 
+var your_yanagishima_queryid_histories = (function () {
+    if (!window.localStorage) return [];
+    var list = [];
+    try {
+        var listString = window.localStorage.your_yanagishima_queryid_histories;
+        if (listString && listString.length > 0)
+            list = JSON.parse(listString);
+    } catch (e) {
+        set_your_yanagishima_queryid_histories([]);
+        list = [];
+    }
+    return list;
+});
+
+var set_your_yanagishima_queryid_histories = (function (list) {
+    if (!window.localStorage) return;
+    window.localStorage.your_yanagishima_queryid_histories = JSON.stringify(list);
+});
+
 var update_query_histories_area = (function () {
     var tbody = document.createElement("tbody");
     var query_list = query_histories();
+    var yanagishima_queryid_list = your_yanagishima_queryid_histories();
     for (var i = 0; i < query_list.length; i++) {
         var tr = document.createElement("tr");
+
+        var td = document.createElement("td");
+        var queryid = yanagishima_queryid_list[i];
+        if(queryid) {
+            var link = document.createElement('a')
+            link.href = "?queryid=" + queryid;
+            link.text = queryid;
+            link.style = "color: #337ab7";
+            link.target = "_blank";
+            $(td).append(link);
+        }
+        $(tr).append(td);
+
         var copy_button = document.createElement("button");
         $(copy_button).attr("type", "button");
         $(copy_button).attr("class", "btn btn-success");
@@ -734,6 +771,9 @@ var delete_query = (function (event) {
     var query_list = query_histories();
     query_list.splice(event.data.index, 1);
     set_query_histories(query_list);
+    var yanagishima_queryid_list = your_yanagishima_queryid_histories();
+    yanagishima_queryid_list.splice(event.data.index, 1);
+    set_your_yanagishima_queryid_histories(yanagishima_queryid_list);
     $("#query-histories").empty();
     update_query_histories_area();
 });
