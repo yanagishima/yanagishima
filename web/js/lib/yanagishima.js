@@ -663,6 +663,7 @@ var update_yanagishima_query_histories_area = (function () {
                         link.href = "?queryid=" + columns[j];
                         link.text = columns[j];
                         link.style = "color: #337ab7";
+                        link.target = "_blank";
                         $(td).append(link);
                     } else {
                         $(td).text(columns[j]);
