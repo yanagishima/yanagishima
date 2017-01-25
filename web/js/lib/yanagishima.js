@@ -813,15 +813,20 @@ var create_table = (function (table_id, headers, rows, show_ddl_flag) {
 
 });
 
-var redraw_running_queryies = (function () {
+var redraw = (function () {
     d3.json('/query', function (queries) {
         var runningQueries = [];
+        var doneQueries = [];
         if (queries) {
             runningQueries = queries.filter(function (query) {
                 return query.state != 'FINISHED' && query.state != 'FAILED' && query.state != 'CANCELED';
             });
+            doneQueries = queries.filter(function (query) {
+                return query.state == 'FINISHED' || query.state == 'FAILED' || query.state == 'CANCELED';
+            });
         }
         renderRunningQueries(runningQueries);
+        renderDoneQueries(doneQueries, "#first_tab_done");
     });
 });
 
@@ -833,7 +838,7 @@ var redraw_done_queryies = (function () {
                 return query.state == 'FINISHED' || query.state == 'FAILED' || query.state == 'CANCELED';
             });
         }
-        renderDoneQueries(doneQueries);
+        renderDoneQueries(doneQueries, "#second_tab_done");
     });
 });
 
@@ -930,8 +935,8 @@ var kill_query = (function (event) {
     }
 });
 
-var renderDoneQueries = (function (queries) {
-    var tbody = d3.select("#done").select("tbody");
+var renderDoneQueries = (function (queries, table_id) {
+    var tbody = d3.select(table_id).select("tbody");
 
     var rows = tbody.selectAll("tr")
         .data(queries, function (query) {
