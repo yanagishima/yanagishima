@@ -29,6 +29,8 @@ public class QueryServlet extends HttpServlet {
 
 	private YanagishimaConfig yanagishimaConfig;
 
+	private static final int LIMIT = 100;
+
 	@Inject
 	public QueryServlet(YanagishimaConfig yanagishimaConfig) {
 		this.yanagishimaConfig = yanagishimaConfig;
@@ -46,10 +48,13 @@ public class QueryServlet extends HttpServlet {
 				.execute().returnContent().asString(StandardCharsets.UTF_8);
 		ObjectMapper mapper = new ObjectMapper();
 		List<Map> list = mapper.readValue(originalJson, List.class);
-		list.sort((a,b)-> String.class.cast(b.get("queryId")).compareTo(String.class.cast(a.get("queryId"))));
-		String json = mapper.writeValueAsString(list.subList(0, 100));
-		writer.println(json);
-
+		if(list.size() > LIMIT) {
+			list.sort((a,b)-> String.class.cast(b.get("queryId")).compareTo(String.class.cast(a.get("queryId"))));
+			String json = mapper.writeValueAsString(list.subList(0, LIMIT));
+			writer.println(json);
+		} else {
+			writer.println(originalJson);
+		}
 	}
 
 }
