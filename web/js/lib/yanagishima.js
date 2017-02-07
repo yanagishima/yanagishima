@@ -188,6 +188,7 @@ var handle_execute = (function () {
     $("#query-clear").attr("disabled", "disabled");
     $("#query-format").attr("disabled", "disabled");
     $("#tsv-download").attr("disabled", "disabled");
+    $("#csv-download").attr("disabled", "disabled");
     $("#send-ikasan").attr("disabled", "disabled");
     $("#query-results-div").remove();
     var div = $("<div></div>", {style: "height:500px; overflow:auto;", id: "query-results-div"});
@@ -319,6 +320,7 @@ var handle_execute = (function () {
                 create_table("#query-results", headers, rows, show_ddl_flag);
             }
             $("#tsv-download").removeAttr("disabled");
+            $("#csv-download").removeAttr("disabled");
             $("#send-ikasan").removeAttr("disabled");
         }
     };
@@ -377,10 +379,12 @@ var handle_explain_distributed = (function () {
 
 var handle_explain_analyze = (function () {
     explain("analyze");
+    explain("analyze");
 });
 
 var explain = (function (kind) {
     $("#tsv-download").attr("disabled", "disabled");
+    $("#csv-download").attr("disabled", "disabled");
     $("#send-ikasan").attr("disabled", "disabled");
     window.editor.removeLineClass(window.editor.listSelections()[0].head.line, 'wrap', 'CodeMirror-errorline-background');
     $("#query-results").empty();
@@ -479,6 +483,19 @@ var tsv_download = (function () {
 
     var link = document.createElement('a')
     link.href = "/download?queryid=" + queryid;
+    link.click();
+});
+
+var csv_download = (function () {
+    var param = document.location.search.substring(1);
+    if (param === null) {
+        return;
+    }
+    var element = param.split('=');
+    var queryid = element[1];
+
+    var link = document.createElement('a')
+    link.href = "/csvdownload?queryid=" + queryid;
     link.click();
 });
 
@@ -1056,6 +1073,7 @@ function follow_current_uri_query(queryid){
             }
             create_table("#query-results", data.headers, data.results, false);
             $("#tsv-download").removeAttr("disabled");
+            $("#csv-download").removeAttr("disabled");
             $("#send-ikasan").removeAttr("disabled");
         }
     });
