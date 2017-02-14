@@ -97,7 +97,11 @@
                                 window.editor = CodeMirror.fromTextArea(document.getElementById('query'), {
                                     mode: "text/x-presto",
                                     lineNumbers: true,
-                                    extraKeys: {"Ctrl-Space": "autocomplete"},
+                                    extraKeys: {"Ctrl-Space": "autocomplete",
+                                        "Cmd-Enter": function(){
+                                            $("#query-submit").click();
+                                        }
+                                    },
                                 });
 
                                 new Clipboard('.clip-btn-native', {
