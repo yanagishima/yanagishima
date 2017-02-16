@@ -205,6 +205,13 @@
                 </ul>
 
                 <div id="all-queries-tab">
+
+                    <div class="checkbox">
+                        <label>
+                            <input id="auto-refresh" type="checkbox" checked/> auto refresh
+                        </label>
+                    </div>
+
                     <div>
                         <table id="running" class="table table-striped">
                             <colgroup>
@@ -405,11 +412,30 @@
 
 <script>
 
-    setInterval(function () {
-        redraw();
-    }, 1000);
+    var timer;
+    function startTimer() {
+        timer = setInterval(function () {
+            redraw();
+        }, 1000);
+    }
+
+    startTimer();
+
+    function stopTimer() {
+        clearInterval(timer);
+    }
 
     redraw();
+
+    $('#auto-refresh').on('change', function(){
+        if ($(this).is(':checked')) {
+            console.log("start");
+            startTimer();
+        } else {
+            console.log("stop");
+            stopTimer();
+        }
+    });
 
 </script>
 
