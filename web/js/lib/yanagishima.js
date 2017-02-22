@@ -191,7 +191,7 @@ var handle_execute = (function () {
     $("#csv-download").attr("disabled", "disabled");
     $("#send-ikasan").attr("disabled", "disabled");
     $("#query-results-div").remove();
-    var div = $("<div></div>", {style: "height:500px; overflow:auto;", id: "query-results-div"});
+    var div = $("<div></div>", {id: "query-results-div"});
     div.append($("<table></table>", {class: "table table-bordered", id: "query-results"}));
     $("#query-results-tab").append(div);
     $("#error-msg").hide();
@@ -826,7 +826,7 @@ var create_table = (function (table_id, headers, rows, show_ddl_flag) {
         $(tbody).append(tr);
     }
     $(table_id).append(tbody);
-    $(table_id).tablefix({height: 600, fixRows: 1});
+    $(table_id).tablefix({fixRows: 1});
 
 });
 

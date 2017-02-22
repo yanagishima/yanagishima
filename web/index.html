@@ -9,6 +9,7 @@
     <link href="css/codemirror.css" rel="stylesheet">
     <link href="css/show-hint.css" rel="stylesheet">
     <link href="css/font-awesome.min.css" rel="stylesheet">
+    <link href="css/yanagishima.css" rel="stylesheet">
     <script src="js/lib/jquery.js"></script>
     <script src="js/lib/jquery-ui.min.js"></script>
     <script src="js/lib/bootstrap.min.js"></script>
@@ -79,130 +80,162 @@
             </script>
 
         </td>
-        <td width="80%>
-
-            <form id="query-form" class="form-horizontal">
-                <div class="form-group">
-                    <div class="col-sm-10">
-                        <h4>query</h4>
-                        <a href="https://prestodb.io/docs/current/" target="_blank">presto document</a>
-                        <textarea rows="10" cols="150" id="query">
-
-
-
-
-                        </textarea>
-                        <script>
-                            $(function () {
-                                window.editor = CodeMirror.fromTextArea(document.getElementById('query'), {
-                                    mode: "text/x-presto",
-                                    lineNumbers: true,
-                                    extraKeys: {"Ctrl-Space": "autocomplete",
-                                        "Cmd-Enter": function(){
-                                            $("#query-submit").click();
-                                        }
-                                    },
-                                });
-
-                                new Clipboard('.clip-btn-native', {
-                                    text: function(trigger) {
-                                        return getCodeMirrorNative("#query").getDoc().getValue();
-                                    }
-                                });
-
-                                function getCodeMirrorNative(target) {
-                                    var _target = target;
-                                    if (typeof _target === 'string') {
-                                        _target = document.querySelector(_target);
-                                    }
-                                    if (_target === null || !_target.tagName === undefined) {
-                                        throw new Error('Element does not reference a CodeMirror instance.');
-                                    }
-
-                                    if (_target.className.indexOf('CodeMirror') > -1) {
-                                        return _target.CodeMirror;
-                                    }
-
-                                    if (_target.tagName === 'TEXTAREA') {
-                                        return _target.nextSibling.CodeMirror;
-                                    }
-
-                                    return null;
-                                };
-
-                            });
-                        </script>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <div class="col-sm-10">
-                        <button type="button" id="query-submit" onclick="handle_execute()" class="btn btn-primary">
-                            execute
-                        </button>
-                        <button type="button" id="query-explain" onclick="handle_explain()" class="btn btn-success">
-                            explain
-                        </button>
-                        <button type="button" id="query-explain-distributed" onclick="handle_explain_distributed()"
-                                class="btn btn-success">explain(distributed)
-                        </button>
-                        <button type="button" id="query-explain-analyze" onclick="handle_explain_analyze()"
-                                class="btn btn-success">explain(analyze)
-                        </button>
-                        <button type="button" id="query-clear" onclick="query_clear()" class="btn btn-info">clear
-                        </button>
-                        <button type="button" id="query-format" onclick="query_format()" class="btn btn-warning">
-                            format
-                        </button>
-                        <button type="button" id="tsv-download" onclick="tsv_download()" class="btn btn-default"
-                                disabled="disabled">TSV download
-                        </button>
-                        <button type="button" id="csv-download" onclick="csv_download()" class="btn btn-default"
-                                disabled="disabled">CSV(Shift_JIS) download
-                        </button>
-                        <button type="button" id="send-ikasan" onclick="send_ikasan()" class="btn btn-default"
-                                disabled="disabled">share
-                        </button>
-                        <button class="btn btn-default clip-btn-native">Copy to clipboard</button>
-                    </div>
-                </div>
-            </form>
-
-            <div class="alert alert-danger" id="error-msg"></div>
-            <div class="alert alert-warning" id="warn-msg"></div>
-            <script>
-                $("#error-msg").hide();
-                $("#warn-msg").hide();
-            </script>
-
-            <h4>query results</h4>
-
-            <div id="query-result-size-line"><span id="lineNumber"></span> lines, DataSize <span id="rawDataSize"></span>, Elapsed <span id="elapsed"></span></div>
-            <script>
-                $("#query-result-size-line").hide();
-            </script>
-
-            <div id="query-results-tab">
-                <div style="height:500px; overflow:auto;" id="query-results-div">
-                    <table class="table table-bordered" id="query-results"></table>
-                </div>
-            </div>
+        <td width="80%">
 
             <script>
                 $(function () {
-                    $("#tabs").tabs();
+                    var timer;
+                    function startTimer() {
+                        timer = setInterval(function () {
+                            redraw();
+                        }, 1000);
+                    }
+
+                    function stopTimer() {
+                        clearInterval(timer);
+                    }
+
+                    $('#auto-refresh').on('change', function(){
+                        if ($(this).is(':checked')) {
+                            startTimer();
+                        } else {
+                            stopTimer();
+                        }
+                    });
+
+                    $("#jquery-ui-tabs").tabs({
+                        activate: function(event, ui) {
+                            var tabIndex = ui.newTab.index();
+
+                            if(tabIndex == 1) {
+                                startTimer();
+                            } else {
+                                stopTimer();
+                            }
+                        }
+                    });
                 });
             </script>
 
-            <h4>all queries/done queries/your query histories/your query bookmarks/yanagishima query histories</h4>
+            <h4>query editor/all queries/done queries/your query histories/your query bookmarks/yanagishima query histories</h4>
 
-            <div id="tabs">
+            <div id="jquery-ui-tabs">
                 <ul>
+                    <li><a href="#query-editor-tab">query editor</a></li>
                     <li><a href="#all-queries-tab">all queries</a></li>
                     <li><a href="#done-queries-tab">done queries</a></li>
                     <li><a href="#query-histories-tab">your query histories</a></li>
                     <li><a href="#query-bookmarks-tab">your query bookmarks</a></li>
                     <li><a href="#yanagishima-query-histories-tab">yanagishima query histories</a></li>
                 </ul>
+
+                <div id="query-editor-tab">
+                    <form id="query-form" class="form-horizontal">
+                        <div class="form-group">
+                            <div class="col-sm-10">
+                                <h4>query</h4>
+                                <a href="https://prestodb.io/docs/current/" target="_blank">presto document</a>
+                                <textarea rows="10" id="query">
+
+
+
+
+                        </textarea>
+                                <script>
+                                    $(function () {
+                                        window.editor = CodeMirror.fromTextArea(document.getElementById('query'), {
+                                            mode: "text/x-presto",
+                                            lineNumbers: true,
+                                            extraKeys: {"Ctrl-Space": "autocomplete",
+                                                "Cmd-Enter": function(){
+                                                    $("#query-submit").click();
+                                                }
+                                            },
+                                        });
+
+                                        new Clipboard('.clip-btn-native', {
+                                            text: function(trigger) {
+                                                return getCodeMirrorNative("#query").getDoc().getValue();
+                                            }
+                                        });
+
+                                        function getCodeMirrorNative(target) {
+                                            var _target = target;
+                                            if (typeof _target === 'string') {
+                                                _target = document.querySelector(_target);
+                                            }
+                                            if (_target === null || !_target.tagName === undefined) {
+                                                throw new Error('Element does not reference a CodeMirror instance.');
+                                            }
+
+                                            if (_target.className.indexOf('CodeMirror') > -1) {
+                                                return _target.CodeMirror;
+                                            }
+
+                                            if (_target.tagName === 'TEXTAREA') {
+                                                return _target.nextSibling.CodeMirror;
+                                            }
+
+                                            return null;
+                                        };
+
+                                    });
+                                </script>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <div class="col-sm-10">
+                                <button type="button" id="query-submit" onclick="handle_execute()" class="btn btn-primary">
+                                    execute
+                                </button>
+                                <button type="button" id="query-explain" onclick="handle_explain()" class="btn btn-success">
+                                    explain
+                                </button>
+                                <button type="button" id="query-explain-distributed" onclick="handle_explain_distributed()"
+                                        class="btn btn-success">explain(distributed)
+                                </button>
+                                <button type="button" id="query-explain-analyze" onclick="handle_explain_analyze()"
+                                        class="btn btn-success">explain(analyze)
+                                </button>
+                                <button type="button" id="query-clear" onclick="query_clear()" class="btn btn-info">clear
+                                </button>
+                                <button type="button" id="query-format" onclick="query_format()" class="btn btn-warning">
+                                    format
+                                </button>
+                                <button type="button" id="tsv-download" onclick="tsv_download()" class="btn btn-default"
+                                        disabled="disabled">TSV download
+                                </button>
+                                <button type="button" id="csv-download" onclick="csv_download()" class="btn btn-default"
+                                        disabled="disabled">CSV(Shift_JIS) download
+                                </button>
+                                <button type="button" id="send-ikasan" onclick="send_ikasan()" class="btn btn-default"
+                                        disabled="disabled">share
+                                </button>
+                                <button class="btn btn-default clip-btn-native">Copy to clipboard</button>
+                            </div>
+                        </div>
+                    </form>
+
+                    <div class="alert alert-danger" id="error-msg"></div>
+                    <div class="alert alert-warning" id="warn-msg"></div>
+                    <script>
+                        $("#error-msg").hide();
+                        $("#warn-msg").hide();
+                    </script>
+
+                    <h4>query results</h4>
+
+                    <div id="query-result-size-line"><span id="lineNumber"></span> lines, DataSize <span id="rawDataSize"></span>, Elapsed <span id="elapsed"></span></div>
+                    <script>
+                        $("#query-result-size-line").hide();
+                    </script>
+
+                    <div id="query-results-tab">
+                        <div id="query-results-div">
+                            <table class="table table-bordered" id="query-results"></table>
+                        </div>
+                    </div>
+                </div>
 
                 <div id="all-queries-tab">
 
@@ -409,34 +442,5 @@
 </table>
 
 </body>
-
-<script>
-
-    var timer;
-    function startTimer() {
-        timer = setInterval(function () {
-            redraw();
-        }, 1000);
-    }
-
-    startTimer();
-
-    function stopTimer() {
-        clearInterval(timer);
-    }
-
-    redraw();
-
-    $('#auto-refresh').on('change', function(){
-        if ($(this).is(':checked')) {
-            console.log("start");
-            startTimer();
-        } else {
-            console.log("stop");
-            stopTimer();
-        }
-    });
-
-</script>
 
 </html>
