@@ -133,31 +133,6 @@
                     <form id="query-form" class="form-horizontal">
                         <div class="form-group">
                             <div class="col-sm-10">
-                                <h4>query</h4>
-                                <a href="https://prestodb.io/docs/current/" target="_blank">presto document</a>
-                                <textarea rows="10" id="query">
-
-
-
-
-                                </textarea>
-                                <script>
-                                    $(function () {
-                                        window.editor = CodeMirror.fromTextArea(document.getElementById('query'), {
-                                            mode: "text/x-presto",
-                                            lineNumbers: true,
-                                            extraKeys: {"Ctrl-Space": "autocomplete",
-                                                "Cmd-Enter": function(){
-                                                    $("#query-submit").click();
-                                                }
-                                            },
-                                        });
-                                    });
-                                </script>
-                            </div>
-                        </div>
-                        <div class="form-group">
-                            <div class="col-sm-10">
                                 <button type="button" id="query-submit" onclick="handle_execute()" class="btn btn-primary">
                                     execute
                                 </button>
@@ -184,6 +159,31 @@
                                 <button type="button" id="send-ikasan" onclick="send_ikasan()" class="btn btn-default"
                                         disabled="disabled">share
                                 </button>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <div class="col-sm-10">
+                                <h4>query</h4>
+                                <a href="https://prestodb.io/docs/current/" target="_blank">presto document</a>
+                                <textarea rows="10" id="query">
+
+
+
+
+                                </textarea>
+                                <script>
+                                    $(function () {
+                                        window.editor = CodeMirror.fromTextArea(document.getElementById('query'), {
+                                            mode: "text/x-presto",
+                                            lineNumbers: true,
+                                            extraKeys: {"Ctrl-Space": "autocomplete",
+                                                "Cmd-Enter": function(){
+                                                    $("#query-submit").click();
+                                                }
+                                            },
+                                        });
+                                    });
+                                </script>
                             </div>
                         </div>
                     </form>
