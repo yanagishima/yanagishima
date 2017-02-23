@@ -827,6 +827,7 @@ var create_table = (function (table_id, headers, rows, show_ddl_flag) {
     }
     $(table_id).append(tbody);
     $(table_id).tablefix({fixRows: 1});
+    $("#jquery-ui-tabs").attr("id", "dummy");
 
 });
 
