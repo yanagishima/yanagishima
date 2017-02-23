@@ -586,11 +586,11 @@ var update_query_histories_area = (function () {
         }
         $(tr).append(td);
 
+        new Clipboard('.btn');
         var copy_button = document.createElement("button");
-        $(copy_button).attr("type", "button");
-        $(copy_button).attr("class", "btn btn-success");
-        $(copy_button).text("copy to query area");
-        $(copy_button).click({query: query_list[i]}, copy_query);
+        $(copy_button).attr("class", "btn");
+        $(copy_button).attr("data-clipboard-text", query_list[i]);
+        $(copy_button).text("Copy to clipboard");
         var td = document.createElement("td");
         $(td).append(copy_button);
         $(tr).append(td);
@@ -623,11 +623,11 @@ var update_query_bookmarks_area = (function () {
     var query_list = query_bookmarks();
     for (var i = 0; i < query_list.length; i++) {
         var tr = document.createElement("tr");
+        new Clipboard('.btn');
         var copy_button = document.createElement("button");
-        $(copy_button).attr("type", "button");
-        $(copy_button).attr("class", "btn btn-success");
-        $(copy_button).text("copy to query area");
-        $(copy_button).click({query: query_list[i]}, copy_query);
+        $(copy_button).attr("class", "btn");
+        $(copy_button).attr("data-clipboard-text", query_list[i]);
+        $(copy_button).text("Copy to clipboard");
         var td = document.createElement("td");
         $(td).append(copy_button);
         $(tr).append(td);
