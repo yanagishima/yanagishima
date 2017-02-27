@@ -26,6 +26,7 @@ import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import yanagishima.filter.YanagishimaFilter;
 import yanagishima.module.DbModule;
 import yanagishima.module.PrestoServiceModule;
 import yanagishima.module.PrestoServletModule;
@@ -74,6 +75,7 @@ public class YanagishimaServer {
 
 		ServletContextHandler servletContextHandler = new ServletContextHandler(
 				server, "/", ServletContextHandler.SESSIONS);
+		servletContextHandler.addFilter(YanagishimaFilter.class, "/*", EnumSet.of(DispatcherType.REQUEST));
 		servletContextHandler.addFilter(GuiceFilter.class, "/*",
 				EnumSet.allOf(DispatcherType.class));
 
