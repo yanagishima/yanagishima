@@ -11,6 +11,7 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.util.Optional;
 
 @Singleton
 public class QueryDetailServlet extends HttpServlet {
@@ -30,8 +31,9 @@ public class QueryDetailServlet extends HttpServlet {
 	protected void doGet(HttpServletRequest request,
 			HttpServletResponse response) throws ServletException, IOException {
 
+		String datasource = Optional.ofNullable(request.getParameter("datasource")).get();
 		String prestoRedirectServerServer = yanagishimaConfig
-				.getPrestoRedirectServer(request.getParameter("datasource"));
+				.getPrestoRedirectServer(datasource);
 		response.sendRedirect(prestoRedirectServerServer + "/query.html?" + request.getParameter("queryId"));
 
 	}

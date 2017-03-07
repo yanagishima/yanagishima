@@ -85,13 +85,13 @@ var yanagishima_tree = (function (datasource) {
                         query = "SELECT * FROM " + catalog + "." + schema + "." + table + " LIMIT 100";
                         window.editor.setValue(query);
                     } else if (action === "select_where") {
-                        select_data("SELECT * FROM", catalog, schema, table, true);
+                        select_data(datasource, "SELECT * FROM", catalog, schema, table, true);
                     } else if (action === "select_where_no_execute") {
-                        select_data("SELECT * FROM", catalog, schema, table, false);
+                        select_data(datasource, "SELECT * FROM", catalog, schema, table, false);
                     } else if (action === "select_count_where") {
-                        select_data("SELECT COUNT(*) FROM", catalog, schema, table, true);
+                        select_data(datasource, "SELECT COUNT(*) FROM", catalog, schema, table, true);
                     } else if (action === "select_count_where_no_execute") {
-                        select_data("SELECT COUNT(*) FROM", catalog, schema, table, false);
+                        select_data(datasource, "SELECT COUNT(*) FROM", catalog, schema, table, false);
                     } else if (action === "partitions") {
                         query = "SHOW PARTITIONS FROM " + catalog + "." + schema + "." + table;
                         window.editor.setValue(query);
@@ -116,11 +116,12 @@ var yanagishima_tree = (function (datasource) {
     return tree;
 });
 
-var select_data = (function (select_query, catalog, schema, table, execute_flag) {
+var select_data = (function (datasource, select_query, catalog, schema, table, execute_flag) {
     partition_query = "SHOW PARTITIONS FROM " + catalog + "." + schema + "." + table;
     var requestURL = "/presto";
     var requestData = {
-        "query": partition_query
+        "query": partition_query,
+        "datasource": datasource
     };
     var successHandler = function (data) {
         if (data.error) {
@@ -180,11 +181,11 @@ var table_search = (function () {
 
 var switch_datasource = (function () {
     var datasource = $('#select_datasource option:selected').text();
-    console.log(datasource);
-    //$("#tree").remove();
     $("#tree").dynatree("destroy");
     var tree = yanagishima_tree(datasource);
     redraw(datasource);
+    redraw_done_queryies(datasource);
+    update_yanagishima_query_histories_area(datasource);
 });
 
 var handle_execute = (function () {
@@ -230,18 +231,18 @@ var handle_execute = (function () {
             $("#error-msg").slideDown("fast");
             $("#query-results").empty();
             selectLine(data.errorLineNumber);
-            update_history_by_query(data.queryid);
+            update_history_by_query(datasource, data.queryid);
         } else {
             if (data.warn) {
                 $("#warn-msg").text(data.warn);
                 $("#warn-msg").slideDown("fast");
             }
-            update_history_by_query(data.queryid);
+            update_history_by_query(datasource, data.queryid);
             push_query(query, data.queryid);
             $("#query-histories").empty();
             $("#yanagishima-query-histories").empty();
             update_query_histories_area();
-            update_yanagishima_query_histories_area();
+            update_yanagishima_query_histories_area(datasource);
             $("#query-results").empty();
             var headers = data.headers;
             var rows = data.results;
@@ -303,7 +304,7 @@ var handle_execute = (function () {
                     $(select_button).attr("type", "button");
                     $(select_button).attr("class", "btn btn-success");
                     $(select_button).text("select latest partition");
-                    $(select_button).click({catalog: columns[0], schema: columns[1], table: columns[2]}, execute_select_query_latest_partition);
+                    $(select_button).click({datasource: datasource, catalog: columns[0], schema: columns[1], table: columns[2]}, execute_select_query_latest_partition);
                     $(td).append(select_button);
                     $(tr).append(td);
                     var td = document.createElement("td");
@@ -341,13 +342,15 @@ var execute_select_query = (function (event) {
 });
 
 var execute_select_query_latest_partition = (function (event) {
-    select_data("SELECT * FROM", event.data.catalog, event.data.schema, event.data.table, true);
+    select_data(event.data.datasource, "SELECT * FROM", event.data.catalog, event.data.schema, event.data.table, true);
 });
 
 var show_columns = (function (event) {
     var query = "DESCRIBE " + event.data.catalog + "." + event.data.schema + "." + event.data.table;
+    var datasource = $('#select_datasource option:selected').text();
     var requestData = {
-        "query": query
+        "query": query,
+        "datasource": datasource
     };
     var button = $(this);
     if (! button.data('loaded')) {
@@ -387,7 +390,6 @@ var handle_explain_distributed = (function () {
 
 var handle_explain_analyze = (function () {
     explain("analyze");
-    explain("analyze");
 });
 
 var explain = (function (kind) {
@@ -405,8 +407,10 @@ var explain = (function (kind) {
         query = "explain " + window.editor.getValue();
     }
     var requestURL = "/presto";
+    var datasource = $('#select_datasource option:selected').text();
     var requestData = {
-        "query": query
+        "query": query,
+        "datasource": datasource
     };
     var successHandler = function (data) {
         if (data.error) {
@@ -463,8 +467,10 @@ var query_format = (function () {
     $("#warn-msg").hide();
     var query = window.editor.getValue();
     var requestURL = "/format";
+    var datasource = $('#select_datasource option:selected').text();
     var requestData = {
-        "query": query
+        "query": query,
+        "datasource": datasource
     };
     var successHandler = function (data) {
         if (data.error) {
@@ -487,8 +493,9 @@ var tsv_download = (function () {
     var element = param.split('=');
     var queryid = element[1];
 
-    var link = document.createElement('a')
-    link.href = "/download?queryid=" + queryid;
+    var link = document.createElement('a');
+    var datasource = $('#select_datasource option:selected').text();
+    link.href = "/download?queryid=" + queryid + "&datasource=" + datasource;
     link.click();
 });
 
@@ -621,10 +628,11 @@ var update_query_bookmarks_area = (function () {
     $("#query-bookmarks").append(tbody);
 });
 
-var update_yanagishima_query_histories_area = (function () {
+var update_yanagishima_query_histories_area = (function (datasource) {
 
     var requestData = {
-        "limit": 100
+        "limit": 100,
+        "datasource": datasource
     };
 
     var successHandler = function (data) {
@@ -824,8 +832,7 @@ var redraw = (function () {
     });
 });
 
-var redraw_done_queryies = (function () {
-    var datasource = $('#select_datasource option:selected').text();
+var redraw_done_queryies = (function (datasource) {
     var url = "/query?datasource=" + datasource;
     d3.json(url, function (queries) {
         var doneQueries = [];
@@ -840,6 +847,7 @@ var redraw_done_queryies = (function () {
 
 var renderRunningQueries = (function (queries) {
     var tbody = d3.select("#running").select("tbody");
+    var datasource = $('#select_datasource option:selected').text();
 
     tbody.remove();
 
@@ -871,7 +879,7 @@ var renderRunningQueries = (function (queries) {
 
         var queryid_td = document.createElement("td");
         var link = document.createElement('a')
-        link.href = "/queryDetail?queryId=" + queryInfo.queryId;
+        link.href = "/queryDetail?queryId=" + queryInfo.queryId + "&datasource=" + datasource;
         link.text = queryInfo.queryId;
         link.style = "color: #337ab7";
         link.target = "_blank";
@@ -922,17 +930,19 @@ var renderRunningQueries = (function (queries) {
 
 var kill_query = (function (event) {
     query = event.data.query;
+    var datasource = $('#select_datasource option:selected').text();
     if (query.session.source == 'yanagishima') {
-        d3.xhr("/kill?queryId=" + query.queryId).send('GET');
+        d3.xhr("/kill?queryId=" + query.queryId + "&datasource=" + datasource).send('GET');
     } else {
         if(confirm("You are killing the query from non yanagishima user.\nIs it OK?")) {
-            d3.xhr("/kill?queryId=" + query.queryId).send('GET');
+            d3.xhr("/kill?queryId=" + query.queryId + "&datasource=" + datasource).send('GET');
         }
     }
 });
 
 var renderDoneQueries = (function (queries, table_id) {
     var tbody = d3.select(table_id).select("tbody");
+    var datasource = $('#select_datasource option:selected').text();
 
     var rows = tbody.selectAll("tr")
         .data(queries, function (query) {
@@ -956,7 +966,7 @@ var renderDoneQueries = (function (queries, table_id) {
         .append("td")
         .append('a')
         .attr("href", function (query) {
-           return "/queryDetail?queryId=" + query.queryId;
+           return "/queryDetail?queryId=" + query.queryId + "&datasource=" + datasource;
          })
         .attr("target", "_blank")
         .attr("style", "color: #337ab7")
@@ -1014,14 +1024,14 @@ var shortErrorType = (function (errorType) {
     return errorType;
 });
 
-function update_history_by_query(queryid) {
+function update_history_by_query(datasource, queryid) {
     if (! window.history.pushState ) // if pushState not ready
         return;
     if (queryid === null) {
         window.history.pushState('','', '/');
         return;
     }
-    window.history.pushState(queryid, '', '?queryid=' + queryid);
+    window.history.pushState(queryid, '', '?queryid=' + queryid + '&datasource=' + datasource);
 };
 
 function follow_current_uri() {
@@ -1030,11 +1040,11 @@ function follow_current_uri() {
         return;
     }
     var element = param.split('=');
-    follow_current_uri_query(element[1]);
+    follow_current_uri_query(element[1], element[3]);
 };
 
-function follow_current_uri_query(queryid){
-    $.get("/history", {queryid: queryid}, function (data) {
+function follow_current_uri_query(queryid, datasource){
+    $.get("/history", {queryid: queryid, datasource: datasource}, function (data) {
         window.editor.setValue(data.queryString);
         if (data.error) {
             $("#error-msg").text(data.error);

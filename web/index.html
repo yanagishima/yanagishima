@@ -93,6 +93,7 @@
                         $("#select_datasource").append(option);
                     }
                     yanagishima_tree(datasources[0]);
+                    update_yanagishima_query_histories_area(datasources[0]);
 
                 };
 
@@ -327,9 +328,6 @@
 
                 <div id="done-queries-tab">
                     <div>
-                        <script>
-                            redraw_done_queryies();
-                        </script>
                         <div>
                             <i class="fa fa-refresh" aria-hidden="true" onclick="redraw_done_queryies()"></i>
                         </div>
@@ -445,9 +443,7 @@
                     <div>
                         <table class="table table-bordered" id="yanagishima-query-histories"></table>
                     </div>
-                    <script>
-                        update_yanagishima_query_histories_area();
-                    </script>
+
                 </div>
 
             </div>
