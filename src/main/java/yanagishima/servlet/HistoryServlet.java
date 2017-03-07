@@ -56,12 +56,13 @@ public class HistoryServlet extends HttpServlet {
             queryidOptional.ifPresent(queryid -> {
 
                 try {
-                    Optional<Query> queryOptional = db.single(Query.class).where("query_id=?", queryid).execute();
+                    String datasource = Optional.ofNullable(request.getParameter("datasource")).get();
+                    Optional<Query> queryOptional = db.single(Query.class).where("query_id=? and datasource=?", queryid, datasource).execute();
                     queryOptional.ifPresent(query -> {
                         String queryString = query.getQueryString();
                         retVal.put("queryString", queryString);
 
-                        Path errorFilePath = PathUtil.getResultFilePath(queryid, true);
+                        Path errorFilePath = PathUtil.getResultFilePath(datasource, queryid, true);
                         if(errorFilePath.toFile().exists()) {
                             try (BufferedReader br = Files.newBufferedReader(errorFilePath, StandardCharsets.UTF_8)) {
                                 String line = br.readLine();
@@ -73,7 +74,7 @@ public class HistoryServlet extends HttpServlet {
                             int limit = yanagishimaConfig.getSelectLimit();
                             List<List<String>> rowDataList = new ArrayList<List<String>>();
                             int lineNumber = 0;
-                            try (BufferedReader br = Files.newBufferedReader(PathUtil.getResultFilePath(queryid, false), StandardCharsets.UTF_8)) {
+                            try (BufferedReader br = Files.newBufferedReader(PathUtil.getResultFilePath(datasource, queryid, false), StandardCharsets.UTF_8)) {
                                 String line = br.readLine();
                                 while (line != null) {
                                     if (lineNumber == 0) {
@@ -103,7 +104,7 @@ public class HistoryServlet extends HttpServlet {
                             long elapsedTimeMillis = ChronoUnit.MILLIS.between(submitTimeZdt, fetchResultTime);
                             retVal.put("elapsedTimeMillis", elapsedTimeMillis);
                             try {
-                                long size = Files.size(PathUtil.getResultFilePath(queryid, false));
+                                long size = Files.size(PathUtil.getResultFilePath(datasource, queryid, false));
                                 DataSize rawDataSize = new DataSize(size, DataSize.Unit.BYTE);
                                 retVal.put("rawDataSize", rawDataSize.convertToMostSuccinctDataSize().toString());
                             } catch (IOException e) {

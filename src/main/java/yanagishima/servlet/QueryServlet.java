@@ -5,6 +5,7 @@ import java.io.PrintWriter;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
@@ -40,8 +41,9 @@ public class QueryServlet extends HttpServlet {
 	protected void doGet(HttpServletRequest request,
 			HttpServletResponse response) throws ServletException, IOException {
 
+		String datasource = Optional.ofNullable(request.getParameter("datasource")).get();
 		String prestoCoordinatorServer = yanagishimaConfig
-				.getPrestoCoordinatorServer();
+				.getPrestoCoordinatorServer(datasource);
 		response.setContentType("application/json");
 		PrintWriter writer = response.getWriter();
 		String originalJson = Request.Get(prestoCoordinatorServer + "/v1/query")

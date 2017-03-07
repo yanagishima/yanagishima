@@ -62,6 +62,13 @@
                 <li><a href="#describe">DESCRIBE</a></li>
             </ul>
 
+            <h4>datasource</h4>
+            <form class="form-inline">
+                <select id="select_datasource" onChange="switch_datasource()">
+                </select>
+            </form>
+
+            <h4>table search</h4>
             <form class="form-inline" id="table_search">
                 <div class="form-group">
                     <input type="text" class="form-control" id="table_name" placeholder="Table Name"/>
@@ -75,7 +82,21 @@
             </div>
 
             <script>
-                var tree = yanagishima_tree();
+                var successHandler = function (data) {
+                    var datasources = data.datasources;
+
+                    for(var i=0; i<datasources.length; i++) {
+                            var option = $('<option>')
+                                .val(datasources[i])
+                                .text(datasources[i]);
+
+                        $("#select_datasource").append(option);
+                    }
+                    yanagishima_tree(datasources[0]);
+
+                };
+
+                $.get("/datasource", successHandler);
             </script>
 
         </td>
@@ -156,12 +177,6 @@
                         <button type="button" id="tsv-download" onclick="tsv_download()" class="btn btn-default"
                                 disabled="disabled">TSV download
                         </button>
-                        <button type="button" id="csv-download" onclick="csv_download()" class="btn btn-default"
-                                disabled="disabled">CSV(Shift_JIS) download
-                        </button>
-                        <button type="button" id="send-ikasan" onclick="send_ikasan()" class="btn btn-default"
-                                disabled="disabled">share
-                        </button>
                         <button class="btn btn-default clip-btn-native">Copy to clipboard</button>
                     </div>
                 </div>
@@ -189,6 +204,7 @@
 
             <script>
                 $(function () {
+
                     var timer;
                     function startTimer() {
                         timer = setInterval(function () {

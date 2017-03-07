@@ -78,7 +78,8 @@ public class PrestoServlet extends HttpServlet {
 					LOGGER.info(String.format("%s executed %s", userName, query));
 				}
 				try {
-					PrestoQueryResult prestoQueryResult = prestoService.doQuery(query, userName);
+					String datasource = Optional.ofNullable(request.getParameter("datasource")).get();
+					PrestoQueryResult prestoQueryResult = prestoService.doQuery(datasource, query, userName);
 					String queryid = prestoQueryResult.getQueryId();
 					retVal.put("queryid", queryid);
 					if (prestoQueryResult.getUpdateType() == null) {
@@ -90,7 +91,7 @@ public class PrestoServlet extends HttpServlet {
 						warningMessageOptinal.ifPresent(warningMessage -> {
 							retVal.put("warn", warningMessage);
 						});
-						Optional<Query> queryDataOptional = db.single(Query.class).where("query_id=?", queryid).execute();
+						Optional<Query> queryDataOptional = db.single(Query.class).where("query_id=? and datasource=?", queryid, datasource).execute();
 						queryDataOptional.ifPresent(queryData -> {
 							LocalDateTime submitTimeLdt = LocalDateTime.parse(queryid.substring(0, "yyyyMMdd_HHmmss".length()), DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss"));
 							ZonedDateTime submitTimeZdt = submitTimeLdt.atZone(ZoneId.of("GMT", ZoneId.SHORT_IDS));

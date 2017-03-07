@@ -1,87 +1,52 @@
 package yanagishima.config;
 
+import java.util.Arrays;
+import java.util.List;
+import java.util.Optional;
+import java.util.Properties;
+
 public class YanagishimaConfig {
-	
-	private int jettyPort;
-	
-	private String webResourceDir;
 
-	private String prestoCoordinatorServer;
+	private Properties properties;
 
-	private String prestoRedirectServer;
-	
-	private String catalog;
-	
-	private String schema;
-	
-	private String user;
-	
-	private String source;
-	
-	private int selectLimit;
-
-	private String auditHttpHeaderName;
-
-	private String ikasanUrl;
-
-	private String ikasanChannel;
-
-	public YanagishimaConfig(int jettyPort, String webResourceDir,
-			String prestoCoordinatorServer, String prestoRedirectServer, String catalog, String schema, String user, String source, int selectLimit, String auditHttpHeaderName, String ikasanUrl, String ikasanChannel) {
-		this.jettyPort = jettyPort;
-		this.webResourceDir = webResourceDir;
-		this.prestoCoordinatorServer = prestoCoordinatorServer;
-		this.prestoRedirectServer = prestoRedirectServer;
-		this.catalog = catalog;
-		this.schema = schema;
-		this.user = user;
-		this.source = source;
-		this.selectLimit = selectLimit;
-		this.auditHttpHeaderName = auditHttpHeaderName;
-		this.ikasanUrl = ikasanUrl;
-		this.ikasanChannel = ikasanChannel;
-	}
-	
-	public int getJettyPort() {
-		return jettyPort;
+	public YanagishimaConfig(Properties properties) {
+		this.properties = properties;
 	}
 
-	public String getWebResourceDir() {
-		return webResourceDir;
+	public String getPrestoCoordinatorServer(String datasource) {
+		return Optional.ofNullable(properties.getProperty("presto.coordinator.server." + datasource)).get();
 	}
 
-	public String getPrestoCoordinatorServer() {
-		return prestoCoordinatorServer;
+	public String getPrestoRedirectServer(String datasource) {
+		return Optional.ofNullable(properties.getProperty("presto.redirect.server." + datasource)).get();
 	}
 
-	public String getPrestoRedirectServer() { return prestoRedirectServer; }
-
-	public String getCatalog() {
-		return catalog;
+	public String getCatalog(String datasource) {
+		return Optional.ofNullable(properties.getProperty("catalog." + datasource)).get();
 	}
 
-	public String getSchema() {
-		return schema;
+	public String getSchema(String datasource) {
+		return Optional.ofNullable(properties.getProperty("schema." + datasource)).get();
 	}
 	
 	public String getUser() {
-		return user;
+		return "yanagishima";
 	}
 	
 	public String getSource() {
-		return source;
+		return "yanagishima";
 	}
 
 	public int getSelectLimit() {
-		return selectLimit;
+		return Integer.parseInt(properties.getProperty("select.limit"));
 	}
 
 	public String getAuditHttpHeaderName() {
-		return auditHttpHeaderName;
+		return properties.getProperty("audit.http.header.name");
 	}
 
-	public String getIkasanUrl() { return ikasanUrl; }
-
-	public String getIkasanChannel() { return ikasanChannel; }
+	public List<String> getDatasources() {
+		return Arrays.asList(Optional.ofNullable(properties.getProperty("presto.datasources")).get().split(","));
+	}
 
 }

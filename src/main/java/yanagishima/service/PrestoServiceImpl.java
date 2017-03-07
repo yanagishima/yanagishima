@@ -49,9 +49,9 @@ public class PrestoServiceImpl implements PrestoService {
     }
 
     @Override
-    public PrestoQueryResult doQuery(String query, String userName) throws QueryErrorException {
+    public PrestoQueryResult doQuery(String datasource, String query, String userName) throws QueryErrorException {
 
-        try (StatementClient client = getStatementClient(query, userName)) {
+        try (StatementClient client = getStatementClient(datasource, query, userName)) {
             while (client.isValid() && (client.current().getData() == null)) {
                 client.advance();
             }
@@ -63,7 +63,7 @@ public class PrestoServiceImpl implements PrestoService {
                     PrestoQueryResult prestoQueryResult = new PrestoQueryResult();
                     prestoQueryResult.setQueryId(queryId);
                     prestoQueryResult.setUpdateType(results.getUpdateType());
-                    insertQueryHistory(query, queryId);
+                    insertQueryHistory(datasource, query, queryId);
                     return prestoQueryResult;
                 } else if (results.getColumns() == null) {
                     throw new QueryErrorException(new SQLException(format("Query %s has no columns\n", results.getId())));
@@ -74,9 +74,9 @@ public class PrestoServiceImpl implements PrestoService {
                     List<String> columns = Lists.transform(results.getColumns(), Column::getName);
                     prestoQueryResult.setColumns(columns);
                     List<List<String>> rowDataList = new ArrayList<List<String>>();
-                    processData(client, queryId, prestoQueryResult, columns, rowDataList);
+                    processData(client, datasource, queryId, prestoQueryResult, columns, rowDataList);
                     prestoQueryResult.setRecords(rowDataList);
-                    insertQueryHistory(query, queryId);
+                    insertQueryHistory(datasource, query, queryId);
                     return prestoQueryResult;
                 }
             }
@@ -89,11 +89,12 @@ public class PrestoServiceImpl implements PrestoService {
                 QueryResults results = client.finalResults();
                 String queryId = results.getId();
                 db.insert(Query.class)
+                        .value("datasource", datasource)
                         .value("query_id", queryId)
                         .value("fetch_result_time_string", ZonedDateTime.now().toString())
                         .value("query_string", query)
                         .execute();
-                Path dst = getResultFilePath(queryId, true);
+                Path dst = getResultFilePath(datasource, queryId, true);
                 QueryError error = results.getError();
                 String message = format("Query failed (#%s): %s", results.getId(), error.getMessage());
                 try {
@@ -111,9 +112,10 @@ public class PrestoServiceImpl implements PrestoService {
 
     }
 
-    private void insertQueryHistory(String query, String queryId) {
+    private void insertQueryHistory(String datasource, String query, String queryId) {
         if(!query.toLowerCase().startsWith("show") && !query.toLowerCase().startsWith("explain")) {
             db.insert(Query.class)
+                    .value("datasource", datasource)
                     .value("query_id", queryId)
                     .value("fetch_result_time_string", ZonedDateTime.now().toString())
                     .value("query_string", query)
@@ -121,9 +123,9 @@ public class PrestoServiceImpl implements PrestoService {
         }
     }
 
-    private void processData(StatementClient client, String queryId, PrestoQueryResult prestoQueryResult, List<String> columns, List<List<String>> rowDataList) {
+    private void processData(StatementClient client, String datasource, String queryId, PrestoQueryResult prestoQueryResult, List<String> columns, List<List<String>> rowDataList) {
         int limit = yanagishimaConfig.getSelectLimit();
-        Path dst = getResultFilePath(queryId, false);
+        Path dst = getResultFilePath(datasource, queryId, false);
         int lineNumber = 0;
         try (BufferedWriter bw = Files.newBufferedWriter(dst, StandardCharsets.UTF_8)) {
             bw.write(String.join("\t", columns));
@@ -176,25 +178,29 @@ public class PrestoServiceImpl implements PrestoService {
         }
     }
 
-    private Path getResultFilePath(String queryId, boolean error) {
+    private Path getResultFilePath(String datasource, String queryId, boolean error) {
         String currentPath = new File(".").getAbsolutePath();
         String yyyymmdd = queryId.substring(0, 8);
-        File yyyymmddDir = new File(String.format("%s/result/%s", currentPath, yyyymmdd));
+        File datasourceDir = new File(String.format("%s/result/%s", currentPath, datasource));
+        if (!datasourceDir.isDirectory()) {
+            datasourceDir.mkdir();
+        }
+        File yyyymmddDir = new File(String.format("%s/result/%s/%s", currentPath, datasource, yyyymmdd));
         if (!yyyymmddDir.isDirectory()) {
             yyyymmddDir.mkdir();
         }
         if(error) {
-            return Paths.get(String.format("%s/result/%s/%s.err", currentPath, yyyymmdd, queryId));
+            return Paths.get(String.format("%s/result/%s/%s/%s.err", currentPath, datasource, yyyymmdd, queryId));
         } else {
-            return Paths.get(String.format("%s/result/%s/%s.tsv", currentPath, yyyymmdd, queryId));
+            return Paths.get(String.format("%s/result/%s/%s/%s.tsv", currentPath, datasource, yyyymmdd, queryId));
         }
     }
 
-    private StatementClient getStatementClient(String query, String userName) {
+    private StatementClient getStatementClient(String datasource, String query, String userName) {
         String prestoCoordinatorServer = yanagishimaConfig
-                .getPrestoCoordinatorServer();
-        String catalog = yanagishimaConfig.getCatalog();
-        String schema = yanagishimaConfig.getSchema();
+                .getPrestoCoordinatorServer(datasource);
+        String catalog = yanagishimaConfig.getCatalog(datasource);
+        String schema = yanagishimaConfig.getSchema(datasource);
         String user = null;
         if(userName == null ) {
             user = yanagishimaConfig.getUser();

@@ -31,7 +31,7 @@ public class QueryDetailServlet extends HttpServlet {
 			HttpServletResponse response) throws ServletException, IOException {
 
 		String prestoRedirectServerServer = yanagishimaConfig
-				.getPrestoRedirectServer();
+				.getPrestoRedirectServer(request.getParameter("datasource"));
 		response.sendRedirect(prestoRedirectServerServer + "/query.html?" + request.getParameter("queryId"));
 
 	}

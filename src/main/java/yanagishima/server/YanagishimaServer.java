@@ -8,9 +8,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.sql.Connection;
 import java.sql.Statement;
-import java.util.Arrays;
-import java.util.EnumSet;
-import java.util.Properties;
+import java.util.*;
 
 import javax.servlet.DispatcherType;
 
@@ -45,18 +43,9 @@ public class YanagishimaServer {
 		Properties properties = loadProps(args, new OptionParser());
 		int jettyPort = Integer.parseInt(properties.getProperty("jetty.port"));
 		String webResourceDir = properties.getProperty("web.resource.dir", "web");
-		String prestoCoordinatorServer = properties.getProperty("presto.coordinator.server");
-		String prestoRedirectServer = properties.getProperty("presto.redirect.server");
-		String catalog = properties.getProperty("catalog");
-		String schema = properties.getProperty("schema");
-		String user = "yanagishima";
-		String source = "yanagishima";
 		int selectLimit = Integer.parseInt(properties.getProperty("select.limit"));
-		String auditHttpHeaderName = properties.getProperty("audit.http.header.name");
-		String ikasanUrl = properties.getProperty("ikasan.url");
-		String ikasanChannel = properties.getProperty("ikasan.channel");
 
-		PrestoServiceModule prestoServiceModule = new PrestoServiceModule(jettyPort, webResourceDir, prestoCoordinatorServer, prestoRedirectServer, catalog, schema, user, source, selectLimit, auditHttpHeaderName, ikasanUrl, ikasanChannel);
+		PrestoServiceModule prestoServiceModule = new PrestoServiceModule(properties);
 		PrestoServletModule prestoServletModule = new PrestoServletModule();
 		DbModule dbModule = new DbModule();
 		@SuppressWarnings("unused")
@@ -66,7 +55,7 @@ public class YanagishimaServer {
 		TinyORM tinyORM = injector.getInstance(TinyORM.class);
 		try(Connection connection = tinyORM.getConnection()) {
 			try(Statement statement = connection.createStatement()) {
-				statement.executeUpdate("create table if not exists query (query_id text primary key, fetch_result_time_string text, query_string text)");
+				statement.executeUpdate("create table if not exists query (datasource text, query_id text primary key, fetch_result_time_string text, query_string text)");
 			}
 		}
 

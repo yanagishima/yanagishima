@@ -11,14 +11,14 @@ import java.nio.file.Paths;
 
 public class PathUtil {
 
-	public static Path getResultFilePath(String queryid, boolean error) {
+	public static Path getResultFilePath(String datasource, String queryid, boolean error) {
 
 		String currentPath = new File(".").getAbsolutePath();
 		String yyyymmdd = queryid.substring(0, 8);
 		if(error) {
-			return Paths.get(String.format("%s/result/%s/%s.err", currentPath, yyyymmdd, queryid));
+			return Paths.get(String.format("%s/result/%s/%s/%s.err", currentPath, datasource, yyyymmdd, queryid));
 		} else {
-			return Paths.get(String.format("%s/result/%s/%s.tsv", currentPath, yyyymmdd, queryid));
+			return Paths.get(String.format("%s/result/%s/%s/%s.tsv", currentPath, datasource, yyyymmdd, queryid));
 		}
 	}
 

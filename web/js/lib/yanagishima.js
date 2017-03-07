@@ -1,10 +1,10 @@
-var yanagishima_tree = (function () {
+var yanagishima_tree = (function (datasource) {
     var tree = $("#tree").dynatree({
         imagePath: "img",
         initAjax: {
             type: "POST",
             url: "presto",
-            data: {"query": "show catalogs"}
+            data: {"datasource":datasource, "query": "show catalogs"}
         },
         postProcess: function (data, dataType) {
             headers = data["headers"];
@@ -28,7 +28,7 @@ var yanagishima_tree = (function () {
             }
             $.ajax({
                 url: "presto",
-                data: {query: param},
+                data: {"datasource":datasource, query: param},
                 type: "POST",
                 dataType: "json"
             }).done(function (data) {
@@ -177,6 +177,16 @@ var table_search = (function () {
     $("#query-submit").click();
 });
 
+
+var switch_datasource = (function () {
+    var datasource = $('#select_datasource option:selected').text();
+    console.log(datasource);
+    //$("#tree").remove();
+    $("#tree").dynatree("destroy");
+    var tree = yanagishima_tree(datasource);
+    redraw(datasource);
+});
+
 var handle_execute = (function () {
     var line_count = window.editor.lineCount();
     for (var i=0; i<line_count; i++) {
@@ -188,8 +198,6 @@ var handle_execute = (function () {
     $("#query-clear").attr("disabled", "disabled");
     $("#query-format").attr("disabled", "disabled");
     $("#tsv-download").attr("disabled", "disabled");
-    $("#csv-download").attr("disabled", "disabled");
-    $("#send-ikasan").attr("disabled", "disabled");
     $("#query-results-div").remove();
     var div = $("<div></div>", {id: "query-results-div"});
     div.append($("<table></table>", {class: "table table-bordered", id: "query-results"}));
@@ -205,9 +213,11 @@ var handle_execute = (function () {
     $(tr).append(td);
     $("#query-results").append(tr);
     var query = window.editor.getValue();
+    var datasource = $('#select_datasource option:selected').text();
     var requestURL = "/presto";
     var requestData = {
-        "query": query
+        "query": query,
+        "datasource": datasource
     };
     var successHandler = function (data) {
         $("#query-submit").removeAttr("disabled");
@@ -320,8 +330,6 @@ var handle_execute = (function () {
                 create_table("#query-results", headers, rows, show_ddl_flag);
             }
             $("#tsv-download").removeAttr("disabled");
-            $("#csv-download").removeAttr("disabled");
-            $("#send-ikasan").removeAttr("disabled");
         }
     };
     $.post(requestURL, requestData, successHandler, "json");
@@ -384,8 +392,6 @@ var handle_explain_analyze = (function () {
 
 var explain = (function (kind) {
     $("#tsv-download").attr("disabled", "disabled");
-    $("#csv-download").attr("disabled", "disabled");
-    $("#send-ikasan").attr("disabled", "disabled");
     window.editor.removeLineClass(window.editor.listSelections()[0].head.line, 'wrap', 'CodeMirror-errorline-background');
     $("#query-results").empty();
     $("#error-msg").hide();
@@ -484,38 +490,6 @@ var tsv_download = (function () {
     var link = document.createElement('a')
     link.href = "/download?queryid=" + queryid;
     link.click();
-});
-
-var csv_download = (function () {
-    var param = document.location.search.substring(1);
-    if (param === null) {
-        return;
-    }
-    var element = param.split('=');
-    var queryid = element[1];
-
-    var link = document.createElement('a')
-    link.href = "/csvdownload?queryid=" + queryid;
-    link.click();
-});
-
-var send_ikasan = (function () {
-    var param = document.location.search.substring(1);
-    if (param === null) {
-        return;
-    }
-    var element = param.split('=');
-    var queryid = element[1];
-
-    var successHandler = function (data) {
-        if (data.error) {
-            $("#error-msg").text(data.error);
-            $("#error-msg").slideDown("fast");
-        }
-    };
-
-    $.get("/ikasan", {"hostname": document.location.hostname, "port": document.location.port, "queryid": queryid}, successHandler);
-
 });
 
 var push_query = (function (query, queryid) {
@@ -832,7 +806,9 @@ var create_table = (function (table_id, headers, rows, show_ddl_flag) {
 });
 
 var redraw = (function () {
-    d3.json('/query', function (queries) {
+    var datasource = $('#select_datasource option:selected').text();
+    var url = "/query?datasource=" + datasource;
+    d3.json(url, function (queries) {
         var runningQueries = [];
         var doneQueries = [];
         if (queries) {
@@ -849,7 +825,9 @@ var redraw = (function () {
 });
 
 var redraw_done_queryies = (function () {
-    d3.json('/query', function (queries) {
+    var datasource = $('#select_datasource option:selected').text();
+    var url = "/query?datasource=" + datasource;
+    d3.json(url, function (queries) {
         var doneQueries = [];
         if (queries) {
             doneQueries = queries.filter(function (query) {
@@ -1074,8 +1052,6 @@ function follow_current_uri_query(queryid){
             }
             create_table("#query-results", data.headers, data.results, false);
             $("#tsv-download").removeAttr("disabled");
-            $("#csv-download").removeAttr("disabled");
-            $("#send-ikasan").removeAttr("disabled");
         }
     });
 };

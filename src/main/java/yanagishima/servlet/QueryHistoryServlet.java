@@ -30,31 +30,32 @@ public class QueryHistoryServlet extends HttpServlet {
     protected void doGet(HttpServletRequest request,
                          HttpServletResponse response) throws ServletException, IOException {
 
-        HashMap<String, Object> retVal = new HashMap<String, Object>();
-
-        try {
-            Optional<String> limitOptional = Optional.ofNullable(request.getParameter("limit"));
-            limitOptional.ifPresent(limitStr -> {
-                List<Query> queryList = db.search(Query.class).orderBy("query_id DESC").limit(Integer.parseInt(limitStr)).execute();
-                List<List<String>> rowDataList = new ArrayList<List<String>>();
-                for (Query query : queryList) {
-                    List<String> row = new ArrayList<>();
-                    row.add(query.getQueryId());
-                    row.add(query.getQueryString());
-                    row.add(query.getFetchResultTimeString());
-                    rowDataList.add(row);
-                }
-                retVal.put("headers", Arrays.asList("Id", "Query", "Time"));
-                retVal.put("results", rowDataList);
-            });
-
-
-        } catch (Throwable e) {
-            LOGGER.error(e.getMessage(), e);
-            retVal.put("error", e.getMessage());
-        }
-
-        JsonUtil.writeJSON(response, retVal);
+//        HashMap<String, Object> retVal = new HashMap<String, Object>();
+//
+//        try {
+//            Optional<String> limitOptional = Optional.ofNullable(request.getParameter("limit"));
+//            limitOptional.ifPresent(limitStr -> {
+//                String datasource = Optional.ofNullable(request.getParameter("datasource")).get();
+//                List<Query> queryList = db.search(Query.class).where("datasource=?", datasource).orderBy("query_id DESC").limit(Integer.parseInt(limitStr)).execute();
+//                List<List<String>> rowDataList = new ArrayList<List<String>>();
+//                for (Query query : queryList) {
+//                    List<String> row = new ArrayList<>();
+//                    row.add(query.getQueryId());
+//                    row.add(query.getQueryString());
+//                    row.add(query.getFetchResultTimeString());
+//                    rowDataList.add(row);
+//                }
+//                retVal.put("headers", Arrays.asList("Id", "Query", "Time"));
+//                retVal.put("results", rowDataList);
+//            });
+//
+//
+//        } catch (Throwable e) {
+//            LOGGER.error(e.getMessage(), e);
+//            retVal.put("error", e.getMessage());
+//        }
+//
+//        JsonUtil.writeJSON(response, retVal);
 
     }
 
