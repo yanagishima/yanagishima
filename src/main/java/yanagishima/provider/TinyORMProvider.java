@@ -13,6 +13,8 @@ public class TinyORMProvider implements Provider<TinyORM> {
 
 	@Override
 	public TinyORM get() {
-		return new TinyORM(connection);
+		TinyORM tinyORM =  new TinyORM(connection);
+		tinyORM.setQueryTimeout(3);
+		return tinyORM;
 	}
 }
