@@ -54,7 +54,6 @@ var yanagishima_tree = (function (datasource) {
                         } else if(table_type === "VIEW") {
                             node.addChild({title: table_name, key: table_name, isLazy: true, isFolder: false, table: table_name, icon: false, addClass: "fa fa-eye"});
                         } else {
-                            console.log(table_type);
                             node.addChild({title: table_name, key: table_name, isLazy: true, isFolder: true, table: table_name});
                         }
                     }
@@ -1039,8 +1038,19 @@ function follow_current_uri() {
     if (param === null) {
         return;
     }
-    var element = param.split('=');
-    follow_current_uri_query(element[1], element[3]);
+    var element = param.split('&');
+    if (element.length != 2) {
+        return;
+    }
+    var queryid = element[0].split('=')[1];
+    if (queryid === null || queryid === undefined) {
+        return;
+    }
+    var datasource = element[1].split('=')[1];
+    if (datasource === null || datasource === undefined) {
+        return;
+    }
+    follow_current_uri_query(queryid, datasource);
 };
 
 function follow_current_uri_query(queryid, datasource){

@@ -26,11 +26,7 @@
         $(function(){
             follow_current_uri();
             window.addEventListener("popstate", function (event) {
-                if (event.state === null || event.state === undefined || event.state.length < 27) {
-                    return;
-                }
-                var queryid = event.state;
-                follow_current_uri_query(queryid);
+                follow_current_uri();
             }, false);
         });
     </script>
