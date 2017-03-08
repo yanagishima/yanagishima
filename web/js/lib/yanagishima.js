@@ -183,8 +183,7 @@ var switch_datasource = (function () {
     $("#tree").dynatree("destroy");
     var tree = yanagishima_tree(datasource);
     redraw(datasource);
-    redraw_done_queryies(datasource);
-    update_yanagishima_query_histories_area(datasource);
+    update_query_histories_area(datasource);
 });
 
 var handle_execute = (function () {
@@ -237,11 +236,10 @@ var handle_execute = (function () {
                 $("#warn-msg").slideDown("fast");
             }
             update_history_by_query(datasource, data.queryid);
-            push_query(query, data.queryid);
+            push_query(datasource, query, data.queryid);
             $("#query-histories").empty();
             $("#yanagishima-query-histories").empty();
-            update_query_histories_area();
-            update_yanagishima_query_histories_area(datasource);
+            update_query_histories_area(datasource);
             $("#query-results").empty();
             var headers = data.headers;
             var rows = data.results;
@@ -498,79 +496,76 @@ var tsv_download = (function () {
     link.click();
 });
 
-var push_query = (function (query, queryid) {
+var push_query = (function (datasource, query, queryid) {
     if (!window.localStorage) return;
-    var list = query_histories();
-    list.unshift(query);
-    set_query_histories(list.slice(0, 1000000));
+    var query_info_list = your_query_histories(datasource);
+    var query_info = {queryid: queryid, query: query};
+    query_info_list.unshift(query_info);
+    set_your_query_histories(datasource, query_info_list.slice(0, 1000000));
 
-    var yanagishima_queryid_list = your_yanagishima_queryid_histories();
-    yanagishima_queryid_list.unshift(queryid);
-    set_your_yanagishima_queryid_histories(yanagishima_queryid_list.slice(0, 1000000));
 });
 
-var query_histories = (function () {
+var your_query_histories = (function (datasource) {
     if (!window.localStorage) return [];
-    var list = [];
+    var history_map = {};
+    history_map[datasource] = [];
     try {
-        var listString = window.localStorage.query_histories;
-        if (listString && listString.length > 0)
-            list = JSON.parse(listString);
-    } catch (e) {
-        set_query_histories([]);
-        list = [];
-    }
-    return list;
-});
-
-var set_query_histories = (function (list) {
-    if (!window.localStorage) return;
-    window.localStorage.query_histories = JSON.stringify(list);
-});
-
-var your_yanagishima_queryid_histories = (function () {
-    if (!window.localStorage) return [];
-    var list = [];
-    try {
-        var listString = window.localStorage.your_yanagishima_queryid_histories;
-        if (listString && listString.length > 0)
-            list = JSON.parse(listString);
-    } catch (e) {
-        set_your_yanagishima_queryid_histories([]);
-        list = [];
-    }
-    return list;
-});
-
-var set_your_yanagishima_queryid_histories = (function (list) {
-    if (!window.localStorage) return;
-    window.localStorage.your_yanagishima_queryid_histories = JSON.stringify(list);
-});
-
-var update_query_histories_area = (function () {
-    var tbody = document.createElement("tbody");
-    var query_list = query_histories();
-    var yanagishima_queryid_list = your_yanagishima_queryid_histories();
-    for (var i = 0; i < query_list.length; i++) {
-        var tr = document.createElement("tr");
-
-        var td = document.createElement("td");
-        var queryid = yanagishima_queryid_list[i];
-        if(queryid) {
-            var link = document.createElement('a')
-            link.href = "?queryid=" + queryid;
-            link.text = queryid;
-            link.style = "color: #337ab7";
-            link.target = "_blank";
-            $(td).append(link);
+        var json_str = window.localStorage.your_query_histories;
+        if (json_str && json_str.length > 0) {
+            history_map = JSON.parse(json_str);
+        } else {
+            set_your_query_histories(datasource, []);
         }
+    } catch (e) {
+        console.log(e);
+        set_your_query_histories(datasource, []);
+    }
+
+    if(history_map[datasource] === null || history_map[datasource] === undefined) {
+        history_map[datasource] = [];
+    }
+
+    return history_map[datasource];
+});
+
+var set_your_query_histories = (function (datasource, query_info_list) {
+    if (!window.localStorage) return;
+    var history_map = {};
+    history_map[datasource] = [];
+    try {
+        var json_str = window.localStorage.your_query_histories;
+        if (json_str && json_str.length > 0) {
+            history_map = JSON.parse(json_str);
+        }
+    } catch (e) {
+        console.log(e);
+    }
+    history_map[datasource] = query_info_list;
+    window.localStorage.your_query_histories = JSON.stringify(history_map);
+});
+
+var update_query_histories_area = (function (datasource) {
+    $("#query-histories").empty();
+    var tbody = document.createElement("tbody");
+    var query_info_list = your_query_histories(datasource);
+    for (var i = 0; i < query_info_list.length; i++) {
+        var tr = document.createElement("tr");
+        var td = document.createElement("td");
+        var queryid = query_info_list[i]["queryid"]
+        var query = query_info_list[i]["query"]
+        var link = document.createElement('a')
+        link.href = "?queryid=" + queryid + "&datasource=" + datasource;
+        link.text = queryid;
+        link.style = "color: #337ab7";
+        link.target = "_blank";
+        $(td).append(link);
         $(tr).append(td);
 
         var copy_button = document.createElement("button");
         $(copy_button).attr("type", "button");
         $(copy_button).attr("class", "btn btn-success");
         $(copy_button).text("copy to query area");
-        $(copy_button).click({query: query_list[i]}, copy_query);
+        $(copy_button).click({query: query}, copy_query);
         var td = document.createElement("td");
         $(td).append(copy_button);
         $(tr).append(td);
@@ -582,183 +577,12 @@ var update_query_histories_area = (function () {
         var td = document.createElement("td");
         $(td).append(delete_button);
         $(tr).append(td);
-        var bookmark_button = document.createElement("button");
-        $(bookmark_button).attr("type", "button");
-        $(bookmark_button).attr("class", "btn btn-warning");
-        $(bookmark_button).text("bookmark");
-        $(bookmark_button).click({query: query_list[i]}, add_bookmark);
         var td = document.createElement("td");
-        $(td).append(bookmark_button);
-        $(tr).append(td);
-        var td = document.createElement("td");
-        $(td).text(query_list[i]);
+        $(td).text(query);
         $(tr).append(td);
         $(tbody).append(tr);
     }
     $("#query-histories").append(tbody);
-});
-
-var update_query_bookmarks_area = (function () {
-    var tbody = document.createElement("tbody");
-    var query_list = query_bookmarks();
-    for (var i = 0; i < query_list.length; i++) {
-        var tr = document.createElement("tr");
-        var copy_button = document.createElement("button");
-        $(copy_button).attr("type", "button");
-        $(copy_button).attr("class", "btn btn-success");
-        $(copy_button).text("copy to query area");
-        $(copy_button).click({query: query_list[i]}, copy_query);
-        var td = document.createElement("td");
-        $(td).append(copy_button);
-        $(tr).append(td);
-        var delete_button = document.createElement("button");
-        $(delete_button).attr("type", "button");
-        $(delete_button).attr("class", "btn btn-info");
-        $(delete_button).text("delete");
-        $(delete_button).click({index: i}, delete_bookmark);
-        var td = document.createElement("td");
-        $(td).append(delete_button);
-        $(tr).append(td);
-        var td = document.createElement("td");
-        $(td).text(query_list[i]);
-        $(tr).append(td);
-        $(tbody).append(tr);
-    }
-    $("#query-bookmarks").append(tbody);
-});
-
-var update_yanagishima_query_histories_area = (function (datasource) {
-
-    var requestData = {
-        "limit": 100,
-        "datasource": datasource
-    };
-
-    var successHandler = function (data) {
-        if (data.error) {
-            $("#error-msg").text(data.error);
-            $("#error-msg").slideDown("fast");
-        } else {
-            var headers = data.headers;
-            var rows = data.results;
-            var thead = document.createElement("thead");
-            var tr = document.createElement("tr");
-            for (var i = 0; i < headers.length; i++) {
-                var th = document.createElement("th");
-                $(th).text(headers[i]);
-                $(tr).append(th);
-            }
-            $(thead).append(tr);
-            $("#yanagishima-query-histories").append(thead);
-            var tbody = document.createElement("tbody");
-            for (var i = 0; i < rows.length; i++) {
-                var tr = document.createElement("tr");
-                var columns = rows[i];
-                for (var j = 0; j < columns.length; j++) {
-                    var td = document.createElement("td");
-                    if(j==0) {
-                        var link = document.createElement('a')
-                        link.href = "?queryid=" + columns[j];
-                        link.text = columns[j];
-                        link.style = "color: #337ab7";
-                        link.target = "_blank";
-                        $(td).append(link);
-                    } else {
-                        $(td).text(columns[j]);
-                    }
-                    $(tr).append(td);
-                }
-                $(tbody).append(tr);
-            }
-            $("#yanagishima-query-histories").append(tbody);
-        }
-    };
-    $.get("/queryHistory", requestData, successHandler, "json");
-});
-
-var search_yanagishima_query_histories = (function () {
-
-    var requestData = {
-        "query":  $("#yanagishima_query").val()
-    };
-
-    var successHandler = function (data) {
-        if (data.error) {
-            $("#error-msg").text(data.error);
-            $("#error-msg").slideDown("fast");
-        } else {
-            $("#yanagishima-query-histories").empty();
-            var headers = data.headers;
-            var rows = data.results;
-            var thead = document.createElement("thead");
-            var tr = document.createElement("tr");
-            for (var i = 0; i < headers.length; i++) {
-                var th = document.createElement("th");
-                $(th).text(headers[i]);
-                $(tr).append(th);
-            }
-            $(thead).append(tr);
-            $("#yanagishima-query-histories").append(thead);
-            var tbody = document.createElement("tbody");
-            for (var i = 0; i < rows.length; i++) {
-                var tr = document.createElement("tr");
-                var columns = rows[i];
-                for (var j = 0; j < columns.length; j++) {
-                    var td = document.createElement("td");
-                    if(j==0) {
-                        var link = document.createElement('a')
-                        link.href = "?queryid=" + columns[j];
-                        link.text = columns[j];
-                        link.style = "color: #337ab7";
-                        $(td).append(link);
-                    } else {
-                        $(td).text(columns[j]);
-                    }
-                    $(tr).append(td);
-                }
-                $(tbody).append(tr);
-            }
-            $("#yanagishima-query-histories").append(tbody);
-        }
-    };
-    $.post("/yanagishimaQueryHistory", requestData, successHandler, "json");
-});
-
-var add_bookmark = (function (event) {
-    if (!window.localStorage) return;
-    var list = query_bookmarks();
-    list.unshift(event.data.query);
-    set_query_bookmarks(list.slice(0, 1000000));
-    $("#query-bookmarks").empty();
-    update_query_bookmarks_area();
-});
-
-var query_bookmarks = (function () {
-    if (!window.localStorage) return [];
-    var list = [];
-    try {
-        var listString = window.localStorage.query_bookmarks;
-        if (listString && listString.length > 0)
-            list = JSON.parse(listString);
-    } catch (e) {
-        set_query_bookmarks([]);
-        list = [];
-    }
-    return list;
-});
-
-var set_query_bookmarks = (function (list) {
-    if (!window.localStorage) return;
-    window.localStorage.query_bookmarks = JSON.stringify(list);
-});
-
-var delete_bookmark = (function (event) {
-    if (!window.localStorage) return;
-    var query_list = query_bookmarks();
-    query_list.splice(event.data.index, 1);
-    set_query_bookmarks(query_list);
-    $("#query-bookmarks").empty();
-    update_query_bookmarks_area();
 });
 
 var copy_query = (function (event) {
@@ -767,14 +591,12 @@ var copy_query = (function (event) {
 
 var delete_query = (function (event) {
     if (!window.localStorage) return;
-    var query_list = query_histories();
+    var datasource = $('#select_datasource option:selected').text();
+    var query_list = your_query_histories(datasource);
     query_list.splice(event.data.index, 1);
-    set_query_histories(query_list);
-    var yanagishima_queryid_list = your_yanagishima_queryid_histories();
-    yanagishima_queryid_list.splice(event.data.index, 1);
-    set_your_yanagishima_queryid_histories(yanagishima_queryid_list);
+    set_your_query_histories(datasource, query_list);
     $("#query-histories").empty();
-    update_query_histories_area();
+    update_query_histories_area(datasource);
 });
 
 var create_table = (function (table_id, headers, rows, show_ddl_flag) {
@@ -828,19 +650,6 @@ var redraw = (function () {
         }
         renderRunningQueries(runningQueries);
         renderDoneQueries(doneQueries, "#first_tab_done");
-    });
-});
-
-var redraw_done_queryies = (function (datasource) {
-    var url = "/query?datasource=" + datasource;
-    d3.json(url, function (queries) {
-        var doneQueries = [];
-        if (queries) {
-            doneQueries = queries.filter(function (query) {
-                return query.state == 'FINISHED' || query.state == 'FAILED' || query.state == 'CANCELED';
-            });
-        }
-        renderDoneQueries(doneQueries, "#second_tab_done");
     });
 });
 

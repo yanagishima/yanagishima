@@ -89,8 +89,7 @@
                         $("#select_datasource").append(option);
                     }
                     yanagishima_tree(datasources[0]);
-                    update_yanagishima_query_histories_area(datasources[0]);
-
+                    update_query_histories_area(datasources[0]);
                 };
 
                 $.get("/datasource", successHandler);
@@ -231,6 +230,11 @@
                                 startTimer();
                             } else {
                                 stopTimer();
+                                if(tabIndex == 1) {
+                                    var datasource = $('#select_datasource option:selected').text();
+                                    update_query_histories_area(datasource);
+                                }
+
                             }
                         }
                     });
@@ -238,15 +242,12 @@
             </script>
 
 
-            <h4>all queries/done queries/your query histories/your query bookmarks/yanagishima query histories</h4>
+            <h4>all queries/your query histories</h4>
 
             <div id="jquery-ui-tabs">
                 <ul>
                     <li><a href="#all-queries-tab">all queries</a></li>
-                    <li><a href="#done-queries-tab">done queries</a></li>
                     <li><a href="#query-histories-tab">your query histories</a></li>
-                    <li><a href="#query-bookmarks-tab">your query bookmarks</a></li>
-                    <li><a href="#yanagishima-query-histories-tab">yanagishima query histories</a></li>
                 </ul>
 
                 <div id="all-queries-tab">
@@ -322,79 +323,13 @@
                     </div>
                 </div>
 
-                <div id="done-queries-tab">
-                    <div>
-                        <div>
-                            <i class="fa fa-refresh" aria-hidden="true" onclick="redraw_done_queryies()"></i>
-                        </div>
-                        <div>
-                            query:<input type="text" size="20" id="search_done_queries_by_query">
-                        </div>
-                        <script>
-                            $('#search_done_queries_by_query').keyup(function(){
-                                if ($(this).val()) {
-                                    $('#done tr').hide();
-                                    $('#done tr td:nth-child(3):contains(' + this.value + ')').parent().show();
-                                } else {
-                                    $('#done tr').show();
-                                }
-                            });
-                        </script>
-                        <div>
-                            or
-                        </div>
-                        <div>
-                            user:<input type="text" size="20" id="search_done_queries_by_user">
-                        </div>
-                        <script>
-                            $('#search_done_queries_by_user').keyup(function(){
-                                if ($(this).val()) {
-                                    $('#done tr').hide();
-                                    $('#done tr td:nth-child(5):contains(' + this.value + ')').parent().show();
-                                } else {
-                                    $('#done tr').show();
-                                }
-                            });
-                        </script>
-                        <table id="second_tab_done" class="table table-striped">
-                            <colgroup>
-                                <col width="90px">
-                                <col width="80px">
-                                <col width="auto">
-                                <col width="80px">
-                                <col width="80px">
-                                <col width="90px">
-                                <col width="80px">
-                                <col width="60px">
-                                <col width="60px">
-                                <col width="60px">
-                            </colgroup>
-                            <thead>
-                            <tr>
-                                <th>Id</th>
-                                <th>Elapsed</th>
-                                <th>Query</th>
-                                <th>Source</th>
-                                <th>User</th>
-                                <th>State</th>
-                                <th>Error</th>
-                                <th>Done</th>
-                                <th>Total</th>
-                                <th>Completion</th>
-                            </tr>
-                            </thead>
-                            <tbody></tbody>
-                        </table>
-                    </div>
-                </div>
-
                 <div id="query-histories-tab">
                     <input type="text" size="20" id="search_query_histories">
                     <script>
                         $('#search_query_histories').keyup(function(){
                             if ($(this).val()) {
                                 $('#query-histories tr').hide();
-                                $('#query-histories tr td:nth-child(5):contains(' + this.value + ')').parent().show();
+                                $('#query-histories tr td:nth-child(4):contains(' + this.value + ')').parent().show();
                             } else {
                                 $('#query-histories tr').show();
                             }
@@ -403,43 +338,6 @@
                     <div>
                         <table class="table table-bordered" id="query-histories"></table>
                     </div>
-                    <script>
-                        update_query_histories_area();
-                    </script>
-                </div>
-
-                <div id="query-bookmarks-tab">
-                    <input type="text" size="20" id="search_query_bookmarks">
-                    <script>
-                        $('#search_query_bookmarks').keyup(function(){
-                            if ($(this).val()) {
-                                $('#query-bookmarks tr').hide();
-                                $('#query-bookmarks tr td:nth-child(3):contains(' + this.value + ')').parent().show();
-                            } else {
-                                $('#query-bookmarks tr').show();
-                            }
-                        });
-                    </script>
-                    <div>
-                        <table class="table table-bordered" id="query-bookmarks"></table>
-                    </div>
-                    <script>
-                        update_query_bookmarks_area();
-                    </script>
-                </div>
-
-                <div id="yanagishima-query-histories-tab">
-                    <form class="form-inline">
-                        <div class="form-group">
-                            Query
-                            <input type="text" class="form-control" id="yanagishima_query" size="50"/>
-                            <button type="button" class="btn btn-default" onclick="search_yanagishima_query_histories()">search</button>
-                        </div>
-                    </form>
-                    <div>
-                        <table class="table table-bordered" id="yanagishima-query-histories"></table>
-                    </div>
-
                 </div>
 
             </div>
