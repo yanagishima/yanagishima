@@ -88,8 +88,16 @@
 
                         $("#select_datasource").append(option);
                     }
-                    yanagishima_tree(datasources[0]);
-                    update_query_histories_area(datasources[0]);
+
+                    var datasource = get_datasource_from_url();
+                    if(datasource) {
+                        yanagishima_tree(datasource);
+                        update_query_histories_area(datasource);
+                        $('#select_datasource').val(datasource);
+                    } else {
+                        yanagishima_tree(datasources[0]);
+                        update_query_histories_area(datasources[0]);
+                    }
                 };
 
                 $.get("/datasource", successHandler);

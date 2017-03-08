@@ -464,10 +464,8 @@ var query_format = (function () {
     $("#warn-msg").hide();
     var query = window.editor.getValue();
     var requestURL = "/format";
-    var datasource = $('#select_datasource option:selected').text();
     var requestData = {
-        "query": query,
-        "datasource": datasource
+        "query": query
     };
     var successHandler = function (data) {
         if (data.error) {
@@ -551,9 +549,9 @@ var update_query_histories_area = (function (datasource) {
     for (var i = 0; i < query_info_list.length; i++) {
         var tr = document.createElement("tr");
         var td = document.createElement("td");
-        var queryid = query_info_list[i]["queryid"]
-        var query = query_info_list[i]["query"]
-        var link = document.createElement('a')
+        var queryid = query_info_list[i]["queryid"];
+        var query = query_info_list[i]["query"];
+        var link = document.createElement('a');
         link.href = "?queryid=" + queryid + "&datasource=" + datasource;
         link.text = queryid;
         link.style = "color: #337ab7";
@@ -841,6 +839,26 @@ function update_history_by_query(datasource, queryid) {
     }
     window.history.pushState(queryid, '', '?queryid=' + queryid + '&datasource=' + datasource);
 };
+
+function get_datasource_from_url() {
+    var param = document.location.search.substring(1);
+    if (param === null) {
+        return;
+    }
+    var element = param.split('&');
+    if (element.length != 2) {
+        return;
+    }
+    var queryid = element[0].split('=')[1];
+    if (queryid === null || queryid === undefined) {
+        return;
+    }
+    var datasource = element[1].split('=')[1];
+    if (datasource === null || datasource === undefined) {
+        return;
+    }
+    return datasource;
+}
 
 function follow_current_uri() {
     var param = document.location.search.substring(1);
