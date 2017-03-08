@@ -1070,6 +1070,7 @@ function follow_current_uri_query(queryid, datasource){
                 $("#elapsed").text(formatDuration(data.elapsedTimeMillis));
                 $("#query-result-size-line").show();
             }
+            $("#query-results").empty();
             create_table("#query-results", data.headers, data.results, false);
             $("#tsv-download").removeAttr("disabled");
         }
