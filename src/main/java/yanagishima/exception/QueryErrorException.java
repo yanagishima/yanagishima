@@ -1,8 +1,8 @@
 package yanagishima.exception;
 
-import java.sql.SQLException;
-
 import com.facebook.presto.client.QueryError;
+
+import java.sql.SQLException;
 
 public class QueryErrorException extends Exception {
 

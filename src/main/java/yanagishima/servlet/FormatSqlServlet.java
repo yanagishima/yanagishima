@@ -1,24 +1,21 @@
 package yanagishima.servlet;
 
-import java.io.IOException;
-import java.util.HashMap;
-import java.util.Optional;
+import com.facebook.presto.sql.SqlFormatter;
+import com.facebook.presto.sql.parser.ParsingException;
+import com.facebook.presto.sql.parser.SqlParser;
+import com.facebook.presto.sql.tree.Statement;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import yanagishima.util.JsonUtil;
 
 import javax.inject.Singleton;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import yanagishima.util.JsonUtil;
-
-import com.facebook.presto.sql.SqlFormatter;
-import com.facebook.presto.sql.parser.ParsingException;
-import com.facebook.presto.sql.parser.SqlParser;
-import com.facebook.presto.sql.tree.Statement;
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.Optional;
 
 @Singleton
 public class FormatSqlServlet extends HttpServlet {

@@ -1,11 +1,10 @@
 package yanagishima.util;
 
-import java.io.IOException;
-import java.io.OutputStream;
+import org.codehaus.jackson.map.ObjectMapper;
 
 import javax.servlet.http.HttpServletResponse;
-
-import org.codehaus.jackson.map.ObjectMapper;
+import java.io.IOException;
+import java.io.OutputStream;
 
 public class JsonUtil {
 

@@ -1,37 +1,30 @@
 package yanagishima.server;
 
-import java.io.BufferedInputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStream;
-import java.sql.Connection;
-import java.sql.Statement;
-import java.util.*;
-
-import javax.servlet.DispatcherType;
-
+import com.google.inject.Guice;
+import com.google.inject.Injector;
+import com.google.inject.servlet.GuiceFilter;
 import io.prometheus.client.exporter.MetricsServlet;
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
-
 import me.geso.tinyorm.TinyORM;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.servlet.DefaultServlet;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import yanagishima.filter.YanagishimaFilter;
 import yanagishima.module.DbModule;
 import yanagishima.module.PrestoServiceModule;
 import yanagishima.module.PrestoServletModule;
 
-import com.google.inject.Guice;
-import com.google.inject.Injector;
-import com.google.inject.servlet.GuiceFilter;
+import javax.servlet.DispatcherType;
+import java.io.*;
+import java.sql.Connection;
+import java.sql.Statement;
+import java.util.Arrays;
+import java.util.EnumSet;
+import java.util.Properties;
 
 public class YanagishimaServer {
 

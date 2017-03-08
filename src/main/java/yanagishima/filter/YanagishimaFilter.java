@@ -1,6 +1,5 @@
 package yanagishima.filter;
 
-import javax.inject.Singleton;
 import javax.servlet.*;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;

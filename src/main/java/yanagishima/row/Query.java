@@ -2,10 +2,9 @@ package yanagishima.row;
 
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-
+import me.geso.tinyorm.Row;
 import me.geso.tinyorm.annotations.Column;
 import me.geso.tinyorm.annotations.PrimaryKey;
-import me.geso.tinyorm.Row;
 import me.geso.tinyorm.annotations.Table;
 
 @Table("query")

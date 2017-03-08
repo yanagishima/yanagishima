@@ -1,7 +1,9 @@
 package yanagishima.servlet;
 
-import java.io.IOException;
-import java.util.Optional;
+import org.apache.http.client.fluent.Request;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import yanagishima.config.YanagishimaConfig;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
@@ -9,12 +11,8 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-
-import org.apache.http.client.fluent.Request;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import yanagishima.config.YanagishimaConfig;
+import java.io.IOException;
+import java.util.Optional;
 
 @Singleton
 public class KillServlet extends HttpServlet {

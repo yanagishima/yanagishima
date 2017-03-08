@@ -1,8 +1,7 @@
 package yanagishima.module;
 
-import yanagishima.servlet.*;
-
 import com.google.inject.servlet.ServletModule;
+import yanagishima.servlet.*;
 
 public class PrestoServletModule extends ServletModule {
 	@Override

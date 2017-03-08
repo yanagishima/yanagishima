@@ -1,13 +1,10 @@
 package yanagishima.module;
 
 import com.google.inject.AbstractModule;
-import com.google.inject.Scopes;
-import com.google.inject.servlet.ServletScopes;
 import me.geso.tinyorm.TinyORM;
 import yanagishima.provider.ConnectionProvider;
 import yanagishima.provider.TinyORMProvider;
 
-import javax.sql.DataSource;
 import java.sql.Connection;
 
 

@@ -1,12 +1,10 @@
 package yanagishima.module;
 
+import com.google.inject.AbstractModule;
 import yanagishima.config.YanagishimaConfig;
 import yanagishima.service.PrestoService;
 import yanagishima.service.PrestoServiceImpl;
 
-import com.google.inject.AbstractModule;
-
-import java.util.List;
 import java.util.Properties;
 
 public class PrestoServiceModule extends AbstractModule {
