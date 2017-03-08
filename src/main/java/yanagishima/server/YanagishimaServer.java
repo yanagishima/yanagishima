@@ -48,7 +48,7 @@ public class YanagishimaServer {
 		TinyORM tinyORM = injector.getInstance(TinyORM.class);
 		try(Connection connection = tinyORM.getConnection()) {
 			try(Statement statement = connection.createStatement()) {
-				statement.executeUpdate("create table if not exists query (datasource text, query_id text primary key, fetch_result_time_string text, query_string text)");
+				statement.executeUpdate("create table if not exists query (datasource text, query_id text, fetch_result_time_string text, query_string text, primary key(datasource, query_id))");
 			}
 		}
 
