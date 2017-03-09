@@ -485,11 +485,20 @@ var tsv_download = (function () {
     if (param === null) {
         return;
     }
-    var element = param.split('=');
-    var queryid = element[1];
+    var element = param.split('&');
+    if (element.length != 2) {
+        return;
+    }
+    var queryid = element[0].split('=')[1];
+    if (queryid === null || queryid === undefined) {
+        return;
+    }
+    var datasource = element[1].split('=')[1];
+    if (datasource === null || datasource === undefined) {
+        return;
+    }
 
     var link = document.createElement('a');
-    var datasource = $('#select_datasource option:selected').text();
     link.href = "/download?queryid=" + queryid + "&datasource=" + datasource;
     link.click();
 });
