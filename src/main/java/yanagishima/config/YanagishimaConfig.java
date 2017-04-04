@@ -38,7 +38,7 @@ public class YanagishimaConfig {
 	}
 
 	public int getSelectLimit() {
-		return Integer.parseInt(properties.getProperty("select.limit"));
+		return Integer.parseInt(Optional.ofNullable(properties.getProperty("select.limit")).get());
 	}
 
 	public String getAuditHttpHeaderName() {
