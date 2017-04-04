@@ -51,9 +51,15 @@ public class PrestoServiceImpl implements PrestoService {
     @Override
     public PrestoQueryResult doQuery(String datasource, String query, String userName) throws QueryErrorException {
 
+        long start = System.currentTimeMillis();
+        Duration queryMaxRunTime = new Duration(yanagishimaConfig.getQueryMaxRunTimeSeconds(), TimeUnit.SECONDS);
+
         try (StatementClient client = getStatementClient(datasource, query, userName)) {
             while (client.isValid() && (client.current().getData() == null)) {
                 client.advance();
+                if(System.currentTimeMillis() - start > queryMaxRunTime.toMillis()) {
+                    throw new RuntimeException("Query exceeded maximum time limit of " + queryMaxRunTime);
+                }
             }
 
             if ((!client.isFailed()) && (!client.isGone()) && (!client.isClosed())) {

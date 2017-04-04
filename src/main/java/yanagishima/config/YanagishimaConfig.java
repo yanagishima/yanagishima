@@ -49,4 +49,8 @@ public class YanagishimaConfig {
 		return Arrays.asList(Optional.ofNullable(properties.getProperty("presto.datasources")).get().split(","));
 	}
 
+	public double getQueryMaxRunTimeSeconds() {
+		return Double.parseDouble(Optional.ofNullable(properties.getProperty("presto.query.max-run-time-seconds")).get());
+	}
+
 }
