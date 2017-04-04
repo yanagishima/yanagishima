@@ -132,6 +132,8 @@ public class PrestoServiceImpl implements PrestoService {
         int limit = yanagishimaConfig.getSelectLimit();
         Path dst = getResultFilePath(datasource, queryId, false);
         int lineNumber = 0;
+        int maxResultFileByteSize = yanagishimaConfig.getMaxResultFileByteSize();
+        int resultBytes = 0;
         try (BufferedWriter bw = Files.newBufferedWriter(dst, StandardCharsets.UTF_8)) {
             bw.write(String.join("\t", columns));
             bw.write("\n");
@@ -154,9 +156,13 @@ public class PrestoServiceImpl implements PrestoService {
                             }
                         }
                         try {
-                            bw.write(String.join("\t", columnDataList));
-                            bw.write("\n");
+                            String resultStr = String.join("\t", columnDataList) + "\n";
+                            bw.write(resultStr);
                             lineNumber++;
+                            resultBytes += resultStr.getBytes(StandardCharsets.UTF_8).length;
+                            if(resultBytes > maxResultFileByteSize) {
+                                throw new RuntimeException(String.format("Result file size exceeded %s bytes", maxResultFileByteSize));
+                            }
                         } catch (IOException e) {
                             throw new RuntimeException(e);
                         }
