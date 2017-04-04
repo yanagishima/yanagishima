@@ -103,10 +103,9 @@ public class PrestoServiceImpl implements PrestoService {
                 Path dst = getResultFilePath(datasource, queryId, true);
                 QueryError error = results.getError();
                 String message = format("Query failed (#%s): %s", results.getId(), error.getMessage());
-                try {
-                    try (BufferedWriter bw = Files.newBufferedWriter(dst, StandardCharsets.UTF_8)) {
-                        bw.write(message);
-                    }
+
+                try (BufferedWriter bw = Files.newBufferedWriter(dst, StandardCharsets.UTF_8)) {
+                    bw.write(message);
                 } catch (IOException e) {
                     throw new RuntimeException(e);
                 }
