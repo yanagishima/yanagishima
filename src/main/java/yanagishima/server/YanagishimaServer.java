@@ -36,7 +36,6 @@ public class YanagishimaServer {
 		Properties properties = loadProps(args, new OptionParser());
 		int jettyPort = Integer.parseInt(properties.getProperty("jetty.port"));
 		String webResourceDir = properties.getProperty("web.resource.dir", "web");
-		int selectLimit = Integer.parseInt(properties.getProperty("select.limit"));
 
 		PrestoServiceModule prestoServiceModule = new PrestoServiceModule(properties);
 		PrestoServletModule prestoServletModule = new PrestoServletModule();
