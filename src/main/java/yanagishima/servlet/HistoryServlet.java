@@ -87,6 +87,7 @@ public class HistoryServlet extends HttpServlet {
                                         } else {
                                             String warningMessage = String.format("now fetch size is %d. This is more than %d. So, fetch operation stopped.", rowDataList.size(), limit);
                                             retVal.put("warn", warningMessage);
+                                            break;
                                         }
                                     }
                                     lineNumber++;
