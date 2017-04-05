@@ -71,11 +71,11 @@ public class PrestoServlet extends HttpServlet {
 			Optional<String> queryOptional = Optional.ofNullable(request.getParameter("query"));
 			queryOptional.ifPresent(query -> {
 				String userName = request.getHeader(yanagishimaConfig.getAuditHttpHeaderName());
-				if(userName != null) {
-					LOGGER.info(String.format("%s executed %s", userName, query));
-				}
 				try {
 					String datasource = Optional.ofNullable(request.getParameter("datasource")).get();
+					if(userName != null) {
+						LOGGER.info(String.format("%s executed %s in %s", userName, query, datasource));
+					}
 					PrestoQueryResult prestoQueryResult = prestoService.doQuery(datasource, query, userName);
 					String queryid = prestoQueryResult.getQueryId();
 					retVal.put("queryid", queryid);
