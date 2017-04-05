@@ -118,7 +118,7 @@ public class PrestoServiceImpl implements PrestoService {
     }
 
     private void insertQueryHistory(String datasource, String query, String queryId) {
-        if(!query.toLowerCase().startsWith("show") && !query.toLowerCase().startsWith("explain")) {
+        if(!query.toLowerCase().startsWith("show")) {
             db.insert(Query.class)
                     .value("datasource", datasource)
                     .value("query_id", queryId)
