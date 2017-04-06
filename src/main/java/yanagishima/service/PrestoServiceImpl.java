@@ -161,7 +161,7 @@ public class PrestoServiceImpl implements PrestoService {
                             lineNumber++;
                             resultBytes += resultStr.getBytes(StandardCharsets.UTF_8).length;
                             if(resultBytes > maxResultFileByteSize) {
-                                throw new RuntimeException(String.format("Result file size exceeded %s bytes", maxResultFileByteSize));
+                                throw new RuntimeException(String.format("Result file size exceeded %s bytes. queryId=%s", maxResultFileByteSize, queryId));
                             }
                         } catch (IOException e) {
                             throw new RuntimeException(e);
