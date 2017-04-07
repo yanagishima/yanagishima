@@ -1,6 +1,6 @@
 # yanagishima
 
-yanagishima is a Web UI for presto like MySQL Workbench.
+yanagishima is a Web UI for presto.
 
 ![preview](v2.gif)
 
