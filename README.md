@@ -21,6 +21,7 @@ yanagishima is a Web UI for presto like MySQL Workbench.
 * share query
 * share query result
 * search table
+* handle multiple presto clusters
 
 # Limitation
 
