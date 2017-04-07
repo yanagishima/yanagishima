@@ -44,7 +44,7 @@ see http://localhost:8080/
 You need to edit conf/yanagishima.properties.
 ```
 jetty.port=8080 # yanagishima web port
-presto.query.max-run-time-seconds=1800 # 30 minitues. If presto query exceeds this time, yanagishima cancel the query.
+presto.query.max-run-time-seconds=1800 # 30 minutes. If presto query exceeds this time, yanagishima cancel the query.
 presto.max-result-file-byte-size=1073741824 # 1GB. If presto query result file size exceeds this value, yanagishima cancel the query.
 presto.datasources=your-presto # you can speciy freely. But you need to spedify same name to presto.coordinator.server.[...] and presto.redirect.server.[...] and catalog.[...] and schema.[...]
 presto.coordinator.server.your-presto=http://presto.coordinator:8080 # presto coordinator url
