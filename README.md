@@ -97,7 +97,7 @@ bin/yanagishima-stop.sh
 ### File organization
 
 |File|Description|Copy to docroot|Build index.js|
-|:--:|:-:|:-:|:-:|
+|:--|:--|:-:|:-:|
 |build/index.html|SPA body|Yes||
 |build/index.js|Static assets (JS/CSS/IMG)|Yes||
 |build/favicon.ico|Favorite icon|Yes||
