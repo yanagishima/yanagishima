@@ -11,7 +11,7 @@
 apply plugin: 'java'
 apply plugin: 'distribution'
 
-version = '1.8'
+version = '2.0'
 
 // In this section you declare where to find the dependencies of your project
 repositories {
@@ -30,7 +30,7 @@ task createDirs() << {
 }
 
 task copyWeb(type: Copy) {
-  from('web')
+  from('web/build')
   into('build/package/web')
 }
 

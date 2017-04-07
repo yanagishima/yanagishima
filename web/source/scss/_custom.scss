@@ -1,0 +1,168 @@
+// Bootstrap overrides
+//
+// Copy variables from `_variables.scss` to this file to override default values
+// without modifying source files.
+
+$colors: $brand-primary, #263238, #4E342E, #004D40, #311B92;
+
+@mixin ellipsis {
+	overflow: hidden;
+	white-space: nowrap;
+	text-overflow: ellipsis;
+}
+@mixin datasource($color: $brand-primary) {
+	#header-main {
+		background: linear-gradient(lighten($color, 2.5%) 0%, lighten($color, 12.5%) 100%);
+		.btn:not(.btn-secondary) {
+			background: darken($color, 5%);
+		}
+	}	
+}
+@each $color in $colors {
+	$key: index($colors, $color) - 1;
+	.datasource_#{$key} {
+		#header {
+			@include datasource($color);
+		}
+	}
+	.datasource_#{$key}-color {
+		color: $color;
+	}
+}
+#header {
+	#header-main {
+		color: #fff;
+	}
+	#header-sub {
+		background: $gray-lightest;
+		padding-bottom: 1rem;
+	}
+	#logo {
+		font-size: 1rem;
+		font-weight: bold;
+		margin-bottom: 0;
+		a {
+			color: $white;
+			text-decoration: none;
+		}
+		#logo-figure {
+			display: inline-block;
+			vertical-align: middle;
+			width: 1.2rem;
+			height: 1.6rem;
+			background: url(../yanagishima.svg) 0 no-repeat;
+			background-size: contain;
+		}
+	}
+	.nav-tabs {
+		border-bottom: 0;
+	}
+	.nav-link {
+		border-width: 0;
+		color: #eee;
+		&:hover,
+		&:focus {
+			color: #fff;
+		}
+		&.active {
+			color: $brand-primary;
+		}
+	}
+}
+#content {
+	min-height: 640px;
+	background: url(../yanagishima.svg) 50% 65% no-repeat;
+	background-size: 320px;
+	background-attachment: fixed;
+	position: relative;
+}
+#footer {
+}
+#treeview {
+	.list-group {
+		max-height: 345px;
+		overflow-y: scroll;
+		.list-group-item {
+			flex: none;
+		}
+	}
+}
+#explain {
+	background: $black;
+	color: $white;
+	padding: 0.5rem;
+}
+.editor {
+	border-radius: $border-radius;
+	border: 1px solid #ccc;
+	background: #fff;
+}
+.table {
+	&.table-auto {
+		width: auto;
+		max-width: auto;
+	}
+	&.table-fixed {
+		table-layout: fixed;
+		th,
+		td {
+			@include ellipsis;
+		}
+	}
+	thead {
+		background: darken($gray-lighter, 5%);
+	}
+	tbody {
+		background-color: #fff;
+	}
+}
+.card-header + .list-group {
+	margin-top: -1px;
+}
+.ellipsis {
+	@include ellipsis;
+}
+.monospace {
+	font-family: $font-family-monospace;
+}
+.modal-body {
+	background: $gray-lightest;
+}
+.btn.clip {
+	position: absolute;
+	margin-top: -0.1rem;
+	right: 0.4rem;
+	display: none;
+	z-index: 10;
+}
+a:hover .btn.clip {
+	display: inline-block;
+}
+.table-base {
+	color: $brand-primary;
+}
+.table-view {
+	color: $brand-info;
+}
+.mfp-iframe-holder {
+	padding-top: 0;
+	padding-bottom: 0;
+}
+.mfp-iframe-holder .mfp-content {
+	height: 90%;
+	max-width: 1280px;
+}
+.clone {
+	position: fixed;
+	color: $white;
+	text-shadow: 1px 1px 1px #000;
+	padding: 0.5rem;
+	background: $black;
+	z-index: 15;
+}
+.pointer {
+	cursor: pointer;
+}
+.bg-transparent {
+	background: transparent !important;
+}
