@@ -13,7 +13,13 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Singleton
 public class QueryHistoryServlet extends HttpServlet {
@@ -33,22 +39,32 @@ public class QueryHistoryServlet extends HttpServlet {
         HashMap<String, Object> retVal = new HashMap<String, Object>();
 
         try {
-            Optional<String> limitOptional = Optional.ofNullable(request.getParameter("limit"));
-            limitOptional.ifPresent(limitStr -> {
-                String datasource = Optional.ofNullable(request.getParameter("datasource")).get();
-                List<Query> queryList = db.search(Query.class).where("datasource=?", datasource).orderBy("query_id DESC").limit(Integer.parseInt(limitStr)).execute();
-                List<List<String>> rowDataList = new ArrayList<List<String>>();
-                for (Query query : queryList) {
-                    List<String> row = new ArrayList<>();
-                    row.add(query.getQueryId());
-                    row.add(query.getQueryString());
-                    row.add(query.getFetchResultTimeString());
-                    rowDataList.add(row);
-                }
-                retVal.put("headers", Arrays.asList("Id", "Query", "Time"));
-                retVal.put("results", rowDataList);
-            });
+            String datasource = Optional.ofNullable(request.getParameter("datasource")).get();
+            String[] queryids = Optional.ofNullable(request.getParameter("queryids")).get().split(",");
 
+            String placeholder = Arrays.stream(queryids).map(r -> "?").collect(Collectors.joining(", "));
+            List<Query> queryList = db.searchBySQL(Query.class,
+                    "SELECT query_id, fetch_result_time_string, query_string FROM query WHERE datasource=\'" + datasource + "\' and query_id IN (" + placeholder + ")",
+                    Arrays.stream(queryids).collect(Collectors.toList()));
+
+            List<List<Object>> queryHistoryList = new ArrayList<List<Object>>();
+            for (Query query : queryList) {
+                List<Object> row = new ArrayList<>();
+                String queryid = query.getQueryId();
+                row.add(queryid);
+                row.add(query.getQueryString());
+
+                LocalDateTime submitTimeLdt = LocalDateTime.parse(queryid.substring(0, "yyyyMMdd_HHmmss".length()), DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss"));
+                ZonedDateTime submitTimeZdt = submitTimeLdt.atZone(ZoneId.of("GMT", ZoneId.SHORT_IDS));
+                String fetchResultTimeString = query.getFetchResultTimeString();
+                ZonedDateTime fetchResultTime = ZonedDateTime.parse(fetchResultTimeString);
+                long elapsedTimeMillis = ChronoUnit.MILLIS.between(submitTimeZdt, fetchResultTime);
+                row.add(elapsedTimeMillis);
+
+                queryHistoryList.add(row);
+            }
+            retVal.put("headers", Arrays.asList("Id", "Query", "Time"));
+            retVal.put("results", queryHistoryList);
 
         } catch (Throwable e) {
             LOGGER.error(e.getMessage(), e);
