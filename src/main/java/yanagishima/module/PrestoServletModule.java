@@ -7,6 +7,7 @@ public class PrestoServletModule extends ServletModule {
 	@Override
 	protected void configureServlets() {
 		bind(PrestoServlet.class);
+		bind(PrestoAsyncServlet.class);
 		bind(QueryServlet.class);
 		bind(KillServlet.class);
 		bind(FormatSqlServlet.class);
@@ -16,9 +17,9 @@ public class PrestoServletModule extends ServletModule {
 		bind(CsvDownloadServlet.class);
 		bind(QueryHistoryServlet.class);
 		bind(DatasourceServlet.class);
-
-
+		bind(QueryStatusServlet.class);
 		serve("/presto").with(PrestoServlet.class);
+		serve("/prestoAsync").with(PrestoAsyncServlet.class);
 		serve("/query").with(QueryServlet.class);
 		serve("/kill").with(KillServlet.class);
 		serve("/format").with(FormatSqlServlet.class);
@@ -28,6 +29,7 @@ public class PrestoServletModule extends ServletModule {
 		serve("/csvdownload").with(CsvDownloadServlet.class);
 		serve("/queryHistory").with(QueryHistoryServlet.class);
 		serve("/datasource").with(DatasourceServlet.class);
+		serve("/queryStatus").with(QueryStatusServlet.class);
 
 	}
 }

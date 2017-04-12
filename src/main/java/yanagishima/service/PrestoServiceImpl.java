@@ -8,6 +8,8 @@ import io.airlift.json.JsonCodec;
 import io.airlift.units.DataSize;
 import io.airlift.units.Duration;
 import me.geso.tinyorm.TinyORM;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import yanagishima.config.YanagishimaConfig;
 import yanagishima.exception.QueryErrorException;
 import yanagishima.result.PrestoQueryResult;
@@ -25,6 +27,8 @@ import java.nio.file.Paths;
 import java.sql.SQLException;
 import java.time.ZonedDateTime;
 import java.util.*;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -34,9 +38,13 @@ import static java.util.concurrent.TimeUnit.MINUTES;
 
 public class PrestoServiceImpl implements PrestoService {
 
+    private static Logger LOGGER = LoggerFactory.getLogger(PrestoServiceImpl.class);
+
     private YanagishimaConfig yanagishimaConfig;
 
     private JettyHttpClient httpClient;
+
+    private ExecutorService executorService = Executors.newFixedThreadPool(10);
 
     @Inject
     private TinyORM db;
@@ -49,72 +57,104 @@ public class PrestoServiceImpl implements PrestoService {
     }
 
     @Override
-    public PrestoQueryResult doQuery(String datasource, String query, String userName) throws QueryErrorException {
+    public String doQueryAsync(String datasource, String query, String userName) {
+        StatementClient client = getStatementClient(datasource, query, userName);
+        executorService.submit(new Task(datasource, query, client));
+        return client.current().getId();
+    }
 
+    public class Task implements Runnable {
+        private String datasource;
+        private String query;
+        private StatementClient client;
+
+        public Task(String datasource, String query, StatementClient client) {
+            this.datasource = datasource;
+            this.query = query;
+            this.client = client;
+        }
+
+        @Override
+        public void run() {
+            try {
+                getPrestoQueryResult(this.datasource, this.query, this.client);
+            } catch (Throwable e) {
+                LOGGER.error(e.getMessage(), e);
+            } finally {
+                if(this.client != null) {
+                    this.client.close();
+                }
+            }
+        }
+    }
+
+    @Override
+    public PrestoQueryResult doQuery(String datasource, String query, String userName) throws QueryErrorException {
+        try (StatementClient client = getStatementClient(datasource, query, userName)) {
+            return getPrestoQueryResult(datasource, query, client);
+        }
+    }
+
+    private PrestoQueryResult getPrestoQueryResult(String datasource, String query, StatementClient client) throws QueryErrorException {
         long start = System.currentTimeMillis();
         Duration queryMaxRunTime = new Duration(yanagishimaConfig.getQueryMaxRunTimeSeconds(), TimeUnit.SECONDS);
-
-        try (StatementClient client = getStatementClient(datasource, query, userName)) {
-            while (client.isValid() && (client.current().getData() == null)) {
-                client.advance();
-                if(System.currentTimeMillis() - start > queryMaxRunTime.toMillis()) {
-                    throw new RuntimeException("Query exceeded maximum time limit of " + queryMaxRunTime);
-                }
+        while (client.isValid() && (client.current().getData() == null)) {
+            client.advance();
+            if(System.currentTimeMillis() - start > queryMaxRunTime.toMillis()) {
+                throw new RuntimeException("Query exceeded maximum time limit of " + queryMaxRunTime);
             }
+        }
 
-            if ((!client.isFailed()) && (!client.isGone()) && (!client.isClosed())) {
-                QueryResults results = client.isValid() ? client.current() : client.finalResults();
-                String queryId = results.getId();
-                if (results.getUpdateType() != null) {
-                    PrestoQueryResult prestoQueryResult = new PrestoQueryResult();
-                    prestoQueryResult.setQueryId(queryId);
-                    prestoQueryResult.setUpdateType(results.getUpdateType());
-                    insertQueryHistory(datasource, query, queryId);
-                    return prestoQueryResult;
-                } else if (results.getColumns() == null) {
-                    throw new QueryErrorException(new SQLException(format("Query %s has no columns\n", results.getId())));
-                } else {
-                    PrestoQueryResult prestoQueryResult = new PrestoQueryResult();
-                    prestoQueryResult.setQueryId(queryId);
-                    prestoQueryResult.setUpdateType(results.getUpdateType());
-                    List<String> columns = Lists.transform(results.getColumns(), Column::getName);
-                    prestoQueryResult.setColumns(columns);
-                    List<List<String>> rowDataList = new ArrayList<List<String>>();
-                    processData(client, datasource, queryId, prestoQueryResult, columns, rowDataList);
-                    prestoQueryResult.setRecords(rowDataList);
-                    insertQueryHistory(datasource, query, queryId);
-                    return prestoQueryResult;
-                }
+        if ((!client.isFailed()) && (!client.isGone()) && (!client.isClosed())) {
+            QueryResults results = client.isValid() ? client.current() : client.finalResults();
+            String queryId = results.getId();
+            if (results.getUpdateType() != null) {
+                PrestoQueryResult prestoQueryResult = new PrestoQueryResult();
+                prestoQueryResult.setQueryId(queryId);
+                prestoQueryResult.setUpdateType(results.getUpdateType());
+                insertQueryHistory(datasource, query, queryId);
+                return prestoQueryResult;
+            } else if (results.getColumns() == null) {
+                throw new QueryErrorException(new SQLException(format("Query %s has no columns\n", results.getId())));
+            } else {
+                PrestoQueryResult prestoQueryResult = new PrestoQueryResult();
+                prestoQueryResult.setQueryId(queryId);
+                prestoQueryResult.setUpdateType(results.getUpdateType());
+                List<String> columns = Lists.transform(results.getColumns(), Column::getName);
+                prestoQueryResult.setColumns(columns);
+                List<List<String>> rowDataList = new ArrayList<List<String>>();
+                processData(client, datasource, queryId, prestoQueryResult, columns, rowDataList);
+                prestoQueryResult.setRecords(rowDataList);
+                insertQueryHistory(datasource, query, queryId);
+                return prestoQueryResult;
             }
+        }
 
-            if (client.isClosed()) {
-                throw new RuntimeException("Query aborted by user");
-            } else if (client.isGone()) {
-                throw new RuntimeException("Query is gone (server restarted?)");
-            } else if (client.isFailed()) {
-                QueryResults results = client.finalResults();
-                String queryId = results.getId();
-                db.insert(Query.class)
-                        .value("datasource", datasource)
-                        .value("query_id", queryId)
-                        .value("fetch_result_time_string", ZonedDateTime.now().toString())
-                        .value("query_string", query)
-                        .execute();
-                Path dst = getResultFilePath(datasource, queryId, true);
-                QueryError error = results.getError();
-                String message = format("Query failed (#%s): %s", results.getId(), error.getMessage());
+        if (client.isClosed()) {
+            throw new RuntimeException("Query aborted by user");
+        } else if (client.isGone()) {
+            throw new RuntimeException("Query is gone (server restarted?)");
+        } else if (client.isFailed()) {
+            QueryResults results = client.finalResults();
+            String queryId = results.getId();
+            db.insert(Query.class)
+                    .value("datasource", datasource)
+                    .value("query_id", queryId)
+                    .value("fetch_result_time_string", ZonedDateTime.now().toString())
+                    .value("query_string", query)
+                    .execute();
+            Path dst = getResultFilePath(datasource, queryId, true);
+            QueryError error = results.getError();
+            String message = format("Query failed (#%s): %s", results.getId(), error.getMessage());
 
-                try (BufferedWriter bw = Files.newBufferedWriter(dst, StandardCharsets.UTF_8)) {
-                    bw.write(message);
-                } catch (IOException e) {
-                    throw new RuntimeException(e);
-                }
-                throw resultsException(results);
+            try (BufferedWriter bw = Files.newBufferedWriter(dst, StandardCharsets.UTF_8)) {
+                bw.write(message);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
             }
-
+            throw resultsException(results);
         }
         throw new RuntimeException("should not reach");
-
     }
 
     private void insertQueryHistory(String datasource, String query, String queryId) {
