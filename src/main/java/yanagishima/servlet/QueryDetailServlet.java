@@ -34,7 +34,7 @@ public class QueryDetailServlet extends HttpServlet {
 		String datasource = Optional.ofNullable(request.getParameter("datasource")).get();
 		String prestoRedirectServerServer = yanagishimaConfig
 				.getPrestoRedirectServer(datasource);
-		response.sendRedirect(prestoRedirectServerServer + "/query.html?" + request.getParameter("queryId"));
+		response.sendRedirect(prestoRedirectServerServer + "/query.html?" + request.getParameter("queryid"));
 
 	}
 

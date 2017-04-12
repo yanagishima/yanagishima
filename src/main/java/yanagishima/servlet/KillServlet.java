@@ -32,7 +32,7 @@ public class KillServlet extends HttpServlet {
 	protected void doGet(HttpServletRequest request,
 			HttpServletResponse response) throws ServletException, IOException {
 
-		Optional<String> queryIdOptinal = Optional.ofNullable(request.getParameter("queryId"));
+		Optional<String> queryIdOptinal = Optional.ofNullable(request.getParameter("queryid"));
 		queryIdOptinal.ifPresent(queryId -> {
 			String datasource = Optional.ofNullable(request.getParameter("datasource")).get();
 			String prestoCoordinatorServer = yanagishimaConfig.getPrestoCoordinatorServer(datasource);
