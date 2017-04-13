@@ -84,9 +84,6 @@ public class HistoryServlet extends HttpServlet {
                                         if (queryString.toLowerCase().startsWith("show") || lineNumber <= limit) {
                                             String[] row = line.split("\t");
                                             rowDataList.add(Arrays.asList(row));
-                                        } else {
-                                            String warningMessage = String.format("now fetch size is %d. This is more than %d. So, fetch operation stopped.", rowDataList.size(), limit);
-                                            retVal.put("warn", warningMessage);
                                         }
                                     }
                                     lineNumber++;
