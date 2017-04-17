@@ -56,8 +56,10 @@ public class HistoryServlet extends HttpServlet {
             Optional<String> queryidOptional = Optional.ofNullable(request.getParameter("queryid"));
             if(queryidOptional.isPresent()) {
                 String datasource = Optional.ofNullable(request.getParameter("datasource")).get();
-                Query query = db.single(Query.class).where("query_id=? and datasource=?", queryidOptional.get(), datasource).execute().get();
-                HistoryUtil.createHistoryResult(retVal, yanagishimaConfig.getSelectLimit(), datasource, query.getQueryId(), query.getQueryString(), query.getFetchResultTimeString());
+                Optional<Query> queryOptional = db.single(Query.class).where("query_id=? and datasource=?", queryidOptional.get(), datasource).execute();
+                queryOptional.ifPresent(query -> {
+                    HistoryUtil.createHistoryResult(retVal, yanagishimaConfig.getSelectLimit(), datasource, query.getQueryId(), query.getQueryString(), query.getFetchResultTimeString());
+                });
             }
         } catch (Throwable e) {
             LOGGER.error(e.getMessage(), e);
