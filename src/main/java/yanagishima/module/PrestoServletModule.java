@@ -12,6 +12,7 @@ public class PrestoServletModule extends ServletModule {
 		bind(KillServlet.class);
 		bind(FormatSqlServlet.class);
 		bind(HistoryServlet.class);
+		bind(HistoryStatusServlet.class);
 		bind(ShareHistoryServlet.class);
 		bind(PublishServlet.class);
 		bind(QueryDetailServlet.class);
@@ -27,6 +28,7 @@ public class PrestoServletModule extends ServletModule {
 		serve("/kill").with(KillServlet.class);
 		serve("/format").with(FormatSqlServlet.class);
 		serve("/history").with(HistoryServlet.class);
+		serve("/historyStatus").with(HistoryStatusServlet.class);
 		serve("/public/shareHistory").with(ShareHistoryServlet.class);
 		serve("/publish").with(PublishServlet.class);
 		serve("/queryDetail").with(QueryDetailServlet.class);
