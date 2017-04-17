@@ -46,15 +46,12 @@ public class ShareHistoryServlet extends HttpServlet {
         try {
             String publishId = Optional.ofNullable(request.getParameter("publish_id")).get();
             Optional<Publish> publishOptional = db.single(Publish.class).where("publish_id=?", publishId).execute();
-            publishOptional.ifPresent(publish -> {
-                try {
-                    String datasource = publish.getDatasource();
-                    String queryid = publish.getQueryId();
-                    HistoryUtil.createHistoryResult(db, yanagishimaConfig.getSelectLimit(), retVal, datasource, queryid);
-                } catch (Throwable e) {
-                    throw new RuntimeException(e);
-                }
-            });
+            if(publishOptional.isPresent()) {
+                String datasource = publishOptional.get().getDatasource();
+                String queryid = publishOptional.get().getQueryId();
+                Query query = db.single(Query.class).where("query_id=? and datasource=?", queryid, datasource).execute().get();
+                retVal = HistoryUtil.createHistoryResult(yanagishimaConfig.getSelectLimit(), datasource, queryid, query.getQueryString(), query.getFetchResultTimeString());
+            }
         } catch (Throwable e) {
             LOGGER.error(e.getMessage(), e);
             retVal.put("error", e.getMessage());
