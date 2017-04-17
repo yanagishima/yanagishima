@@ -29,11 +29,13 @@ public class PrestoServletModule extends ServletModule {
 		serve("/format").with(FormatSqlServlet.class);
 		serve("/history").with(HistoryServlet.class);
 		serve("/historyStatus").with(HistoryStatusServlet.class);
-		serve("/public/shareHistory").with(ShareHistoryServlet.class);
+		serve("/share/shareHistory").with(ShareHistoryServlet.class);
 		serve("/publish").with(PublishServlet.class);
 		serve("/queryDetail").with(QueryDetailServlet.class);
 		serve("/download").with(DownloadServlet.class);
+		serve("/share/download").with(DownloadServlet.class);
 		serve("/csvdownload").with(CsvDownloadServlet.class);
+		serve("/share/csvdownload").with(CsvDownloadServlet.class);
 		serve("/queryHistory").with(QueryHistoryServlet.class);
 		serve("/datasource").with(DatasourceServlet.class);
 		serve("/queryStatus").with(QueryStatusServlet.class);
