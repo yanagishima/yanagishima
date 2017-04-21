@@ -77,7 +77,7 @@ public class PrestoServiceImpl implements PrestoService {
         @Override
         public void run() {
             try {
-                getPrestoQueryResult(this.datasource, this.query, this.client);
+                getPrestoQueryResult(this.datasource, this.query, this.client, true);
             } catch (Throwable e) {
                 LOGGER.error(e.getMessage(), e);
             } finally {
@@ -91,11 +91,11 @@ public class PrestoServiceImpl implements PrestoService {
     @Override
     public PrestoQueryResult doQuery(String datasource, String query, String userName) throws QueryErrorException {
         try (StatementClient client = getStatementClient(datasource, query, userName)) {
-            return getPrestoQueryResult(datasource, query, client);
+            return getPrestoQueryResult(datasource, query, client, false);
         }
     }
 
-    private PrestoQueryResult getPrestoQueryResult(String datasource, String query, StatementClient client) throws QueryErrorException {
+    private PrestoQueryResult getPrestoQueryResult(String datasource, String query, StatementClient client, boolean asyncFlag) throws QueryErrorException {
         long start = System.currentTimeMillis();
         Duration queryMaxRunTime = new Duration(yanagishimaConfig.getQueryMaxRunTimeSeconds(), TimeUnit.SECONDS);
         while (client.isValid() && (client.current().getData() == null)) {
@@ -119,7 +119,7 @@ public class PrestoServiceImpl implements PrestoService {
                 List<List<String>> rowDataList = new ArrayList<List<String>>();
                 processData(client, datasource, queryId, prestoQueryResult, columns, rowDataList);
                 prestoQueryResult.setRecords(rowDataList);
-                insertQueryHistory(datasource, query, queryId);
+                insertQueryHistory(datasource, query, queryId, asyncFlag);
                 return prestoQueryResult;
             }
         }
@@ -151,14 +151,23 @@ public class PrestoServiceImpl implements PrestoService {
         throw new RuntimeException("should not reach");
     }
 
-    private void insertQueryHistory(String datasource, String query, String queryId) {
-        if(!query.toLowerCase().startsWith("show")) {
+    private void insertQueryHistory(String datasource, String query, String queryId, boolean asyncFlag) {
+        if(asyncFlag) {
             db.insert(Query.class)
                     .value("datasource", datasource)
                     .value("query_id", queryId)
                     .value("fetch_result_time_string", ZonedDateTime.now().toString())
                     .value("query_string", query)
                     .execute();
+        } else {
+            if(!query.toLowerCase().startsWith("show")) {
+                db.insert(Query.class)
+                        .value("datasource", datasource)
+                        .value("query_id", queryId)
+                        .value("fetch_result_time_string", ZonedDateTime.now().toString())
+                        .value("query_string", query)
+                        .execute();
+            }
         }
     }
 
