@@ -1,10 +1,12 @@
 package yanagishima.servlet;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import me.geso.tinyorm.TinyORM;
 import org.apache.http.client.fluent.Request;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import yanagishima.config.YanagishimaConfig;
+import yanagishima.row.Query;
 import yanagishima.util.AccessControlUtil;
 import yanagishima.util.HttpRequestUtil;
 
@@ -30,6 +32,9 @@ public class QueryServlet extends HttpServlet {
 
 	private YanagishimaConfig yanagishimaConfig;
 
+	@Inject
+	private TinyORM db;
+
 	private static final int LIMIT = 100;
 
 	@Inject
@@ -51,13 +56,18 @@ public class QueryServlet extends HttpServlet {
 				.execute().returnContent().asString(StandardCharsets.UTF_8);
 		ObjectMapper mapper = new ObjectMapper();
 		List<Map> list = mapper.readValue(originalJson, List.class);
-		if(list.size() > LIMIT) {
-			list.sort((a,b)-> String.class.cast(b.get("queryId")).compareTo(String.class.cast(a.get("queryId"))));
-			String json = mapper.writeValueAsString(list.subList(0, LIMIT));
-			writer.println(json);
-		} else {
-			writer.println(originalJson);
+		list.sort((a,b)-> String.class.cast(b.get("queryId")).compareTo(String.class.cast(a.get("queryId"))));
+		List<Map> limitedList = list.subList(0, LIMIT);
+		for(Map m : limitedList) {
+			Optional<Query> queryOptional = db.single(Query.class).where("query_id=? and datasource=?", m.get("queryId"), datasource).execute();
+			if(queryOptional.isPresent()) {
+				m.put("existdb", true);
+			} else {
+				m.put("existdb", false);
+			}
 		}
+		String json = mapper.writeValueAsString(limitedList);
+		writer.println(json);
 	}
 
 }
