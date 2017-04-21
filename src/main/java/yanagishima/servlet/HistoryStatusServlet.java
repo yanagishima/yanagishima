@@ -5,7 +5,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import yanagishima.config.YanagishimaConfig;
 import yanagishima.row.Query;
+import yanagishima.util.AccessControlUtil;
 import yanagishima.util.HistoryUtil;
+import yanagishima.util.HttpRequestUtil;
 import yanagishima.util.JsonUtil;
 
 import javax.inject.Inject;
@@ -39,7 +41,8 @@ public class HistoryStatusServlet extends HttpServlet {
         try {
             Optional<String> queryidOptional = Optional.ofNullable(request.getParameter("queryid"));
             if(queryidOptional.isPresent()) {
-                String datasource = Optional.ofNullable(request.getParameter("datasource")).get();
+                String datasource = HttpRequestUtil.getParam(request, "datasource");
+                AccessControlUtil.checkDatasource(request, datasource);
                 Optional<Query> queryOptional = db.single(Query.class).where("query_id=? and datasource=?", queryidOptional.get(), datasource).execute();
                 queryOptional.ifPresent(query -> {
                     retVal.put("status", "ok");

@@ -4,6 +4,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import yanagishima.config.YanagishimaConfig;
 import yanagishima.service.PrestoService;
+import yanagishima.util.AccessControlUtil;
+import yanagishima.util.HttpRequestUtil;
 import yanagishima.util.JsonUtil;
 
 import javax.inject.Inject;
@@ -43,7 +45,8 @@ public class PrestoAsyncServlet extends HttpServlet {
 			Optional<String> queryOptional = Optional.ofNullable(request.getParameter("query"));
 			queryOptional.ifPresent(query -> {
 				String userName = request.getHeader(yanagishimaConfig.getAuditHttpHeaderName());
-				String datasource = Optional.ofNullable(request.getParameter("datasource")).get();
+				String datasource = HttpRequestUtil.getParam(request, "datasource");
+				AccessControlUtil.checkDatasource(request, datasource);
 				if(userName != null) {
 					LOGGER.info(String.format("%s executed %s in %s", userName, query, datasource));
 				}

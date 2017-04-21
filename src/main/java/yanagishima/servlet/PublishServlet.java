@@ -8,9 +8,7 @@ import org.slf4j.LoggerFactory;
 import yanagishima.config.YanagishimaConfig;
 import yanagishima.row.Publish;
 import yanagishima.row.Query;
-import yanagishima.util.HistoryUtil;
-import yanagishima.util.JsonUtil;
-import yanagishima.util.PathUtil;
+import yanagishima.util.*;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
@@ -48,7 +46,8 @@ public class PublishServlet extends HttpServlet {
         HashMap<String, Object> retVal = new HashMap<String, Object>();
 
         try {
-            String datasource = Optional.ofNullable(request.getParameter("datasource")).get();
+            String datasource = HttpRequestUtil.getParam(request, "datasource");
+            AccessControlUtil.checkDatasource(request, datasource);
             String queryid = Optional.ofNullable(request.getParameter("queryid")).get();
             Optional<Publish> publishOptional = db.single(Publish.class).where("datasource=? and query_id=?", datasource, queryid).execute();
             if(publishOptional.isPresent()) {

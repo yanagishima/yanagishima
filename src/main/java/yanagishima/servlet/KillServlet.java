@@ -4,6 +4,8 @@ import org.apache.http.client.fluent.Request;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import yanagishima.config.YanagishimaConfig;
+import yanagishima.util.AccessControlUtil;
+import yanagishima.util.HttpRequestUtil;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
@@ -34,7 +36,8 @@ public class KillServlet extends HttpServlet {
 
 		Optional<String> queryIdOptinal = Optional.ofNullable(request.getParameter("queryid"));
 		queryIdOptinal.ifPresent(queryId -> {
-			String datasource = Optional.ofNullable(request.getParameter("datasource")).get();
+			String datasource = HttpRequestUtil.getParam(request, "datasource");
+			AccessControlUtil.checkDatasource(request, datasource);
 			String prestoCoordinatorServer = yanagishimaConfig.getPrestoCoordinatorServer(datasource);
 			try {
 				Request.Delete(prestoCoordinatorServer + "/v1/query/" + queryId).execute();

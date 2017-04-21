@@ -2,6 +2,8 @@ package yanagishima.servlet;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import yanagishima.util.AccessControlUtil;
+import yanagishima.util.HttpRequestUtil;
 import yanagishima.util.PathUtil;
 
 import javax.inject.Singleton;
@@ -30,7 +32,8 @@ public class CsvDownloadServlet extends HttpServlet {
             response.setContentType("text/csv; charset=Shift_JIS");
             response.setHeader("Content-Disposition", "inline; filename=\"" + fileName + "\"");
             try (OutputStream out = response.getOutputStream()) {
-                String datasource = Optional.ofNullable(request.getParameter("datasource")).get();
+                String datasource = HttpRequestUtil.getParam(request, "datasource");
+                AccessControlUtil.checkDatasource(request, datasource);
                 try(BufferedReader br = Files.newBufferedReader(PathUtil.getResultFilePath(datasource, queryid, false))) {
                     br.lines().forEach(line -> {
                         try {

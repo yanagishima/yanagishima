@@ -5,6 +5,8 @@ import org.apache.http.client.fluent.Request;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import yanagishima.config.YanagishimaConfig;
+import yanagishima.util.AccessControlUtil;
+import yanagishima.util.HttpRequestUtil;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
@@ -39,7 +41,8 @@ public class QueryServlet extends HttpServlet {
 	protected void doGet(HttpServletRequest request,
 			HttpServletResponse response) throws ServletException, IOException {
 
-		String datasource = Optional.ofNullable(request.getParameter("datasource")).get();
+		String datasource = HttpRequestUtil.getParam(request, "datasource");
+		AccessControlUtil.checkDatasource(request, datasource);
 		String prestoCoordinatorServer = yanagishimaConfig
 				.getPrestoCoordinatorServer(datasource);
 		response.setContentType("application/json");

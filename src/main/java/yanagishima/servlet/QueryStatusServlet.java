@@ -2,6 +2,8 @@ package yanagishima.servlet;
 
 import org.apache.http.client.fluent.Request;
 import yanagishima.config.YanagishimaConfig;
+import yanagishima.util.AccessControlUtil;
+import yanagishima.util.HttpRequestUtil;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
@@ -32,7 +34,8 @@ public class QueryStatusServlet extends HttpServlet {
 	protected void doGet(HttpServletRequest request,
 			HttpServletResponse response) throws ServletException, IOException {
 
-		String datasource = Optional.ofNullable(request.getParameter("datasource")).get();
+		String datasource = HttpRequestUtil.getParam(request, "datasource");
+		AccessControlUtil.checkDatasource(request, datasource);
 		String queryid = Optional.ofNullable(request.getParameter("queryid")).get();
 		String prestoCoordinatorServer = yanagishimaConfig
 				.getPrestoCoordinatorServer(datasource);

@@ -4,6 +4,8 @@ import me.geso.tinyorm.TinyORM;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import yanagishima.row.Query;
+import yanagishima.util.AccessControlUtil;
+import yanagishima.util.HttpRequestUtil;
 import yanagishima.util.JsonUtil;
 
 import javax.inject.Inject;
@@ -39,7 +41,8 @@ public class QueryHistoryServlet extends HttpServlet {
         HashMap<String, Object> retVal = new HashMap<String, Object>();
 
         try {
-            String datasource = Optional.ofNullable(request.getParameter("datasource")).get();
+            String datasource = HttpRequestUtil.getParam(request, "datasource");
+            AccessControlUtil.checkDatasource(request, datasource);
             String[] queryids = Optional.ofNullable(request.getParameter("queryids")).get().split(",");
 
             String placeholder = Arrays.stream(queryids).map(r -> "?").collect(Collectors.joining(", "));

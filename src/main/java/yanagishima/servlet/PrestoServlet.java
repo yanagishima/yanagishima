@@ -12,6 +12,8 @@ import yanagishima.exception.QueryErrorException;
 import yanagishima.result.PrestoQueryResult;
 import yanagishima.row.Query;
 import yanagishima.service.PrestoService;
+import yanagishima.util.AccessControlUtil;
+import yanagishima.util.HttpRequestUtil;
 import yanagishima.util.JsonUtil;
 
 import javax.inject.Inject;
@@ -26,7 +28,9 @@ import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Optional;
 
 @Singleton
@@ -72,7 +76,8 @@ public class PrestoServlet extends HttpServlet {
 			queryOptional.ifPresent(query -> {
 				String userName = request.getHeader(yanagishimaConfig.getAuditHttpHeaderName());
 				try {
-					String datasource = Optional.ofNullable(request.getParameter("datasource")).get();
+					String datasource = HttpRequestUtil.getParam(request, "datasource");
+					AccessControlUtil.checkDatasource(request, datasource);
 					if(userName != null) {
 						LOGGER.info(String.format("%s executed %s in %s", userName, query, datasource));
 					}

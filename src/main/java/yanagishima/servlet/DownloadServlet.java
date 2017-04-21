@@ -2,6 +2,8 @@ package yanagishima.servlet;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import yanagishima.util.AccessControlUtil;
+import yanagishima.util.HttpRequestUtil;
 import yanagishima.util.PathUtil;
 
 import javax.inject.Singleton;
@@ -32,7 +34,8 @@ public class DownloadServlet extends HttpServlet {
             response.setContentType("application/octet-stream");
             response.setHeader("Content-Disposition", "inline; filename=\"" + fileName + "\"");
             try (OutputStream out = response.getOutputStream()) {
-                String datasource = Optional.ofNullable(request.getParameter("datasource")).get();
+                String datasource = HttpRequestUtil.getParam(request, "datasource");
+                AccessControlUtil.checkDatasource(request, datasource);
                 try (InputStream in = Files.newInputStream(PathUtil.getResultFilePath(datasource, queryid, false))) {
                     byte[] buff = new byte[1024];
                     int len = 0;
