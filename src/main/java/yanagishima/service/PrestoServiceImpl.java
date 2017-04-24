@@ -121,7 +121,9 @@ public class PrestoServiceImpl implements PrestoService {
                 List<List<String>> rowDataList = new ArrayList<List<String>>();
                 processData(client, datasource, queryId, query, prestoQueryResult, columns, rowDataList);
                 prestoQueryResult.setRecords(rowDataList);
-                insertQueryHistory(datasource, query, queryId, asyncFlag);
+                if(asyncFlag) {
+                    insertQueryHistory(datasource, query, queryId);
+                }
                 return prestoQueryResult;
             }
         }
@@ -157,24 +159,13 @@ public class PrestoServiceImpl implements PrestoService {
     }
 
 
-    private void insertQueryHistory(String datasource, String query, String queryId, boolean asyncFlag) {
-        if(asyncFlag) {
-            db.insert(Query.class)
-                    .value("datasource", datasource)
-                    .value("query_id", queryId)
-                    .value("fetch_result_time_string", ZonedDateTime.now().toString())
-                    .value("query_string", query)
-                    .execute();
-        } else {
-            if(!query.toLowerCase().startsWith("show") && !query.toLowerCase().startsWith("describe")) {
-                db.insert(Query.class)
-                        .value("datasource", datasource)
-                        .value("query_id", queryId)
-                        .value("fetch_result_time_string", ZonedDateTime.now().toString())
-                        .value("query_string", query)
-                        .execute();
-            }
-        }
+    private void insertQueryHistory(String datasource, String query, String queryId) {
+        db.insert(Query.class)
+                .value("datasource", datasource)
+                .value("query_id", queryId)
+                .value("fetch_result_time_string", ZonedDateTime.now().toString())
+                .value("query_string", query)
+                .execute();
     }
 
     private void processData(StatementClient client, String datasource, String queryId, String query, PrestoQueryResult prestoQueryResult, List<String> columns, List<List<String>> rowDataList) {
