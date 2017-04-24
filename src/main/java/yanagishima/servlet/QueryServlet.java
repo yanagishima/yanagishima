@@ -57,7 +57,13 @@ public class QueryServlet extends HttpServlet {
 		ObjectMapper mapper = new ObjectMapper();
 		List<Map> list = mapper.readValue(originalJson, List.class);
 		list.sort((a,b)-> String.class.cast(b.get("queryId")).compareTo(String.class.cast(a.get("queryId"))));
-		List<Map> limitedList = list.subList(0, LIMIT);
+		List<Map> limitedList;
+		if(list.size() > LIMIT) {
+			limitedList = list.subList(0, LIMIT);
+		} else {
+			limitedList = list;
+		}
+
 		for(Map m : limitedList) {
 			Optional<Query> queryOptional = db.single(Query.class).where("query_id=? and datasource=?", m.get("queryId"), datasource).execute();
 			if(queryOptional.isPresent()) {
