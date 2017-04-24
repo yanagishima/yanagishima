@@ -160,7 +160,7 @@ public class PrestoServiceImpl implements PrestoService {
                     .value("query_string", query)
                     .execute();
         } else {
-            if(!query.toLowerCase().startsWith("show")) {
+            if(!query.toLowerCase().startsWith("show") && !query.toLowerCase().startsWith("describe")) {
                 db.insert(Query.class)
                         .value("datasource", datasource)
                         .value("query_id", queryId)
