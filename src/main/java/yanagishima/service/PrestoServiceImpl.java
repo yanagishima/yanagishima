@@ -101,7 +101,9 @@ public class PrestoServiceImpl implements PrestoService {
         while (client.isValid() && (client.current().getData() == null)) {
             client.advance();
             if(System.currentTimeMillis() - start > queryMaxRunTime.toMillis()) {
-                throw new RuntimeException("Query exceeded maximum time limit of " + queryMaxRunTime);
+                String message = "Query exceeded maximum time limit of " + queryMaxRunTime;
+                storeError(datasource, client.current().getId(), query, message);
+                throw new RuntimeException(message);
             }
         }
 
@@ -117,7 +119,7 @@ public class PrestoServiceImpl implements PrestoService {
                 List<String> columns = Lists.transform(results.getColumns(), Column::getName);
                 prestoQueryResult.setColumns(columns);
                 List<List<String>> rowDataList = new ArrayList<List<String>>();
-                processData(client, datasource, queryId, prestoQueryResult, columns, rowDataList);
+                processData(client, datasource, queryId, query, prestoQueryResult, columns, rowDataList);
                 prestoQueryResult.setRecords(rowDataList);
                 insertQueryHistory(datasource, query, queryId, asyncFlag);
                 return prestoQueryResult;
@@ -130,26 +132,30 @@ public class PrestoServiceImpl implements PrestoService {
             throw new RuntimeException("Query is gone (server restarted?)");
         } else if (client.isFailed()) {
             QueryResults results = client.finalResults();
-            String queryId = results.getId();
-            db.insert(Query.class)
-                    .value("datasource", datasource)
-                    .value("query_id", queryId)
-                    .value("fetch_result_time_string", ZonedDateTime.now().toString())
-                    .value("query_string", query)
-                    .execute();
-            Path dst = getResultFilePath(datasource, queryId, true);
-            QueryError error = results.getError();
-            String message = format("Query failed (#%s): %s", results.getId(), error.getMessage());
-
-            try (BufferedWriter bw = Files.newBufferedWriter(dst, StandardCharsets.UTF_8)) {
-                bw.write(message);
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
+            storeError(datasource, results.getId(), query, results.getError().getMessage());
             throw resultsException(results);
         }
         throw new RuntimeException("should not reach");
     }
+
+    private void storeError(String datasource, String queryId, String query, String errorMessage) {
+        db.insert(Query.class)
+                .value("datasource", datasource)
+                .value("query_id", queryId)
+                .value("fetch_result_time_string", ZonedDateTime.now().toString())
+                .value("query_string", query)
+                .execute();
+        Path dst = getResultFilePath(datasource, queryId, true);
+        String message = format("Query failed (#%s): %s", queryId, errorMessage);
+
+        try (BufferedWriter bw = Files.newBufferedWriter(dst, StandardCharsets.UTF_8)) {
+            bw.write(message);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+
+    }
+
 
     private void insertQueryHistory(String datasource, String query, String queryId, boolean asyncFlag) {
         if(asyncFlag) {
@@ -171,7 +177,7 @@ public class PrestoServiceImpl implements PrestoService {
         }
     }
 
-    private void processData(StatementClient client, String datasource, String queryId, PrestoQueryResult prestoQueryResult, List<String> columns, List<List<String>> rowDataList) {
+    private void processData(StatementClient client, String datasource, String queryId, String query, PrestoQueryResult prestoQueryResult, List<String> columns, List<List<String>> rowDataList) {
         int limit = yanagishimaConfig.getSelectLimit();
         Path dst = getResultFilePath(datasource, queryId, false);
         int lineNumber = 0;
@@ -204,7 +210,9 @@ public class PrestoServiceImpl implements PrestoService {
                             lineNumber++;
                             resultBytes += resultStr.getBytes(StandardCharsets.UTF_8).length;
                             if(resultBytes > maxResultFileByteSize) {
-                                throw new RuntimeException(String.format("Result file size exceeded %s bytes. queryId=%s", maxResultFileByteSize, queryId));
+                                String message = String.format("Result file size exceeded %s bytes. queryId=%s", maxResultFileByteSize, queryId);
+                                storeError(datasource, client.current().getId(), query, message);
+                                throw new RuntimeException(message);
                             }
                         } catch (IOException e) {
                             throw new RuntimeException(e);
