@@ -49,6 +49,7 @@ public class YanagishimaServer {
 			try(Statement statement = connection.createStatement()) {
 				statement.executeUpdate("create table if not exists query (datasource text, query_id text, fetch_result_time_string text, query_string text, primary key(datasource, query_id))");
 				statement.executeUpdate("create table if not exists publish (publish_id text, datasource text, query_id text, primary key(publish_id))");
+				statement.executeUpdate("create table if not exists bookmark (bookmark_id integer primary key autoincrement, datasource text, query text)");
 			}
 		}
 
