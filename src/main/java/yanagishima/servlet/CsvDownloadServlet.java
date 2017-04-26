@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import yanagishima.util.AccessControlUtil;
+import yanagishima.util.DownloadUtil;
 import yanagishima.util.HttpRequestUtil;
 import yanagishima.util.PathUtil;
 
@@ -31,25 +32,9 @@ public class CsvDownloadServlet extends HttpServlet {
         Optional<String> queryidOptional = Optional.ofNullable(request.getParameter("queryid"));
         queryidOptional.ifPresent(queryid -> {
             String fileName = queryid + ".csv";
-            response.setContentType("text/csv; charset=Shift_JIS");
-            response.setHeader("Content-Disposition", "inline; filename=\"" + fileName + "\"");
-            try (OutputStream out = response.getOutputStream()) {
-                String datasource = HttpRequestUtil.getParam(request, "datasource");
-                AccessControlUtil.checkDatasource(request, datasource);
-                try(BufferedReader br = Files.newBufferedReader(PathUtil.getResultFilePath(datasource, queryid, false))) {
-                    br.lines().forEach(line -> {
-                        try {
-                            ObjectMapper mapper = new ObjectMapper();
-                            List row = mapper.readValue(line, List.class);
-                            out.write((String.join(",", row) + System.getProperty("line.separator")).getBytes("Shift_JIS"));
-                        } catch (IOException e) {
-                            throw new RuntimeException(e);
-                        }
-                    });
-                }
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
+            String datasource = HttpRequestUtil.getParam(request, "datasource");
+            AccessControlUtil.checkDatasource(request, datasource);
+            DownloadUtil.csvDownload(response, fileName, datasource, queryid);
         });
 
     }

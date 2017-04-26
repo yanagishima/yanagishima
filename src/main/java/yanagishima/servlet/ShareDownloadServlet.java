@@ -1,9 +1,11 @@
 package yanagishima.servlet;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import me.geso.tinyorm.TinyORM;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import yanagishima.row.Publish;
+import yanagishima.util.DownloadUtil;
 import yanagishima.util.PathUtil;
 
 import javax.inject.Inject;
@@ -12,10 +14,12 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.file.Files;
+import java.util.List;
 import java.util.Optional;
 
 @Singleton
@@ -39,20 +43,7 @@ public class ShareDownloadServlet extends HttpServlet {
             publishOptional.ifPresent(publish -> {
                 String datasource = publishOptional.get().getDatasource();
                 String queryid = publishOptional.get().getQueryId();
-
-                response.setContentType("application/octet-stream");
-                response.setHeader("Content-Disposition", "inline; filename=\"" + fileName + "\"");
-                try (OutputStream out = response.getOutputStream()) {
-                    try (InputStream in = Files.newInputStream(PathUtil.getResultFilePath(datasource, queryid, false))) {
-                        byte[] buff = new byte[1024];
-                        int len = 0;
-                        while ((len = in.read(buff, 0, buff.length)) != -1) {
-                            out.write(buff, 0, len);
-                        }
-                    }
-                } catch (IOException e) {
-                    throw new RuntimeException(e);
-                }
+                DownloadUtil.tsvDownload(response, fileName, datasource, queryid);
             });
         });
     }

@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import yanagishima.util.AccessControlUtil;
+import yanagishima.util.DownloadUtil;
 import yanagishima.util.HttpRequestUtil;
 import yanagishima.util.PathUtil;
 
@@ -34,25 +35,9 @@ public class DownloadServlet extends HttpServlet {
         Optional<String> queryidOptional = Optional.ofNullable(request.getParameter("queryid"));
         queryidOptional.ifPresent(queryid -> {
             String fileName = queryid + ".tsv";
-            response.setContentType("application/octet-stream");
-            response.setHeader("Content-Disposition", "inline; filename=\"" + fileName + "\"");
-            try (OutputStream out = response.getOutputStream()) {
-                String datasource = HttpRequestUtil.getParam(request, "datasource");
-                AccessControlUtil.checkDatasource(request, datasource);
-                try(BufferedReader br = Files.newBufferedReader(PathUtil.getResultFilePath(datasource, queryid, false))) {
-                    br.lines().forEach(line -> {
-                        try {
-                            ObjectMapper mapper = new ObjectMapper();
-                            List row = mapper.readValue(line, List.class);
-                            out.write((String.join("\t", row) + System.getProperty("line.separator")).getBytes("UTF-8"));
-                        } catch (IOException e) {
-                            throw new RuntimeException(e);
-                        }
-                    });
-                }
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
+            String datasource = HttpRequestUtil.getParam(request, "datasource");
+            AccessControlUtil.checkDatasource(request, datasource);
+            DownloadUtil.tsvDownload(response, fileName, datasource, queryid);
         });
 
     }
