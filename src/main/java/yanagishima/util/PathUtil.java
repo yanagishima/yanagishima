@@ -13,7 +13,7 @@ public class PathUtil {
 		if(error) {
 			return Paths.get(String.format("%s/result/%s/%s/%s.err", currentPath, datasource, yyyymmdd, queryid));
 		} else {
-			return Paths.get(String.format("%s/result/%s/%s/%s.tsv", currentPath, datasource, yyyymmdd, queryid));
+			return Paths.get(String.format("%s/result/%s/%s/%s.json", currentPath, datasource, yyyymmdd, queryid));
 		}
 	}
 

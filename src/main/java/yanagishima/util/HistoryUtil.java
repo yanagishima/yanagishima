@@ -1,5 +1,6 @@
 package yanagishima.util;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.airlift.units.DataSize;
 
 import java.io.BufferedReader;
@@ -37,12 +38,14 @@ public class HistoryUtil {
                 String line = br.readLine();
                 while (line != null) {
                     if (lineNumber == 0) {
-                        String[] columns = line.split("\t");
-                        retVal.put("headers", Arrays.asList(columns));
+                        ObjectMapper columnsMapper = new ObjectMapper();
+                        List columns = columnsMapper.readValue(line, List.class);
+                        retVal.put("headers", columns);
                     } else {
                         if (queryString.toLowerCase().startsWith("show") || lineNumber <= limit) {
-                            String[] row = line.split("\t");
-                            rowDataList.add(Arrays.asList(row));
+                            ObjectMapper resultsMapper = new ObjectMapper();
+                            List row = resultsMapper.readValue(line, List.class);
+                            rowDataList.add(row);
                         }
                     }
                     lineNumber++;

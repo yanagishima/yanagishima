@@ -8,6 +8,7 @@ import io.airlift.json.JsonCodec;
 import io.airlift.units.DataSize;
 import io.airlift.units.Duration;
 import me.geso.tinyorm.TinyORM;
+import org.codehaus.jackson.map.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import yanagishima.config.YanagishimaConfig;
@@ -175,8 +176,9 @@ public class PrestoServiceImpl implements PrestoService {
         int maxResultFileByteSize = yanagishimaConfig.getMaxResultFileByteSize();
         int resultBytes = 0;
         try (BufferedWriter bw = Files.newBufferedWriter(dst, StandardCharsets.UTF_8)) {
-            bw.write(String.join("\t", columns));
-            bw.write("\n");
+            ObjectMapper columnsMapper = new ObjectMapper();
+            String columnsStr = columnsMapper.writeValueAsString(columns) + "\n";
+            bw.write(columnsStr);
             lineNumber++;
             while (client.isValid()) {
                 Iterable<List<Object>> data = client.current().getData();
@@ -196,7 +198,8 @@ public class PrestoServiceImpl implements PrestoService {
                             }
                         }
                         try {
-                            String resultStr = String.join("\t", columnDataList) + "\n";
+                            ObjectMapper resultMapper = new ObjectMapper();
+                            String resultStr = resultMapper.writeValueAsString(columnDataList) + "\n";
                             bw.write(resultStr);
                             lineNumber++;
                             resultBytes += resultStr.getBytes(StandardCharsets.UTF_8).length;
@@ -245,7 +248,7 @@ public class PrestoServiceImpl implements PrestoService {
         if(error) {
             return Paths.get(String.format("%s/result/%s/%s/%s.err", currentPath, datasource, yyyymmdd, queryId));
         } else {
-            return Paths.get(String.format("%s/result/%s/%s/%s.tsv", currentPath, datasource, yyyymmdd, queryId));
+            return Paths.get(String.format("%s/result/%s/%s/%s.json", currentPath, datasource, yyyymmdd, queryId));
         }
     }
 

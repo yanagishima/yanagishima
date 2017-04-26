@@ -1,5 +1,6 @@
 package yanagishima.servlet;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import yanagishima.util.AccessControlUtil;
@@ -13,6 +14,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.*;
 import java.nio.file.Files;
+import java.util.List;
 import java.util.Optional;
 
 @Singleton
@@ -37,7 +39,9 @@ public class CsvDownloadServlet extends HttpServlet {
                 try(BufferedReader br = Files.newBufferedReader(PathUtil.getResultFilePath(datasource, queryid, false))) {
                     br.lines().forEach(line -> {
                         try {
-                            out.write((line.replaceAll("\t", ",") + System.getProperty("line.separator")).getBytes("Shift_JIS"));
+                            ObjectMapper mapper = new ObjectMapper();
+                            List row = mapper.readValue(line, List.class);
+                            out.write((String.join(",", row) + System.getProperty("line.separator")).getBytes("Shift_JIS"));
                         } catch (IOException e) {
                             throw new RuntimeException(e);
                         }
