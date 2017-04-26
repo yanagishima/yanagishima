@@ -3,6 +3,7 @@ package yanagishima.servlet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import yanagishima.config.YanagishimaConfig;
+import yanagishima.util.Constants;
 import yanagishima.util.HttpRequestUtil;
 import yanagishima.util.JsonUtil;
 
@@ -41,7 +42,7 @@ public class DatasourceServlet extends HttpServlet {
 
         HashMap<String, Object> retVal = new HashMap<String, Object>();
 
-        String header = HttpRequestUtil.getHeader(request,"X-yanagishima-datasources");
+        String header = HttpRequestUtil.getHeader(request, Constants.DATASOURCE_HEADER);
         if(header.equals("*")) {
             retVal.put("datasources", yanagishimaConfig.getDatasources());
         } else {

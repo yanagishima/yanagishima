@@ -5,10 +5,12 @@ import javax.servlet.http.HttpServletRequest;
 import java.util.Arrays;
 import java.util.List;
 
+import yanagishima.util.Constants;
+
 public class AccessControlUtil {
 
     public static void checkDatasource(HttpServletRequest request, String datasource) {
-        String header = HttpRequestUtil.getHeader(request,"X-yanagishima-datasources");
+        String header = HttpRequestUtil.getHeader(request, Constants.DATASOURCE_HEADER);
         if(header.equals("*")) {
             return;
         }
