@@ -1,29 +1,30 @@
 {
-  "name": "yanagishima",
-  "version": "2.0.0",
-  "description": "Web UI for PrestoDB",
-  "main": "index.js",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/wyukawa/yanagishima.git"
-  },
-  "author": "",
-  "license": "ISC",
-  "devDependencies": {
-    "browser-sync": "^2.18.8",
-    "clipboard": "^1.6.1",
-    "css-loader": "^0.26.2",
-    "file-loader": "^0.10.1",
-    "node-sass": "^4.5.0",
-    "npm-sass": "^2.0.0",
-    "raw-loader": "^0.5.1",
-    "sass-loader": "^6.0.3",
-    "style-loader": "^0.13.2",
-    "url-loader": "^0.5.8",
-    "vue-clipboards": "^0.2.6",
-    "webpack": "^2.2.1"
-  },
-  "scripts": {
-	  "start": "webpack --watch -d & browser-sync start --config browsersync.config.js"
-  }
+	"name": "yanagishima",
+	"version": "3.0.0",
+	"description": "Web UI for PrestoDB",
+	"main": "index.js",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/wyukawa/yanagishima.git"
+	},
+	"author": "",
+	"license": "ISC",
+	"devDependencies": {
+		"browser-sync": "^2.18.8",
+		"clipboard": "^1.6.1",
+		"css-loader": "^0.26.2",
+		"file-loader": "^0.10.1",
+		"node-sass": "^4.5.0",
+		"npm-sass": "^2.0.0",
+		"raw-loader": "^0.5.1",
+		"sass-loader": "^6.0.3",
+		"style-loader": "^0.13.2",
+		"url-loader": "^0.5.8",
+		"vue-charts": "^0.2.1",
+		"vue-clipboards": "^0.2.6",
+		"webpack": "^2.2.1"
+	},
+	"scripts": {
+		"start": "webpack --watch -d & browser-sync start --config browsersync.config.js"
+	}
 }

@@ -2,7 +2,7 @@
 
 yanagishima is a Web UI for presto.
 
-![preview](v2.gif)
+![preview](v3.gif)
 
 # Features
 * easy to install
@@ -22,6 +22,7 @@ yanagishima is a Web UI for presto.
 * share query result
 * search table
 * handle multiple presto clusters
+* query parameter substitution
 
 # Limitation
 
@@ -31,9 +32,9 @@ yanagishima is a Web UI for presto.
 
 # Quick Start
 ```
-wget https://bintray.com/artifact/download/wyukawa/generic/yanagishima-2.0.zip
-unzip yanagishima-2.0.zip
-cd yanagishima-2.0
+wget https://bintray.com/artifact/download/wyukawa/generic/yanagishima-3.0.zip
+unzip yanagishima-3.0.zip
+cd yanagishima-3.0
 vim conf/yanagishima.properties
 nohup bin/yanagishima-start.sh >y.log 2>&1 &
 ```
@@ -129,12 +130,8 @@ bin/yanagishima-stop.sh
 
 #### Installation
 
-	$ cd ./web/
+	$ cd web
 	$ npm install
-
-#### Build
-
-	$ webpack
 
 #### Build/Serving and Livereload
 

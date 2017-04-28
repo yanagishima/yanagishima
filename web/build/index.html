@@ -1,7 +1,7 @@
 <html>
 <head>
 <title>yanagishima</title>
-<link rel="shortcut icon" type="image/x-icon" href="favicon.ico">
+<link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" id="favicon">
 <link href="https://fonts.googleapis.com/css?family=Droid+Sans" rel="stylesheet">
 <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet">
 <link href="https://cdnjs.cloudflare.com/ajax/libs/magnific-popup.js/1.1.0/magnific-popup.css" rel="stylesheet">
@@ -9,7 +9,54 @@
 </head>
 <body>
 <div id="page" class="unload" :class="'datasource_' + datasources.indexOf(datasource)">
-<header id="header" :class="{'sticky-top': maxline !== Infinity}">
+<header id="header" :class="{'sticky-top': fixedHeader}">
+	<div id="header-setting" class="row align-items-center" v-if="setting">
+		<div class="col-1">
+			<i class="fa fa-fw fa-times text-muted pointer" @click="setting = 0"></i>
+		<!-- /col --></div>
+		<div class="col text-right">
+			<div class="d-inline-block">
+				<div class="d-inline-block ml-3">
+					<span class="mr-1">Fixed Header</span>
+					<div class="btn-group">
+						<a class="btn btn-sm btn-secondary" href="#" @click.prevent="fixedHeader = 1" :class="{'selected': fixedHeader}">Yes</a>
+						<a class="btn btn-sm btn-secondary" href="#" @click.prevent="fixedHeader = 0" :class="{'selected': !fixedHeader}">No</a>
+					<!-- /btn-group --></div>
+				</div>
+				<div class="d-inline-block ml-3" v-if="datasources.length > 1">
+					<span class="mr-1">Remember Last Datasource</span>
+					<div class="btn-group">
+						<a class="btn btn-sm btn-secondary" href="#" @click.prevent="rememberDatasource = 1" :class="{'selected': rememberDatasource}">Yes</a>
+						<a class="btn btn-sm btn-secondary" href="#" @click.prevent="rememberDatasource = 0" :class="{'selected': !rememberDatasource}">No</a>
+					<!-- /btn-group --></div>
+				</div>
+				<div class="d-inline-block ml-3">
+					<span class="mr-1">Remember Last Query</span>
+					<div class="btn-group">
+						<a class="btn btn-sm btn-secondary" href="#" @click.prevent="rememberQuery = 1" :class="{'selected': rememberQuery}">Yes</a>
+						<a class="btn btn-sm btn-secondary" href="#" @click.prevent="rememberQuery = 0" :class="{'selected': !rememberQuery}">No</a>
+					<!-- /btn-group --></div>
+				</div>
+				<div class="d-inline-block ml-3">
+					<span class="mr-1">Wide Screen</span>
+					<div class="btn-group">
+						<a class="btn btn-sm btn-secondary" href="#" @click.prevent="is_wide = 1" :class="{'selected': is_wide}">Yes</a>
+						<a class="btn btn-sm btn-secondary" href="#" @click.prevent="is_wide = 0" :class="{'selected': !is_wide}">No</a>
+					<!-- /btn-group --></div>
+				</div>
+				<div class="d-inline-block ml-3">
+					<span class="mr-1">Editor Maxline</span>
+					<div class="btn-group">
+						<a class="btn btn-sm btn-secondary" href="#" v-for="item in maxlines" @click.prevent="maxline = item" :class="{'selected': item == maxline}"><template v-if="item != Infinity">{{item}}</template><template v-else>&infin;</template></a>
+					<!-- /btn-group --></div>
+				</div>
+				<div class="d-inline-block ml-3">
+					<span class="mr-1">Editor Theme</span>
+					<button class="btn btn-sm btn-secondary selected dropdown-toggle" @click="$('#theme').modal('show')">{{theme | humanize}}</button>
+				</div>
+			<!-- /d-inline-block --></div>
+		<!-- /col --></div>
+	<!-- /row --></div>
 	<div id="header-main">
 		<div class="container">
 			<div id="header-upper" class="py-2">
@@ -18,31 +65,26 @@
 						<h1 id="logo"><a :href="'#datasource={0}'.format(datasource)" @click.prevent="queryid = '', tab = tabs[0].id, init()"><span id="logo-figure" class="mr-2"></span>{{sitename}}</a><small class="ml-2">Ver {{version}}</small></h1>
 					<!-- /col --></div>
 					<div class="col-6 text-right">
-						<div id="setting" class="d-inline-block">
-							<div class="d-inline-block ml-2">
-								<small class="mr-1">Screen Size</small>
-								<div class="btn-group">
-									<a class="btn btn-sm" href="#" v-for="item in layouts" @click.prevent="layout = item.class" :class="{'btn-primary': layout != item.class, 'btn-secondary': layout == item.class}">{{item.name}}</a>
-								<!-- /btn-group --></div>
-							</div>
-							<div class="d-inline-block ml-2">
-								<small class="mr-1">Editor Maxline</small>
-								<div class="btn-group">
-									<a class="btn btn-sm" href="#" v-for="item in maxlines" @click.prevent="maxline = item" :class="{'btn-primary': item != maxline, 'btn-secondary': item == maxline}"><template v-if="item != Infinity">{{item}}</template><template v-else>&infin;</template></a>
-								<!-- /btn-group --></div>
-							</div>
-							<div class="d-inline-block ml-2">
-								<small class="mr-1">Editor Thema</small>
-								<button class="btn btn-sm btn-primary" @click="$('#theme').modal('show')">{{theme | humanize}}</button>
-							</div>
-						<!-- /setting --></div>
+						<a href="#help" class="mr-2" data-toggle="modal" data-target="#help"><i class="fa fa-fw fa-question mr-1"></i>Help</a>
+						<a href="#settings" @click.prevent="setting = setting ? 0 : 1"><i class="fa fa-fw fa-cog mr-1" :class="{'fa-spin': setting}"></i>Settings</a>
 					<!-- /col --></div>
 				<!-- /row --></div>
 			<!-- /header-upper --></div>
 			<div id="header-loower">
 				<div class="editor mb-2">
-					<ace :code="input_query" :gotoline="gotoline" :focus="focus" :maxline="maxline" :theme="theme" @change-code="changeQuery" @run-code="runQuery"></ace>
+					<ace :code="input_query" :gotoline="gotoline" :focus="focus" :maxline="maxline" :theme="theme" @change-code="changeQuery" @run-code="runQuery" :errorline="errorline"></ace>
 				</div>
+
+				<fieldset id="variables" class="mb-3" v-if="variables.length">
+					<legend>{{variables.length}} variables</legend>
+					<form class="form-inline mb-0" @keyup.ctrl.enter="runQuery(input_query)">
+						<template v-for="(items, index) in variables">
+							<label class="mr-2">{{items[1]}}</label>
+							<input type="text" :id="'variable_' + items[1]" v-model="variables[index][2]" class="form-control form-control-sm mr-3" size="10">
+						</template>
+					</form>
+				</fieldset>
+				
 				<div class="row align-items-end">
 					<div class="col">
 						<ul class="nav nav-tabs">
@@ -55,12 +97,25 @@
 					<!-- /col --></div>
 					<div class="col text-right pb-2">
 						<div id="control" class="d-inline-block">
-							<button type="button" class="btn btn-primary ml-1" @click="$('#treeview').modal('show')"><i class="fa fa-fw fa-sitemap mr-1"></i><strong>{{datasource}}</strong><small class="ml-1">(Ctrl+T)</small></button>
-							<button class="btn btn-primary ml-1" :class="{disabled: !bookmarks.length}" @click="bookmarks.length && $('#bookmark').modal('show')"><i class="fa fa-fw fa-star mr-1"></i>Bookmark<small class="ml-2" v-if="bookmarks.length">{{bookmarks.length}}</small></button>
+							<div class="btn-group">
+								<button type="button" class="btn btn-primary ml-1" @click="$('#treeview').modal('show')" data-toggle="tooltip" data-animation="false" title="Ctrl + T"><i class="fa fa-fw fa-sitemap mr-1"></i><strong>{{datasource}}</strong></button>
+								<div class="btn-group" v-if="datasources.length > 1">
+									<button type="button" class="btn btn-primary" data-toggle="dropdown">{{datasources.length}}</button>
+									<div class="dropdown-menu dropdown-menu-right">
+										<a class="dropdown-item" href="#" v-for="item in datasources" @click.prevent="datasource = item" :class="{active: item === datasource}">{{item}}</a>
+									<!-- /dropdown-menu --></div>
+								<!-- /btn-group --></div>
+							<!-- /btn-group --></div>
+							<button class="btn btn-primary ml-3" v-if="bookmarks.length" @click="bookmarks.length && $('#bookmark').modal('show')" data-toggle="tooltip" data-animation="false" title="Bookmarks"><i class="fa fa-fw fa-star mr-1"></i>{{bookmarks.length}}</button>
 							<div class="btn-group ml-3">
-								<button type="button" class="btn btn-primary" @click="runQuery(input_query)"><i class="fa fa-fw fa-play mr-1"></i><strong>Run</strong><small class="ml-1">(Ctrl+Enter)</small></button>
+								<a class="btn btn-secondary" href="#" @click.prevent="formatQuery()" data-toggle="tooltip" data-animation="false" title="Format Query" :class="{disabled: !input_query.length}"><i class="fa fa-fw fa-indent"></i></a>
+								<a class="btn btn-secondary" href="#" v-clipboard="input_query" @click.prevent="" data-toggle="tooltip" data-animation="false" title="Copy to Clipboard" :class="{disabled: !input_query.length}"><i class="fa fa-fw fa-clipboard"></i></a>
+								<a class="btn btn-secondary" href="#" @click.prevent="input_query = ''" data-toggle="tooltip" data-animation="false" title="Clear Query" :class="{disabled: !input_query.length}"><i class="fa fa-fw fa-eraser"></i></a>
+							<!-- /btn-group --></div>
+							<div class="btn-group ml-3">
+								<button type="button" class="btn btn-primary px-4" :disabled="loading.result || !input_query.length" @click="runQuery(input_query)" data-toggle="tooltip" data-animation="false" title="Ctrl + Enter"><i class="fa fa-fw fa-play mr-1"></i><strong>Run</strong></button>
 								<div class="btn-group">
-									<button type="button" class="btn btn-primary" data-toggle="dropdown"><i class="fa fa-ellipsis-v"></i></button>
+									<button type="button" class="btn btn-primary" data-toggle="dropdown" :disabled="loading.result || !input_query.length"><i class="fa fa-ellipsis-v"></i></button>
 									<div class="dropdown-menu dropdown-menu-right">
 										<a class="dropdown-item" href="#" v-for="(val, key) in explains" @click.prevent="runQuery(val.format(input_query))">{{key | humanize}}</a>
 									<!-- /dropdown-menu --></div>
@@ -73,78 +128,97 @@
 		<!-- /container --></div>
 	<!-- /header-main --></div>
 	<div id="header-sub">
-		<div :class="layout">
+		<div :class="is_wide ? 'container-fluid' : 'container'">
 			<div class="row align-items-center pt-3">
 				<div class="col">
 					<template v-if="tab === 'qlist'">
-						<span>As of<strong class="ml-2">{{now}}</strong></span>
+						<span><strong class="mr-2">{{datasource}}</strong>as of<strong class="ml-2">{{now}}</strong></span>
 					</template>
 					<template v-if="tab === 'history'">
-						<span v-if="histories.length"><strong class="mr-1">Excuted History</strong> {{histories.length}}</span>
-						<span v-else><strong>No history</strong></span>
+						<strong class="mr-1">Executed History</strong>
+						<span v-if="filteredHistory.length">{{filteredHistory.first(historySize).length}}</span>
 					</template>
 					<template v-if="tab === 'result'">
 						<template v-if="loading.result">
-							<strong>Now Loading</strong> 
+							<template v-if="running_progress">
+								<strong>Running</strong>
+								<span class="ml-2">{{running_queryid}}</span>
+							</template>
+							<strong v-else>Loading</strong>
 						</template>
 						<template v-else>
-							<template v-if="responses.normal.error || error.result">
-								<strong><i class="fa fa-exclamation-triangle text-danger mr-1"></i>Error</strong>
+							<template v-if="response.result.error || error.result">
+								<strong class="text-danger mr-2">
+									<i class="fa fa-exclamation-triangle text-danger mr-1"></i>Error
+								</strong>
+								<span class="text-muted">{{queryid}}</span>
 							</template>
 							<template v-else>
-								<span v-if="responses.normal.results">
-									<span v-if="responses.normal.lineNumber">
-										<span class="mr-3">
-											<i class="fa fa-fw fa-file-text-o" title="ID" data-toggle="tooltip" data-placement="left"></i>
-											<strong>{{shortID(queryid)}}</strong>
-										</span>
-										<span class="mr-3">
-											{{queryid | extractDate}}
-										</span>
-										<strong>{{result.results.length | formatNumber}}</strong><template v-if="responses.normal.results.length != result.lineNumber -1"><span class="mx-1">/</span><strong>{{result.lineNumber -1 | formatNumber}}</strong></template><span class="text-muted ml-1">results</span>
+								<span v-if="response.result.results">
+									<span class="mr-3" v-if="response.result.lineNumber">
+										<i class="fa fa-fw fa-file-text-o" title="query ID" data-toggle="tooltip" data-animation="false" data-placement="left"></i>
+										<strong>{{queryid}}</strong>
 									</span>
-									<span class="ml-2" v-if="responses.normal.elapsedTimeMillis">
-										<strong>{{(result.elapsedTimeMillis / 1000).ceil(2)}}</strong><span class="text-muted ml-1">sec</span>
+									<span class="mr-2" v-if="response.result.elapsedTimeMillis">
+										<strong>{{(response.result.elapsedTimeMillis / 1000).ceil(2)}}</strong><span class="text-muted ml-1">sec</span>
 									</span>
-									<span class="ml-2" v-if="responses.normal.rawDataSize">
-										<strong>{{responses.normal.rawDataSize.remove('B')}}</strong><span class="text-muted ml-1">byte</span>
+									<span class="mr-2" v-if="response.result.rawDataSize">
+										<strong>{{response.result.rawDataSize.remove('B')}}</strong><span class="text-muted ml-1">byte</span>
+									</span>
+									<span class="mr-2" v-if="response.result.lineNumber">
+										<strong>{{response.result.results.length | formatNumber}}</strong><template v-if="response.result.results.length != response.result.lineNumber -1"><span class="mx-1">/</span><strong>{{response.result.lineNumber -1 | formatNumber}}</strong></template><span class="text-muted ml-1">results</span>
 									</span>
 								</span>
-								<span v-else><strong>No result</strong></span>
+								<span v-else><strong>Excuted Result</strong></span>
 							</template>
 						</template>
 					</template>
 				<!-- /col --></div>
 				<div class="col text-right">
 					<template v-if="tab === 'qlist'">
-						<label class="form-check-label mr-2"><input class="form-check-input mr-1" type="checkbox" v-model="is_autoQlist">Auto</label>
-						<button class="btn btn-sm btn-secondary" @click="getQlist()"><i class="fa fa-fw fa-refresh mr-1"></i>Refresh</button>
+						<label class="form-check-label mr-3"><input class="form-check-input mr-1" type="checkbox" v-model="is_adminMode">Admin mode</label>
+						<div class="btn-group">
+							<button class="btn btn-sm btn-secondary" @click="getQlist()"><i class="fa fa-fw fa-refresh mr-1"></i>Refresh<small class="ml-1" v-if="is_autoQlist">(Auto)</small></button>
+							<button type="button" class="btn btn-sm btn-secondary dropdown-toggle dropdown-toggle-split" data-toggle="dropdown"></button>
+							<div class="dropdown-menu dropdown-menu-right">
+								<a class="dropdown-item" href="#" @click.prevent="is_autoQlist = 0" :class="{active: !is_autoQlist}">Manual</a>
+								<a class="dropdown-item" href="#" @click.prevent="is_autoQlist = 1" :class="{active: is_autoQlist}">Automatic</a>
+							</div>
+						</div>
 					</template>
 					<template v-if="tab === 'history'">
-						<button class="btn btn-sm btn-secondary" :class="{disabled: !histories.length}" @click="delHistoryAll()"><i class="fa fa-fw fa-trash mr-1"></i>Delete All History</button>
+						<input type="text" class="form-control form-control-sm d-inline-block mr-2 w-50" placeholder="Filter by Query" v-model="filter_history">
+						<div class="btn-group">
+							<button class="btn btn-sm btn-secondary dropdown-toggle" data-toggle="dropdown">Last <strong>{{historySize}}</strong></button>
+							<div class="dropdown-menu dropdown-menu-right">
+								<a class="dropdown-item" href="#" v-for="item in historySizes" @click.prevent="historySize = item" :class="{'active': item == historySize}">{{item}}</a>
+							</div>
+						<!-- /btn-group --></div>
 					</template>
 					<template v-if="tab === 'result'">
-						<div class="btn-group mr-2" data-toggle="tooltip">
-							<template  v-if="bookmarks.includes(queryid)">
-								<a href="#" class="btn btn-sm btn-secondary" @click.prevent="delBookmarkItem(queryid)" :class="{disabled: result.error || !queryid || loading.result}"><i class="fa fa-fw fa-star mr-1"></i>Added</a>
+						<div class="btn-group ml-2">
+							<template  v-if="bookmark_addId">
+								<a href="#" class="btn btn-sm btn-secondary" @click.prevent="delBookmarkItem(bookmark_addId), bookmark_addId = false" :class="{disabled: response.result.error || !queryid || loading.result}" data-toggle="tooltip" data-animation="false" title="Remove from Bookmarks"><i class="fa fa-fw fa-star mr-1"></i>Added</a>
 							</template>
 							<template v-else>
-								<a href="#" class="btn btn-sm btn-secondary" @click.prevent="addBookmarkItem(queryid)" :class="{disabled: result.error || !queryid || loading.result}"><i class="fa fa-fw fa-star-o mr-1"></i>Add</a>
+								<a href="#" class="btn btn-sm btn-secondary" @click.prevent="addBookmarkItem()" :class="{disabled: response.result.error || !queryid || loading.result}" data-toggle="tooltip" data-animation="false" title="Add to Bookmarks"><i class="fa fa-fw fa-star-o mr-1"></i>Add</a>
 							</template>
-							<a href="#" class="btn btn-sm btn-secondary" @click.prevent="input_query = query, focus++" v-if="!result.error && !loading.result" :class="{disabled: input_query == query}"><i class="fa fa-fw fa-pencil mr-1"></i>Set</a>
+							<a href="#" class="btn btn-sm btn-secondary" @click.prevent="input_query = queryString, focus++" v-if="queryString" :class="{disabled: input_query == queryString}" data-toggle="tooltip" data-animation="false" title="Set to Editor"><i class="fa fa-fw fa-pencil mr-1"></i>Set</a>
 						<!-- /btn-group --></div>
-						<div class="btn-group" data-toggle="tooltip">
-							<a :href="download(queryid)" class="btn btn-sm btn-secondary" :class="{disabled: result.error || !queryid || loading.result}"><i class="fa fa-fw fa-download mr-1"></i>TSV</a>
-							<a :href="download(queryid, 'csv')" class="btn btn-sm btn-secondary" :class="{disabled: result.error || !queryid || loading.result}"><i class="fa fa-fw fa-download mr-1"></i>CSV</a>
+						<div class="btn-group ml-2">
+							<a :href="download(queryid)" class="btn btn-sm btn-secondary" :class="{disabled: response.result.error || !queryid || loading.result}" data-toggle="tooltip" data-animation="false" title="Download TSV"><i class="fa fa-fw fa-download mr-1"></i>TSV</a>
+							<a :href="download(queryid, 'csv')" class="btn btn-sm btn-secondary" :class="{disabled: response.result.error || !queryid || loading.result}" data-toggle="tooltip" data-animation="false" title="Download CSV"><i class="fa fa-fw fa-download mr-1"></i>CSV</a>
 						<!-- /btn-group --></div>
+						<button class="btn btn-sm btn-secondary ml-2" :disabled="response.result.error || !queryid || loading.result" @click="publish(queryid)" data-toggle="tooltip" data-animation="false" title="Publish Readonly Result"><i class="fa fa-fw fa-globe mr-1"></i>Publish</button>
 					</template>
 				<!-- /col --></div>
 			<!-- /row --></div>
 		<!-- /container --></div>
 	<!-- /header-sub --></div>
 </header>
+
 <div id="content">
-	<div :class="layout">
+	<div :class="is_wide ? 'container-fluid' : 'container'">
 		<template v-if="tab === 'qlist'">
 			<template v-if="loading.qlist">
 				<div class="alert alert-info" role="alert">
@@ -162,12 +236,13 @@
 					<span class="mr-2"><strong>{{orderdQlist.length}}</strong> Results</span>
 					<span class="mr-2" v-if="orderdFailQlist.length"><strong>{{orderdFailQlist.length}}</strong> Fails</span>
 				</div>
-				<table class="table table-bordered table-fixed table-hover">
+				<table class="table table-bordered table-fixed table-hover" v-if="orderdQlist.length">
 					<thead>
 						<tr>
 							<th width="7%">State</th>
+							<th width="15%">query ID</th>
 							<th width="5%" class="text-right">Elapsed</th>
-							<th width="55%">Query</th>
+							<th width="40%">Query</th>
 							<th width="12.5%">Source</th>
 							<th width="12.5%">User</th>
 							<th width="4%" class="text-center">Kill</th>
@@ -175,10 +250,27 @@
 						</tr>
 					</thead>
 					<tbody>
-						<tr v-for="item in orderdQlist" :class="{'table-danger': item.state === 'FAILED', 'table-warning': isRunning(item.state)}">
-							<td>{{item.state}}</td>
+						<tr v-for="item in orderdQlist" :class="{'table-danger': item.state === 'FAILED', 'table-info': isRunning(item.state)}">
+							<td>
+								<template v-if="item.state === 'RUNNING'">
+									<div class="progress">
+										<div class="progress-bar bg-info" :style="'width:' + progress(item.queryStats) + '%'"><small>{{progress(item.queryStats)}}%</small></div>
+									</div>
+								</template>
+								<template v-else>
+									{{item.state.camelize()}}
+								</template>
+							</td>
+							<td>
+								<template v-if="item.existdb && (item.state === 'FINISHED' || item.state === 'FAILED')">
+									<a :href="'#datasource={0}&tab=result&queryid={1}'.format(datasource, item.queryId)">{{item.queryId}}</a>
+								</template>
+								<template v-else>
+									{{item.queryId}}
+								</template>
+							</td>
 							<td class="text-right">{{item.queryStats.elapsedTime | formatUnit}}</td>
-							<td>{{item.query.compact()}}</td>
+							<td class="ace-font">{{item.query.compact()}}</td>
 							<td>{{item.session.source}}</td>
 							<td><a href="#" @click.prevent="filter_user = item.session.user">{{item.session.user}}</a></td>
 							<td class="text-center"><a href="#" class="btn btn-sm btn-secondary p-1" @click.prevent="killQuery(item.queryId)" v-if="isRunning(item.state)"><i class="fa fa-fw fa-times text-danger"></i></a></td>
@@ -186,6 +278,13 @@
 						</tr>
 					</tbody>
 				</table>
+				<div class="alert alert-warning" role="alert" v-else>
+					<div class="row align-items-center">
+						<div class="col">
+							<i class="fa fa-fw fa-frown-o mr-1"></i>No result
+						</div>
+					</div>
+				</div>
 			</template>
 		</template>
 		<template v-if="tab === 'history'">
@@ -199,102 +298,160 @@
 				</div>
 			</template>
 			<template v-else>
-				<table class="table table-bordered table-fixed table-hover" v-if="historyQlist.length">
+				<table class="table table-bordered table-fixed table-hover" v-if="filteredHistory.length">
 					<thead>
 						<tr>
-							<th width="5%" class="text-center">ID</th>
-							<th width="12%" class="text-center">Excuted Date</th>
-							<th width="6%" class="text-right">Size</th>
-							<th width="67%">Query</th>
+							<th width="17%">query ID</th>
+							<th width="6%" class="text-right">Elapsed</th>
+							<th width="69%">Query</th>
 							<th width="5%" class="text-center">Set</th>
 							<th width="5%" class="text-center">Del</th>
 						</tr>
 					</thead>
 					<tbody>
-						<tr v-for="item in historyQlist">
-							<td class="text-center">
-								<a :href="'#datasource={0}&amp;tab=result&amp;queryid={1}'.format(datasource, item.queryid)">{{shortID(item.queryid)}}</a>
-							</td>
-							<td class="text-center">
-								{{item.queryid | extractDate}}
+						<tr v-for="items in filteredHistory.first(historySize)">
+							<td>
+								<a :href="'#datasource={0}&amp;tab=result&amp;queryid={1}'.format(datasource, items[0])">{{items[0]}}</a>
 							</td>
 							<td class="text-right">
-								{{item.rawDataSize}}
+								{{(items[2] / 1000).ceil(2)}}s
 							</td>
 							<td>
-								<ace :code="item.query" readonly="true" css_class="bg-transparent"></ace>
+								<pre class="ace-font mb-0">{{items[1]}}</pre>
+								<!-- <ace :code="items[1]" readonly="true" css_class="bg-transparent"></ace> -->
 							</td>
 							<td class="text-center">
-								<a href="#" class="btn btn-sm btn-secondary" @click.prevent="input_query = item.query, focus++"><i class="fa fa-fw fa-pencil"></i></a>
+								<a href="#" class="btn btn-sm btn-secondary" @click.prevent="input_query = items[1], focus++"><i class="fa fa-fw fa-pencil"></i></a>
 							</td>
 							<td class="text-center">
-								<a href="#" class="btn btn-sm btn-secondary" @click.prevent="delHistoryItem(item.queryid), historyQlist.remove(item)"><i class="fa fa-fw fa-trash"></i></a>
+								<a href="#" class="btn btn-sm btn-secondary" @click.prevent="delHistoryItem(items[0]), response.history.remove(items)"><i class="fa fa-fw fa-trash"></i></a>
 							</td>
 						</tr>
 					</tbody>
 				</table>
-			</template>
-		</template>
-		<template v-if="tab === 'result'">
-			<template v-if="loading.result">
-				<div class="alert alert-info" role="alert">
+				<div class="alert alert-warning" role="alert" v-else>
 					<div class="row align-items-center">
 						<div class="col">
-							<i class="fa fa-fw fa-spinner fa-pulse mr-1"></i>Loading
-							You can check status by <a href="#" @click.prevent="tab = 'qlist', queryid = ''" class="alert-link">Que List</a>.</strong>
-						</div>
-						<div class="col text-right">
-							<button class="btn btn-sm btn-secondary" @click="abortQuery()">Cancel <span class="text-muted">(not Kill)</span></button>
+							<i class="fa fa-fw fa-frown-o mr-1"></i>No result
 						</div>
 					</div>
 				</div>
 			</template>
-			<template v-else>
-				<template v-if="error.result">
-					<div class="alert alert-danger" role="alert">{{error.result}}</div>
+		</template>
+		<template v-if="tab === 'result'">
+			<template v-if="loading.result">
+				<template v-if="running_progress">
+					<div class="alert alert-info" role="alert">
+						<div class="row align-items-center">
+							<div class="col-2 text-right">
+								<strong>{{running_time}}</strong>
+							</div>
+							<div class="col">
+								<div class="progress">
+								  <div class="progress-bar progress-bar-striped progress-bar-animated bg-info" :style="'width:' + running_progress + '%'"><template v-if="running_progress > 10"><strong>{{running_progress}}</strong>%</template></div>
+								</div>
+							</div>
+							<div class="col-2">
+								<div class="btn-group">
+								<a href="#" class="btn btn-sm btn-secondary" @click.prevent="abortQuery(running_queryid)"><i class="fa fa-fw fa-times mr-1 text-danger"></i>Kill</a>
+								<a class="btn btn-sm btn-secondary link_detail" :href="linkDetail(running_queryid)"><i class="fa fa-fw fa-info"></i>Info</a>
+								</div>
+							</div>
+						</div>
+					<!-- /alert --></div>
 				</template>
 				<template v-else>
-					<template v-if="responses.normal.error">
-						<div class="alert alert-danger" role="alert">{{result.error}}</div>
+					<div class="alert alert-info" role="alert">
+						<i class="fa fa-fw fa-spinner fa-pulse mr-1"></i>Loading
+					<!-- /alert --></div>
+				</template>
+			</template>
+			<template v-else>
+				<template v-if="queryString">
+					<div class="editor p-2 mb-3">
+						<ace :code="queryString" readonly="true" css_class="bg-transparent"></ace>
+					</div>
+					<template v-if="error.result">
+						<div class="alert alert-danger" role="alert">{{error.result}}</div>
 					</template>
 					<template v-else>
-						<div class="editor p-2 mb-3" v-if="query">
-							<ace :code="query" readonly="true" css_class="bg-transparent"></ace>
-						</div>
-						<template v-if="/^explain /i.test(query)">
-							<pre id="explain"><code v-html="explain"></code></pre>
+						<template v-if="response.result.error">
+							<div class="alert alert-danger" role="alert">{{response.result.error}}</div>
 						</template>
-						<table class="table table-auto table-bordered table-hover table-responsive" v-else>
-							<thead>
-								<tr>
-									<th v-for="item in result.headers">{{item}}</th>
-								</tr>
-							</thead>
-							<tbody>
-								<tr v-for="items in result.results">
-									<td v-for="item in items">
-										<template v-if="item === null">
-											<span class="text-muted">(null)</span>
-										</template>
-										<template v-else>
-											{{item}}
-										</template>
-									</td>
-								</tr>
-							</tbody>
-						</table>
+						<template v-else>
+							<template v-if="/^explain /i.test(queryString)">
+								<pre id="explain"><code v-html="explain"></code></pre>
+							</template>
+							<template v-else>
+								<div class="mb-3" v-if="enable_chart">
+									<div class="card" v-if="chart">
+										<div class="card-header">
+											<div class="row align-items-center">
+												<div class="col">
+													<label class="form-check-label mr-3" v-for="(item, key) in chart_types">
+														<input class="form-check-input mr-2" type="radio" v-model="chart" :value="key">{{item.name}}
+													</label>
+												</div>
+												<div class="col-1">
+													<button type="button" class="close" @click="chart = 0"><span>&times;</span></button>
+												</div>
+											</div>
+										</div>
+					  					<div class="card-block">
+											<template v-if="chart == key" v-for="(val, key) in chart_types">
+												<vue-chart :chart-type="val.type" :columns="chart_columns" :rows="chart_rows" :options="Object.merge(chart_options, val.option)"></vue-chart>
+											</template>
+										</div>
+									</div>
+									<a href="#" @click.prevent="chart = 1" v-else>
+										<i class="fa fa-fw fa-plus-square mr-1"></i>Chart
+									</a>
+								</div>
+								<table class="table table-auto table-bordered table-hover table-responsive">
+									<thead>
+										<tr>
+											<th v-for="item in response.result.headers">{{item}}</th>
+										</tr>
+									</thead>
+									<tbody>
+										<tr v-for="items in response.result.results">
+											<td v-for="item in items">
+												<template v-if="item === null">
+													<span class="text-muted">(null)</span>
+												</template>
+												<template v-else>
+													{{item}}
+												</template>
+											</td>
+										</tr>
+									</tbody>
+								</table>
+							</template>
+						</template>
 					</template>
+				</template>
+				<template v-else>
+					<div class="alert alert-warning" role="alert">
+						<div class="row align-items-center">
+							<div class="col">
+								<i class="fa fa-fw fa-frown-o mr-1"></i>No result
+							</div>
+						</div>
+					</div>
 				</template>
 			</template>
 		</template>
 	<!-- /container --></div>
 <!-- /content --></div>
+
+<div id="gotop"><a href="#" class="btn btn-secondary" @click.prevent="$(document).scrollTop(0)"><i class="fa fa-fw fa-paper-plane-o fa-flip-horizontal mr-1"></i>Back to Top</a></div>
+
 <footer id="footer" class="py-3">
 	<address class="text-center">
 		<span><strong><a href="https://github.com/wyukawa/yanagishima"><i class="fa fa-github mr-1"></i>yanagishima</a></strong> by wyukawa and okazou</span>
-		<a :href="contact" target="_blank" class="ml-2" v-if="contact"><i class="fa fa-commenting-o mr-1"></i>Contact</a>
 	</address>
 </footer>
+
 <div id="theme" class="modal fade">
 	<div class="modal-dialog modal-lg" role="document">
 		<div class="modal-content">
@@ -321,6 +478,7 @@
 		<!-- /modal-content --></div>
 	<!-- /modal-dialog --></div>
 <!-- /modal --></div>
+
 <div id="treeview" class="modal fade">
 	<div class="modal-dialog modal-lg" role="document">
 		<div class="modal-content">
@@ -328,31 +486,31 @@
 				<h5 class="modal-title">Datasource</h5>
 				<button type="button" class="close" data-dismiss="modal"><span>&times;</span></button>
 			<!-- /modal-header --></div>
-			<div class="modal-body py-2 px-4">
+			<div class="modal-body py-3 px-4">
 				<div class="row align-items-center mb-3">
 					<div class="col">
 						<template v-if="datasources.length">
 							<template v-if="datasources.length === 1">
-								<span class="font-weight-bold"><i class="fa fa-fw fa-plug mr-1"></i>{{datasource}}</span>
+								<span class="font-weight-bold"><i class="fa fa-fw fa-sitemap mr-1"></i>{{datasource}}</span>
 							</template>
 							<template v-else>
 								<label class="form-check-label mr-3" :class="{'font-weight-bold': item == datasource}" v-for="item in datasources">
 									<input type="radio" class="form-check-input mr-1" v-model="datasource" :value="item">
-									<i class="fa fa-fw fa-plug mr-1" :class="'datasource_{0}-color'.format(datasources.indexOf(item))"></i>{{item}}
+									<i class="fa fa-fw fa-sitemap mr-1" :class="'datasource_{0}-color'.format(datasources.indexOf(item))"></i>{{item}}
 								</label>
 							</template>
 						</template>
 					</div>
 					<div class="col-4 text-right">
-						<input type="text" id="table_q_in" class="form-control" :placeholder="placeholder" v-model="table_q_in" @keyup.enter="searchTable()">
+						<input type="text" id="table_q_in" class="form-control" :placeholder="'Search by Table in ' + catalog" v-model="table_q_in" @keyup.enter="searchTable()">
 					</div>
 				</div>
-				<template v-if="!table_result.length && !table_q.length">
+				<template v-if="!is_searchTable">
 					<div class="row">
 						<div class="col">
 							<div class="card mb-3">
 								<div class="card-header">
-									<i class="fa fa-fw fa-server mr-1"></i>Catalog
+									<strong>Catalog</strong>
 									<span class="badge badge-default badge-pill" v-if="catalogs.length">{{catalogs.length}}</span>
 								<!-- /card-header --></div>
 								<div class="list-group list-group-flush">
@@ -368,12 +526,15 @@
 						<div class="col">
 							<div class="card mb-3">
 								<div class="card-header">
-									<i class="fa fa-fw fa-database mr-1"></i>Schema
-									<span class="badge badge-default badge-pill" v-if="schemata.length">{{schemata.length}}</span>
+									<strong>Schema</strong>
+									<span class="badge badge-default badge-pill" v-if="filteredSchemata.length">{{filteredSchemata.length}}</span>
+									<div class="pull-right" style="border-bottom: 1px solid #ccc;">
+										<i class="fa fa-filter mt-1 mr-1" :class="{'text-primary': filter_schema.length, 'text-muted': !filter_schema.length}"></i><input type="text" id="filter_schema" class="pull-right" v-model="filter_schema">
+									</div>
 								<!-- /card-header --></div>
 								<div class="list-group list-group-flush">
-									<template v-if="catalog && schemata.length">
-										<a href="#" class="list-group-item" v-for="item in schemata" :class="{active: item == schema}" @click.prevent="schema = item, table = ''">{{item}}</a>
+									<template v-if="catalog && filteredSchemata.length">
+										<a href="#" class="list-group-item" v-for="item in filteredSchemata" :class="{active: item == schema}" @click.prevent="schema = item, table = ''">{{item}}</a>
 									</template>
 									<template v-else>
 										<a href="#" class="list-group-item disabled">(N/A)</a>
@@ -384,7 +545,7 @@
 						<div class="col">
 							<div class="card mb-3">
 								<div class="card-header">
-									<i class="fa fa-fw fa-table mr-1"></i>Table
+									<strong>Table</strong>
 									<span class="badge badge-default badge-pill" v-if="tables.length">{{tables.length}}</span>
 									<div class="pull-right">
 										<small><i class="fa fa-fw fa-circle table-base"></i>Base table</small>
@@ -393,8 +554,8 @@
 								<!-- /card-header --></div>
 								<div class="list-group list-group-flush">
 									<template v-if="schema && tables.length">
-									<a href="#" class="list-group-item" v-for="items in tables" :class="{active: items[0] == table, 'table-view': items[1] === 'VIEW'}" @click.prevent="table = items[0], table_type = items[1]">
-										<button class="btn btn-sm btn-secondary clip" v-clipboard="[catalog, schema, items[0]].join('.')" data-toggle="tooltip" data-placement="right"><small>Copy</small></button>
+									<a href="#" class="list-group-item" v-for="items in tables" :class="{active: items[0] == table, 'table-base': items[1] !== 'VIEW', 'table-view': items[1] === 'VIEW'}" @click.prevent="table = items[0], table_type = items[1]">
+										<button class="btn btn-sm btn-secondary clip px-2" v-clipboard="[catalog, schema, items[0]].join('.')"><i class="fa fa-fw fa-clipboard"></i></button>
 										{{items[0]}}
 									</a>
 									</template>
@@ -407,20 +568,20 @@
 					<!-- /row --></div>
 				</template>
 				<template v-else>
-					<div class="card mb-4">
+					<div class="card mb-3">
 						<div class="card-header">
-							<a href="#" class="text-muted mr-2" @click.prevent="table_q_in = '', searchTable()"><i class="fa fa-times"></i></a>
+							<a href="#" class="text-muted mr-2" @click.prevent="is_searchTable = 0"><i class="fa fa-times"></i></a>
 							"<strong>{{table_q}}</strong>" in {{catalog}}
-							<template class="ml-2" v-if="table_result.length"><strong>{{table_result.length}}</strong> results</template>
+							<template v-if="response.table.length"><strong class="ml-2">{{response.table.length}}</strong> results</template>
 							<div class="pull-right">
 								<small><i class="fa fa-fw fa-circle table-base"></i>Base table</small>
 								<small><i class="fa fa-fw fa-circle table-view"></i>View</small>
 							</div>
 						<!-- /card-header --></div>
 						<div class="list-group list-group-flush">
-							<template v-if="table_result.length">
-							<a href="#" class="list-group-item ellipsis" v-for="items in table_result" @click.prevent="catalog = items[0], schema = items[1], table = items[2], table_type = items[3]" :class="{active: items[0] == catalog && items[1] == schema && items[2] == table, 'table-view': items[3] == 'VIEW'}">
-								<button class="btn btn-sm btn-secondary clip" v-clipboard="[items[0], items[1], items[2]].join('.')" data-toggle="tooltip" data-placement="right"><small>Copy</small></button>
+							<template v-if="response.table.length">
+							<a href="#" class="list-group-item ellipsis" v-for="items in response.table" @click.prevent="catalog = items[0], schema = items[1], table = items[2], table_type = items[3]" :class="{active: items[0] == catalog && items[1] == schema && items[2] == table, 'table-view': items[3] == 'VIEW'}">
+								<button class="btn btn-sm btn-secondary clip" v-clipboard="[items[0], items[1], items[2]].join('.')"><i class="fa fa-fw fa-clipboard"></i></button>
 								{{items[0]}} / {{items[1]}} / {{items[2]}}
 							</a>
 							</template>
@@ -430,8 +591,32 @@
 						<!-- /list-group --></div>
 					<!-- /card --></div>
 				</template>
+				<template v-if="table && columns.length">
+					<div class="text-right"><a href="#columns" data-toggle="collapse"><i class="fa fa-fw fa-columns mr-1"></i>Show/Hide <strong>Columns</strong></a></div>
+					<div id="columns" class="collapse mt-2">
+					<table class="table table-striped table-hover table-fixed mb-0">
+						<thead>
+							<tr>
+								<th>Column<span class="badge badge-default badge-pill ml-1">{{columns.length}}</span></th>
+								<th>Type</th>
+								<th>Extra</th>
+								<th>Comment</th>
+							</tr>
+						</thead>
+						<tbody>
+							<tr v-for="items in columns">
+								<td><a href="#" v-clipboard="items[0]" @click.prevent="" data-toggle="tooltip" data-placement="right" title="Copy to Clipboard">{{items[0]}}</a></td>
+								<td><i>{{items[1]}}</i></td>
+								<td>{{items[2]}}</td>
+								<td>{{items[3]}}</td>
+							</tr>
+						</tbody>
+					</table>
+					</div>
+				</template>
 			<!-- /modal-body --></div>
 			<div class="modal-footer" v-if="table">
+				<label class="form-check-label mr-2"><input class="form-check-input mr-1" type="checkbox" v-model="is_expandColumns">Expand Columns</label>
 				<select id="snippet" class="custom-select" v-model="snippet">
 					<option v-for="item in snippets" :value="item.sql" v-if="item.enable.includes(table_type)">{{item.label}}</option>
 				</select>
@@ -443,6 +628,7 @@
 		<!-- /modal-content --></div>
 	<!-- /modal-dialog --></div>
 <!-- /modal --></div>
+
 <div id="bookmark" class="modal fade">
 	<div class="modal-dialog modal-lg" role="document">
 		<div class="modal-content">
@@ -454,7 +640,7 @@
 				<template v-if="loading.bookmark">
 				</template>
 				<template v-else>
-					<table class="table table-bordered table-fixed table-hover mb-0" v-if="bookmarkQlist.length">
+					<table class="table table-bordered table-fixed table-hover mb-0" v-if="response.bookmark.length">
 						<thead>
 							<tr>
 								<th width="85%">Query</th>
@@ -463,7 +649,7 @@
 							</tr>
 						</thead>
 						<tbody>
-							<tr v-for="item in bookmarkQlist">
+							<tr v-for="item in response.bookmark">
 								<td>
 									<ace :code="item.query" readonly="true" css_class="bg-transparent"></ace>
 								</td>
@@ -471,7 +657,7 @@
 									<a href="#" class="btn btn-sm btn-secondary" @click.prevent="input_query = item.query, focus++" data-dismiss="modal"><i class="fa fa-fw fa-pencil"></i></a>
 								</td>
 								<td class="text-center">
-									<a href="#" class="btn btn-sm btn-secondary" @click.prevent="delBookmarkItem(item.queryid), bookmarkQlist.remove(item)"><i class="fa fa-fw fa-trash"></i></a>
+									<a href="#" class="btn btn-sm btn-secondary" @click.prevent="delBookmarkItem(item.bookmark_id), response.bookmark.remove(item)"><i class="fa fa-fw fa-trash"></i></a>
 								</td>
 							</tr>
 						</tbody>
@@ -482,50 +668,102 @@
 		<!-- /modal-content --></div>
 	<!-- /modal-dialog --></div>
 <!-- /modal --></div>
-<div id="show" class="modal fade">
+
+<div id="help" class="modal fade">
 	<div class="modal-dialog modal-lg" role="document">
 		<div class="modal-content">
 			<div class="modal-header">
-				<h5 class="modal-title">{{input_query.compact().truncate(30)}}</h5>
+				<h5 class="modal-title"><strong>Help</strong></h5>
 				<button type="button" class="close" data-dismiss="modal"><span>&times;</span></button>
 			<!-- /modal-header --></div>
-			<div class="modal-body p-3">
-				<template v-if="responses.show.error">
-					<div class="alert alert-danger" role="alert">{{responses.show.error}}</div>
-				</template>
-				<template v-else>
-					<table class="table table-auto table-bordered table-hover table-responsive">
+			<div class="modal-body p-4">
+				<section class="mb-5">
+					<h4 class="font-weight-bold mb-3"><i class="fa fa-fw fa-keyboard-o mr-1"></i>HotKeys</h4>
+					<table class="table table-fixed">
 						<thead>
 							<tr>
-								<th v-for="item in responses.show.headers">{{item}}</th>
+								<th width="25%">Effective Range</th>
+								<th width="25%">Keyboard</th>
+								<th width="50%">Command</th>
 							</tr>
 						</thead>
 						<tbody>
-							<tr v-for="items in responses.show.results">
-								<td v-for="item in items">
-									<template v-if="item === null">
-										<span class="text-muted">(null)</span>
-									</template>
-									<template v-else>
-										{{item}}
-									</template>
+							<tr>
+								<td>Everywhere</td>
+								<td><kbd>Ctrl</kbd> + <kbd>T</kbd></td>
+								<td>Launch <strong>Tree View</strong></td>
+							</tr>
+							<tr>
+								<td>Editor</td>
+								<td><kbd>Ctrl</kbd> + <kbd>Enter</kbd></td>
+								<td><strong>Run</strong> Query</td>
+							</tr>
+							<tr>
+								<td>Editor</td>
+								<td><kbd>ESC</kbd></td>
+								<td>Toggle <strong>Function Auto-complate</strong></td>
+							</tr>
+						</tbody>
+					</table>
+				</section>
+				<section class="mb-5">
+					<h4 class="font-weight-bold mb-3"><i class="fa fa-fw fa-dollar mr-1"></i>Variable expansion</h4>
+					<p class="px-3">You can use <strong>variables</strong> as <strong>${var}</strong> in query.</p>
+					<table class="table table-fixed">
+						<tbody>
+							<tr>
+								<td width="70%">
+									<ace :code="demo.variables" readonly="true" css_class="bg-transparent"></ace>
+								</td>
+								<td width="30%" class="text-right">
+									<a href="#" class="btn btn-sm btn-secondary" @click.prevent="input_query = demo.variables, runQuery(input_query), $('#help').modal('hide')"><i class="fa fa-fw fa-play mr-1"></i>Demo</a>
 								</td>
 							</tr>
 						</tbody>
 					</table>
-				</template>
+				</section>
+				<section>
+					<h4 class="font-weight-bold mb-3"><i class="fa fa-fw fa-bar-chart mr-1"></i>Chart Function</h4>
+					<p class="px-3">You can insert <strong>charts</strong> under the following conditions.</p>
+					<ul>
+						<li>column[0] is the <strong>date</strong> (column_name = {{columnDate_names.join(', ')}})</li>
+						<li>other columns are <strong>numbers</strong></li>
+					</ul>
+					<table class="table table-fixed">
+						<tbody>
+							<tr>
+								<td width="70%">
+									<ace code="SELECT dt, pageview FROM sample" readonly="true" css_class="bg-transparent"></ace>
+								</td>
+								<td width="30%" class="text-right">
+									<a href="#" class="btn btn-sm btn-secondary" @click.prevent="input_query = demo.chart, runQuery(input_query), $('#help').modal('hide'), chart = 2"><i class="fa fa-fw fa-play mr-1"></i>Demo</a>
+								</td>
+							</tr>
+						</tbody>
+					</table>
+				</section>
 			<!-- /modal-body --></div>
+			<div class="modal-footer">
+				<a :href="'mailto:' + links.mail_admin" class="btn btn-primary" v-if="links.mail_admin"><i class="fa fa-fw fa-envelope-o mr-1"></i>Mail to Admin</a>
+				<a :href="links.about_this" class="btn btn-primary" target="wiki" v-if="links.about_this"><i class="fa fa-fw fa-book mr-1"></i>About yanagishima</a>
+				<a :href="links.bugs_feedback" class="btn btn-primary" target="bug" v-if="links.bugs_feedback"><i class="fa fa-fw fa-bug mr-1"></i>Bugs and Feedback</a>
+				</div>
+			</div>
+			<!-- /modal-footer --></div>
 		<!-- /modal-content --></div>
 	<!-- /modal-dialog --></div>
 <!-- /modal --></div>
+
 <!-- /page --></div>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tether/1.4.0/js/tether.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.0.0-alpha.6/js/bootstrap.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.2.6/ace.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/vue/2.2.1/vue.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.2.6/ext-language_tools.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/vue/2.3.0/vue.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/sugar/2.0.4/sugar.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/favico.js/0.3.10/favico.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/magnific-popup.js/1.1.0/jquery.magnific-popup.min.js"></script>
-<script src="./index.js"></script>
+<script src="/index.js"></script>
 </body>

@@ -1,0 +1,145 @@
+<html>
+<head>
+<title>yanagishima</title>
+<link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" id="favicon">
+<link href="https://fonts.googleapis.com/css?family=Droid+Sans" rel="stylesheet">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/magnific-popup.js/1.1.0/magnific-popup.css" rel="stylesheet">
+<style>.unload {display: none;}</style>
+</head>
+<body id="share">
+<div id="page" class="unload">
+<header id="header" style="background: #333;">
+	<div id="header-main">
+		<div class="container">
+			<div id="header-upper" class="py-2">
+				<div class="row align-items-center">
+					<div class="col-6">
+						<h1 id="logo"><span id="logo-figure" class="mr-2"></span>{{sitename}}<small class="ml-2">Ver {{version}}</small></h1>
+					<!-- /col --></div>
+					<div class="col-6 text-right">
+						Readonly
+					<!-- /col --></div>
+				<!-- /row --></div>
+			<!-- /header-upper --></div>
+		<!-- /container --></div>
+	<!-- /header-main --></div>
+	<div id="header-sub">
+		<div class="container">
+			<div class="row align-items-center pt-3">
+				<div class="col">
+					<template v-if="loading.share">
+						<strong>Loading</strong>
+					</template>
+					<template v-else>
+						<template v-if="response.share.error || error.share">
+							<strong><i class="fa fa-exclamation-triangle text-danger mr-1"></i>Error</strong>
+						</template>
+						<template v-else>
+							<span v-if="response.share.results">
+								<span class="mr-3" v-if="response.share.lineNumber">
+									<i class="fa fa-fw fa-file-text-o" title="Publish ID" data-toggle="tooltip" data-placement="left"></i>
+									<strong>{{publish_id}}</strong>
+								</span>
+								<span class="mr-2" v-if="response.share.elapsedTimeMillis">
+									<strong>{{(response.share.elapsedTimeMillis / 1000).ceil(2)}}</strong><span class="text-muted ml-1">sec</span>
+								</span>
+								<span class="mr-2" v-if="response.share.rawDataSize">
+									<strong>{{response.share.rawDataSize.remove('B')}}</strong><span class="text-muted ml-1">byte</span>
+								</span>
+								<span class="mr-2" v-if="response.share.lineNumber">
+									<strong>{{response.share.results.length | formatNumber}}</strong><template v-if="response.share.results.length != response.share.lineNumber -1"><span class="mx-1">/</span><strong>{{response.share.lineNumber -1 | formatNumber}}</strong></template><span class="text-muted ml-1">results</span>
+								</span>
+							</span>
+							<span v-else><strong>No result</strong></span>
+						</template>
+					</template>
+				<!-- /col --></div>
+				<div class="col text-right">
+					<div class="btn-group">
+						<a :href="domain + apis.shareDownload.format({publish_id: publish_id})" class="btn btn-sm btn-secondary" :class="{disabled: Object.isEmpty(response.share) || !publish_id || loading.share}"><i class="fa fa-fw fa-download mr-1"></i>TSV</a>
+						<a :href="domain + apis.shareCsvDownload.format({publish_id: publish_id})" class="btn btn-sm btn-secondary" :class="{disabled: Object.isEmpty(response.share) || !publish_id || loading.share}"><i class="fa fa-fw fa-download mr-1"></i>CSV</a>
+					<!-- /btn-group --></div>
+				<!-- /col --></div>
+			<!-- /row --></div>
+		<!-- /container --></div>
+	<!-- /header-sub --></div>
+</header>
+
+<div id="content">
+
+	<div class="container">
+		<template v-if="loading.share">
+			<div class="alert alert-info" role="alert">
+				<i class="fa fa-fw fa-spinner fa-pulse mr-1"></i>Loading
+			<!-- /alert --></div>
+		</template>
+		<template v-else>
+			<template v-if="!Object.isEmpty(response.share)">
+				<div class="editor p-2 mb-3">
+					<ace :code="response.share.queryString" readonly="true" css_class="bg-transparent"></ace>
+				</div>
+				<div class="mb-3" v-if="enable_chart && chart">
+					<div class="card">
+					<div class="card-header">
+						<strong>{{chart_types[chart].name}}</strong>
+					</div>
+  					<div class="card-block">
+						<template v-if="chart == key" v-for="(val, key) in chart_types">
+							<vue-chart :chart-type="val.type" :columns="chart_columns" :rows="chart_rows" :options="Object.merge(chart_options, val.option)"></vue-chart>
+						</template>
+					</div>
+					</div>
+				</div>
+				<table class="table table-auto table-bordered table-hover table-responsive">
+					<thead>
+						<tr>
+							<th v-for="item in response.share.headers">{{item}}</th>
+						</tr>
+					</thead>
+					<tbody>
+						<tr v-for="items in response.share.results">
+							<td v-for="item in items">
+								<template v-if="item === null">
+									<span class="text-muted">(null)</span>
+								</template>
+								<template v-else>
+									{{item}}
+								</template>
+							</td>
+						</tr>
+					</tbody>
+				</table>
+			</template>
+			<template v-else>
+				<div class="alert alert-warning" role="alert">
+					<div class="row align-items-center">
+						<div class="col">
+							<i class="fa fa-fw fa-frown-o mr-1"></i>I'm sorry.
+						</div>
+					</div>
+				</div>
+			</template>
+		</template>
+	<!-- /container --></div>
+<!-- /content --></div>
+
+<footer id="footer" class="py-3">
+	<address class="text-center">
+		<span><strong>&copy; yanagishima</strong> by wyukawa and okazou</span>
+	</address>
+</footer>
+
+<!-- /page --></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/tether/1.4.0/js/tether.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.0.0-alpha.6/js/bootstrap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.2.6/ace.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.2.6/ext-language_tools.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/vue/2.3.0/vue.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/sugar/2.0.4/sugar.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/favico.js/0.3.10/favico.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/magnific-popup.js/1.1.0/jquery.magnific-popup.min.js"></script>
+<script src="/index.js"></script>
+</body>

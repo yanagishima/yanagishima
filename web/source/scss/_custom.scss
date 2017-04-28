@@ -3,7 +3,7 @@
 // Copy variables from `_variables.scss` to this file to override default values
 // without modifying source files.
 
-$colors: $brand-primary, #263238, #4E342E, #004D40, #311B92;
+$colors: $brand-primary, #212121, #880E4F, #827717, #1B5E20;
 
 @mixin ellipsis {
 	overflow: hidden;
@@ -29,30 +29,55 @@ $colors: $brand-primary, #263238, #4E342E, #004D40, #311B92;
 		color: $color;
 	}
 }
+#logo {
+	font-size: 1rem;
+	font-weight: bold;
+	margin-bottom: 0;
+	a {
+		color: $white;
+		text-decoration: none;
+	}
+	#logo-figure {
+		display: inline-block;
+		vertical-align: middle;
+		width: 1.2rem;
+		height: 1.6rem;
+		background: url(../yanagishima.svg) 0 no-repeat;
+		background-size: contain;
+	}
+}
 #header {
+	#header-setting {
+		padding: .5rem;
+		background: lighten($black, 10%);
+		border-bottom: 1px solid #fff;
+		color: $white;
+		.btn {
+			min-width: 1.6rem;
+			background: rgba($white, 0.5);
+			color: lighten($black, 10%);
+			padding: .2rem .4rem;
+			&:hover {
+				color: $white;
+			}
+			&.selected {
+				color: $black;
+				background: $white;
+			}
+		}
+	}
 	#header-main {
-		color: #fff;
+		color: $white;
+		#header-upper {
+			a {
+				color: $white;
+				text-decoration: none;
+			}
+		}
 	}
 	#header-sub {
 		background: $gray-lightest;
 		padding-bottom: 1rem;
-	}
-	#logo {
-		font-size: 1rem;
-		font-weight: bold;
-		margin-bottom: 0;
-		a {
-			color: $white;
-			text-decoration: none;
-		}
-		#logo-figure {
-			display: inline-block;
-			vertical-align: middle;
-			width: 1.2rem;
-			height: 1.6rem;
-			background: url(../yanagishima.svg) 0 no-repeat;
-			background-size: contain;
-		}
 	}
 	.nav-tabs {
 		border-bottom: 0;
@@ -62,10 +87,10 @@ $colors: $brand-primary, #263238, #4E342E, #004D40, #311B92;
 		color: #eee;
 		&:hover,
 		&:focus {
-			color: #fff;
+			color: $white;
 		}
 		&.active {
-			color: $brand-primary;
+			color: $black;
 		}
 	}
 }
@@ -86,16 +111,55 @@ $colors: $brand-primary, #263238, #4E342E, #004D40, #311B92;
 			flex: none;
 		}
 	}
+	#filter_schema {
+		width: 2.5em;
+		border: 0;
+		padding: 0;
+		background: transparent;
+		outline: 0;
+		color: $gray;
+		&:focus {
+			width: 5rem;
+		}
+	}
 }
 #explain {
 	background: $black;
 	color: $white;
 	padding: 0.5rem;
 }
+#gotop {
+	opacity: .9;
+	position: fixed;
+	bottom: 1rem;
+	right: 1rem;
+	box-shadow: 1px 1px 5px rgba(#000, 0.3);
+	&:hover {
+		opacity: 1;
+	}
+}
+#error {
+	background: $brand-primary;
+	color: #fff;
+	height: 100%;
+	#logo {
+		position: absolute;
+		top: 15px;
+		left: 15px;
+	}
+	#box {
+		position: absolute;
+		top: 50%;
+		left: 50%;
+		-webkit-transform: translateY(-50%) translateX(-50%);
+		transform: translateY(-50%) translateX(-50%);
+		font-size: 128px;
+	}
+}
 .editor {
 	border-radius: $border-radius;
 	border: 1px solid #ccc;
-	background: #fff;
+	background: $white;
 }
 .table {
 	&.table-auto {
@@ -107,13 +171,14 @@ $colors: $brand-primary, #263238, #4E342E, #004D40, #311B92;
 		th,
 		td {
 			@include ellipsis;
+			vertical-align: middle;
 		}
 	}
 	thead {
 		background: darken($gray-lighter, 5%);
 	}
 	tbody {
-		background-color: #fff;
+		background-color: $white;
 	}
 }
 .card-header + .list-group {
@@ -139,10 +204,10 @@ a:hover .btn.clip {
 	display: inline-block;
 }
 .table-base {
-	color: $brand-primary;
+	color: $link-color !important;
 }
 .table-view {
-	color: $brand-info;
+	color: $brand-success !important;
 }
 .mfp-iframe-holder {
 	padding-top: 0;
@@ -165,4 +230,22 @@ a:hover .btn.clip {
 }
 .bg-transparent {
 	background: transparent !important;
+}
+#variables {
+	border-radius: 4px;
+	border:  1px solid $white;
+	padding: .75rem 1rem;
+	padding-top: .4rem;
+	legend {
+		font-size: .8rem;
+		margin: 0;
+		width: auto;
+		padding: 0 .6rem;
+	}
+	label {
+		font-weight: bold;
+	}
+}
+.ace-font {
+	font: 12px/normal 'Monaco', 'Menlo', 'Ubuntu Mono', 'Consolas', 'source-code-pro', monospace;
 }
