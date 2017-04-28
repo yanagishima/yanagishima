@@ -22,7 +22,11 @@ yanagishima is a Web UI for presto.
 * share query result
 * search table
 * handle multiple presto clusters
-* query parameter substitution
+* auto detection of partition key
+* show progress of running query
+* query parameters substitution
+* insert chart
+* format query
 
 # Limitation
 
