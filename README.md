@@ -103,6 +103,8 @@ bin/yanagishima-stop.sh
 |build/index.html|SPA body|Yes||
 |build/index.js|Static assets (JS/CSS/IMG)|Yes||
 |build/favicon.ico|Favorite icon|Yes||
+|build/share/index.html|Published result page (readonly)|Yes||
+|build/error/index.html|Error page template|Yes||
 |source/config.js|Config for yanagishima||Yes|
 |source/core.js|SPA core||Yes|
 |source/plugin.js|Vue plugin for Ace Editor||Yes|
