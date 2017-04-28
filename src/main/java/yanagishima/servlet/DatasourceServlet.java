@@ -42,13 +42,16 @@ public class DatasourceServlet extends HttpServlet {
 
         HashMap<String, Object> retVal = new HashMap<String, Object>();
 
-        String header = HttpRequestUtil.getHeader(request, Constants.DATASOURCE_HEADER);
-        if(header.equals("*")) {
-            retVal.put("datasources", yanagishimaConfig.getDatasources());
-        } else {
-            List<String> headerDatasources = Arrays.asList(header.split(","));
-            retVal.put("datasources", yanagishimaConfig.getDatasources().stream().filter(datasource -> headerDatasources.contains(datasource)).collect(Collectors.toList()));
-        }
+
+//        String header = HttpRequestUtil.getHeader(request, Constants.DATASOURCE_HEADER);
+//        if(header.equals("*")) {
+//            retVal.put("datasources", yanagishimaConfig.getDatasources());
+//        } else {
+//            List<String> headerDatasources = Arrays.asList(header.split(","));
+//            retVal.put("datasources", yanagishimaConfig.getDatasources().stream().filter(datasource -> headerDatasources.contains(datasource)).collect(Collectors.toList()));
+//        }
+
+        retVal.put("datasources", yanagishimaConfig.getDatasources());
 
         JsonUtil.writeJSON(response, retVal);
     }
