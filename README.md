@@ -118,10 +118,10 @@ bin/yanagishima-stop.sh
 	- FontAwesome 4.7.0
 	- Google Fonts "[Droid+Sans](https://fonts.google.com/specimen/Droid+Sans)"
 - JavaScript
-	- Vue 2.2.1
+	- Vue 2.3.0
 	- Ace Editor 1.2.6
 	- Sugar 2.0.4
-	- jQuery 3.1.1
+	- jQuery 3.2.1
 - Build/Serving tool
 	- webpack 2.2.1
 	- browser-sync 2.18.8
