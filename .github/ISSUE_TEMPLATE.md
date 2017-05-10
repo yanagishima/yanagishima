@@ -25,7 +25,9 @@ Issues that do not follow these guidelines are likely to be closed.
 
 **JVM version** (`java -version`):
 
-**OS version** (`uname -a` if on a Unix-like system):
+**Server OS version** (`uname -a` if on a Unix-like system):
+
+**User OS version**
 
 **Browser**:
 
