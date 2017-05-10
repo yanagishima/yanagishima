@@ -27,7 +27,7 @@ Issues that do not follow these guidelines are likely to be closed.
 
 **Server OS version** (`uname -a` if on a Unix-like system):
 
-**User OS version**
+**Client OS version**
 
 **Browser**:
 
