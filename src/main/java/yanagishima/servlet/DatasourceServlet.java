@@ -51,8 +51,6 @@ public class DatasourceServlet extends HttpServlet {
             retVal.put("datasources", yanagishimaConfig.getDatasources().stream().filter(datasource -> headerDatasources.contains(datasource)).collect(Collectors.toList()));
         }
 
-        retVal.put("datasources", yanagishimaConfig.getDatasources());
-
         JsonUtil.writeJSON(response, retVal);
     }
 
