@@ -47,6 +47,8 @@ public class PrestoServiceImpl implements PrestoService {
 
     private ExecutorService executorService = Executors.newFixedThreadPool(10);
 
+    private Duration queryMaxRunTime;
+
     @Inject
     private TinyORM db;
 
@@ -55,6 +57,7 @@ public class PrestoServiceImpl implements PrestoService {
         this.yanagishimaConfig = yanagishimaConfig;
         HttpClientConfig httpClientConfig = new HttpClientConfig().setConnectTimeout(new Duration(10, TimeUnit.SECONDS));
         this.httpClient = new JettyHttpClient(httpClientConfig);
+        queryMaxRunTime = new Duration(this.yanagishimaConfig.getQueryMaxRunTimeSeconds(), TimeUnit.SECONDS);
     }
 
     @Override
@@ -96,16 +99,19 @@ public class PrestoServiceImpl implements PrestoService {
         }
     }
 
+    private void checkTimeout(long start, String datasource, String queryId, String query) {
+        if(System.currentTimeMillis() - start > queryMaxRunTime.toMillis()) {
+            String message = "Query exceeded maximum time limit of " + queryMaxRunTime;
+            storeError(datasource, queryId, query, message);
+            throw new RuntimeException(message);
+        }
+    }
+
     private PrestoQueryResult getPrestoQueryResult(String datasource, String query, StatementClient client, boolean asyncFlag) throws QueryErrorException {
         long start = System.currentTimeMillis();
-        Duration queryMaxRunTime = new Duration(yanagishimaConfig.getQueryMaxRunTimeSeconds(), TimeUnit.SECONDS);
         while (client.isValid() && (client.current().getData() == null)) {
             client.advance();
-            if(System.currentTimeMillis() - start > queryMaxRunTime.toMillis()) {
-                String message = "Query exceeded maximum time limit of " + queryMaxRunTime;
-                storeError(datasource, client.current().getId(), query, message);
-                throw new RuntimeException(message);
-            }
+            checkTimeout(start, datasource, client.current().getId(), query);
         }
 
         if ((!client.isFailed()) && (!client.isGone()) && (!client.isClosed())) {
@@ -170,6 +176,7 @@ public class PrestoServiceImpl implements PrestoService {
     }
 
     private void processData(StatementClient client, String datasource, String queryId, String query, PrestoQueryResult prestoQueryResult, List<String> columns, List<List<String>> rowDataList) {
+        long start = System.currentTimeMillis();
         int limit = yanagishimaConfig.getSelectLimit();
         Path dst = getResultFilePath(datasource, queryId, false);
         int lineNumber = 0;
@@ -219,6 +226,7 @@ public class PrestoServiceImpl implements PrestoService {
                     }
                 }
                 client.advance();
+                checkTimeout(start, datasource, queryId, query);
             }
         } catch (IOException e) {
             throw new RuntimeException(e);
