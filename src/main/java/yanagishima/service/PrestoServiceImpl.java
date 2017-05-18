@@ -111,7 +111,11 @@ public class PrestoServiceImpl implements PrestoService {
         long start = System.currentTimeMillis();
         while (client.isValid() && (client.current().getData() == null)) {
             client.advance();
-            checkTimeout(start, datasource, client.current().getId(), query);
+            if(System.currentTimeMillis() - start > queryMaxRunTime.toMillis()) {
+                String message = "Query exceeded maximum time limit of " + queryMaxRunTime;
+                storeError(datasource, client.current().getId(), query, message);
+                throw new RuntimeException(message);
+            }
         }
 
         if ((!client.isFailed()) && (!client.isGone()) && (!client.isClosed())) {
