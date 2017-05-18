@@ -19,9 +19,8 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.nio.charset.StandardCharsets;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Singleton
 public class QueryServlet extends HttpServlet {
@@ -56,10 +55,16 @@ public class QueryServlet extends HttpServlet {
 				.execute().returnContent().asString(StandardCharsets.UTF_8);
 		ObjectMapper mapper = new ObjectMapper();
 		List<Map> list = mapper.readValue(originalJson, List.class);
-		list.sort((a,b)-> String.class.cast(b.get("queryId")).compareTo(String.class.cast(a.get("queryId"))));
+		List<Map> runningList = list.stream().filter(m -> m.get("state").equals("RUNNING")).collect(Collectors.toList());;
+		List<Map> notRunningList = list.stream().filter(m -> !m.get("state").equals("RUNNING")).collect(Collectors.toList());;
+		runningList.sort((a,b)-> String.class.cast(b.get("queryId")).compareTo(String.class.cast(a.get("queryId"))));
+		notRunningList.sort((a,b)-> String.class.cast(b.get("queryId")).compareTo(String.class.cast(a.get("queryId"))));
+
 		List<Map> limitedList;
 		if(list.size() > LIMIT) {
-			limitedList = list.subList(0, LIMIT);
+			limitedList = new ArrayList<>();
+			limitedList.addAll(runningList);
+			limitedList.addAll(notRunningList.subList(0, LIMIT - runningList.size()));
 		} else {
 			limitedList = list;
 		}
