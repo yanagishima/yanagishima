@@ -24,6 +24,7 @@ public class PrestoServletModule extends ServletModule {
 		bind(DatasourceServlet.class);
 		bind(QueryStatusServlet.class);
 		bind(BookmarkServlet.class);
+		bind(ToValuesQueryServlet.class);
 
 		serve("/presto").with(PrestoServlet.class);
 		serve("/prestoAsync").with(PrestoAsyncServlet.class);
@@ -43,6 +44,7 @@ public class PrestoServletModule extends ServletModule {
 		serve("/datasource").with(DatasourceServlet.class);
 		serve("/queryStatus").with(QueryStatusServlet.class);
 		serve("/bookmark").with(BookmarkServlet.class);
+		serve("/toValuesQuery").with(ToValuesQueryServlet.class);
 
 	}
 }

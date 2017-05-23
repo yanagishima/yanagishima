@@ -57,4 +57,7 @@ public class YanagishimaConfig {
 		return Integer.parseInt(Optional.ofNullable(properties.getProperty("presto.max-result-file-byte-size")).get());
 	}
 
+	public int getToValuesQueryLimit() {
+		return Integer.parseInt(Optional.ofNullable(properties.getProperty("to.values.query.limit")).get());
+	}
 }
