@@ -38,9 +38,9 @@ public class ToValuesQueryServlet extends HttpServlet {
         HashMap<String, Object> retVal = new HashMap<String, Object>();
 
         try {
-            Optional<String> tsvOptional = Optional.ofNullable(request.getParameter("tsv"));
-            tsvOptional.ifPresent(tsv -> {
-                String[] lines = tsv.split("\n");
+            Optional<String> csvOptional = Optional.ofNullable(request.getParameter("csv"));
+            csvOptional.ifPresent(csv -> {
+                String[] lines = csv.split("\n");
                 if (lines.length < 2) {
                     throw new RuntimeException("At least, there must be 2 lines");
                 }
@@ -48,18 +48,14 @@ public class ToValuesQueryServlet extends HttpServlet {
                     throw new RuntimeException(String.format("At most, there must be %d lines", yanagishimaConfig.getToValuesQueryLimit()));
                 }
                 int lineNumber = 0;
-                String[] columnNames = null;
                 List<String> rows = new ArrayList<>();
                 for (String line : lines) {
-                    if (lineNumber == 0) {
-                        columnNames = line.split("\\t");
-                    } else {
-                        String[] columnValues = line.split("\\t");
-                        rows.add("(" + String.join(",", columnValues) + ")");
+                    if (lineNumber != 0) {
+                        rows.add("(" + line + ")");
                     }
                     lineNumber++;
                 }
-                String valuesQuery = String.format("SELECT * FROM ( VALUES\n%s ) AS t (%s)", String.join(",\n", rows), String.join(",", columnNames));
+                String valuesQuery = String.format("SELECT * FROM ( VALUES\n%s ) AS t (%s)", String.join(",\n", rows), lines[0]);
                 LOGGER.info(String.format("query=%s", valuesQuery));
                 retVal.put("query", valuesQuery);
             });
