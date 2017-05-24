@@ -92,7 +92,8 @@ public class PrestoServlet extends HttpServlet {
 					if(userName != null) {
 						LOGGER.info(String.format("%s executed %s in %s", userName, query, datasource));
 					}
-					PrestoQueryResult prestoQueryResult = prestoService.doQuery(datasource, query, userName);
+					boolean storeFlag = Boolean.parseBoolean(Optional.ofNullable(request.getParameter("store")).orElse("false"));
+					PrestoQueryResult prestoQueryResult = prestoService.doQuery(datasource, query, userName, storeFlag);
 					String queryid = prestoQueryResult.getQueryId();
 					retVal.put("queryid", queryid);
 					if (prestoQueryResult.getUpdateType() == null) {

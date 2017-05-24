@@ -93,9 +93,9 @@ public class PrestoServiceImpl implements PrestoService {
     }
 
     @Override
-    public PrestoQueryResult doQuery(String datasource, String query, String userName) throws QueryErrorException {
+    public PrestoQueryResult doQuery(String datasource, String query, String userName, boolean storeFlag) throws QueryErrorException {
         try (StatementClient client = getStatementClient(datasource, query, userName)) {
-            return getPrestoQueryResult(datasource, query, client, false);
+            return getPrestoQueryResult(datasource, query, client, storeFlag);
         }
     }
 
@@ -107,7 +107,7 @@ public class PrestoServiceImpl implements PrestoService {
         }
     }
 
-    private PrestoQueryResult getPrestoQueryResult(String datasource, String query, StatementClient client, boolean asyncFlag) throws QueryErrorException {
+    private PrestoQueryResult getPrestoQueryResult(String datasource, String query, StatementClient client, boolean storeFlag) throws QueryErrorException {
         long start = System.currentTimeMillis();
         while (client.isValid() && (client.current().getData() == null)) {
             client.advance();
@@ -132,7 +132,7 @@ public class PrestoServiceImpl implements PrestoService {
                 List<List<String>> rowDataList = new ArrayList<List<String>>();
                 processData(client, datasource, queryId, query, prestoQueryResult, columns, rowDataList, start);
                 prestoQueryResult.setRecords(rowDataList);
-                if(asyncFlag) {
+                if(storeFlag) {
                     insertQueryHistory(datasource, query, queryId);
                 }
                 return prestoQueryResult;

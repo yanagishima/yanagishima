@@ -6,7 +6,7 @@ import yanagishima.result.PrestoQueryResult;
 
 public interface PrestoService {
 	
-	public PrestoQueryResult doQuery(String datasource, String query, String userName) throws QueryErrorException;
+	public PrestoQueryResult doQuery(String datasource, String query, String userName, boolean storeFlag) throws QueryErrorException;
 
 	public String doQueryAsync(String datasource, String query, String userName);
 
