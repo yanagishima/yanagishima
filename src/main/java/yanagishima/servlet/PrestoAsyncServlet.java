@@ -18,6 +18,8 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Optional;
 
+import static javax.servlet.http.HttpServletResponse.SC_FORBIDDEN;
+
 @Singleton
 public class PrestoAsyncServlet extends HttpServlet {
 
@@ -46,7 +48,16 @@ public class PrestoAsyncServlet extends HttpServlet {
 			queryOptional.ifPresent(query -> {
 				String userName = request.getHeader(yanagishimaConfig.getAuditHttpHeaderName());
 				String datasource = HttpRequestUtil.getParam(request, "datasource");
-				AccessControlUtil.checkDatasource(request, datasource);
+				if(yanagishimaConfig.isCheckDatasource()) {
+					if(!AccessControlUtil.validateDatasource(request, datasource)) {
+						try {
+							response.sendError(SC_FORBIDDEN);
+							return;
+						} catch (IOException e) {
+							throw new RuntimeException(e);
+						}
+					}
+				}
 				if(userName != null) {
 					LOGGER.info(String.format("%s executed %s in %s", userName, query, datasource));
 				}

@@ -16,6 +16,8 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.Optional;
 
+import static javax.servlet.http.HttpServletResponse.SC_FORBIDDEN;
+
 @Singleton
 public class KillServlet extends HttpServlet {
 
@@ -37,7 +39,16 @@ public class KillServlet extends HttpServlet {
 		Optional<String> queryIdOptinal = Optional.ofNullable(request.getParameter("queryid"));
 		queryIdOptinal.ifPresent(queryId -> {
 			String datasource = HttpRequestUtil.getParam(request, "datasource");
-			AccessControlUtil.checkDatasource(request, datasource);
+			if(yanagishimaConfig.isCheckDatasource()) {
+				if(!AccessControlUtil.validateDatasource(request, datasource)) {
+					try {
+						response.sendError(SC_FORBIDDEN);
+						return;
+					} catch (IOException e) {
+						throw new RuntimeException(e);
+					}
+				}
+			}
 			String prestoCoordinatorServer = yanagishimaConfig.getPrestoCoordinatorServer(datasource);
 			try {
 				Request.Delete(prestoCoordinatorServer + "/v1/query/" + queryId).execute();

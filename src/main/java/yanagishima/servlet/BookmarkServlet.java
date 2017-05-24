@@ -3,6 +3,7 @@ package yanagishima.servlet;
 import me.geso.tinyorm.TinyORM;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import yanagishima.config.YanagishimaConfig;
 import yanagishima.row.Bookmark;
 import yanagishima.util.AccessControlUtil;
 import yanagishima.util.HttpRequestUtil;
@@ -18,6 +19,8 @@ import java.io.IOException;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static javax.servlet.http.HttpServletResponse.SC_FORBIDDEN;
+
 @Singleton
 public class BookmarkServlet extends HttpServlet {
 
@@ -29,6 +32,13 @@ public class BookmarkServlet extends HttpServlet {
     @Inject
     private TinyORM db;
 
+    private YanagishimaConfig yanagishimaConfig;
+
+    @Inject
+    public BookmarkServlet(YanagishimaConfig yanagishimaConfig) {
+        this.yanagishimaConfig = yanagishimaConfig;
+    }
+
     @Override
     protected void doPost(HttpServletRequest request,
                           HttpServletResponse response) throws ServletException, IOException {
@@ -37,7 +47,17 @@ public class BookmarkServlet extends HttpServlet {
 
         try {
             String datasource = HttpRequestUtil.getParam(request, "datasource");
-            AccessControlUtil.checkDatasource(request, datasource);
+            if(yanagishimaConfig.isCheckDatasource()) {
+                if(!AccessControlUtil.validateDatasource(request, datasource)) {
+                    try {
+                        response.sendError(SC_FORBIDDEN);
+                        return;
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    }
+                }
+            }
+
             String query = HttpRequestUtil.getParam(request, "query");
             db.insert(Bookmark.class).value("datasource", datasource).value("query", query).execute();
             List<Bookmark> bookmarkList = db.searchBySQL(Bookmark.class, "select bookmark_id, datasource, query from bookmark where rowid = last_insert_rowid()");
@@ -63,7 +83,16 @@ public class BookmarkServlet extends HttpServlet {
 
         try {
             String datasource = HttpRequestUtil.getParam(request, "datasource");
-            AccessControlUtil.checkDatasource(request, datasource);
+            if(yanagishimaConfig.isCheckDatasource()) {
+                if(!AccessControlUtil.validateDatasource(request, datasource)) {
+                    try {
+                        response.sendError(SC_FORBIDDEN);
+                        return;
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    }
+                }
+            }
             String[] bookmarkIds = HttpRequestUtil.getParam(request, "bookmark_id").split(",");
 
             String placeholder = Arrays.stream(bookmarkIds).map(r -> "?").collect(Collectors.joining(", "));

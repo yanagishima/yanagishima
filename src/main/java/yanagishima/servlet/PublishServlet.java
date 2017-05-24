@@ -28,6 +28,8 @@ import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
 
+import static javax.servlet.http.HttpServletResponse.SC_FORBIDDEN;
+
 @Singleton
 public class PublishServlet extends HttpServlet {
 
@@ -39,6 +41,13 @@ public class PublishServlet extends HttpServlet {
     @Inject
     private TinyORM db;
 
+    private YanagishimaConfig yanagishimaConfig;
+
+    @Inject
+    public PublishServlet(YanagishimaConfig yanagishimaConfig) {
+        this.yanagishimaConfig = yanagishimaConfig;
+    }
+
     @Override
     protected void doPost(HttpServletRequest request,
                          HttpServletResponse response) throws ServletException, IOException {
@@ -47,7 +56,16 @@ public class PublishServlet extends HttpServlet {
 
         try {
             String datasource = HttpRequestUtil.getParam(request, "datasource");
-            AccessControlUtil.checkDatasource(request, datasource);
+            if(yanagishimaConfig.isCheckDatasource()) {
+                if(!AccessControlUtil.validateDatasource(request, datasource)) {
+                    try {
+                        response.sendError(SC_FORBIDDEN);
+                        return;
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    }
+                }
+            }
             String queryid = Optional.ofNullable(request.getParameter("queryid")).get();
             Optional<Publish> publishOptional = db.single(Publish.class).where("datasource=? and query_id=?", datasource, queryid).execute();
             if(publishOptional.isPresent()) {

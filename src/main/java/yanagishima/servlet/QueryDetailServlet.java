@@ -15,6 +15,8 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.Optional;
 
+import static javax.servlet.http.HttpServletResponse.SC_FORBIDDEN;
+
 @Singleton
 public class QueryDetailServlet extends HttpServlet {
 
@@ -34,7 +36,16 @@ public class QueryDetailServlet extends HttpServlet {
 			HttpServletResponse response) throws ServletException, IOException {
 
 		String datasource = HttpRequestUtil.getParam(request, "datasource");
-		AccessControlUtil.checkDatasource(request, datasource);
+		if(yanagishimaConfig.isCheckDatasource()) {
+			if(!AccessControlUtil.validateDatasource(request, datasource)) {
+				try {
+					response.sendError(SC_FORBIDDEN);
+					return;
+				} catch (IOException e) {
+					throw new RuntimeException(e);
+				}
+			}
+		}
 		String prestoRedirectServerServer = yanagishimaConfig
 				.getPrestoRedirectServer(datasource);
 		response.sendRedirect(prestoRedirectServerServer + "/query.html?" + request.getParameter("queryid"));

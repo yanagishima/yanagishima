@@ -60,4 +60,8 @@ public class YanagishimaConfig {
 	public int getToValuesQueryLimit() {
 		return Integer.parseInt(Optional.ofNullable(properties.getProperty("to.values.query.limit")).get());
 	}
+
+	public boolean isCheckDatasource() {
+		return Boolean.parseBoolean(Optional.ofNullable(properties.getProperty("check.datasource")).orElse("false"));
+	}
 }

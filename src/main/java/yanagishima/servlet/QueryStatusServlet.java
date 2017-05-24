@@ -16,6 +16,8 @@ import java.io.PrintWriter;
 import java.nio.charset.StandardCharsets;
 import java.util.Optional;
 
+import static javax.servlet.http.HttpServletResponse.SC_FORBIDDEN;
+
 @Singleton
 public class QueryStatusServlet extends HttpServlet {
 
@@ -35,7 +37,16 @@ public class QueryStatusServlet extends HttpServlet {
 			HttpServletResponse response) throws ServletException, IOException {
 
 		String datasource = HttpRequestUtil.getParam(request, "datasource");
-		AccessControlUtil.checkDatasource(request, datasource);
+		if(yanagishimaConfig.isCheckDatasource()) {
+			if(!AccessControlUtil.validateDatasource(request, datasource)) {
+				try {
+					response.sendError(SC_FORBIDDEN);
+					return;
+				} catch (IOException e) {
+					throw new RuntimeException(e);
+				}
+			}
+		}
 		String queryid = Optional.ofNullable(request.getParameter("queryid")).get();
 		String prestoCoordinatorServer = yanagishimaConfig
 				.getPrestoCoordinatorServer(datasource);

@@ -3,6 +3,7 @@ package yanagishima.servlet;
 import me.geso.tinyorm.TinyORM;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import yanagishima.config.YanagishimaConfig;
 import yanagishima.row.Query;
 import yanagishima.util.AccessControlUtil;
 import yanagishima.util.HttpRequestUtil;
@@ -23,6 +24,8 @@ import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static javax.servlet.http.HttpServletResponse.SC_FORBIDDEN;
+
 @Singleton
 public class QueryHistoryServlet extends HttpServlet {
 
@@ -34,6 +37,13 @@ public class QueryHistoryServlet extends HttpServlet {
     @Inject
     private TinyORM db;
 
+    private YanagishimaConfig yanagishimaConfig;
+
+    @Inject
+    public QueryHistoryServlet(YanagishimaConfig yanagishimaConfig) {
+        this.yanagishimaConfig = yanagishimaConfig;
+    }
+
     @Override
     protected void doGet(HttpServletRequest request,
                          HttpServletResponse response) throws ServletException, IOException {
@@ -42,7 +52,16 @@ public class QueryHistoryServlet extends HttpServlet {
 
         try {
             String datasource = HttpRequestUtil.getParam(request, "datasource");
-            AccessControlUtil.checkDatasource(request, datasource);
+            if(yanagishimaConfig.isCheckDatasource()) {
+                if(!AccessControlUtil.validateDatasource(request, datasource)) {
+                    try {
+                        response.sendError(SC_FORBIDDEN);
+                        return;
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    }
+                }
+            }
             String[] queryids = Optional.ofNullable(request.getParameter("queryids")).get().split(",");
 
             String placeholder = Arrays.stream(queryids).map(r -> "?").collect(Collectors.joining(", "));

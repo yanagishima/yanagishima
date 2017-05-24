@@ -22,6 +22,8 @@ import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static javax.servlet.http.HttpServletResponse.SC_FORBIDDEN;
+
 @Singleton
 public class QueryServlet extends HttpServlet {
 
@@ -46,7 +48,16 @@ public class QueryServlet extends HttpServlet {
 			HttpServletResponse response) throws ServletException, IOException {
 
 		String datasource = HttpRequestUtil.getParam(request, "datasource");
-		AccessControlUtil.checkDatasource(request, datasource);
+		if(yanagishimaConfig.isCheckDatasource()) {
+			if(!AccessControlUtil.validateDatasource(request, datasource)) {
+				try {
+					response.sendError(SC_FORBIDDEN);
+					return;
+				} catch (IOException e) {
+					throw new RuntimeException(e);
+				}
+			}
+		}
 		String prestoCoordinatorServer = yanagishimaConfig
 				.getPrestoCoordinatorServer(datasource);
 		response.setContentType("application/json");

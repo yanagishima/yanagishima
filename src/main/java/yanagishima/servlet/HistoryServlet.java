@@ -26,6 +26,8 @@ import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
 
+import static javax.servlet.http.HttpServletResponse.SC_FORBIDDEN;
+
 @Singleton
 public class HistoryServlet extends HttpServlet {
 
@@ -54,7 +56,16 @@ public class HistoryServlet extends HttpServlet {
             Optional<String> queryidOptional = Optional.ofNullable(request.getParameter("queryid"));
             if(queryidOptional.isPresent()) {
                 String datasource = HttpRequestUtil.getParam(request, "datasource");
-                AccessControlUtil.checkDatasource(request, datasource);
+                if(yanagishimaConfig.isCheckDatasource()) {
+                    if(!AccessControlUtil.validateDatasource(request, datasource)) {
+                        try {
+                            response.sendError(SC_FORBIDDEN);
+                            return;
+                        } catch (IOException e) {
+                            throw new RuntimeException(e);
+                        }
+                    }
+                }
                 Optional<Query> queryOptional = db.single(Query.class).where("query_id=? and datasource=?", queryidOptional.get(), datasource).execute();
                 queryOptional.ifPresent(query -> {
                     HistoryUtil.createHistoryResult(retVal, yanagishimaConfig.getSelectLimit(), datasource, query.getQueryId(), query.getQueryString(), query.getFetchResultTimeString());

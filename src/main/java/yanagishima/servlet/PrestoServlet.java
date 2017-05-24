@@ -33,6 +33,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
 
+import static javax.servlet.http.HttpServletResponse.SC_FORBIDDEN;
+
 @Singleton
 public class PrestoServlet extends HttpServlet {
 
@@ -77,7 +79,16 @@ public class PrestoServlet extends HttpServlet {
 				String userName = request.getHeader(yanagishimaConfig.getAuditHttpHeaderName());
 				try {
 					String datasource = HttpRequestUtil.getParam(request, "datasource");
-					AccessControlUtil.checkDatasource(request, datasource);
+					if(yanagishimaConfig.isCheckDatasource()) {
+						if(!AccessControlUtil.validateDatasource(request, datasource)) {
+							try {
+								response.sendError(SC_FORBIDDEN);
+								return;
+							} catch (IOException e) {
+								throw new RuntimeException(e);
+							}
+						}
+					}
 					if(userName != null) {
 						LOGGER.info(String.format("%s executed %s in %s", userName, query, datasource));
 					}

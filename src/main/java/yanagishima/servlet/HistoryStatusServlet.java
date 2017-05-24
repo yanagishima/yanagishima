@@ -20,6 +20,8 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Optional;
 
+import static javax.servlet.http.HttpServletResponse.SC_FORBIDDEN;
+
 @Singleton
 public class HistoryStatusServlet extends HttpServlet {
 
@@ -30,6 +32,13 @@ public class HistoryStatusServlet extends HttpServlet {
 
     @Inject
     private TinyORM db;
+
+    private YanagishimaConfig yanagishimaConfig;
+
+    @Inject
+    public HistoryStatusServlet(YanagishimaConfig yanagishimaConfig) {
+        this.yanagishimaConfig = yanagishimaConfig;
+    }
 
     @Override
     protected void doGet(HttpServletRequest request,
@@ -42,7 +51,16 @@ public class HistoryStatusServlet extends HttpServlet {
             Optional<String> queryidOptional = Optional.ofNullable(request.getParameter("queryid"));
             if(queryidOptional.isPresent()) {
                 String datasource = HttpRequestUtil.getParam(request, "datasource");
-                AccessControlUtil.checkDatasource(request, datasource);
+                if(yanagishimaConfig.isCheckDatasource()) {
+                    if(!AccessControlUtil.validateDatasource(request, datasource)) {
+                        try {
+                            response.sendError(SC_FORBIDDEN);
+                            return;
+                        } catch (IOException e) {
+                            throw new RuntimeException(e);
+                        }
+                    }
+                }
                 Optional<Query> queryOptional = db.single(Query.class).where("query_id=? and datasource=?", queryidOptional.get(), datasource).execute();
                 queryOptional.ifPresent(query -> {
                     retVal.put("status", "ok");

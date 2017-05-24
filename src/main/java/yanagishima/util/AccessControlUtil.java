@@ -9,16 +9,16 @@ import yanagishima.util.Constants;
 
 public class AccessControlUtil {
 
-    public static void checkDatasource(HttpServletRequest request, String datasource) {
+    public static boolean validateDatasource(HttpServletRequest request, String datasource) {
 
         String header = HttpRequestUtil.getHeader(request, Constants.DATASOURCE_HEADER);
         if(header.equals("*")) {
-            return;
+            return true;
         }
         List<String> headerDatasources = Arrays.asList(header.split(","));
         if(!headerDatasources.contains(datasource)) {
-            throw new RuntimeException("Denied access to " + datasource);
+            return false;
         }
+        return true;
     }
-
 }
