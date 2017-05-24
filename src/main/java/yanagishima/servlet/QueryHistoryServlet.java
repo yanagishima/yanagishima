@@ -1,5 +1,6 @@
 package yanagishima.servlet;
 
+import io.airlift.units.DataSize;
 import me.geso.tinyorm.TinyORM;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -8,6 +9,7 @@ import yanagishima.row.Query;
 import yanagishima.util.AccessControlUtil;
 import yanagishima.util.HttpRequestUtil;
 import yanagishima.util.JsonUtil;
+import yanagishima.util.PathUtil;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
@@ -16,6 +18,8 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
@@ -83,9 +87,13 @@ public class QueryHistoryServlet extends HttpServlet {
                 long elapsedTimeMillis = ChronoUnit.MILLIS.between(submitTimeZdt, fetchResultTime);
                 row.add(elapsedTimeMillis);
 
+                long size = Files.size(PathUtil.getResultFilePath(datasource, queryid, false));
+                DataSize rawDataSize = new DataSize(size, DataSize.Unit.BYTE);
+                row.add(rawDataSize.convertToMostSuccinctDataSize().toString());
+
                 queryHistoryList.add(row);
             }
-            retVal.put("headers", Arrays.asList("Id", "Query", "Time"));
+            retVal.put("headers", Arrays.asList("Id", "Query", "Time", "rawDataSize"));
             retVal.put("results", queryHistoryList);
 
         } catch (Throwable e) {
