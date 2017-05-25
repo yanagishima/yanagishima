@@ -27,6 +27,8 @@ yanagishima is a Web UI for presto.
 * query parameters substitution
 * insert chart
 * format query
+* run in the background
+* convert from TSV to values query
 
 # Limitation
 
@@ -36,9 +38,9 @@ yanagishima is a Web UI for presto.
 
 # Quick Start
 ```
-wget https://bintray.com/artifact/download/wyukawa/generic/yanagishima-3.0.zip
-unzip yanagishima-3.0.zip
-cd yanagishima-3.0
+wget https://bintray.com/artifact/download/wyukawa/generic/yanagishima-4.0.zip
+unzip yanagishima-4.0.zip
+cd yanagishima-4.0
 vim conf/yanagishima.properties
 nohup bin/yanagishima-start.sh >y.log 2>&1 &
 ```
@@ -58,6 +60,8 @@ catalog.your-presto=hive # presto catalog name
 schema.your-presto=default # presto schema name
 select.limit=500 # if query result exceeds this limit, to show rest of result is skipped
 audit.http.header.name=some.auth.header # http header name for audit log
+to.values.query.limit=500 # limit to convert from tsv to values query
+check.datasource=false # authroization feature
 ```
 
 If you want to handle multiple presto clusters, you need to specify as follows.

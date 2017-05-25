@@ -3,10 +3,14 @@ require('./scss/bootstrap.scss');
 Sugar.extend();
 Vue.use(require('vue-clipboards'));
 Vue.use(require('vue-charts'));
+Vue.directive('focus', {
+	inserted: function (el) {
+		el.focus()
+	}
+});
 var favicon = new Favico({});
 
 jQuery(document).ready(function($) {
-	var runXHR;
 	$('body').tooltip({
 		selector: '[data-toggle="tooltip"]',
 		html: true
@@ -74,13 +78,17 @@ jQuery(document).ready(function($) {
 						icon: 'table',
 						name: 'Result',
 					},
+					{
+						id: 'treeview',
+						icon: 'sitemap',
+						name: 'Treeview',
+					},
 				],
 				theme: localStorage.getItem('theme') || 'chrome',
 				tab: '',
 				is_wide: Number(localStorage.getItem('wide')) || 0,
 				now: '',
 				timer: '',
-				run_timer: '',
 				is_modal: false,
 
 				// setting
@@ -88,12 +96,11 @@ jQuery(document).ready(function($) {
 				fixedHeader: Number(localStorage.getItem('fixedHeader')) || 0,
 				rememberQuery: Number(localStorage.getItem('rememberQuery')) || 0,
 				rememberDatasource: Number(localStorage.getItem('rememberDatasource')) || 0,
-				maxlines: [
+				minlines: [
+					2,
 					4,
 					8,
 					16,
-					32,
-					Infinity
 				],
 				explains: {
 					'explain': 'explain {0}',
@@ -132,10 +139,11 @@ jQuery(document).ready(function($) {
 				input_query: '',
 				query: '',
 				queryString: '',
+				queryString_collapse: false,
 				gotoline: 0,
 				errorline: -1,
 				focus: 1,
-				maxline: Number(localStorage.getItem('maxline')) || 16,
+				minline: Number(localStorage.getItem('minline')) || 4,
 				historySize: Number(localStorage.getItem('historySize')) || 25,
 
 				// qlist
@@ -153,13 +161,15 @@ jQuery(document).ready(function($) {
 				// queryid
 				queryid: '',
 				running_queryid: '',
-				running_progress: 0,
+				running_progress: -1,
 				running_time: '',
+				running_bgqueries: 0,
 
 				// error page
 				status_code: '200',
 
 				// share
+				short_url: '',
 				publish_id: '',
 
 				// chart
@@ -169,11 +179,13 @@ jQuery(document).ready(function($) {
 					1: {
 						name: 'Line Chart',
 						type: 'LineChart',
+						minRows: 2,
 						option: {}
 					},
 					2: {
 						name: 'Stacked Area Chart',
 						type: 'AreaChart',
+						minRows: 3,
 						option: {
 							isStacked: true
 						}
@@ -181,6 +193,7 @@ jQuery(document).ready(function($) {
 					3: {
 						name: 'Full-Stacked Area Chart',
 						type: 'AreaChart',
+						minRows: 3,
 						option: {
 							isStacked: 'relative',
 						}
@@ -188,6 +201,7 @@ jQuery(document).ready(function($) {
 					4: {
 						name: 'Column Chart',
 						type: 'ColumnChart',
+						minRows: 2,
 						option: {
 							isStacked: false
 						}
@@ -195,6 +209,7 @@ jQuery(document).ready(function($) {
 					5: {
 						name: 'Stacked Column Chart',
 						type: 'ColumnChart',
+						minRows: 3,
 						option: {
 							isStacked: true
 						}
@@ -245,7 +260,7 @@ jQuery(document).ready(function($) {
 				// demo
 				demo: {
 					variables: 'SELECT ${x} FROM ${y} LIMIT ${z}',
-					chart: 'SELECT * FROM (VALUES(20160401,0),(20160402,10),(20160403,23),(20160404,17),(20160405,18),(20160406,9),(20160407,11)) AS t (dt,pageview)',
+					chart: 'SELECT * FROM (VALUES(2013,1000,400),(2014,1170,460),(2015,660,1120),(2016,1030,540),(2017,1220,890)) AS t (year,A,B)',
 				},
 			}
 		},
@@ -273,6 +288,26 @@ jQuery(document).ready(function($) {
 				}).trigger('hashchange');
 			}
 
+			// Toastr config
+			toastr.options = {
+				escapeHtml: false,
+				closeButton: true,
+				debug: false,
+				newestOnTop: false,
+				progressBar: false,
+				positionClass: "toast-bottom-right",
+				preventDuplicates: false,
+				onclick: null,
+				showDuration: 300,
+				hideDuration: 1000,
+				timeOut: 30000,
+				extendedTimeOut: 1000,
+				showEasing: "swing",
+				hideEasing: "linear",
+				showMethod: "fadeIn",
+				hideMethod: "fadeOut"
+			};
+
 			// Ajax setup and preflight
 			if (self.domain) {
 				$.ajaxSetup({
@@ -295,16 +330,16 @@ jQuery(document).ready(function($) {
 			}).fail(function(xhr, status, error) {});
 
 			// Load query if rememberQuery == true
-			if (self.rememberQuery) {
-				self.input_query = localStorage.getItem('input_query') || '';
-			}
+			// if (self.rememberQuery) {
+			// 	self.input_query = localStorage.getItem('input_query') || '';
+			// }
 
 			// Start
 			$('#page').removeClass('unload');
 
 			// iframe Modal
 			$('body').magnificPopup({
-				delegate: '.link_detail',
+				delegate: '.link-iframe',
 				type: 'iframe'
 			});
 
@@ -323,7 +358,6 @@ jQuery(document).ready(function($) {
 			}).on('hidden.bs.modal', function(e) {});
 
 			$(document).on('show.bs.modal', '#bookmark', function(e) {
-				self.getBookmark();
 				$('button').blur();
 			}).on('hide.bs.modal', function(e) {});
 
@@ -331,7 +365,7 @@ jQuery(document).ready(function($) {
 			$(window).keydown(function(e) {
 				if (e.ctrlKey) {
 					if (e.keyCode === 84) { // T
-						$('#treeview').modal('show');
+						self.tab = 'treeview';
 						e.preventDefault();
 					}
 				}
@@ -344,6 +378,20 @@ jQuery(document).ready(function($) {
 			$(window).on('beforeunload', function(event) {
 				if (self.loading.result) {
 					return confirm('Do you want to do it?');
+				}
+			});
+
+			// hidden command
+			var inputs = [];
+			var configs = {
+				'konami': [38,38,40,40,37,39,37,39,66,65],
+				'traffic': [17,17,17,17,17],
+			};
+			$(window).keyup(function(e){
+				inputs.push(e.keyCode);
+				if (inputs.toString().indexOf(configs.konami) >= 0) {
+					inputs = [];
+					$('body').toggleClass('konami');
 				}
 			});
 		},
@@ -365,11 +413,26 @@ jQuery(document).ready(function($) {
 					});
 				}
 			},
+			sortedHits: function() {
+				var self = this;
+				return  self.traffic.hits.sortBy(function(n) {
+					return n[3];
+				}, true);
+			},
 			is_error: function() {
 				return $('body').attr('id') === 'error';
 			},
 			is_share: function() {
 				return $('body').attr('id') === 'share';
+			},
+			exist_bookmark: function() {
+				var self = this;
+				var query = self.input_query;
+				var queries = [];
+				self.response.bookmark.map(function(n) {
+					queries.push(n.query);
+				});
+				return queries.includes(query);
 			},
 			orderdQlist: function() {
 				var self = this;
@@ -548,11 +611,13 @@ jQuery(document).ready(function($) {
 			},
 			init: function(val) {
 				var self = this;
-				Object.forEach(self.response, function(val, key) {
+				Object.map(self.response, function(val, key) {
 					self.response[key] = Object.isArray(val) ? [] : '';
 				});
+				$('[data-toggle="tooltip"]').tooltip('hide');
 				self.query = '';
 				self.queryString = '';
+				self.queryString_collapse = false;
 				self.catalog = '';
 				self.schema = '';
 				self.table = '';
@@ -568,8 +633,10 @@ jQuery(document).ready(function($) {
 				self.table_q_in = '';
 				self.table_q = '';
 				self.running_queryid = '';
+				self.chart = 0;
 				self.setTitle();
-				self.getBookmarkItems();
+				self.getHistory();
+				self.getBookmark();
 				self.getQlist();
 				$(document).scrollTop(0);
 			},
@@ -602,6 +669,9 @@ jQuery(document).ready(function($) {
 						break;
 					case 'result':
 						self.loadResult()
+						break;
+					case 'treeview':
+						self.getTree();
 						break;
 				}
 			},
@@ -646,20 +716,24 @@ jQuery(document).ready(function($) {
 				}
 				self.tab = 'result';
 			},
-			runQuery: function(query) {
+			runQuery: function(query, is_bg) {
 				var self = this;
 				var query = query || self.query;
+				var is_bg = is_bg || false;
 				var is_checking = true;
+				var run_timer;
 
-				if (self.loading.result) {
-					return false;
+				if (!is_bg) {
+					if (self.loading.result) {
+						return false;
+					}
 				}
 
 				// variables expansion
 				if (self.variables.length) {
 					var error_variables = [];
 					self.variables.map(function(n) {
-						var variable = n[0];
+						var variable = new RegExp(RegExp.escape(n[0]), 'g');
 						var variable_id = n[1];
 						var value = n[2];
 						if (value.length) {
@@ -674,40 +748,73 @@ jQuery(document).ready(function($) {
 					}
 				}
 
-				self.loading.result = true;
-				self.error.result = false;
-				self.queryid = '';
-				favicon.badge(1);
-				runXHR = $.ajax({
-					type: 'POST',
-					url: self.domain + self.apis.prestoAsync.format({
-						datasource: self.datasource
-					}),
-					data: {
-						query: query
-					}
-				}).done(function(data) {
-					var queryid = data.queryid;
-					if (queryid) {
-						self.running_queryid = queryid;
-						self.running_progress = 0;
-						self.running_time = '';
-						clearInterval(self.run_timer);
-						if (self.loading.result) {
-							self.run_timer = setInterval(function() {
-								getResult(queryid);
-							}, 500);
+				if (!is_bg) {
+					self.loading.result = true;
+					self.error.result = false;
+					self.queryid = '';
+
+					$.ajax({
+						type: 'POST',
+						url: self.domain + self.apis.prestoAsync.format({
+							datasource: self.datasource
+						}),
+						data: {
+							query: query
 						}
-					} else {
+					}).done(function(data) {
+						var queryid = data.queryid;
+						if (queryid) {
+							self.running_queryid = queryid;
+							self.running_progress = -1;
+							self.running_time = '';
+							clearInterval(run_timer);
+							if (self.loading.result) {
+								run_timer = setInterval(function() {
+									getResult(queryid);
+								}, 500);
+							}
+						} else {
+							self.loading.result = false;
+							self.error.result = data.error;
+						}
+					}).fail(function(xhr, status, error) {
 						self.loading.result = false;
-						self.error.result = data.error;
-						favicon.badge(0);
-					}
-				}).fail(function(xhr, status, error) {
-					self.loading.result = false;
-					self.error.result = error || true;
-					favicon.badge(0);
-				});
+						self.error.result = error || true;
+					});
+					self.tab = 'result';
+				} else {
+					self.running_bgqueries++;
+					toastr.info(query.compact().truncate(64), "Run in the background", {
+						timeOut: '1000'
+					});
+					$.ajax({
+						type: 'POST',
+						url: self.domain + self.apis.presto.format({
+							datasource: self.datasource
+						}),
+						data: {
+							store: true,
+							query: query
+						}
+					}).done(function(data) {
+						var queryid = data.queryid;
+						if (!data.error) {
+							toastr.success(query.compact().truncate(64), queryid, {
+								onclick: function() {
+									self.queryid = data.queryid;
+									self.tab = 'result';
+									self.loadResult();
+								}
+							});
+							self.addHistoryItem(queryid);
+						} else {
+							toastr.error(data.error, "Error");
+						}
+						self.running_bgqueries--;
+					}).fail(function(xhr, status, error) {
+						self.running_bgqueries--;
+					});
+				}
 
 				function getResult(queryid) {
 					$.ajax({
@@ -719,7 +826,7 @@ jQuery(document).ready(function($) {
 					}).done(function(status) {
 						var state = status.state;
 						if (state === 'FINISHED' || state === 'FAILED') {
-							clearInterval(self.run_timer);
+							clearInterval(run_timer);
 							self.running_queryid = '';
 							self.running_progress = 0;
 							self.running_time = '';
@@ -728,13 +835,13 @@ jQuery(document).ready(function($) {
 								var wait = 10;
 								var step = 1000; //[ms]
 								var count = wait * step;
-								self.run_timer = setInterval(function() {
+								run_timer = setInterval(function() {
 									if (is_checking) {
 										if (count -= step) {
 											wgetResult(queryid);
 										}
 									} else {
-										clearInterval(self.run_timer);
+										clearInterval(run_timer);
 									}
 								}, step);
 							} else if (state === 'FAILED') {
@@ -751,7 +858,6 @@ jQuery(document).ready(function($) {
 						}
 					});
 				}
-
 				function wgetResult(queryid) {
 					$.ajax({
 						type: 'GET',
@@ -770,7 +876,6 @@ jQuery(document).ready(function($) {
 						favicon.badge(0);
 					});
 				}
-				self.tab = 'result';
 			},
 			loadQuery: function(queryid) {
 				var self = this;
@@ -780,7 +885,7 @@ jQuery(document).ready(function($) {
 				}
 				self.loading.result = true;
 				self.error.result = false;
-				runXHR = $.ajax({
+				$.ajax({
 					type: 'GET',
 					url: self.domain + self.apis.history.format({
 						datasource: self.datasource,
@@ -796,6 +901,9 @@ jQuery(document).ready(function($) {
 					self.response.result = data;
 					self.drawChart(data);
 					self.queryString = data.queryString;
+					self.input_query = data.queryString.remove(/^explain( \(type distributed\)| analyze|) /i);
+
+					// self.input_query = data.queryString;
 					self.queryid = queryid;
 					self.loading.result = false;
 					favicon.badge(0);
@@ -808,7 +916,6 @@ jQuery(document).ready(function($) {
 			},
 			abortQuery: function(queryid) {
 				var self = this;
-				runXHR.abort();
 				self.killQuery(queryid);
 				self.loadQuery('abort');
 				self.tab = 'qlist';
@@ -841,17 +948,15 @@ jQuery(document).ready(function($) {
 			},
 			killQuery: function(queryid) {
 				var self = this;
-				if (confirm('Do you want to do it?')) {
-					$.ajax({
-						type: 'GET',
-						url: self.domain + self.apis.kill.format({
-							datasource: self.datasource,
-							queryid: queryid
-						})
-					}).done(function(data) {
-						self.getQlist();
-					}).fail(function(xhr, status, error) {});
-				}
+				$.ajax({
+					type: 'GET',
+					url: self.domain + self.apis.kill.format({
+						datasource: self.datasource,
+						queryid: queryid
+					})
+				}).done(function(data) {
+					self.getQlist();
+				}).fail(function(xhr, status, error) {});
 			},
 			formatQuery: function(queryid) {
 				var self = this;
@@ -873,9 +978,28 @@ jQuery(document).ready(function($) {
 					}).fail(function(xhr, status, error) {});
 				}
 			},
+			toValuesQuery: function(values) {
+				var self = this;
+				if (values) {
+					$.ajax({
+						type: 'POST',
+						url: self.domain + self.apis.toValuesQuery,
+						data: {
+							csv: values
+						}
+					}).done(function(data) {
+						if (data.error) {
+							alert(data.error);
+						} else {
+							self.input_query = data.query;
+						}
+					}).fail(function(xhr, status, error) {});
+				}
+			},
 			getBookmark: function() {
 				var self = this;
 				self.getBookmarkItems();
+
 				var bookmarks = self.bookmarks;
 				if (!bookmarks.length) {
 					return false;
@@ -891,9 +1015,11 @@ jQuery(document).ready(function($) {
 					},
 					timeout: 300000,
 				}).done(function(data) {
-					self.response.bookmark = data.bookmarkList.sortBy(function(n) {
-						return n.bookmark_id;
-					}, true);
+					if (data.bookmarkList) {
+						self.response.bookmark = data.bookmarkList.sortBy(function(n) {
+							return n.bookmark_id;
+						}, true);
+					}
 					self.loading.bookmark = false;
 				}).fail(function(xhr, status, error) {
 					self.loading.bookmark = false;
@@ -915,9 +1041,11 @@ jQuery(document).ready(function($) {
 					}),
 					timeout: 300000,
 				}).done(function(data) {
-					self.response.history = data.results.sortBy(function(n) {
-						return n[0];
-					}, true);
+					if (data.results) {
+						self.response.history = data.results.sortBy(function(n) {
+							return n[0];
+						}, true);
+					}
 					self.loading.history = false;
 				}).fail(function(xhr, status, error) {
 					self.loading.history = false;
@@ -1101,7 +1229,7 @@ jQuery(document).ready(function($) {
 			},
 			addBookmarkItem: function() {
 				var self = this;
-				var query = self.variables.length ? self.input_query : self.queryString;
+				var query = self.input_query;
 				$.ajax({
 					type: 'POSt',
 					url: self.domain + self.apis.bookmark.format({
@@ -1116,7 +1244,7 @@ jQuery(document).ready(function($) {
 					self.setItem('bookmarks_' + self.datasource, bookmark_id);
 					self.bookmark_addId = bookmark_id;
 					self.getBookmarkItems();
-					// $('#bookmark').modal('show');
+					$('#bookmark').modal('show');
 				}).fail(function(xhr, status, error) {
 					console.log('error');
 				});
@@ -1125,6 +1253,13 @@ jQuery(document).ready(function($) {
 				var self = this;
 				self.delItem('bookmarks_' + self.datasource, String(bookmark_id));
 				self.getBookmarkItems();
+			},
+			delBookmarkAll: function() {
+				var self = this;
+				if (confirm('Do you want to do it?')) {
+					localStorage.removeItem('bookmarks_' + self.datasource);
+					self.getBookmark();
+				}
 			},
 			getHistoryItems: function(max) {
 				var self = this;
@@ -1229,8 +1364,13 @@ jQuery(document).ready(function($) {
 				self.datasource = self.datasource || self.rememberDatasource ? (localStorage.getItem('datasource') || self.datasources[0]) : self.datasources[0];
 				self.tab = self.tab || self.tabs[0].id;
 			},
-			datasource: function(val) {
+			datasource: function(val, oldVal) {
 				var self = this;
+				if (oldVal !== '') {
+					self.queryid = '';
+					self.input_query = '';
+					self.tab = 'qlist';
+				}
 				self.init();
 				self.runTab();
 				localStorage.setItem('datasource', val);
@@ -1272,9 +1412,9 @@ jQuery(document).ready(function($) {
 				self.autoQlist(val);
 				localStorage.setItem('autoQlist', Number(val));
 			},
-			maxline: function(val) {
+			minline: function(val) {
 				var self = this;
-				localStorage.setItem('maxline', val);
+				localStorage.setItem('minline', val);
 			},
 			is_wide: function(val) {
 				var self = this;
@@ -1316,8 +1456,17 @@ jQuery(document).ready(function($) {
 				var self = this;
 				self.bookmark_addId = false;
 			},
+			bookmarks: function(vals, oldVals) {
+				var self = this;
+				if (vals.length > oldVals.length) {
+					self.getBookmark();
+				}
+			},
 			chart: function(val) {
 				var self = this;
+			},
+			running_bgqueries: function(val) {
+				favicon.badge(val);
 			},
 		}
 	});

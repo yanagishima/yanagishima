@@ -1,5 +1,5 @@
 yanagishima = {
-	version: '3.0',
+	version: '4.0',
 	sitename: 'yanagishima',
 	domain: '',
 	apis: {
@@ -20,7 +20,8 @@ yanagishima = {
 		detail: '/queryDetail?datasource={datasource}&queryid={queryid}',
 		shareHistory: '/share/shareHistory?publish_id={publish_id}',
 		shareDownload: '/share/download?publish_id={publish_id}',
-		shareCsvDownload: '/share/csvdownload?publish_id={publish_id}'
+		shareCsvDownload: '/share/csvdownload?publish_id={publish_id}',
+		toValuesQuery: '/toValuesQuery'
 	},
 	links: {
 		about_this: 'https://github.com/wyukawa/yanagishima/blob/master/README.md',

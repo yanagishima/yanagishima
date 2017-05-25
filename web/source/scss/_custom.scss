@@ -3,7 +3,7 @@
 // Copy variables from `_variables.scss` to this file to override default values
 // without modifying source files.
 
-$colors: $brand-primary, #212121, #880E4F, #827717, #1B5E20;
+$colors: $brand-primary, #1B5E20, #880E4F, #827717, #212121;
 
 @mixin ellipsis {
 	overflow: hidden;
@@ -26,7 +26,10 @@ $colors: $brand-primary, #212121, #880E4F, #827717, #1B5E20;
 		}
 	}
 	.datasource_#{$key}-color {
-		color: $color;
+		color: $color !important;
+	}
+	.datasource_#{$key}-bgcolor {
+		background-color: lighten($color, 10%) !important;
 	}
 }
 #logo {
@@ -48,10 +51,14 @@ $colors: $brand-primary, #212121, #880E4F, #827717, #1B5E20;
 }
 #header {
 	#header-setting {
-		padding: .5rem;
+		padding: 1rem;
 		background: lighten($black, 10%);
-		border-bottom: 1px solid #fff;
+		border-bottom: 1px solid $gray-light;
 		color: $white;
+		.card {
+			background: lighten($black, 20%);
+			border: lighten($black, 10%);
+		}
 		.btn {
 			min-width: 1.6rem;
 			background: rgba($white, 0.5);
@@ -68,12 +75,6 @@ $colors: $brand-primary, #212121, #880E4F, #827717, #1B5E20;
 	}
 	#header-main {
 		color: $white;
-		#header-upper {
-			a {
-				color: $white;
-				text-decoration: none;
-			}
-		}
 	}
 	#header-sub {
 		background: $gray-lightest;
@@ -112,14 +113,24 @@ $colors: $brand-primary, #212121, #880E4F, #827717, #1B5E20;
 		}
 	}
 	#filter_schema {
-		width: 2.5em;
+		width: 8em;
 		border: 0;
 		padding: 0;
 		background: transparent;
 		outline: 0;
 		color: $gray;
 		&:focus {
-			width: 5rem;
+		}
+	}
+	#columns {
+		border: $card-border-width solid $card-border-color;
+		border-radius: $card-border-radius;
+		th {
+			border: 0;
+		}
+		th,
+		td {
+			padding: $card-spacer-y $card-spacer-x;
 		}
 	}
 }
@@ -172,6 +183,12 @@ $colors: $brand-primary, #212121, #880E4F, #827717, #1B5E20;
 		td {
 			@include ellipsis;
 			vertical-align: middle;
+			&.overflow-visible {
+				overflow: visible;
+			}
+			&.vertical-tp {
+				
+			}
 		}
 	}
 	thead {
@@ -248,4 +265,10 @@ a:hover .btn.clip {
 }
 .ace-font {
 	font: 12px/normal 'Monaco', 'Menlo', 'Ubuntu Mono', 'Consolas', 'source-code-pro', monospace;
+}
+body.konami {
+	transform: scale(-1, 1);
+}
+.mfp-iframe-scaler iframe {
+	background: #fff;
 }

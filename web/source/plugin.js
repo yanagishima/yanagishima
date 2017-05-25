@@ -1,7 +1,7 @@
 // Vue component for Ace Editor
 Vue.component('ace', {
 	template: '<div :id="aceId" style="width: 100%; height: 100%;"></div>',
-	props: ['code', 'lang', 'theme', 'readonly', 'gotoline', 'errorline', 'focus', 'maxline', 'css_class'],
+	props: ['code', 'lang', 'theme', 'readonly', 'gotoline', 'errorline', 'focus', 'minline', 'maxline', 'css_class'],
 	data: function() {
 		return {
 			ace: Object,
@@ -38,6 +38,11 @@ Vue.component('ace', {
 		'maxline': function(value, oldValue) {
 			this.ace.setOptions({
 				maxLines: value,
+			});
+		},
+		'minline': function(value, oldValue) {
+			this.ace.setOptions({
+				minLines: value,
 			});
 		},
 		'theme': function(value, oldValue) {
@@ -104,12 +109,12 @@ Vue.component('ace', {
 			self.ace.setHighlightActiveLine(false);
 			self.ace.setOptions({
 				minLines: 1,
-				maxLines: 8
+				maxLines: self.maxline || 8
 			});
 			self.ace.renderer.$cursorLayer.element.style.display = "none"
 		} else {
 			self.ace.setOptions({
-				minLines: 4,
+				minLines: self.minline || 4,
 				maxLines: self.maxline || 16
 			});
 			self.focus && self.ace.focus();

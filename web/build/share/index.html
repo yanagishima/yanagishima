@@ -65,9 +65,7 @@
 		<!-- /container --></div>
 	<!-- /header-sub --></div>
 </header>
-
 <div id="content">
-
 	<div class="container">
 		<template v-if="loading.share">
 			<div class="alert alert-info" role="alert">
@@ -77,7 +75,13 @@
 		<template v-else>
 			<template v-if="!Object.isEmpty(response.share)">
 				<div class="editor p-2 mb-3">
-					<ace :code="response.share.queryString" readonly="true" css_class="bg-transparent"></ace>
+					<ace :code="response.share.queryString" readonly="true" :maxline="queryString_collapse ? 4 : Infinity" css_class="bg-transparent"></ace>
+					<div class="text-right" v-if="response.share.queryString.split('\n').length > 4">
+						<a href="#" @click.prevent="queryString_collapse = !queryString_collapse">
+							Show <template v-if="queryString_collapse">More</template>
+							<template v-else>Less</template>
+						</a>
+					</div>
 				</div>
 				<div class="mb-3" v-if="enable_chart && chart">
 					<div class="card">
@@ -123,15 +127,12 @@
 		</template>
 	<!-- /container --></div>
 <!-- /content --></div>
-
 <footer id="footer" class="py-3">
 	<address class="text-center">
 		<span><strong>&copy; yanagishima</strong> by wyukawa and okazou</span>
 	</address>
 </footer>
-
 <!-- /page --></div>
-
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tether/1.4.0/js/tether.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.0.0-alpha.6/js/bootstrap.min.js"></script>
