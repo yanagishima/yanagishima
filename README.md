@@ -2,7 +2,7 @@
 
 yanagishima is a Web UI for presto.
 
-![preview](v3.gif)
+![preview](v4.gif)
 
 # Features
 * easy to install
