@@ -144,7 +144,7 @@
 							<!-- /btn-group --></div>
 							<button class="btn btn-primary ml-3" @click="$('#bookmark').modal('show')" data-toggle="tooltip" data-animation="false" title="Open Bookmarks" :disabled="!bookmarks.length"><i class="fa fa-fw fa-star mr-1"></i>{{bookmarks.length}}</button>
 							<div class="btn-group ml-3">
-								<button type="button" class="btn btn-primary px-4" :disabled="loading.result || !input_query.length" @click="runQuery(input_query)" data-toggle="tooltip" data-animation="false" title="Ctrl + Enter"><i class="fa fa-fw fa-play mr-1"></i><strong>Run</strong></button>
+								<button type="button" class="btn btn-primary px-4" :disabled="loading.result || !input_query.length" @click="runQuery(input_query)"><i class="fa fa-fw fa-play mr-1"></i><strong>Run</strong></button>
 								<button type="button" class="btn btn-primary" data-toggle="dropdown" :disabled="!input_query.length"><i class="fa fa-ellipsis-v"></i></button>
 								<div class="dropdown-menu dropdown-menu-right">
 									<a class="dropdown-item" href="#" v-for="(val, key) in explains" @click.prevent="runQuery(val.format(input_query))">{{key | humanize}}</a>
@@ -249,7 +249,7 @@
 						<div class="btn-group">
 							<button type="button" class="btn btn-secondary dropdown-toggle" data-toggle="dropdown"><small class="text-muted mr-1">Catalog</small><strong>{{catalog}}</strong></button>
 							<div class="dropdown-menu" v-if="catalogs.length">
-								<a class="dropdown-item" href="#" v-for="item in catalogs" @click.prevent="catalog = item" :class="{active: item === catalog}">{{item}}</a>
+								<a class="dropdown-item" href="#" v-for="item in catalogs" @click.prevent="catalog = item, schema = '', table = ''" :class="{active: item === catalog}">{{item}}</a>
 							<!-- /dropdown-menu --></div>
 						<!-- /btn-group --></div>
 					<!-- /col --></div>

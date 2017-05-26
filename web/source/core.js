@@ -1395,6 +1395,7 @@ jQuery(document).ready(function($) {
 			catalog: function(val) {
 				var self = this;
 				self.getTree();
+				self.is_searchTable && self.searchTable();
 				localStorage.setItem('catalog', val);
 			},
 			schema: function(val) {
