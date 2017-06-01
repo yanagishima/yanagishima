@@ -1,9 +1,6 @@
 package yanagishima.config;
 
-import java.util.Arrays;
-import java.util.List;
-import java.util.Optional;
-import java.util.Properties;
+import java.util.*;
 
 public class YanagishimaConfig {
 
@@ -64,4 +61,14 @@ public class YanagishimaConfig {
 	public boolean isCheckDatasource() {
 		return Boolean.parseBoolean(Optional.ofNullable(properties.getProperty("check.datasource")).orElse("false"));
 	}
+
+	public List<String> getInvisibleSchemas(String datasource, String catalog) {
+		String invisibleSchemas = properties.getProperty("invisible.schema." + datasource + "." + catalog);
+		if(invisibleSchemas == null) {
+			return Collections.emptyList();
+		} else {
+			return Arrays.asList(invisibleSchemas.split(","));
+		}
+	}
+	
 }

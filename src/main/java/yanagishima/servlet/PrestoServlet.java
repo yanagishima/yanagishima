@@ -32,6 +32,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import static javax.servlet.http.HttpServletResponse.SC_FORBIDDEN;
 
@@ -98,7 +99,14 @@ public class PrestoServlet extends HttpServlet {
 					retVal.put("queryid", queryid);
 					if (prestoQueryResult.getUpdateType() == null) {
 						retVal.put("headers", prestoQueryResult.getColumns());
-						retVal.put("results", prestoQueryResult.getRecords());
+
+						if(query.toLowerCase().startsWith("show schemas from")) {
+							String catalog = query.substring("show schemas from".length()).trim();
+							List<String> invisibleSchemas = yanagishimaConfig.getInvisibleSchemas(datasource, catalog);
+							retVal.put("results", prestoQueryResult.getRecords().stream().filter(list -> !invisibleSchemas.contains(list.get(0))).collect(Collectors.toList()));
+						} else {
+							retVal.put("results", prestoQueryResult.getRecords());
+						}
 						retVal.put("lineNumber", Integer.toString(prestoQueryResult.getLineNumber()));
 						retVal.put("rawDataSize", prestoQueryResult.getRawDataSize().toString());
 						Optional<String> warningMessageOptinal = Optional.ofNullable(prestoQueryResult.getWarningMessage());
