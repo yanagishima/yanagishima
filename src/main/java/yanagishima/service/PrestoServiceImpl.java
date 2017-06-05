@@ -81,7 +81,8 @@ public class PrestoServiceImpl implements PrestoService {
         @Override
         public void run() {
             try {
-                getPrestoQueryResult(this.datasource, this.query, this.client, true);
+                int limit = yanagishimaConfig.getSelectLimit();
+                getPrestoQueryResult(this.datasource, this.query, this.client, true, limit);
             } catch (Throwable e) {
                 LOGGER.error(e.getMessage(), e);
             } finally {
@@ -93,9 +94,9 @@ public class PrestoServiceImpl implements PrestoService {
     }
 
     @Override
-    public PrestoQueryResult doQuery(String datasource, String query, String userName, boolean storeFlag) throws QueryErrorException {
+    public PrestoQueryResult doQuery(String datasource, String query, String userName, boolean storeFlag, int limit) throws QueryErrorException {
         try (StatementClient client = getStatementClient(datasource, query, userName)) {
-            return getPrestoQueryResult(datasource, query, client, storeFlag);
+            return getPrestoQueryResult(datasource, query, client, storeFlag, limit);
         }
     }
 
@@ -107,7 +108,7 @@ public class PrestoServiceImpl implements PrestoService {
         }
     }
 
-    private PrestoQueryResult getPrestoQueryResult(String datasource, String query, StatementClient client, boolean storeFlag) throws QueryErrorException {
+    private PrestoQueryResult getPrestoQueryResult(String datasource, String query, StatementClient client, boolean storeFlag, int limit) throws QueryErrorException {
         long start = System.currentTimeMillis();
         while (client.isValid() && (client.current().getData() == null)) {
             client.advance();
@@ -130,7 +131,7 @@ public class PrestoServiceImpl implements PrestoService {
                 List<String> columns = Lists.transform(results.getColumns(), Column::getName);
                 prestoQueryResult.setColumns(columns);
                 List<List<String>> rowDataList = new ArrayList<List<String>>();
-                processData(client, datasource, queryId, query, prestoQueryResult, columns, rowDataList, start);
+                processData(client, datasource, queryId, query, prestoQueryResult, columns, rowDataList, start, limit);
                 prestoQueryResult.setRecords(rowDataList);
                 if(storeFlag) {
                     insertQueryHistory(datasource, query, queryId);
@@ -179,8 +180,7 @@ public class PrestoServiceImpl implements PrestoService {
                 .execute();
     }
 
-    private void processData(StatementClient client, String datasource, String queryId, String query, PrestoQueryResult prestoQueryResult, List<String> columns, List<List<String>> rowDataList, long start) {
-        int limit = yanagishimaConfig.getSelectLimit();
+    private void processData(StatementClient client, String datasource, String queryId, String query, PrestoQueryResult prestoQueryResult, List<String> columns, List<List<String>> rowDataList, long start, int limit) {
         Path dst = getResultFilePath(datasource, queryId, false);
         int lineNumber = 0;
         int maxResultFileByteSize = yanagishimaConfig.getMaxResultFileByteSize();

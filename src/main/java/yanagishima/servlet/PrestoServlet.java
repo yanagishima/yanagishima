@@ -94,7 +94,8 @@ public class PrestoServlet extends HttpServlet {
 						LOGGER.info(String.format("%s executed %s in %s", userName, query, datasource));
 					}
 					boolean storeFlag = Boolean.parseBoolean(Optional.ofNullable(request.getParameter("store")).orElse("false"));
-					PrestoQueryResult prestoQueryResult = prestoService.doQuery(datasource, query, userName, storeFlag);
+					int limit = yanagishimaConfig.getSelectLimit();
+					PrestoQueryResult prestoQueryResult = prestoService.doQuery(datasource, query, userName, storeFlag, limit);
 					String queryid = prestoQueryResult.getQueryId();
 					retVal.put("queryid", queryid);
 					if (prestoQueryResult.getUpdateType() == null) {
