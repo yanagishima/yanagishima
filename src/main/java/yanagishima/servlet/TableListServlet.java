@@ -63,7 +63,7 @@ public class TableListServlet extends HttpServlet {
             String userName = request.getHeader(yanagishimaConfig.getAuditHttpHeaderName());
             List<String> invisibleSchemas = yanagishimaConfig.getInvisibleSchemas(datasource, catalog);
             String notin = "('" + String.join("','", invisibleSchemas) + "')";
-            String query = String.format("SELECT table_catalog || '.' || table_schema || '.' || table_name FROM %s.information_schema.tables WHERE table_schema NOT IN %s", catalog, notin);
+            String query = String.format("/* yanagishima */SELECT table_catalog || '.' || table_schema || '.' || table_name FROM %s.information_schema.tables WHERE table_schema NOT IN %s", catalog, notin);
             List<String> tables = prestoService.doQuery(datasource, query, userName, false, Integer.MAX_VALUE).getRecords().stream().map(list -> list.get(0)).collect(Collectors.toList());
 
             retVal.put("tableList", tables);
