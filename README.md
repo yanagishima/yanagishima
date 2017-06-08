@@ -60,7 +60,7 @@ catalog.your-presto=hive # presto catalog name
 schema.your-presto=default # presto schema name
 select.limit=500 # if query result exceeds this limit, to show rest of result is skipped
 audit.http.header.name=some.auth.header # http header name for audit log
-to.values.query.limit=500 # limit to convert from tsv to values query
+to.values.query.limit=500 # limit to convert from csv to values query
 check.datasource=false # authroization feature
 ```
 
