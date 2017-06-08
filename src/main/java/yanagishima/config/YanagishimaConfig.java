@@ -70,5 +70,16 @@ public class YanagishimaConfig {
 			return Arrays.asList(invisibleSchemas.split(","));
 		}
 	}
-	
+
+	public Optional<String> getFluentdTag() {
+		return Optional.ofNullable(properties.getProperty("fluentd.tag"));
+	}
+
+	public Optional<String> getFluentdHost() {
+		return Optional.ofNullable(properties.getProperty("fluentd.host"));
+	}
+
+	public Optional<String> getFluentdPort() {
+		return Optional.ofNullable(properties.getProperty("fluentd.port"));
+	}
 }

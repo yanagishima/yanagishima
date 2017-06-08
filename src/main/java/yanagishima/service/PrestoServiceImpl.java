@@ -9,6 +9,7 @@ import io.airlift.units.DataSize;
 import io.airlift.units.Duration;
 import me.geso.tinyorm.TinyORM;
 import org.codehaus.jackson.map.ObjectMapper;
+import org.komamitsu.fluency.Fluency;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import yanagishima.config.YanagishimaConfig;
@@ -63,7 +64,7 @@ public class PrestoServiceImpl implements PrestoService {
     @Override
     public String doQueryAsync(String datasource, String query, String userName) {
         StatementClient client = getStatementClient(datasource, query, userName);
-        executorService.submit(new Task(datasource, query, client));
+        executorService.submit(new Task(datasource, query, client, userName));
         return client.current().getId();
     }
 
@@ -71,18 +72,20 @@ public class PrestoServiceImpl implements PrestoService {
         private String datasource;
         private String query;
         private StatementClient client;
+        private String userName;
 
-        public Task(String datasource, String query, StatementClient client) {
+        public Task(String datasource, String query, StatementClient client, String userName) {
             this.datasource = datasource;
             this.query = query;
             this.client = client;
+            this.userName = userName;
         }
 
         @Override
         public void run() {
             try {
                 int limit = yanagishimaConfig.getSelectLimit();
-                getPrestoQueryResult(this.datasource, this.query, this.client, true, limit);
+                getPrestoQueryResult(this.datasource, this.query, this.client, true, limit, this.userName);
             } catch (Throwable e) {
                 LOGGER.error(e.getMessage(), e);
             } finally {
@@ -96,7 +99,7 @@ public class PrestoServiceImpl implements PrestoService {
     @Override
     public PrestoQueryResult doQuery(String datasource, String query, String userName, boolean storeFlag, int limit) throws QueryErrorException {
         try (StatementClient client = getStatementClient(datasource, query, userName)) {
-            return getPrestoQueryResult(datasource, query, client, storeFlag, limit);
+            return getPrestoQueryResult(datasource, query, client, storeFlag, limit, userName);
         }
     }
 
@@ -108,7 +111,7 @@ public class PrestoServiceImpl implements PrestoService {
         }
     }
 
-    private PrestoQueryResult getPrestoQueryResult(String datasource, String query, StatementClient client, boolean storeFlag, int limit) throws QueryErrorException {
+    private PrestoQueryResult getPrestoQueryResult(String datasource, String query, StatementClient client, boolean storeFlag, int limit, String userName) throws QueryErrorException {
         long start = System.currentTimeMillis();
         while (client.isValid() && (client.current().getData() == null)) {
             client.advance();
@@ -135,6 +138,22 @@ public class PrestoServiceImpl implements PrestoService {
                 prestoQueryResult.setRecords(rowDataList);
                 if(storeFlag) {
                     insertQueryHistory(datasource, query, queryId);
+                }
+                if(yanagishimaConfig.getFluentdTag().isPresent()) {
+                    String fluentdHost = yanagishimaConfig.getFluentdHost().orElse("localhost");
+                    int fluentdPort = Integer.parseInt(yanagishimaConfig.getFluentdPort().orElse("24224"));
+                    try (Fluency fluency = Fluency.defaultFluency(fluentdHost, fluentdPort)) {
+                        long end = System.currentTimeMillis();
+                        String tag = yanagishimaConfig.getFluentdTag().get();
+                        Map<String, Object> event = new HashMap<>();
+                        event.put("elapsed_time_millseconds", end - start);
+                        event.put("user", userName);
+                        event.put("query", query);
+                        event.put("datasource", datasource);
+                        fluency.emit(tag, event);
+                    } catch (IOException e) {
+                        LOGGER.error(e.getLocalizedMessage(), e);
+                    }
                 }
                 return prestoQueryResult;
             }
