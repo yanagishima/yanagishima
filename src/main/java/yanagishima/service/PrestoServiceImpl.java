@@ -152,7 +152,7 @@ public class PrestoServiceImpl implements PrestoService {
                         event.put("datasource", datasource);
                         fluency.emit(tag, event);
                     } catch (IOException e) {
-                        LOGGER.error(e.getLocalizedMessage(), e);
+                        LOGGER.error(e.getMessage(), e);
                     }
                 }
                 return prestoQueryResult;
