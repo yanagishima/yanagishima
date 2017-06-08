@@ -2,8 +2,6 @@ package yanagishima.servlet;
 
 import com.facebook.presto.client.ErrorLocation;
 import com.facebook.presto.client.QueryError;
-import io.prometheus.client.Counter;
-import io.prometheus.client.Summary;
 import me.geso.tinyorm.TinyORM;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -28,7 +26,6 @@ import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
@@ -47,16 +44,6 @@ public class PrestoServlet extends HttpServlet {
 
 	private final YanagishimaConfig yanagishimaConfig;
 
-	static final Summary requestLatency = Summary.build()
-			.name("yanagishima_requests_latency_seconds")
-			.help("Request latency in seconds.").register();
-	static final Counter requestSuccesses = Counter.build()
-			.name("yanagishima_requests_successes_total")
-			.help("Request successes.").register();
-	static final Counter requestFailures = Counter.build()
-			.name("yanagishima_requests_failures_total")
-			.help("Request failures.").register();
-
 	@Inject
 	private TinyORM db;
 
@@ -70,8 +57,6 @@ public class PrestoServlet extends HttpServlet {
 	protected void doPost(HttpServletRequest request,
 			HttpServletResponse response) throws ServletException, IOException {
 
-		Summary.Timer requestTimer = requestLatency.startTimer();
-		
 		HashMap<String, Object> retVal = new HashMap<String, Object>();
 		
 		try {
@@ -124,7 +109,6 @@ public class PrestoServlet extends HttpServlet {
 							retVal.put("elapsedTimeMillis", elapsedTimeMillis);
 						});
 					}
-					requestSuccesses.inc();
 				} catch (QueryErrorException e) {
 					LOGGER.error(e.getMessage(), e);
 					Optional<QueryError> queryErrorOptional = Optional.ofNullable(e.getQueryError());
@@ -137,15 +121,11 @@ public class PrestoServlet extends HttpServlet {
 					});
 					retVal.put("error", e.getCause().getMessage());
 					retVal.put("queryid", e.getQueryId());
-					requestFailures.inc();
 				}
 			});
 		} catch (Throwable e) {
 			LOGGER.error(e.getMessage(), e);
 			retVal.put("error", e.getMessage());
-			requestFailures.inc();
-		} finally {
-			requestTimer.observeDuration();
 		}
 
 		JsonUtil.writeJSON(response, retVal);

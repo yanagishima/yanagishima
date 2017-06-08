@@ -3,7 +3,6 @@ package yanagishima.server;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.servlet.GuiceFilter;
-import io.prometheus.client.exporter.MetricsServlet;
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
@@ -65,8 +64,6 @@ public class YanagishimaServer {
 		servletContextHandler.addServlet(DefaultServlet.class, "/");
 		
 		servletContextHandler.setResourceBase(webResourceDir);
-
-		servletContextHandler.addServlet(MetricsServlet.class, "/metrics");
 
 		LOGGER.info("Yanagishima Server started...");
 
