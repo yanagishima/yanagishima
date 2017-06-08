@@ -149,7 +149,7 @@ public class PrestoServiceImpl implements PrestoService {
                         event.put("elapsed_time_millseconds", end - start);
                         event.put("user", userName);
                         event.put("query", query);
-                        event.put("queryId", queryId);
+                        event.put("query_id", queryId);
                         event.put("datasource", datasource);
                         fluency.emit(tag, event);
                     } catch (IOException e) {
