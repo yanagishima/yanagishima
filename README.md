@@ -7,6 +7,7 @@ yanagishima is a Web UI for presto.
 # Features
 * easy to install
 * easy to use
+* run query(Ctrl+Enter)
 * query history
 * query bookmark
 * show query execution list
@@ -29,6 +30,8 @@ yanagishima is a Web UI for presto.
 * format query
 * run in the background
 * convert from TSV to values query
+* function, table completion(ESC)
+* validation(Shift+Enter)
 
 # Limitation
 
@@ -38,9 +41,9 @@ yanagishima is a Web UI for presto.
 
 # Quick Start
 ```
-wget https://bintray.com/artifact/download/wyukawa/generic/yanagishima-4.0.zip
-unzip yanagishima-4.0.zip
-cd yanagishima-4.0
+wget https://bintray.com/artifact/download/wyukawa/generic/yanagishima-5.0.zip
+unzip yanagishima-5.0.zip
+cd yanagishima-5.0
 vim conf/yanagishima.properties
 nohup bin/yanagishima-start.sh >y.log 2>&1 &
 ```
