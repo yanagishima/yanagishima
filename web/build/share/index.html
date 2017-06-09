@@ -83,6 +83,9 @@
 						</a>
 					</div>
 				</div>
+				<div class="alert alert-info" v-if="line">
+					<i class="fa fa-fw fa-check mr-1"></i><a href="#" class="alert-link" v-scroll-to="'#L' + line">Line {{line}}</a> is selected
+				<!-- /alert --></div>
 				<div class="mb-3" v-if="enable_chart && chart">
 					<div class="card">
 					<div class="card-header">
@@ -98,11 +101,13 @@
 				<table class="table table-auto table-bordered table-hover table-responsive">
 					<thead>
 						<tr>
+							<th class="text-muted text-right">line</th>
 							<th v-for="item in response.share.headers">{{item}}</th>
 						</tr>
 					</thead>
 					<tbody>
-						<tr v-for="items in response.share.results">
+						<tr v-for="(items, index) in response.share.results" :id="'L' + (index + 1)" :class="{'table-info': line == (index + 1)}">
+							<td class="text-right text-muted">{{index + 1}}</td>
 							<td v-for="item in items">
 								<template v-if="item === null">
 									<span class="text-muted">(null)</span>

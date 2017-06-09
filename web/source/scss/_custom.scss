@@ -14,7 +14,7 @@ $colors: $brand-primary, #1B5E20, #880E4F, #827717, #212121;
 	#header-main {
 		background: linear-gradient(lighten($color, 2.5%) 0%, lighten($color, 12.5%) 100%);
 		.btn:not(.btn-secondary) {
-			background: darken($color, 5%);
+			background-color: darken($color, 5%);
 		}
 	}	
 }
@@ -171,6 +171,9 @@ $colors: $brand-primary, #1B5E20, #880E4F, #827717, #212121;
 	border-radius: $border-radius;
 	border: 1px solid #ccc;
 	background: $white;
+	.auto-complate {
+		font-style: italic;
+	}
 }
 .table {
 	&.table-auto {
@@ -186,8 +189,11 @@ $colors: $brand-primary, #1B5E20, #880E4F, #827717, #212121;
 			&.overflow-visible {
 				overflow: visible;
 			}
-			&.vertical-tp {
-				
+		}
+		tr.vertical-top {
+			th,
+			td {
+				vertical-align: top;
 			}
 		}
 	}
@@ -265,6 +271,17 @@ a:hover .btn.clip {
 }
 .ace-font {
 	font: 12px/normal 'Monaco', 'Menlo', 'Ubuntu Mono', 'Consolas', 'source-code-pro', monospace;
+}
+.ace_editor.ace_autocomplete {
+	width: 640px;
+}
+.ace_tooltip {
+	font-family: $font-family-sans-serif;
+	padding: .2rem .5rem;
+	background: $alert-danger-bg;
+	border: $alert-danger-border 1px solid;
+	color: $alert-danger-text;
+	font-size: 12px;
 }
 body.konami {
 	transform: scale(-1, 1);

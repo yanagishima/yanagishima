@@ -34,9 +34,9 @@
 				<div class="card card-inverse">
 					<div class="card-header">Remember</div>
 					<div class="card-block pb-1">
-						<div>
+						<div v-if="datasources.length > 1">
 							<label :class="{'text-white': rememberDatasource}">
-								<input type="checkbox" class="mr-1" v-model="rememberDatasource" :disabled="datasources.length == 1">
+								<input type="checkbox" class="mr-1" v-model="rememberDatasource">
 								Last Datasource
 							</label>
 						</div>
@@ -69,8 +69,13 @@
 							<div class="col-8 text-right">
 								<span class="mr-2"><strong>{{histories.length}}</strong> items</span>
 								<div class="btn-group">
-									<button class="btn btn-sm btn-secondary selected" @click="input_query = histories.join(',')"  :disabled="!histories.length">Export</button>
-									<button class="btn btn-sm btn-secondary selected text-danger" @click="delHistoryAll()"  :disabled="!histories.length">Remove</button>
+									<button class="btn btn-sm btn-secondary selected dropdown-toggle" data-toggle="dropdown">Action</button>
+									<div class="dropdown-menu dropdown-menu-right">
+										<a class="dropdown-item" href="#" @click="input_query = histories.join(',')">Export</a>
+										<a class="dropdown-item" href="#" @click="importHistory()">Import</a>
+										<div class="dropdown-divider"></div>
+										<a class="dropdown-item text-danger" href="#" @click="delHistoryAll()">Remove</a>
+									<!-- dropdown-menu --></div>
 								<!-- /btn-group --></div>
 							</div>
 						</div>
@@ -79,8 +84,13 @@
 							<div class="col-8 text-right">
 								<span class="mr-2"><strong>{{bookmarks.length}}</strong> items</span>
 								<div class="btn-group">
-									<button class="btn btn-sm btn-secondary selected" @click="input_query = bookmarks.join(',')"  :disabled="!bookmarks.length">Export</button>
-									<button class="btn btn-sm btn-secondary selected text-danger" @click="delBookmarkAll()"  :disabled="!bookmarks.length">Remove</button>
+									<button class="btn btn-sm btn-secondary selected dropdown-toggle" data-toggle="dropdown">Action</button>
+									<div class="dropdown-menu dropdown-menu-right">
+										<a class="dropdown-item" href="#" @click="input_query = bookmarks.join(',')">Export</a>
+										<a class="dropdown-item" href="#" @click="importBookmark()">Import</a>
+										<div class="dropdown-divider"></div>
+										<a class="dropdown-item text-danger" href="#" @click="delBookmarkAll()">Remove</a>
+									<!-- dropdown-menu --></div>
 								<!-- /btn-group --></div>
 							</div>
 						</div>
@@ -94,7 +104,7 @@
 			<div id="header-upper" class="py-2">
 				<div class="row align-items-center">
 					<div class="col-8">
-						<h1 id="logo" class="d-inline-block mr-4"><a :href="'#datasource={0}'.format(datasource)" @click.prevent="input_query = '', queryid = '', tab = tabs[0].id, init()"><span id="logo-figure" class="mr-2"></span>{{sitename}}</a><small class="ml-2">Ver {{version}}</small></h1>
+						<h1 id="logo" class="d-inline-block mr-4"><a :href="'#datasource={0}'.format(datasource)" @click.prevent="init(true)"><span id="logo-figure" class="mr-2"></span>{{sitename}}</a><small class="ml-2">Ver {{version}}</small></h1>
 						<template v-if="datasources.length > 1">
 							<label class="form-check-label mr-3" :class="{'font-weight-bold': item == datasource}" v-for="item in datasources">
 								<input type="radio" class="form-check-input mr-1" v-model="datasource" :value="item">
@@ -114,7 +124,7 @@
 			<!-- /header-upper --></div>
 			<div id="header-loower">
 				<div class="editor mb-2">
-					<ace :code="input_query" :gotoline="gotoline" :focus="focus" :minline="minline" maxline="Infinity" :theme="theme" @change-code="changeQuery" @run-code="runQuery" :errorline="errorline"></ace>
+					<ace :code="input_query" :gotoline="gotoline" :focus="focus" :minline="minline" maxline="Infinity" :theme="theme" @change-code="changeQuery" @validate-code="validateQuery" @run-code="runQuery" :errorline="errorline" :errortext="errortext | tinyError" :complate_words="complate_words"></ace>
 				<!-- /editor --></div>
 				<fieldset id="variables" class="mb-3" v-if="variables.length">
 					<legend>{{variables.length}} variables</legend>
@@ -168,6 +178,7 @@
 						<span><strong class="mr-2">{{datasource}}</strong>as of<strong class="ml-2">{{now}}</strong></span>
 					<!-- /col --></div>
 					<div class="col text-right">
+						<label class="form-check-label mr-3"><input class="form-check-input mr-1" type="checkbox" v-model="is_openQuery">Full Query</label>
 						<label class="form-check-label mr-3"><input class="form-check-input mr-1" type="checkbox" v-model="is_adminMode">Admin Mode</label>
 						<div class="btn-group">
 							<button class="btn btn-sm btn-secondary" @click="getQlist()"><i class="fa fa-fw fa-refresh mr-1"></i>Refresh<small class="ml-1" v-if="is_autoQlist">(Auto)</small></button>
@@ -246,6 +257,12 @@
 			<template v-if="tab === 'treeview'">
 				<div class="row align-items-center pt-3">
 					<div class="col">
+						<div class="btn-group mr-2" v-if="datasources.length > 1">
+							<button type="button" class="btn btn-secondary dropdown-toggle" data-toggle="dropdown"><strong>{{datasource}}</strong></button>
+							<div class="dropdown-menu">
+								<a class="dropdown-item" href="#" v-for="item in datasources" @click.prevent="datasource = item" :class="{active: item === datasource}">{{item}}</a>
+							<!-- /dropdown-menu --></div>
+						<!-- /btn-group --></div>
 						<div class="btn-group">
 							<button type="button" class="btn btn-secondary dropdown-toggle" data-toggle="dropdown"><small class="text-muted mr-1">Catalog</small><strong>{{catalog}}</strong></button>
 							<div class="dropdown-menu" v-if="catalogs.length">
@@ -265,7 +282,7 @@
 	<div :class="is_wide ? 'container-fluid' : 'container'">
 		<template v-if="tab === 'qlist'">
 			<template v-if="loading.qlist">
-				<div class="alert alert-info" role="alert">
+				<div class="alert alert-info">
 					<i class="fa fa-fw fa-spinner fa-pulse mr-1"></i>Loading
 				<!-- /alert --></div>
 			</template>
@@ -273,10 +290,10 @@
 				<div class="alert alert-info" v-if="filter_user !== ''">
 					<button class="close" @click="filter_user = ''"><span>&times;</span></button>
 					<span class="mr-3">Filter by <strong>{{filter_user}}</strong></span>
-					<span class="mr-2"><strong>{{orderdQlist.length}}</strong> Results</span>
-					<span class="mr-2" v-if="orderdFailQlist.length"><strong>{{orderdFailQlist.length}}</strong> Fails</span>
+					<span class="mr-2"><strong>{{orderedQlist.length}}</strong> Results</span>
+					<span class="mr-2" v-if="orderedFailQlist.length"><strong>{{orderedFailQlist.length}}</strong> Fails</span>
 				<!-- /alert --></div>
-				<table class="table table-bordered table-fixed table-hover" v-if="orderdQlist.length">
+				<table class="table table-bordered table-fixed table-hover" v-if="orderedQlist.length">
 					<thead>
 						<tr>
 							<th width="7%">State</th>
@@ -290,7 +307,7 @@
 						</tr>
 					</thead>
 					<tbody>
-						<tr v-for="item in orderdQlist" :class="{'table-danger': item.state === 'FAILED', 'table-info': isRunning(item.state)}">
+						<tr v-for="item in orderedQlist" :class="{'table-danger': item.state === 'FAILED', 'table-info': isRunning(item.state)}">
 							<td>
 								<template v-if="item.state === 'RUNNING'">
 									<div class="progress">
@@ -310,7 +327,10 @@
 								</template>
 							</td>
 							<td class="text-right">{{item.queryStats.elapsedTime | formatUnit}}</td>
-							<td class="ace-font" :title="item.query">{{item.query.compact()}}</td>
+							<td class="ace-font">
+								<pre class="ace-font mb-0" v-if="is_openQuery">{{item.query}}</pre>
+								<span :title="item.query" v-else>{{item.query.compact()}}</span>
+							</td>
 							<td>{{item.session.source}}</td>
 							<td><a href="#" @click.prevent="filter_user = item.session.user">{{item.session.user}}</a></td>
 							<td class="text-center"><a href="#" class="btn btn-sm btn-secondary p-1" @click.prevent="confirm('Do you want to do it?') && killQuery(item.queryId)" v-if="isRunning(item.state)"><i class="fa fa-fw fa-times text-danger"></i></a></td>
@@ -318,14 +338,14 @@
 						</tr>
 					</tbody>
 				</table>
-				<div class="alert alert-warning" role="alert" v-else>
+				<div class="alert alert-warning" v-else>
 					<i class="fa fa-fw fa-frown-o mr-1"></i>No result
 				<!-- /alert --></div>
 			</template>
 		<!-- /qlist --></template>
 		<template v-if="tab === 'history'">
 			<template v-if="loading.history">
-				<div class="alert alert-info" role="alert">
+				<div class="alert alert-info">
 					<i class="fa fa-fw fa-spinner fa-pulse mr-1"></i>Loading
 				<!-- /alert --></div>
 			</template>
@@ -333,24 +353,27 @@
 				<table class="table table-bordered table-fixed table-hover" v-if="filteredHistory.length">
 					<thead>
 						<tr>
+							<th width="5%" class="text-right">No</th>
 							<th width="17%">query ID</th>
 							<th width="6%" class="text-right">Elapsed</th>
-							<th width="55%">Query</th>
+							<th width="50%">Query</th>
 							<th width="5%" class="text-center">Set</th>
 							<th width="5%" class="text-center">Del</th>
 							<th width="8%" class="text-center">DL Result</th>
 						</tr>
 					</thead>
 					<tbody>
-						<tr class="vertical-top" v-for="items in filteredHistory.first(historySize)">
+						<tr class="vertical-top" v-for="(items, index) in filteredHistory.first(historySize)">
+							<td class="text-right text-muted">{{index}}</td>
 							<td>
-								<a :href="'#datasource={0}&amp;tab=result&amp;queryid={1}'.format(datasource, items[0])">{{items[0]}}</a>
+								<a :href="'#datasource={0}&amp;tab=result&amp;queryid={1}'.format(datasource, items[0])" @click="line = 0">{{items[0]}}</a>
 							</td>
 							<td class="text-right">
 								{{(items[2] / 1000).ceil(2)}}s
 							</td>
 							<td>
-								<pre class="ace-font mb-0">{{items[1]}}</pre>
+								<!-- <pre class="ace-font mb-0">{{items[1]}}</pre> -->
+								<pre class="ace-font mb-0"><highlight :sentense="items[1]" :keyword="filter_history"></highlight></pre>
 							</td>
 							<td class="text-center">
 								<a href="#" class="btn btn-sm btn-secondary" @click.prevent="input_query = items[1], focus++"><i class="fa fa-fw fa-pencil"></i></a>
@@ -370,19 +393,18 @@
 						</tr>
 					</tbody>
 				</table>
-				<div class="alert alert-warning" role="alert" v-else>
+				<div class="alert alert-warning" v-else>
 					<i class="fa fa-fw fa-frown-o mr-1"></i>No result
 				<!-- /alert --></div>
 			</template>
 		<!-- /history --></template>
 		<template v-if="tab === 'result'">
 			<template v-if="loading.result">
-				<template v-if="running_progress !== -1">
-					<div class="alert alert-info" role="alert">
+				<template v-if="running_progress != -1">
+					<div class="alert alert-info" v-if="running_time">
 						<div class="row align-items-center">
 							<div class="col-2 text-right">
-								<strong v-if="running_time">{{running_time}}</strong>
-								<template v-else>Preparing</template>
+								<strong>{{running_time}}</strong>
 							</div>
 							<div class="col">
 								<div class="progress">
@@ -391,15 +413,18 @@
 							</div>
 							<div class="col-2">
 								<div class="btn-group">
-								<a href="#" class="btn btn-sm btn-secondary" @click.prevent="abortQuery(running_queryid)"><i class="fa fa-fw fa-times mr-1 text-danger"></i>Kill</a>
-								<a class="btn btn-sm btn-secondary link-iframe" :href="linkDetail(running_queryid)"><i class="fa fa-fw fa-info"></i>Info</a>
+									<a href="#" class="btn btn-sm btn-secondary" @click.prevent="abortQuery(running_queryid)"><i class="fa fa-fw fa-times mr-1 text-danger"></i>Kill</a>
+									<a class="btn btn-sm btn-secondary link-iframe" :href="linkDetail(running_queryid)"><i class="fa fa-fw fa-info"></i>Info</a>
 								</div>
 							</div>
 						</div>
 					<!-- /alert --></div>
+					<div class="alert alert-info" v-else>
+						<i class="fa fa-fw fa-clock-o fa-spin mr-1"></i>Preparing
+					<!-- /alert --></div>
 				</template>
 				<template v-else>
-					<div class="alert alert-info" role="alert">
+					<div class="alert alert-info">
 						<i class="fa fa-fw fa-spinner fa-pulse mr-1"></i>Loading
 					<!-- /alert --></div>
 				</template>
@@ -407,13 +432,13 @@
 			<template v-else>
 				<template v-if="queryString">
 					<template v-if="error.result">
-						<div class="alert alert-danger" role="alert">
+						<div class="alert alert-danger">
 							{{error.result}}
 						<!-- /alert --></div>
 					</template>
 					<template v-else>
 						<template v-if="response.result.error">
-							<div class="alert alert-danger" role="alert">
+							<div class="alert alert-danger">
 								{{response.result.error}}
 							<!-- /alert --></div>
 						</template>
@@ -433,6 +458,10 @@
 									<!-- /card --></div>
 								</template>
 								<template v-else>
+									<div class="alert alert-info" v-if="line">
+										<button class="close" @click="line = 0"><span>&times;</span></button>
+										<i class="fa fa-fw fa-check mr-1"></i><a href="#" class="alert-link" v-scroll-to="'#L' + line">Line {{line}}</a> is selected
+									<!-- /alert --></div>
 									<div class="mb-3" v-if="enable_chart">
 										<div class="card" v-if="chart">
 											<div class="card-header">
@@ -460,11 +489,13 @@
 									<table class="table table-auto table-bordered table-hover table-responsive">
 										<thead>
 											<tr>
+												<th class="text-muted">line</th>
 												<th v-for="item in response.result.headers">{{item}}</th>
 											</tr>
 										</thead>
 										<tbody>
-											<tr v-for="items in response.result.results">
+											<tr v-for="(items, index) in response.result.results" :class="{'table-info': line == (index + 1)}" :id="'L' + (index + 1)">
+												<td class="text-right"><a href="#" @click.prevent="line = (line === (index + 1)) ? 0 : (index + 1)" class="text-muted">{{index + 1}}</a></td>
 												<td v-for="item in items">
 													<template v-if="item === null">
 														<span class="text-muted">(null)</span>
@@ -482,7 +513,7 @@
 					</template>
 				</template>
 				<template v-else>
-					<div class="alert alert-warning" role="alert">
+					<div class="alert alert-warning">
 						<i class="fa fa-fw fa-frown-o mr-1"></i>No result
 					<!-- /alert --></div>
 				</template>
@@ -505,7 +536,7 @@
 										<!-- /card-header --></div>
 										<div class="list-group list-group-flush">
 											<template v-if="catalog && filteredSchemata.length">
-												<a href="#" class="list-group-item" v-for="item in filteredSchemata" :class="{active: item == schema}" @click.prevent="schema = item, table = ''">{{item}}</a>
+												<a href="#" class="list-group-item" v-for="item in filteredSchemata" :class="{active: item == schema}" @click.prevent="schema = item, table = ''"><highlight :sentense="item" :keyword="filter_schema"></highlight> </a>
 											</template>
 											<template v-else>
 												<a href="#" class="list-group-item disabled">(N/A)</a>
@@ -553,8 +584,12 @@
 									<template v-if="response.table.length">
 										<a href="#" class="list-group-item ellipsis" v-for="items in response.table" @click.prevent="catalog = items[0], schema = items[1], table = items[2], table_type = items[3]" :class="{active: items[0] == catalog && items[1] == schema && items[2] == table, 'table-view': items[3] == 'VIEW'}">
 											<button class="btn btn-sm btn-secondary clip" v-clipboard="[items[0], items[1], items[2]].join('.')"><i class="fa fa-fw fa-clipboard"></i></button>
-											{{items[0]}} / {{items[1]}} / {{items[2]}}
-										<!-- /list-group-item --></a>
+											<highlight :sentense="items[0]" :keyword="table_q"></highlight>
+											<span class="mx-1">/</span>
+											<highlight :sentense="items[1]" :keyword="table_q"></highlight>
+											<span class="mx-1">/</span>
+											<highlight :sentense="items[2]" :keyword="table_q"></highlight>
+/										<!-- /list-group-item --></a>
 									</template>
 									<template v-else>
 										<a href="#" class="list-group-item disabled">(Not Found)</a>
@@ -604,7 +639,7 @@
 <!-- /content --></div>
 <footer id="footer" class="py-3">
 	<address class="text-center">
-		<span><strong><a href="https://github.com/wyukawa/yanagishima"><i class="fa fa-github mr-1"></i>yanagishima</a></strong> by wyukawa and okazou</span>
+		<span><strong><a href="https://github.com/wyukawa/yanagishima"><i class="fa fa-github mr-1"></i>yanagishima</a></strong> by wyukawa and okazou</span><teamplte v-if="links.bugs_feedback">, <a :href="links.bugs_feedback" class="mr-2">Bugs and Feedback</a></teamplte>
 	</address>
 </footer>
 
@@ -693,11 +728,6 @@
 							</tr>
 						</thead>
 						<tbody>
-							<!-- <tr>
-								<td>Everywhere</td>
-								<td><kbd>Ctrl</kbd> + <kbd>T</kbd></td>
-								<td>Launch <strong>Tree View</strong></td>
-							</tr> -->
 							<tr>
 								<td>Editor</td>
 								<td><kbd>Ctrl</kbd> + <kbd>Enter</kbd></td>
@@ -705,8 +735,13 @@
 							</tr>
 							<tr>
 								<td>Editor</td>
+								<td><kbd>Shift</kbd> + <kbd>Enter</kbd></td>
+								<td><strong>Validate</strong> Query</td>
+							</tr>
+							<tr>
+								<td>Editor</td>
 								<td><kbd>ESC</kbd></td>
-								<td>Toggle <strong>Function Auto-complate</strong></td>
+								<td>Toggle <strong>Table/Function Auto-complate</strong></td>
 							</tr>
 						</tbody>
 					</table>

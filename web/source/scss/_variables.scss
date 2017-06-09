@@ -301,7 +301,7 @@ $blockquote-border-width: .25rem !default;
 $hr-border-color: rgba($black,.1) !default;
 $hr-border-width: $border-width !default;
 
-$mark-padding: .2em !default;
+$mark-padding: 0 !default;
 
 $dt-font-weight: $font-weight-bold !default;
 
@@ -697,7 +697,7 @@ $state-info-border:              darken($state-info-bg, 7%) !default;
 
 $state-warning-text:             #8a6d3b !default;
 $state-warning-bg:               #fcf8e3 !default;
-$mark-bg:                        $state-warning-bg !default;
+$mark-bg:                        #FFF59D !default;
 $state-warning-border:           darken($state-warning-bg, 5%) !default;
 
 $state-danger-text:              #a94442 !default;
