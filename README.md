@@ -32,6 +32,8 @@ yanagishima is a Web UI for presto.
 * convert from TSV to values query
 * function, table completion(ESC)
 * validation(Shift+Enter)
+* export/import history
+* export/import bookmark
 
 # Limitation
 
