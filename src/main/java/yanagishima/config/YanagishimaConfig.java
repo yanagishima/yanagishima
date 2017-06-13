@@ -71,8 +71,12 @@ public class YanagishimaConfig {
 		}
 	}
 
-	public Optional<String> getFluentdTag() {
-		return Optional.ofNullable(properties.getProperty("fluentd.tag"));
+	public Optional<String> getFluentdExecutedTag() {
+		return Optional.ofNullable(properties.getProperty("fluentd.executed.tag"));
+	}
+
+	public Optional<String> getFluentdFaliedTag() {
+		return Optional.ofNullable(properties.getProperty("fluentd.failed.tag"));
 	}
 
 	public Optional<String> getFluentdHost() {

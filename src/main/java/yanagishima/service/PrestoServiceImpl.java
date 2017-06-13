@@ -139,12 +139,12 @@ public class PrestoServiceImpl implements PrestoService {
                 if(storeFlag) {
                     insertQueryHistory(datasource, query, queryId);
                 }
-                if(yanagishimaConfig.getFluentdTag().isPresent()) {
+                if(yanagishimaConfig.getFluentdExecutedTag().isPresent()) {
                     String fluentdHost = yanagishimaConfig.getFluentdHost().orElse("localhost");
                     int fluentdPort = Integer.parseInt(yanagishimaConfig.getFluentdPort().orElse("24224"));
                     try (Fluency fluency = Fluency.defaultFluency(fluentdHost, fluentdPort)) {
                         long end = System.currentTimeMillis();
-                        String tag = yanagishimaConfig.getFluentdTag().get();
+                        String tag = yanagishimaConfig.getFluentdExecutedTag().get();
                         Map<String, Object> event = new HashMap<>();
                         event.put("elapsed_time_millseconds", end - start);
                         event.put("user", userName);
@@ -167,6 +167,28 @@ public class PrestoServiceImpl implements PrestoService {
         } else if (client.isFailed()) {
             QueryResults results = client.finalResults();
             storeError(datasource, results.getId(), query, results.getError().getMessage());
+            if(yanagishimaConfig.getFluentdFaliedTag().isPresent()) {
+                String fluentdHost = yanagishimaConfig.getFluentdHost().orElse("localhost");
+                int fluentdPort = Integer.parseInt(yanagishimaConfig.getFluentdPort().orElse("24224"));
+                try (Fluency fluency = Fluency.defaultFluency(fluentdHost, fluentdPort)) {
+                    long end = System.currentTimeMillis();
+                    String tag = yanagishimaConfig.getFluentdFaliedTag().get();
+                    String queryId = results.getId();
+                    String errorName = results.getError().getErrorName();
+                    String errorType = results.getError().getErrorType();
+                    Map<String, Object> event = new HashMap<>();
+                    event.put("elapsed_time_millseconds", end - start);
+                    event.put("user", userName);
+                    event.put("query", query);
+                    event.put("query_id", queryId);
+                    event.put("datasource", datasource);
+                    event.put("errorName", errorName);
+                    event.put("errorType", errorType);
+                    fluency.emit(tag, event);
+                } catch (IOException e) {
+                    LOGGER.error(e.getMessage(), e);
+                }
+            }
             throw resultsException(results);
         }
         throw new RuntimeException("should not reach");
