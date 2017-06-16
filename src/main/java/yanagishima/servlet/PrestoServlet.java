@@ -32,6 +32,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 import static javax.servlet.http.HttpServletResponse.SC_FORBIDDEN;
+import static yanagishima.util.Constants.YANAGISHIMA_COMMENT;
 
 @Singleton
 public class PrestoServlet extends HttpServlet {
@@ -86,8 +87,8 @@ public class PrestoServlet extends HttpServlet {
 					if (prestoQueryResult.getUpdateType() == null) {
 						retVal.put("headers", prestoQueryResult.getColumns());
 
-						if(query.toLowerCase().startsWith("show schemas from")) {
-							String catalog = query.substring("show schemas from".length()).trim();
+						if(query.toLowerCase().indexOf(YANAGISHIMA_COMMENT + "show schemas from") != -1) {
+							String catalog = query.substring((YANAGISHIMA_COMMENT + "show schemas from").length()).trim();
 							List<String> invisibleSchemas = yanagishimaConfig.getInvisibleSchemas(datasource, catalog);
 							retVal.put("results", prestoQueryResult.getRecords().stream().filter(list -> !invisibleSchemas.contains(list.get(0))).collect(Collectors.toList()));
 						} else {
