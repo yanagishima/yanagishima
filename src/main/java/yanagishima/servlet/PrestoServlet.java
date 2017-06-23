@@ -64,6 +64,14 @@ public class PrestoServlet extends HttpServlet {
 			Optional<String> queryOptional = Optional.ofNullable(request.getParameter("query"));
 			queryOptional.ifPresent(query -> {
 				String userName = request.getHeader(yanagishimaConfig.getAuditHttpHeaderName());
+				if(yanagishimaConfig.isUserRequired() && userName == null) {
+					try {
+						response.sendError(SC_FORBIDDEN);
+						return;
+					} catch (IOException e) {
+						throw new RuntimeException(e);
+					}
+				}
 				try {
 					String datasource = HttpRequestUtil.getParam(request, "datasource");
 					if(yanagishimaConfig.isCheckDatasource()) {

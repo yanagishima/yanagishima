@@ -86,4 +86,8 @@ public class YanagishimaConfig {
 	public Optional<String> getFluentdPort() {
 		return Optional.ofNullable(properties.getProperty("fluentd.port"));
 	}
+
+	public boolean isUserRequired() {
+		return Boolean.parseBoolean(Optional.ofNullable(properties.getProperty("user.require")).orElse("false"));
+	}
 }
