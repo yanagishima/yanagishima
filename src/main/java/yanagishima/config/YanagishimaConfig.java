@@ -50,6 +50,15 @@ public class YanagishimaConfig {
 		return Double.parseDouble(Optional.ofNullable(properties.getProperty("presto.query.max-run-time-seconds")).get());
 	}
 
+	public double getQueryMaxRunTimeSeconds(String datasource) {
+		String property = properties.getProperty("presto.query.max-run-time-seconds" + "." + datasource);
+		if(property == null) {
+			return getQueryMaxRunTimeSeconds();
+		} else {
+			return Double.parseDouble(property);
+		}
+	}
+
 	public int getMaxResultFileByteSize() {
 		return Integer.parseInt(Optional.ofNullable(properties.getProperty("presto.max-result-file-byte-size")).get());
 	}
