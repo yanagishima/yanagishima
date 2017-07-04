@@ -21,4 +21,7 @@ public class Bookmark extends Row<Bookmark>{
 
     @Column("query")
     private String query;
+
+    @Column("title")
+    private String title;
 }
