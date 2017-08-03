@@ -14,6 +14,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import yanagishima.filter.YanagishimaFilter;
 import yanagishima.module.DbModule;
+import yanagishima.module.HiveServletModule;
 import yanagishima.module.PrestoServiceModule;
 import yanagishima.module.PrestoServletModule;
 
@@ -38,10 +39,11 @@ public class YanagishimaServer {
 
 		PrestoServiceModule prestoServiceModule = new PrestoServiceModule(properties);
 		PrestoServletModule prestoServletModule = new PrestoServletModule();
+		HiveServletModule hiveServletModule = new HiveServletModule();
 		DbModule dbModule = new DbModule();
 		@SuppressWarnings("unused")
 		Injector injector = Guice.createInjector(prestoServiceModule,
-				prestoServletModule, dbModule);
+				prestoServletModule, hiveServletModule, dbModule);
 
 		TinyORM tinyORM = injector.getInstance(TinyORM.class);
 		try(Connection connection = tinyORM.getConnection()) {

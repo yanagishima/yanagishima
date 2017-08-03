@@ -99,4 +99,16 @@ public class YanagishimaConfig {
 	public boolean isUserRequired() {
 		return Boolean.parseBoolean(Optional.ofNullable(properties.getProperty("user.require")).orElse("false"));
 	}
+
+	public Optional<String> getHiveJdbcUrl(String datasource) {
+		return Optional.ofNullable(properties.getProperty("hive.jdbc.url." + datasource));
+	}
+
+	public Optional<String> getHiveJdbcUser(String datasource) {
+		return Optional.ofNullable(properties.getProperty("hive.jdbc.user." + datasource));
+	}
+
+	public Optional<String> getHiveJdbcPassword(String datasource) {
+		return Optional.ofNullable(properties.getProperty("hive.jdbc.password." + datasource));
+	}
 }
