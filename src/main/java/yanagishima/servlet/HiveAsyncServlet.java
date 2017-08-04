@@ -4,8 +4,6 @@ import me.geso.tinyorm.TinyORM;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import yanagishima.config.YanagishimaConfig;
-import yanagishima.result.HiveQueryResult;
-import yanagishima.row.Query;
 import yanagishima.service.HiveService;
 import yanagishima.util.AccessControlUtil;
 import yanagishima.util.HttpRequestUtil;
@@ -18,21 +16,16 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
-import java.time.ZonedDateTime;
-import java.time.format.DateTimeFormatter;
-import java.time.temporal.ChronoUnit;
 import java.util.HashMap;
 import java.util.Optional;
 
 import static javax.servlet.http.HttpServletResponse.SC_FORBIDDEN;
 
 @Singleton
-public class HiveServlet extends HttpServlet {
+public class HiveAsyncServlet extends HttpServlet {
 
     private static Logger LOGGER = LoggerFactory
-            .getLogger(HiveServlet.class);
+            .getLogger(HiveAsyncServlet.class);
 
     private static final long serialVersionUID = 1L;
 
@@ -44,7 +37,7 @@ public class HiveServlet extends HttpServlet {
     private final HiveService hiveService;
 
     @Inject
-    public HiveServlet(YanagishimaConfig yanagishimaConfig, HiveService hiveService) {
+    public HiveAsyncServlet(YanagishimaConfig yanagishimaConfig, HiveService hiveService) {
         this.yanagishimaConfig = yanagishimaConfig;
         this.hiveService = hiveService;
     }
@@ -84,29 +77,9 @@ public class HiveServlet extends HttpServlet {
                     LOGGER.info(String.format("%s executed %s in %s", userName, query, datasource));
                 }
 
-                boolean storeFlag = Boolean.parseBoolean(Optional.ofNullable(request.getParameter("store")).orElse("false"));
-                int limit = yanagishimaConfig.getSelectLimit();
-                HiveQueryResult hiveQueryResult = hiveService.doQuery(datasource, query, userName, storeFlag, limit);
-                String queryid = hiveQueryResult.getQueryId();
+                String queryid = hiveService.doQueryAsync(datasource, query, userName);
                 retVal.put("queryid", queryid);
-                retVal.put("headers", hiveQueryResult.getColumns());
-                retVal.put("results", hiveQueryResult.getRecords());
 
-                retVal.put("lineNumber", Integer.toString(hiveQueryResult.getLineNumber()));
-                retVal.put("rawDataSize", hiveQueryResult.getRawDataSize().toString());
-                Optional<String> warningMessageOptinal = Optional.ofNullable(hiveQueryResult.getWarningMessage());
-                warningMessageOptinal.ifPresent(warningMessage -> {
-                    retVal.put("warn", warningMessage);
-                });
-                Optional<Query> queryDataOptional = db.single(Query.class).where("query_id=? and datasource=?", queryid, datasource).execute();
-                queryDataOptional.ifPresent(queryData -> {
-                    LocalDateTime submitTimeLdt = LocalDateTime.parse(queryid.substring(0, "yyyyMMdd_HHmmss".length()), DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss"));
-                    ZonedDateTime submitTimeZdt = submitTimeLdt.atZone(ZoneId.of("GMT", ZoneId.SHORT_IDS));
-                    String fetchResultTimeString = queryData.getFetchResultTimeString();
-                    ZonedDateTime fetchResultTime = ZonedDateTime.parse(fetchResultTimeString);
-                    long elapsedTimeMillis = ChronoUnit.MILLIS.between(submitTimeZdt, fetchResultTime);
-                    retVal.put("elapsedTimeMillis", elapsedTimeMillis);
-                });
 
             } catch (Throwable e) {
                 LOGGER.error(e.getMessage(), e);

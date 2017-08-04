@@ -13,10 +13,7 @@ import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import yanagishima.filter.YanagishimaFilter;
-import yanagishima.module.DbModule;
-import yanagishima.module.HiveServletModule;
-import yanagishima.module.PrestoServiceModule;
-import yanagishima.module.PrestoServletModule;
+import yanagishima.module.*;
 
 import javax.servlet.DispatcherType;
 import java.io.*;
@@ -39,11 +36,12 @@ public class YanagishimaServer {
 
 		PrestoServiceModule prestoServiceModule = new PrestoServiceModule(properties);
 		PrestoServletModule prestoServletModule = new PrestoServletModule();
+		HiveServiceModule hiveServiceModule = new HiveServiceModule(properties);
 		HiveServletModule hiveServletModule = new HiveServletModule();
 		DbModule dbModule = new DbModule();
 		@SuppressWarnings("unused")
 		Injector injector = Guice.createInjector(prestoServiceModule,
-				prestoServletModule, hiveServletModule, dbModule);
+				prestoServletModule, hiveServiceModule, hiveServletModule, dbModule);
 
 		TinyORM tinyORM = injector.getInstance(TinyORM.class);
 		try(Connection connection = tinyORM.getConnection()) {
