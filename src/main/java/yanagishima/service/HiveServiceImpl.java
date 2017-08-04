@@ -195,7 +195,13 @@ public class HiveServiceImpl implements HiveService {
 
                 checkTimeout(start, datasource, queryId, query);
             }
+            hiveQueryResult.setLineNumber(lineNumber);
             hiveQueryResult.setRecords(rowDataList);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+
+        try {
             long size = Files.size(dst);
             DataSize rawDataSize = new DataSize(size, DataSize.Unit.BYTE);
             hiveQueryResult.setRawDataSize(rawDataSize.convertToMostSuccinctDataSize());
