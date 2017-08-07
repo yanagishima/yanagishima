@@ -15,19 +15,15 @@ import org.slf4j.LoggerFactory;
 import yanagishima.config.YanagishimaConfig;
 import yanagishima.exception.QueryErrorException;
 import yanagishima.result.PrestoQueryResult;
-import yanagishima.row.Query;
 
 import javax.inject.Inject;
 import java.io.BufferedWriter;
-import java.io.File;
 import java.io.IOException;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.sql.SQLException;
-import java.time.ZonedDateTime;
 import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -37,6 +33,10 @@ import java.util.stream.Collectors;
 import static io.airlift.json.JsonCodec.jsonCodec;
 import static java.lang.String.format;
 import static java.util.concurrent.TimeUnit.MINUTES;
+import static yanagishima.util.DbUtil.insertQueryHistory;
+import static yanagishima.util.DbUtil.storeError;
+import static yanagishima.util.PathUtil.getResultFilePath;
+import static yanagishima.util.TimeoutUtil.checkTimeout;
 
 public class PrestoServiceImpl implements PrestoService {
 
@@ -100,15 +100,6 @@ public class PrestoServiceImpl implements PrestoService {
         }
     }
 
-    private void checkTimeout(long start, String datasource, String queryId, String query) {
-        Duration queryMaxRunTime = new Duration(this.yanagishimaConfig.getQueryMaxRunTimeSeconds(datasource), TimeUnit.SECONDS);
-        if(System.currentTimeMillis() - start > queryMaxRunTime.toMillis()) {
-            String message = "Query exceeded maximum time limit of " + queryMaxRunTime;
-            storeError(datasource, queryId, query, message);
-            throw new RuntimeException(message);
-        }
-    }
-
     private PrestoQueryResult getPrestoQueryResult(String datasource, String query, StatementClient client, boolean storeFlag, int limit, String userName) throws QueryErrorException {
         Duration queryMaxRunTime = new Duration(this.yanagishimaConfig.getQueryMaxRunTimeSeconds(datasource), TimeUnit.SECONDS);
         long start = System.currentTimeMillis();
@@ -116,7 +107,7 @@ public class PrestoServiceImpl implements PrestoService {
             client.advance();
             if(System.currentTimeMillis() - start > queryMaxRunTime.toMillis()) {
                 String message = "Query exceeded maximum time limit of " + queryMaxRunTime;
-                storeError(datasource, client.current().getId(), query, message);
+                storeError(db, datasource, "presto", client.current().getId(), query, message);
                 throw new RuntimeException(message);
             }
         }
@@ -136,7 +127,7 @@ public class PrestoServiceImpl implements PrestoService {
                 processData(client, datasource, queryId, query, prestoQueryResult, columns, rowDataList, start, limit);
                 prestoQueryResult.setRecords(rowDataList);
                 if(storeFlag) {
-                    insertQueryHistory(datasource, query, queryId);
+                    insertQueryHistory(db, datasource, "presto", query, queryId);
                 }
                 if(yanagishimaConfig.getFluentdExecutedTag().isPresent()) {
                     String fluentdHost = yanagishimaConfig.getFluentdHost().orElse("localhost");
@@ -150,6 +141,7 @@ public class PrestoServiceImpl implements PrestoService {
                         event.put("query", query);
                         event.put("query_id", queryId);
                         event.put("datasource", datasource);
+                        event.put("engine", "presto");
                         fluency.emit(tag, event);
                     } catch (IOException e) {
                         LOGGER.error(e.getMessage(), e);
@@ -165,7 +157,7 @@ public class PrestoServiceImpl implements PrestoService {
             throw new RuntimeException("Query is gone (server restarted?)");
         } else if (client.isFailed()) {
             QueryResults results = client.finalResults();
-            storeError(datasource, results.getId(), query, results.getError().getMessage());
+            storeError(db, datasource, "presto", results.getId(), query, results.getError().getMessage());
             if(yanagishimaConfig.getFluentdFaliedTag().isPresent()) {
                 String fluentdHost = yanagishimaConfig.getFluentdHost().orElse("localhost");
                 int fluentdPort = Integer.parseInt(yanagishimaConfig.getFluentdPort().orElse("24224"));
@@ -193,35 +185,8 @@ public class PrestoServiceImpl implements PrestoService {
         throw new RuntimeException("should not reach");
     }
 
-    private void storeError(String datasource, String queryId, String query, String errorMessage) {
-        db.insert(Query.class)
-                .value("datasource", datasource)
-                .value("query_id", queryId)
-                .value("fetch_result_time_string", ZonedDateTime.now().toString())
-                .value("query_string", query)
-                .execute();
-        Path dst = getResultFilePath(datasource, queryId, true);
-        String message = format("Query failed (#%s): %s", queryId, errorMessage);
-
-        try (BufferedWriter bw = Files.newBufferedWriter(dst, StandardCharsets.UTF_8)) {
-            bw.write(message);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-
-    }
-
-
-    private void insertQueryHistory(String datasource, String query, String queryId) {
-        db.insert(Query.class)
-                .value("datasource", datasource)
-                .value("query_id", queryId)
-                .value("fetch_result_time_string", ZonedDateTime.now().toString())
-                .value("query_string", query)
-                .execute();
-    }
-
     private void processData(StatementClient client, String datasource, String queryId, String query, PrestoQueryResult prestoQueryResult, List<String> columns, List<List<String>> rowDataList, long start, int limit) {
+        Duration queryMaxRunTime = new Duration(this.yanagishimaConfig.getQueryMaxRunTimeSeconds(datasource), TimeUnit.SECONDS);
         Path dst = getResultFilePath(datasource, queryId, false);
         int lineNumber = 0;
         int maxResultFileByteSize = yanagishimaConfig.getMaxResultFileByteSize();
@@ -256,7 +221,7 @@ public class PrestoServiceImpl implements PrestoService {
                             resultBytes += resultStr.getBytes(StandardCharsets.UTF_8).length;
                             if(resultBytes > maxResultFileByteSize) {
                                 String message = String.format("Result file size exceeded %s bytes. queryId=%s", maxResultFileByteSize, queryId);
-                                storeError(datasource, client.current().getId(), query, message);
+                                storeError(db, datasource, "presto", client.current().getId(), query, message);
                                 throw new RuntimeException(message);
                             }
                         } catch (IOException e) {
@@ -270,7 +235,7 @@ public class PrestoServiceImpl implements PrestoService {
                     }
                 }
                 client.advance();
-                checkTimeout(start, datasource, queryId, query);
+                checkTimeout(db, queryMaxRunTime, start, datasource, "presto", queryId, query);
             }
         } catch (IOException e) {
             throw new RuntimeException(e);
@@ -283,24 +248,6 @@ public class PrestoServiceImpl implements PrestoService {
             prestoQueryResult.setRawDataSize(rawDataSize.convertToMostSuccinctDataSize());
         } catch (IOException e) {
             throw new RuntimeException(e);
-        }
-    }
-
-    private Path getResultFilePath(String datasource, String queryId, boolean error) {
-        String currentPath = new File(".").getAbsolutePath();
-        String yyyymmdd = queryId.substring(0, 8);
-        File datasourceDir = new File(String.format("%s/result/%s", currentPath, datasource));
-        if (!datasourceDir.isDirectory()) {
-            datasourceDir.mkdir();
-        }
-        File yyyymmddDir = new File(String.format("%s/result/%s/%s", currentPath, datasource, yyyymmdd));
-        if (!yyyymmddDir.isDirectory()) {
-            yyyymmddDir.mkdir();
-        }
-        if(error) {
-            return Paths.get(String.format("%s/result/%s/%s/%s.err", currentPath, datasource, yyyymmdd, queryId));
-        } else {
-            return Paths.get(String.format("%s/result/%s/%s/%s.json", currentPath, datasource, yyyymmdd, queryId));
         }
     }
 

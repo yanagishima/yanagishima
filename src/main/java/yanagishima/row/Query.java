@@ -13,6 +13,14 @@ import me.geso.tinyorm.annotations.Table;
 public class Query extends Row<Query>{
 
     @PrimaryKey
+    @Column("datasource")
+    private String datasource;
+
+    @PrimaryKey
+    @Column("engine")
+    private String engine;
+
+    @PrimaryKey
     @Column("query_id")
     private String queryId;
 

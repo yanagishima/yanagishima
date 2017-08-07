@@ -10,16 +10,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import yanagishima.config.YanagishimaConfig;
 import yanagishima.result.HiveQueryResult;
-import yanagishima.row.Query;
 
 import javax.inject.Inject;
 import java.io.BufferedWriter;
-import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.sql.*;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
@@ -31,7 +28,10 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
-import static java.lang.String.format;
+import static yanagishima.util.DbUtil.insertQueryHistory;
+import static yanagishima.util.DbUtil.storeError;
+import static yanagishima.util.PathUtil.getResultFilePath;
+import static yanagishima.util.TimeoutUtil.checkTimeout;
 
 public class HiveServiceImpl implements HiveService {
 
@@ -100,7 +100,7 @@ public class HiveServiceImpl implements HiveService {
             hiveQueryResult.setQueryId(queryId);
             processData(datasource, query, limit, connection, queryId, start, hiveQueryResult);
             if (storeFlag) {
-                insertQueryHistory(datasource, query, queryId);
+                insertQueryHistory(db, datasource, "hive", query, queryId);
             }
             if (yanagishimaConfig.getFluentdExecutedTag().isPresent()) {
                 String fluentdHost = yanagishimaConfig.getFluentdHost().orElse("localhost");
@@ -114,6 +114,7 @@ public class HiveServiceImpl implements HiveService {
                     event.put("query", query);
                     event.put("query_id", queryId);
                     event.put("datasource", datasource);
+                    event.put("engine", "hive");
                     fluency.emit(tag, event);
                 } catch (IOException e) {
                     LOGGER.error(e.getMessage(), e);
@@ -181,7 +182,7 @@ public class HiveServiceImpl implements HiveService {
                     resultBytes += resultStr.getBytes(StandardCharsets.UTF_8).length;
                     if (resultBytes > maxResultFileByteSize) {
                         String message = String.format("Result file size exceeded %s bytes. queryId=%s", maxResultFileByteSize, queryId);
-                        storeError(datasource, queryId, query, message);
+                        storeError(db, datasource, "hive", queryId, query, message);
                         throw new RuntimeException(message);
                     }
                 } catch (IOException e) {
@@ -193,7 +194,7 @@ public class HiveServiceImpl implements HiveService {
                     hiveQueryResult.setWarningMessage(String.format("now fetch size is %d. This is more than %d. So, fetch operation stopped.", rowDataList.size(), limit));
                 }
 
-                checkTimeout(start, datasource, queryId, query);
+                checkTimeout(db, queryMaxRunTime, start, datasource, "hive", queryId, query);
             }
             hiveQueryResult.setLineNumber(lineNumber);
             hiveQueryResult.setRecords(rowDataList);
@@ -207,60 +208,6 @@ public class HiveServiceImpl implements HiveService {
             hiveQueryResult.setRawDataSize(rawDataSize.convertToMostSuccinctDataSize());
         } catch (IOException e) {
             throw new RuntimeException(e);
-        }
-    }
-
-    private void checkTimeout(long start, String datasource, String queryId, String query) {
-        Duration queryMaxRunTime = new Duration(this.yanagishimaConfig.getHiveQueryMaxRunTimeSeconds(datasource), TimeUnit.SECONDS);
-        if (System.currentTimeMillis() - start > queryMaxRunTime.toMillis()) {
-            String message = "Query exceeded maximum time limit of " + queryMaxRunTime;
-            storeError(datasource, queryId, query, message);
-            throw new RuntimeException(message);
-        }
-    }
-
-    private void storeError(String datasource, String queryId, String query, String errorMessage) {
-        db.insert(Query.class)
-                .value("datasource", datasource)
-                .value("query_id", queryId)
-                .value("fetch_result_time_string", ZonedDateTime.now().toString())
-                .value("query_string", query)
-                .execute();
-        Path dst = getResultFilePath(datasource, queryId, true);
-        String message = format("Query failed (#%s): %s", queryId, errorMessage);
-
-        try (BufferedWriter bw = Files.newBufferedWriter(dst, StandardCharsets.UTF_8)) {
-            bw.write(message);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-
-    }
-
-    private void insertQueryHistory(String datasource, String query, String queryId) {
-        db.insert(Query.class)
-                .value("datasource", datasource)
-                .value("query_id", queryId)
-                .value("fetch_result_time_string", ZonedDateTime.now().toString())
-                .value("query_string", query)
-                .execute();
-    }
-
-    private Path getResultFilePath(String datasource, String queryId, boolean error) {
-        String currentPath = new File(".").getAbsolutePath();
-        String yyyymmdd = queryId.substring(0, 8);
-        File datasourceDir = new File(String.format("%s/result/%s", currentPath, datasource));
-        if (!datasourceDir.isDirectory()) {
-            datasourceDir.mkdir();
-        }
-        File yyyymmddDir = new File(String.format("%s/result/%s/%s", currentPath, datasource, yyyymmdd));
-        if (!yyyymmddDir.isDirectory()) {
-            yyyymmddDir.mkdir();
-        }
-        if (error) {
-            return Paths.get(String.format("%s/result/%s/%s/%s.err", currentPath, datasource, yyyymmdd, queryId));
-        } else {
-            return Paths.get(String.format("%s/result/%s/%s/%s.json", currentPath, datasource, yyyymmdd, queryId));
         }
     }
 

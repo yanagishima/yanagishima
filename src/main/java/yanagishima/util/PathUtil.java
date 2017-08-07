@@ -10,7 +10,15 @@ public class PathUtil {
 
 		String currentPath = new File(".").getAbsolutePath();
 		String yyyymmdd = queryid.substring(0, 8);
-		if(error) {
+		File datasourceDir = new File(String.format("%s/result/%s", currentPath, datasource));
+		if (!datasourceDir.isDirectory()) {
+			datasourceDir.mkdir();
+		}
+		File yyyymmddDir = new File(String.format("%s/result/%s/%s", currentPath, datasource, yyyymmdd));
+		if (!yyyymmddDir.isDirectory()) {
+			yyyymmddDir.mkdir();
+		}
+		if (error) {
 			return Paths.get(String.format("%s/result/%s/%s/%s.err", currentPath, datasource, yyyymmdd, queryid));
 		} else {
 			return Paths.get(String.format("%s/result/%s/%s/%s.json", currentPath, datasource, yyyymmdd, queryid));
