@@ -9,10 +9,12 @@ public class HiveServletModule extends ServletModule {
 		bind(HiveServlet.class);
 		bind(HiveAsyncServlet.class);
 		bind(YarnJobListServlet.class);
+		bind(KillHiveServlet.class);
 
 		serve("/hive").with(HiveServlet.class);
 		serve("/hiveAsync").with(HiveAsyncServlet.class);
 		serve("/yarnJobList").with(YarnJobListServlet.class);
+		serve("/killHive").with(KillHiveServlet.class);
 
 	}
 }

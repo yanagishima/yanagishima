@@ -51,16 +51,20 @@ public class HiveServiceImpl implements HiveService {
 
     @Override
     public String doQueryAsync(String datasource, String query, String userName) {
-        executorService.submit(new Task(datasource, query, userName));
-        return generateQueryId(datasource, query);
+        String queryId = generateQueryId(datasource, query);
+        executorService.submit(new Task(queryId, datasource, query, userName));
+        return queryId;
     }
 
     public class Task implements Runnable {
+        private String queryId;
+
         private String datasource;
         private String query;
         private String userName;
 
-        public Task(String datasource, String query, String userName) {
+        public Task(String queryId, String datasource, String query, String userName) {
+            this.queryId = queryId;
             this.datasource = datasource;
             this.query = query;
             this.userName = userName;
@@ -70,7 +74,7 @@ public class HiveServiceImpl implements HiveService {
         public void run() {
             try {
                 int limit = yanagishimaConfig.getSelectLimit();
-                getHiveQueryResult(this.datasource, this.query, true, limit, this.userName);
+                getHiveQueryResult(this.queryId, this.datasource, this.query, true, limit, this.userName);
             } catch (Throwable e) {
                 LOGGER.error(e.getMessage(), e);
             }
@@ -79,10 +83,11 @@ public class HiveServiceImpl implements HiveService {
 
     @Override
     public HiveQueryResult doQuery(String datasource, String query, String userName, boolean storeFlag, int limit) {
-        return getHiveQueryResult(datasource, query, storeFlag, limit, userName);
+        String queryId = generateQueryId(datasource, query);
+        return getHiveQueryResult(queryId, datasource, query, storeFlag, limit, userName);
     }
 
-    private HiveQueryResult getHiveQueryResult(String datasource, String query, boolean storeFlag, int limit, String userName) {
+    private HiveQueryResult getHiveQueryResult(String queryId, String datasource, String query, boolean storeFlag, int limit, String userName) {
         try {
             Class.forName("org.apache.hive.jdbc.HiveDriver");
         } catch (ClassNotFoundException e) {
@@ -95,7 +100,6 @@ public class HiveServiceImpl implements HiveService {
 
         try (Connection connection = DriverManager.getConnection(url, user, password)) {
             long start = System.currentTimeMillis();
-            String queryId = generateQueryId(datasource, query);
             HiveQueryResult hiveQueryResult = new HiveQueryResult();
             hiveQueryResult.setQueryId(queryId);
             processData(datasource, query, limit, connection, queryId, start, hiveQueryResult);

@@ -1,29 +1,54 @@
 package yanagishima.util;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.http.client.fluent.Request;
+import org.apache.http.entity.StringEntity;
+import org.apache.http.message.BasicHeader;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static yanagishima.util.Constants.YANAGISHIAM_HIVE_JOB_PREFIX;
 
 
 public class YarnUtil {
 
-    public static String getApplicationId(String resourceManagerUrl, String queryId) {
+    public static String kill(String resourceManagerUrl, String applicationId) {
+        try {
+            Request put = Request.Put(resourceManagerUrl + "/ws/v1/cluster/apps/" + applicationId + "/state");
+            put.addHeader(new BasicHeader("Content-Type", "application/json"));
+            ObjectMapper mapper = new ObjectMapper();
+            Map<String, String> m = new HashMap<>();
+            m.put("state", "KILLED");
+            String json = mapper.writeValueAsString(m);
+            put.body(new StringEntity(json, UTF_8));
+            return put.execute().returnContent().asString(UTF_8);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public static Optional<String> getApplicationId(String resourceManagerUrl, String queryId) {
         List<Map> yarnJoblist = getJobList(resourceManagerUrl);
-        return (String)yarnJoblist.stream().filter(m -> m.get("name").equals(YANAGISHIAM_HIVE_JOB_PREFIX + queryId)).findFirst().get().get("id");
+        Optional<Map> jobOptional = yarnJoblist.stream().filter(m -> m.get("name").equals(YANAGISHIAM_HIVE_JOB_PREFIX + queryId)).findFirst();
+        if(jobOptional.isPresent()) {
+            return Optional.of((String)jobOptional.get().get("id"));
+        } else {
+            return Optional.empty();
+        }
     }
 
     public static List<Map> getJobList(String resourceManagerUrl) {
 
         try {
             String originalJson = Request.Get(resourceManagerUrl + "/ws/v1/cluster/apps")
-                    .execute().returnContent().asString(StandardCharsets.UTF_8);
+                    .execute().returnContent().asString(UTF_8);
 /*
   "apps": {
     "app": [
