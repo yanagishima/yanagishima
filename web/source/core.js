@@ -137,6 +137,7 @@ jQuery(document).ready(function($) {
 				snippets: yanagishima.snippets,
 				snippet: yanagishima.snippets[0].sql,
 				filter_schema: '',
+				filter_table: '',
 				is_searchTable: false,
 				is_expandColumns: false,
 
@@ -265,23 +266,6 @@ jQuery(document).ready(function($) {
 					},
 				},
 
-				// users
-				traffic: {
-					users: 0,
-					events: 0,
-					hits: [],
-					loading: false,
-				},
-				traffic_ranges: [
-					['15 minutes', 15],
-					['30 minutes', 30],
-					['1 hour', 60],
-					['4 hours', 3 * 60],
-					['12 hours', 12 * 60],
-					['24 hours', 24 * 60],
-				],
-				traffic_range: 0,
-
 				// demo
 				demo: {
 					variables: 'SELECT ${x} FROM ${y} LIMIT ${z}',
@@ -294,7 +278,12 @@ jQuery(document).ready(function($) {
 
 			// Migration (v1 -> v2)
 			if (location.search && !self.is_share && !self.is_error) {
-				location.replace('/#' + location.search + '&tab=result');
+				var datasource = location.host.split('.')[0].split('-')[1];
+				if (datasource) {
+					location.replace('/#' + location.search + '&tab=result&datasource=' + datasource);
+				} else {
+					location.href = '/error/?403';
+				}
 				return false;
 			}
 
@@ -352,7 +341,11 @@ jQuery(document).ready(function($) {
 				} else {
 					location.replace('/error/?403');
 				}
-			}).fail(function(xhr, status, error) {});
+			}).fail(function(xhr, status, error) {
+				if (xhr.status === 403) {
+					location.replace('/error/?403');
+				}
+			});
 
 			// Start
 			$('#page').removeClass('unload');
@@ -370,7 +363,6 @@ jQuery(document).ready(function($) {
 			$(document).on('shown.bs.modal', '.modal', function(e) {
 				self.is_modal = true;
 				self.focus = 0;
-				self.trm('modal', $(this).attr('id'));
 			}).on('hidden.bs.modal', function(e) {
 				self.is_modal = false;
 				self.focus = 1;
@@ -404,18 +396,12 @@ jQuery(document).ready(function($) {
 			var inputs = [];
 			var configs = {
 				'konami': [38, 38, 40, 40, 37, 39, 37, 39, 66, 65],
-				'traffic': [17, 17, 17, 17, 17],
 			};
 			$(window).keyup(function(e) {
 				inputs.push(e.keyCode);
 				if (inputs.toString().indexOf(configs.konami) >= 0) {
 					self.superadminMode = true;
 					toastr.success('You can watch all queries.', 'Super Admin Mode');
-				}
-				if (inputs.toString().indexOf(configs.traffic) >= 0) {
-					inputs = [];
-					self.getTraffic();
-					$('#traffic').modal('show');
 				}
 			});
 		},
@@ -436,12 +422,6 @@ jQuery(document).ready(function($) {
 						deep: true
 					});
 				}
-			},
-			sortedHits: function() {
-				var self = this;
-				return self.traffic.hits.sortBy(function(n) {
-					return n[3];
-				}, true);
 			},
 			is_error: function() {
 				return $('body').attr('id') === 'error';
@@ -504,6 +484,16 @@ jQuery(document).ready(function($) {
 					}
 				});
 				return schemata;
+			},
+			filteredTables: function() {
+				var self = this;
+				var filter_table = self.filter_table;
+				var tables = self.tables.filter(function(n) {
+					if (n[0].includes(filter_table)) {
+						return n;
+					}
+				});
+				return tables;
 			},
 			filteredHistory: function() {
 				var self = this;
@@ -573,8 +563,11 @@ jQuery(document).ready(function($) {
 							}
 						});
 					}
-				}).fail(function(xhr, status, error) {});
-				self.trm('result', 'publish');
+				}).fail(function(xhr, status, error) {
+					if (xhr.status === 403) {
+						location.replace('/error/?403');
+					}
+				});
 			},
 			viewError: function() {
 				var self = this;
@@ -603,7 +596,11 @@ jQuery(document).ready(function($) {
 						self.drawChart(data);
 						self.chart = chart;
 						$('#page').removeClass('unload');
-					}).fail(function(xhr, status, error) {});
+					}).fail(function(xhr, status, error) {
+						if (xhr.status === 403) {
+							location.replace('/error/?403');
+						}
+					});
 				}
 			},
 			drawChart: function(data) {
@@ -661,7 +658,7 @@ jQuery(document).ready(function($) {
 				self.query = '';
 				self.queryString = '';
 				self.queryString_collapse = false;
-				self.catalog = '';
+				self.catalog = yanagishima.default_catalog || self.catalogs[0];
 				self.schema = '';
 				self.table = '';
 				self.table_type = '';
@@ -671,6 +668,7 @@ jQuery(document).ready(function($) {
 				self.tables = [];
 				self.columns = [];
 				self.filter_schema = '';
+				self.filter_table = '';
 				self.filter_user = '';
 				self.filter_history = '';
 				self.table_q_in = '';
@@ -732,7 +730,6 @@ jQuery(document).ready(function($) {
 					return false;
 				} else {
 					self.is_searchTable = 1;
-					self.trm('table_search', q);
 				}
 				self.loading.table = true;
 				$.ajax({
@@ -750,6 +747,9 @@ jQuery(document).ready(function($) {
 					self.response.table = data.results;
 					self.loading.table = false;
 				}).fail(function(xhr, status, error) {
+					if (xhr.status === 403) {
+						location.replace('/error/?403');
+					}
 					self.loading.table = false;
 				});
 			},
@@ -779,7 +779,11 @@ jQuery(document).ready(function($) {
 						self.ettortext = '';
 						self.errorline = -1;
 					}
-				}).fail(function(xhr, status, error) {});
+				}).fail(function(xhr, status, error) {
+					if (xhr.status === 403) {
+						location.replace('/error/?403');
+					}
+				});
 			},
 			runQuery: function(query, is_bg) {
 				var self = this;
@@ -794,9 +798,6 @@ jQuery(document).ready(function($) {
 					if (self.loading.result) {
 						return false;
 					}
-					self.trm('run', query);
-				} else {
-					self.trm('run-bg', query);
 				}
 
 				// variables expansion
@@ -815,8 +816,6 @@ jQuery(document).ready(function($) {
 					if (error_variables.length) {
 						alert('Input to variables ' + error_variables.join(', '));
 						return false;
-					} else {
-						self.trm('variables', self.variables.length);
 					}
 				}
 
@@ -852,6 +851,9 @@ jQuery(document).ready(function($) {
 							self.running_queries--;
 						}
 					}).fail(function(xhr, status, error) {
+						if (xhr.status === 403) {
+							location.replace('/error/?403');
+						}
 						self.loading.result = false;
 						self.error.result = error || true;
 						self.running_queries--;
@@ -886,6 +888,9 @@ jQuery(document).ready(function($) {
 						}
 						self.running_queries--;
 					}).fail(function(xhr, status, error) {
+						if (xhr.status === 403) {
+							location.replace('/error/?403');
+						}
 						self.running_queries--;
 					});
 				}
@@ -948,6 +953,9 @@ jQuery(document).ready(function($) {
 							self.running_queries--;
 						}
 					}).fail(function(xhr, status, error) {
+						if (xhr.status === 403) {
+							location.replace('/error/?403');
+						}
 						self.loading.result = false;
 						self.error.result = error || true;
 						self.running_queries--;
@@ -969,7 +977,7 @@ jQuery(document).ready(function($) {
 						queryid: queryid
 					}),
 					timeout: 300000,
-				}).done(function(data) {
+				}).done(function(data, status, xhr) {
 					if (!Object.isEmpty(data)) {
 						self.queryString = data.queryString;
 						self.queryid = queryid;
@@ -992,6 +1000,9 @@ jQuery(document).ready(function($) {
 						self.loading.result = false;
 					}
 				}).fail(function(xhr, status, error) {
+					if (xhr.status === 403) {
+						location.replace('/error/?403');
+					}
 					self.loading.result = false;
 					self.error.result = error || true;
 				});
@@ -1011,7 +1022,6 @@ jQuery(document).ready(function($) {
 					yesterday: Date.create().addDays(-1).format('{yyyy}{MM}{dd}')
 				};
 				self.input_query = self.snippet.format(config);
-				self.trm('snippet', self.snippet);
 			},
 			runSnippet: function() {
 				var self = this;
@@ -1037,7 +1047,11 @@ jQuery(document).ready(function($) {
 					})
 				}).done(function(data) {
 					// self.init();
-				}).fail(function(xhr, status, error) {});
+				}).fail(function(xhr, status, error) {
+					if (xhr.status === 403) {
+						location.replace('/error/?403');
+					}
+				});
 			},
 			formatQuery: function(queryid) {
 				var self = this;
@@ -1056,7 +1070,11 @@ jQuery(document).ready(function($) {
 							self.errortext = data.error;
 							self.errorline = data.errorLineNumber - 1;
 						}
-					}).fail(function(xhr, status, error) {});
+					}).fail(function(xhr, status, error) {
+						if (xhr.status === 403) {
+							location.replace('/error/?403');
+						}
+					});
 				}
 			},
 			toValuesQuery: function(values) {
@@ -1074,7 +1092,11 @@ jQuery(document).ready(function($) {
 						} else {
 							self.input_query = data.query;
 						}
-					}).fail(function(xhr, status, error) {});
+					}).fail(function(xhr, status, error) {
+						if (xhr.status === 403) {
+							location.replace('/error/?403');
+						}
+					});
 				}
 			},
 			getBookmark: function() {
@@ -1103,6 +1125,9 @@ jQuery(document).ready(function($) {
 					}
 					self.loading.bookmark = false;
 				}).fail(function(xhr, status, error) {
+					if (xhr.status === 403) {
+						location.replace('/error/?403');
+					}
 					self.loading.bookmark = false;
 				});
 			},
@@ -1131,6 +1156,9 @@ jQuery(document).ready(function($) {
 					}
 					self.loading.history = false;
 				}).fail(function(xhr, status, error) {
+					if (xhr.status === 403) {
+						location.replace('/error/?403');
+					}
 					self.loading.history = false;
 				});
 			},
@@ -1148,6 +1176,9 @@ jQuery(document).ready(function($) {
 					self.response.qlist = data;
 					self.loading.qlist = false;
 				}).fail(function(xhr, status, error) {
+					if (xhr.status === 403) {
+						location.replace('/error/?403');
+					}
 					self.loading.qlist = false;
 				});
 			},
@@ -1354,12 +1385,18 @@ jQuery(document).ready(function($) {
 			addBookmarkItem: function() {
 				var self = this;
 				var query = self.input_query;
+				var defaultTitle = Date.create().format('{yyyy}/{MM}/{dd} {24hr}:{mm}:{ss}');
+				var title = prompt('Input bookmark title. (default: {0})'.format(defaultTitle));
+				if (title === null) {
+					return false;
+				}
 				$.ajax({
 					type: 'POSt',
 					url: self.domain + self.apis.bookmark.format({
 						datasource: self.datasource
 					}),
 					data: {
+						title: title || defaultTitle,
 						query: query
 					},
 					timeout: 300000,
@@ -1428,10 +1465,6 @@ jQuery(document).ready(function($) {
 					localStorage.setItem('histories_' + self.datasource, self.input_query);
 					self.getHistory();
 				}
-			},
-			trm: function(action, label) {
-				var self = this;
-				var category = self.datasource;
 			},
 			linkDetail: function(val) {
 				var self = this;
@@ -1532,6 +1565,7 @@ jQuery(document).ready(function($) {
 				}
 				self.init();
 				self.runTab();
+				oldVal && self.getTable();
 				localStorage.setItem('datasource', val);
 			},
 			is_modal: function(val) {
@@ -1586,7 +1620,6 @@ jQuery(document).ready(function($) {
 			theme: function(val) {
 				var self = this;
 				localStorage.setItem('theme', val);
-				self.trm('theme', val);
 			},
 			historySize: function(val) {
 				var self = this;
@@ -1628,10 +1661,6 @@ jQuery(document).ready(function($) {
 			},
 			running_queries: function(val) {
 				favicon.badge(val);
-			},
-			traffic_range: function(val) {
-				var self = this;
-				self.getTraffic();
 			},
 		}
 	});

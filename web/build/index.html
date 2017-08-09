@@ -256,21 +256,31 @@
 			<!-- /result --></template>
 			<template v-if="tab === 'treeview'">
 				<div class="row align-items-center pt-3">
-					<div class="col">
-						<div class="btn-group mr-2" v-if="datasources.length > 1">
-							<button type="button" class="btn btn-secondary dropdown-toggle" data-toggle="dropdown"><strong>{{datasource}}</strong></button>
-							<div class="dropdown-menu">
-								<a class="dropdown-item" href="#" v-for="item in datasources" @click.prevent="datasource = item" :class="{active: item === datasource}">{{item}}</a>
-							<!-- /dropdown-menu --></div>
-						<!-- /btn-group --></div>
-						<div class="btn-group">
-							<button type="button" class="btn btn-secondary dropdown-toggle" data-toggle="dropdown"><small class="text-muted mr-1">Catalog</small><strong>{{catalog}}</strong></button>
-							<div class="dropdown-menu" v-if="catalogs.length">
-								<a class="dropdown-item" href="#" v-for="item in catalogs" @click.prevent="catalog = item, schema = '', table = ''" :class="{active: item === catalog}">{{item}}</a>
-							<!-- /dropdown-menu --></div>
-						<!-- /btn-group --></div>
+					<div class="col-7">
+						<div class="row align-items-end pt-3">
+							<div class="col">
+								<div class="btn-group mr-2" v-if="datasources.length > 1">
+									<button type="button" class="btn btn-secondary dropdown-toggle" data-toggle="dropdown"><strong>{{datasource}}</strong></button>
+									<div class="dropdown-menu">
+										<a class="dropdown-item" href="#" v-for="item in datasources" @click.prevent="datasource = item" :class="{active: item === datasource}">{{item}}</a>
+									<!-- /dropdown-menu --></div>
+								<!-- /btn-group --></div>
+								<div class="btn-group">
+									<button type="button" class="btn btn-secondary dropdown-toggle" data-toggle="dropdown"><small class="text-muted mr-1">Catalog</small><strong>{{catalog}}</strong></button>
+									<div class="dropdown-menu" v-if="catalogs.length">
+										<a class="dropdown-item" href="#" v-for="item in catalogs" @click.prevent="catalog = item, schema = '', table = ''" :class="{active: item === catalog}">{{item}}</a>
+									<!-- /dropdown-menu --></div>
+								<!-- /btn-group --></div>
+							<!-- /col --></div>
+							<div class="col">
+								<div class="pull-right">
+									<small><i class="fa fa-fw fa-circle table-base"></i>Base table</small>
+									<small><i class="fa fa-fw fa-circle table-view"></i>View</small>
+								</div>
+							<!-- /col --></div>
+						<!-- /row --></div>
 					<!-- /col --></div>
-					<div class="col text-right">
+					<div class="col-5 text-right">
 						<input type="text" class="form-control  d-inline-block w-50" :placeholder="'Search by Table in ' + catalog" v-model="table_q_in" @keyup.enter="searchTable()" v-focus>
 					<!-- /col --></div>
 				<!-- /row --></div>
@@ -530,13 +540,13 @@
 										<div class="card-header">
 											<strong>Schema</strong>
 											<span class="badge badge-default badge-pill" v-if="filteredSchemata.length">{{filteredSchemata.length}}</span>
-											<div class="pull-right" style="border-bottom: 1px solid #ccc;">
-												<i class="fa fa-filter mt-1 mr-1" :class="{'text-primary': filter_schema.length, 'text-muted': !filter_schema.length}"></i><input type="text" id="filter_schema" class="pull-right" v-model="filter_schema">
+											<div class="pull-right form-filter">
+												<i class="fa fa-filter mt-1 mr-1" :class="{'text-primary': filter_schema.length, 'text-muted': !filter_schema.length}"></i><input type="text" class="pull-right form-filter-input" v-model="filter_schema">
 											</div>
 										<!-- /card-header --></div>
 										<div class="list-group list-group-flush">
 											<template v-if="catalog && filteredSchemata.length">
-												<a href="#" class="list-group-item" v-for="item in filteredSchemata" :class="{active: item == schema}" @click.prevent="schema = item, table = ''"><highlight :sentense="item" :keyword="filter_schema"></highlight> </a>
+												<a href="#" class="list-group-item" v-for="item in filteredSchemata" :class="{active: item == schema}" @click.prevent="schema = item, table = ''"><highlight :sentense="item" :keyword="filter_schema"></highlight></a>
 											</template>
 											<template v-else>
 												<a href="#" class="list-group-item disabled">(N/A)</a>
@@ -548,17 +558,16 @@
 									<div class="card mb-3">
 										<div class="card-header">
 											<strong>Table</strong>
-											<span class="badge badge-default badge-pill" v-if="tables.length">{{tables.length}}</span>
-											<div class="pull-right">
-												<small><i class="fa fa-fw fa-circle table-base"></i>Base table</small>
-												<small><i class="fa fa-fw fa-circle table-view"></i>View</small>
+											<span class="badge badge-default badge-pill" v-if="filteredTables.length">{{filteredTables.length}}</span>
+											<div class="pull-right form-filter">
+												<i class="fa fa-filter mt-1 mr-1" :class="{'text-primary': filter_table.length, 'text-muted': !filter_table.length}"></i><input type="text" class="pull-right form-filter-input" v-model="filter_table">
 											</div>
 										<!-- /card-header --></div>
 										<div class="list-group list-group-flush">
-											<template v-if="schema && tables.length">
-												<a href="#" class="list-group-item" v-for="items in tables" :class="{active: items[0] == table, 'table-base': items[1] !== 'VIEW', 'table-view': items[1] === 'VIEW'}" @click.prevent="table = items[0], table_type = items[1]">
+											<template v-if="schema && filteredTables.length">
+												<a href="#" class="list-group-item" v-for="items in filteredTables" :class="{active: items[0] == table, 'table-base': items[1] !== 'VIEW', 'table-view': items[1] === 'VIEW'}" @click.prevent="table = items[0], table_type = items[1]">
 													<button class="btn btn-sm btn-secondary clip px-2" v-clipboard="[catalog, schema, items[0]].join('.')"><i class="fa fa-fw fa-clipboard"></i></button>
-													{{items[0]}}
+													<highlight :sentense="items[0]" :keyword="filter_table"></highlight>
 												<!-- /list-group-item --></a>
 											</template>
 											<template v-else>
@@ -575,10 +584,6 @@
 									<a href="#" class="text-muted mr-2" @click.prevent="is_searchTable = 0"><i class="fa fa-times"></i></a>
 									"<strong>{{table_q}}</strong>" in {{catalog}}
 									<template v-if="response.table.length"><strong class="ml-2">{{response.table.length}}</strong> results</template>
-									<div class="pull-right">
-										<small><i class="fa fa-fw fa-circle table-base"></i>Base table</small>
-										<small><i class="fa fa-fw fa-circle table-view"></i>View</small>
-									</div>
 								<!-- /card-header --></div>
 								<div class="list-group list-group-flush">
 									<template v-if="response.table.length">
@@ -684,13 +689,18 @@
 					<table class="table table-bordered table-fixed table-hover mb-0" v-if="response.bookmark.length">
 						<thead>
 							<tr>
-								<th width="85%">Query</th>
-								<th width="7.5%" class="text-center">Set</th>
-								<th width="7.5%" class="text-center">Del</th>
+								<th width="20%">Title</th>
+								<th width="66%">Query</th>
+								<th width="7%" class="text-center">Set</th>
+								<th width="7%" class="text-center">Del</th>
 							</tr>
 						</thead>
 						<tbody>
 							<tr v-for="item in response.bookmark" :class="{'table-warning': item.bookmark_id === bookmark_addId}">
+								<td :title="item.title">
+									<template v-if="item.title">{{item.title}}</template>
+									<span class="text-muted" v-else>(none)</span>
+								</td>
 								<td>
 									<ace :code="item.query" readonly="true" css_class="bg-transparent"></ace>
 								</td>
@@ -730,6 +740,11 @@
 						<tbody>
 							<tr>
 								<td>Editor</td>
+								<td><kbd>Ctrl</kbd> + <kbd>Space</kbd></td>
+								<td><strong>Auto-complate</strong> Table/Function</td>
+							</tr>
+							<tr>
+								<td>Editor</td>
 								<td><kbd>Ctrl</kbd> + <kbd>Enter</kbd></td>
 								<td><strong>Run</strong> Query</td>
 							</tr>
@@ -737,11 +752,6 @@
 								<td>Editor</td>
 								<td><kbd>Shift</kbd> + <kbd>Enter</kbd></td>
 								<td><strong>Validate</strong> Query</td>
-							</tr>
-							<tr>
-								<td>Editor</td>
-								<td><kbd>ESC</kbd></td>
-								<td>Toggle <strong>Table/Function Auto-complate</strong></td>
 							</tr>
 						</tbody>
 					</table>

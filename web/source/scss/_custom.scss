@@ -112,7 +112,11 @@ $colors: $brand-primary, #1B5E20, #880E4F, #827717, #212121;
 			flex: none;
 		}
 	}
-	#filter_schema {
+	.form-filter {
+		border-bottom: 1px solid $gray-light;
+	}
+
+	.form-filter-input {
 		width: 8em;
 		border: 0;
 		padding: 0;
@@ -202,6 +206,9 @@ $colors: $brand-primary, #1B5E20, #880E4F, #827717, #212121;
 	}
 	tbody {
 		background-color: $white;
+	}
+	tfoot {
+		background: $white;
 	}
 }
 .card-header + .list-group {

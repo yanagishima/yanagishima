@@ -50,23 +50,14 @@ Vue.component('ace', {
 			this.ace.setTheme(`ace/theme/` + value)
 		},
 		'complate_words': function(value, oldValue) {
-			this.toggleAutoComplate(true);
+			this.startAutoComplate();
 		},
 	},
 	methods: {
-		toggleAutoComplate: function(disable) {
+		startAutoComplate: function() {
 			var self = this;
 			var langTools = ace.require("ace/ext/language_tools");
 			var complate_words = self.complate_words || [];
-
-			self.is_autocomplate = disable ? false : !self.is_autocomplate;
-
-			if (!self.is_autocomplate) {
-				self.ace.unsetStyle('auto-complate');
-				complate_words = [];
-			} else {
-				self.ace.setStyle('auto-complate');
-			}
 			var functionCompleter = {
 				getCompletions: function(editor, session, pos, prefix, callback) {
 					callback(null, complate_words);
@@ -76,7 +67,7 @@ Vue.component('ace', {
 			self.ace.setOptions({
 				enableSnippets: true,
 				enableBasicAutocompletion: true,
-				enableLiveAutocompletion: true,
+				enableLiveAutocompletion: false,
 			});
 		}
 	},
@@ -98,16 +89,7 @@ Vue.component('ace', {
 		self.ace.setStyle(self.css_class || '', true);
 		self.ace.commands.bindKey("Ctrl-P", "golineup");
 		self.ace.commands.bindKey("Ctrl-T", "");
-		self.ace.commands.addCommand({
-			name: "toggleAutoComplate",
-			bindKey: {
-				win: "Esc",
-				mac: "Esc"
-			},
-			exec: function(editor) {
-				self.toggleAutoComplate();
-			}
-		});
+		self.ace.commands.removeCommand('find');
 
 		if (readonly) {
 			self.ace.setReadOnly(readonly);
@@ -161,9 +143,13 @@ Vue.component('highlight', {
 			var sentense = self.sentense;
 			var keyword = self.keyword;
 			var before, after;
-			before = new RegExp('({0})'.format(keyword), 'ig');
-			after = '<mark>$1</mark>';
-			return sentense.replace(before, after);
+			if (keyword.length) {
+				before = new RegExp('({0})'.format(keyword), 'ig');
+				after = '<mark>$1</mark>';
+				return sentense.replace(before, after);
+			} else {
+				return sentense;
+			}
 		}
 	}
 });
