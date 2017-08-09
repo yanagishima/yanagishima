@@ -44,7 +44,7 @@ yanagishima is a Web UI for presto.
 # Versions
 * 6.0
   * support bookmark title, so add title column to bookmark table
-  * metadata of 6.0 is NOT compatible with 5.0, so migration required
+  * metadata of 6.0 is NOT compatible with 5.0, so migration is required
   * migration process is as follows
   ```
   cp data/yanagishima.db data/yanagishima.db.bak
