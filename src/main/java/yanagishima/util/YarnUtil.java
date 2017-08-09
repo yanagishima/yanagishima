@@ -34,14 +34,9 @@ public class YarnUtil {
         }
     }
 
-    public static Optional<String> getApplicationId(String resourceManagerUrl, String queryId) {
+    public static Optional<Map> getApplication(String resourceManagerUrl, String queryId) {
         List<Map> yarnJoblist = getJobList(resourceManagerUrl);
-        Optional<Map> jobOptional = yarnJoblist.stream().filter(m -> m.get("name").equals(YANAGISHIAM_HIVE_JOB_PREFIX + queryId)).findFirst();
-        if(jobOptional.isPresent()) {
-            return Optional.of((String)jobOptional.get().get("id"));
-        } else {
-            return Optional.empty();
-        }
+        return yarnJoblist.stream().filter(m -> m.get("name").equals(YANAGISHIAM_HIVE_JOB_PREFIX + queryId)).findFirst();
     }
 
     public static List<Map> getJobList(String resourceManagerUrl) {

@@ -15,6 +15,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.Map;
 import java.util.Optional;
 
 import static javax.servlet.http.HttpServletResponse.SC_FORBIDDEN;
@@ -52,8 +53,9 @@ public class KillHiveServlet extends HttpServlet {
             }
 
             String resourceManagerUrl = yanagishimaConfig.getResourceManagerUrl(datasource).get();
-            Optional<String> applicationIdOptional = YarnUtil.getApplicationId(resourceManagerUrl, queryId);
-            applicationIdOptional.ifPresent(applicationId -> {
+            Optional<Map> applicationOptional = YarnUtil.getApplication(resourceManagerUrl, queryId);
+            applicationOptional.ifPresent(application -> {
+                String applicationId = (String)application.get("id");
                 try {
                     String json = YarnUtil.kill(resourceManagerUrl, applicationId);
                     response.setContentType("application/json");
