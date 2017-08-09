@@ -9,6 +9,7 @@ import org.komamitsu.fluency.Fluency;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import yanagishima.config.YanagishimaConfig;
+import yanagishima.exception.HiveQueryErrorException;
 import yanagishima.result.HiveQueryResult;
 
 import javax.inject.Inject;
@@ -82,12 +83,12 @@ public class HiveServiceImpl implements HiveService {
     }
 
     @Override
-    public HiveQueryResult doQuery(String datasource, String query, String userName, boolean storeFlag, int limit) {
+    public HiveQueryResult doQuery(String datasource, String query, String userName, boolean storeFlag, int limit) throws HiveQueryErrorException {
         String queryId = generateQueryId(datasource, query);
         return getHiveQueryResult(queryId, datasource, query, storeFlag, limit, userName);
     }
 
-    private HiveQueryResult getHiveQueryResult(String queryId, String datasource, String query, boolean storeFlag, int limit, String userName) {
+    private HiveQueryResult getHiveQueryResult(String queryId, String datasource, String query, boolean storeFlag, int limit, String userName) throws HiveQueryErrorException {
         try {
             Class.forName("org.apache.hive.jdbc.HiveDriver");
         } catch (ClassNotFoundException e) {
@@ -127,7 +128,8 @@ public class HiveServiceImpl implements HiveService {
             return hiveQueryResult;
 
         } catch (SQLException e) {
-            throw new RuntimeException(e);
+            storeError(db, datasource, "hive", queryId, query, e.getMessage());
+            throw new HiveQueryErrorException(queryId, e);
         }
     }
 

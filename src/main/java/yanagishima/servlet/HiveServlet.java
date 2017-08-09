@@ -4,6 +4,7 @@ import me.geso.tinyorm.TinyORM;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import yanagishima.config.YanagishimaConfig;
+import yanagishima.exception.HiveQueryErrorException;
 import yanagishima.result.HiveQueryResult;
 import yanagishima.row.Query;
 import yanagishima.service.HiveService;
@@ -86,27 +87,33 @@ public class HiveServlet extends HttpServlet {
 
                 boolean storeFlag = Boolean.parseBoolean(Optional.ofNullable(request.getParameter("store")).orElse("false"));
                 int limit = yanagishimaConfig.getSelectLimit();
-                HiveQueryResult hiveQueryResult = hiveService.doQuery(datasource, query, userName, storeFlag, limit);
-                String queryid = hiveQueryResult.getQueryId();
-                retVal.put("queryid", queryid);
-                retVal.put("headers", hiveQueryResult.getColumns());
-                retVal.put("results", hiveQueryResult.getRecords());
+                try {
+                    HiveQueryResult hiveQueryResult = hiveService.doQuery(datasource, query, userName, storeFlag, limit);
+                    String queryid = hiveQueryResult.getQueryId();
+                    retVal.put("queryid", queryid);
+                    retVal.put("headers", hiveQueryResult.getColumns());
+                    retVal.put("results", hiveQueryResult.getRecords());
 
-                retVal.put("lineNumber", Integer.toString(hiveQueryResult.getLineNumber()));
-                retVal.put("rawDataSize", hiveQueryResult.getRawDataSize().toString());
-                Optional<String> warningMessageOptinal = Optional.ofNullable(hiveQueryResult.getWarningMessage());
-                warningMessageOptinal.ifPresent(warningMessage -> {
-                    retVal.put("warn", warningMessage);
-                });
-                Optional<Query> queryDataOptional = db.single(Query.class).where("query_id=? and datasource=?", queryid, datasource).execute();
-                queryDataOptional.ifPresent(queryData -> {
-                    LocalDateTime submitTimeLdt = LocalDateTime.parse(queryid.substring(0, "yyyyMMdd_HHmmss".length()), DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss"));
-                    ZonedDateTime submitTimeZdt = submitTimeLdt.atZone(ZoneId.of("GMT", ZoneId.SHORT_IDS));
-                    String fetchResultTimeString = queryData.getFetchResultTimeString();
-                    ZonedDateTime fetchResultTime = ZonedDateTime.parse(fetchResultTimeString);
-                    long elapsedTimeMillis = ChronoUnit.MILLIS.between(submitTimeZdt, fetchResultTime);
-                    retVal.put("elapsedTimeMillis", elapsedTimeMillis);
-                });
+                    retVal.put("lineNumber", Integer.toString(hiveQueryResult.getLineNumber()));
+                    retVal.put("rawDataSize", hiveQueryResult.getRawDataSize().toString());
+                    Optional<String> warningMessageOptinal = Optional.ofNullable(hiveQueryResult.getWarningMessage());
+                    warningMessageOptinal.ifPresent(warningMessage -> {
+                        retVal.put("warn", warningMessage);
+                    });
+                    Optional<Query> queryDataOptional = db.single(Query.class).where("query_id=? and datasource=?", queryid, datasource).execute();
+                    queryDataOptional.ifPresent(queryData -> {
+                        LocalDateTime submitTimeLdt = LocalDateTime.parse(queryid.substring(0, "yyyyMMdd_HHmmss".length()), DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss"));
+                        ZonedDateTime submitTimeZdt = submitTimeLdt.atZone(ZoneId.of("GMT", ZoneId.SHORT_IDS));
+                        String fetchResultTimeString = queryData.getFetchResultTimeString();
+                        ZonedDateTime fetchResultTime = ZonedDateTime.parse(fetchResultTimeString);
+                        long elapsedTimeMillis = ChronoUnit.MILLIS.between(submitTimeZdt, fetchResultTime);
+                        retVal.put("elapsedTimeMillis", elapsedTimeMillis);
+                    });
+                } catch (HiveQueryErrorException e) {
+                    LOGGER.error(e.getMessage(), e);
+                    retVal.put("queryid", e.getQueryId());
+                    retVal.put("error", e.getMessage());
+                }
 
             } catch (Throwable e) {
                 LOGGER.error(e.getMessage(), e);
