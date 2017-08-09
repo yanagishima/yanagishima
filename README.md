@@ -43,18 +43,18 @@ yanagishima is a Web UI for presto.
 
 # Versions
 * 6.0
- * support bookmark title, so add title column to bookmark table
- * metadata of 6.0 is NOT compatible with 5.0, so migration required
- * migration process is as follows
-```
-cp data/yanagishima.db data/yanagishima.db.bak
-sqlite3 data/yanagishima.db
-sqlite> create table if not exists bookmark_new (bookmark_id integer primary key autoincrement, datasource text, query text, title text);
-sqlite> insert into bookmark_new select bookmark_id, datasource, query, null from bookmark;
-sqlite> alter table bookmark rename to bookmark_old;
-sqlite> alter table bookmark_new rename to bookmark;
-If you confirmed, drop table bookmark_old;
-```
+  * support bookmark title, so add title column to bookmark table
+  * metadata of 6.0 is NOT compatible with 5.0, so migration required
+  * migration process is as follows
+  ```
+  cp data/yanagishima.db data/yanagishima.db.bak
+  sqlite3 data/yanagishima.db
+  sqlite> create table if not exists bookmark_new (bookmark_id integer primary key autoincrement, datasource text, query text, title text);
+  sqlite> insert into bookmark_new select bookmark_id, datasource, query, null from bookmark;
+  sqlite> alter table bookmark rename to bookmark_old;
+  sqlite> alter table bookmark_new rename to bookmark;
+  If you confirmed, drop table bookmark_old;
+  ```
 
 # Quick Start
 ```
