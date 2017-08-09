@@ -124,4 +124,9 @@ public class YanagishimaConfig {
 			return Double.parseDouble(property);
 		}
 	}
+
+	public Optional<String> getResourceManagerUrl(String datasource) {
+		return Optional.ofNullable(properties.getProperty("resource.manager.url." + datasource));
+	}
+
 }

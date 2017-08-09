@@ -8,9 +8,11 @@ public class HiveServletModule extends ServletModule {
 	protected void configureServlets() {
 		bind(HiveServlet.class);
 		bind(HiveAsyncServlet.class);
+		bind(YarnJobListServlet.class);
 
 		serve("/hive").with(HiveServlet.class);
 		serve("/hiveAsync").with(HiveAsyncServlet.class);
+		serve("/yarnJobList").with(YarnJobListServlet.class);
 
 	}
 }
