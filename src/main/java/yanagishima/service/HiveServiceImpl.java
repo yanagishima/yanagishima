@@ -139,79 +139,81 @@ public class HiveServiceImpl implements HiveService {
 
     private void processData(String datasource, String query, int limit, Connection connection, String queryId, long start, HiveQueryResult hiveQueryResult) throws SQLException {
         Duration queryMaxRunTime = new Duration(this.yanagishimaConfig.getHiveQueryMaxRunTimeSeconds(datasource), TimeUnit.SECONDS);
-        Statement statement = connection.createStatement();
-        int timeout = (int) queryMaxRunTime.toMillis() / 1000;
-        statement.setQueryTimeout(timeout);
-        String jobName = "yanagishima-hive-" + queryId;
-        statement.execute("set mapreduce.job.name=" + jobName);
-        ResultSet resultSet = statement.executeQuery(query);
-        ResultSetMetaData resultSetMetaData = resultSet.getMetaData();
-        int columnCount = resultSetMetaData.getColumnCount();
-        List<String> columnNameList = new ArrayList<>();
-        for (int i = 1; i <= columnCount; i++) {
-            columnNameList.add(resultSetMetaData.getColumnName(i));
-        }
-
-        Path dst = getResultFilePath(datasource, queryId, false);
-        int lineNumber = 0;
-        int maxResultFileByteSize = yanagishimaConfig.getMaxResultFileByteSize();
-        int resultBytes = 0;
-        try (BufferedWriter bw = Files.newBufferedWriter(dst, StandardCharsets.UTF_8)) {
-            ObjectMapper columnsMapper = new ObjectMapper();
-            String columnsStr = columnsMapper.writeValueAsString(columnNameList) + "\n";
-            bw.write(columnsStr);
-            lineNumber++;
-            hiveQueryResult.setColumns(columnNameList);
-            List<List<String>> rowDataList = new ArrayList<>();
-            while (resultSet.next()) {
-                List<String> columnDataList = new ArrayList<>();
+        try(Statement statement = connection.createStatement()) {
+            int timeout = (int) queryMaxRunTime.toMillis() / 1000;
+            statement.setQueryTimeout(timeout);
+            String jobName = "yanagishima-hive-" + queryId;
+            statement.execute("set mapreduce.job.name=" + jobName);
+            try(ResultSet resultSet = statement.executeQuery(query)) {
+                ResultSetMetaData resultSetMetaData = resultSet.getMetaData();
+                int columnCount = resultSetMetaData.getColumnCount();
+                List<String> columnNameList = new ArrayList<>();
                 for (int i = 1; i <= columnCount; i++) {
-                    Object resultObject = resultSet.getObject(i);
-                    if (resultObject instanceof Long) {
-                        columnDataList.add(((Long) resultObject).toString());
-                    } else {
-                        if (resultObject == null) {
-                            columnDataList.add(null);
-                        } else {
-                            columnDataList.add(resultObject.toString());
-                        }
-                    }
+                    columnNameList.add(resultSetMetaData.getColumnName(i));
                 }
 
-                try {
-                    ObjectMapper resultMapper = new ObjectMapper();
-                    String resultStr = resultMapper.writeValueAsString(columnDataList) + "\n";
-                    bw.write(resultStr);
+                Path dst = getResultFilePath(datasource, queryId, false);
+                int lineNumber = 0;
+                int maxResultFileByteSize = yanagishimaConfig.getMaxResultFileByteSize();
+                int resultBytes = 0;
+                try (BufferedWriter bw = Files.newBufferedWriter(dst, StandardCharsets.UTF_8)) {
+                    ObjectMapper columnsMapper = new ObjectMapper();
+                    String columnsStr = columnsMapper.writeValueAsString(columnNameList) + "\n";
+                    bw.write(columnsStr);
                     lineNumber++;
-                    resultBytes += resultStr.getBytes(StandardCharsets.UTF_8).length;
-                    if (resultBytes > maxResultFileByteSize) {
-                        String message = String.format("Result file size exceeded %s bytes. queryId=%s", maxResultFileByteSize, queryId);
-                        storeError(db, datasource, "hive", queryId, query, message);
-                        throw new RuntimeException(message);
+                    hiveQueryResult.setColumns(columnNameList);
+                    List<List<String>> rowDataList = new ArrayList<>();
+                    while (resultSet.next()) {
+                        List<String> columnDataList = new ArrayList<>();
+                        for (int i = 1; i <= columnCount; i++) {
+                            Object resultObject = resultSet.getObject(i);
+                            if (resultObject instanceof Long) {
+                                columnDataList.add(((Long) resultObject).toString());
+                            } else {
+                                if (resultObject == null) {
+                                    columnDataList.add(null);
+                                } else {
+                                    columnDataList.add(resultObject.toString());
+                                }
+                            }
+                        }
+
+                        try {
+                            ObjectMapper resultMapper = new ObjectMapper();
+                            String resultStr = resultMapper.writeValueAsString(columnDataList) + "\n";
+                            bw.write(resultStr);
+                            lineNumber++;
+                            resultBytes += resultStr.getBytes(StandardCharsets.UTF_8).length;
+                            if (resultBytes > maxResultFileByteSize) {
+                                String message = String.format("Result file size exceeded %s bytes. queryId=%s", maxResultFileByteSize, queryId);
+                                storeError(db, datasource, "hive", queryId, query, message);
+                                throw new RuntimeException(message);
+                            }
+                        } catch (IOException e) {
+                            throw new RuntimeException(e);
+                        }
+                        if (query.toLowerCase().startsWith("show") || rowDataList.size() < limit) {
+                            rowDataList.add(columnDataList);
+                        } else {
+                            hiveQueryResult.setWarningMessage(String.format("now fetch size is %d. This is more than %d. So, fetch operation stopped.", rowDataList.size(), limit));
+                        }
+
+                        checkTimeout(db, queryMaxRunTime, start, datasource, "hive", queryId, query);
                     }
+                    hiveQueryResult.setLineNumber(lineNumber);
+                    hiveQueryResult.setRecords(rowDataList);
                 } catch (IOException e) {
                     throw new RuntimeException(e);
                 }
-                if (query.toLowerCase().startsWith("show") || rowDataList.size() < limit) {
-                    rowDataList.add(columnDataList);
-                } else {
-                    hiveQueryResult.setWarningMessage(String.format("now fetch size is %d. This is more than %d. So, fetch operation stopped.", rowDataList.size(), limit));
+
+                try {
+                    long size = Files.size(dst);
+                    DataSize rawDataSize = new DataSize(size, DataSize.Unit.BYTE);
+                    hiveQueryResult.setRawDataSize(rawDataSize.convertToMostSuccinctDataSize());
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
                 }
-
-                checkTimeout(db, queryMaxRunTime, start, datasource, "hive", queryId, query);
             }
-            hiveQueryResult.setLineNumber(lineNumber);
-            hiveQueryResult.setRecords(rowDataList);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-
-        try {
-            long size = Files.size(dst);
-            DataSize rawDataSize = new DataSize(size, DataSize.Unit.BYTE);
-            hiveQueryResult.setRawDataSize(rawDataSize.convertToMostSuccinctDataSize());
-        } catch (IOException e) {
-            throw new RuntimeException(e);
         }
     }
 
