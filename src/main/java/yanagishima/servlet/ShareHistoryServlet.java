@@ -50,6 +50,7 @@ public class ShareHistoryServlet extends HttpServlet {
                 String datasource = publishOptional.get().getDatasource();
                 String queryid = publishOptional.get().getQueryId();
                 Query query = db.single(Query.class).where("query_id=? and datasource=?", queryid, datasource).execute().get();
+                retVal.put("engine", query.getEngine());
                 HistoryUtil.createHistoryResult(retVal, yanagishimaConfig.getSelectLimit(), datasource, queryid, query.getQueryString(), query.getFetchResultTimeString());
             }
         } catch (Throwable e) {

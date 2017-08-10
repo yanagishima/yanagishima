@@ -68,6 +68,7 @@ public class HistoryServlet extends HttpServlet {
                 }
                 Optional<Query> queryOptional = db.single(Query.class).where("query_id=? and datasource=?", queryidOptional.get(), datasource).execute();
                 queryOptional.ifPresent(query -> {
+                    retVal.put("engine", query.getEngine());
                     HistoryUtil.createHistoryResult(retVal, yanagishimaConfig.getSelectLimit(), datasource, query.getQueryId(), query.getQueryString(), query.getFetchResultTimeString());
                 });
             }

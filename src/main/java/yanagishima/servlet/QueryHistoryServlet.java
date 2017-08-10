@@ -76,7 +76,7 @@ public class QueryHistoryServlet extends HttpServlet {
 
             String placeholder = Arrays.stream(queryids).map(r -> "?").collect(Collectors.joining(", "));
             List<Query> queryList = db.searchBySQL(Query.class,
-                    "SELECT query_id, fetch_result_time_string, query_string FROM query WHERE datasource=\'" + datasource + "\' and query_id IN (" + placeholder + ")",
+                    "SELECT engine, query_id, fetch_result_time_string, query_string FROM query WHERE datasource=\'" + datasource + "\' and query_id IN (" + placeholder + ")",
                     Arrays.stream(queryids).collect(Collectors.toList()));
 
             List<List<Object>> queryHistoryList = new ArrayList<List<Object>>();
@@ -96,10 +96,11 @@ public class QueryHistoryServlet extends HttpServlet {
                 long size = Files.size(PathUtil.getResultFilePath(datasource, queryid, false));
                 DataSize rawDataSize = new DataSize(size, DataSize.Unit.BYTE);
                 row.add(rawDataSize.convertToMostSuccinctDataSize().toString());
+                row.add(query.getEngine());
 
                 queryHistoryList.add(row);
             }
-            retVal.put("headers", Arrays.asList("Id", "Query", "Time", "rawDataSize"));
+            retVal.put("headers", Arrays.asList("Id", "Query", "Time", "rawDataSize", "engine"));
             retVal.put("results", queryHistoryList);
 
         } catch (Throwable e) {
