@@ -1,7 +1,5 @@
 package yanagishima.servlet;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import yanagishima.config.YanagishimaConfig;
 import yanagishima.util.Constants;
 import yanagishima.util.HttpRequestUtil;
@@ -23,13 +21,9 @@ import java.util.stream.Collectors;
 @Singleton
 public class DatasourceServlet extends HttpServlet {
 
-    private static Logger LOGGER = LoggerFactory.getLogger(DatasourceServlet.class);
-
     private static final long serialVersionUID = 1L;
 
     private YanagishimaConfig yanagishimaConfig;
-
-    private static final int LIMIT = 100;
 
     @Inject
     public DatasourceServlet(YanagishimaConfig yanagishimaConfig) {
@@ -42,16 +36,32 @@ public class DatasourceServlet extends HttpServlet {
 
         HashMap<String, Object> retVal = new HashMap<String, Object>();
 
-        if(yanagishimaConfig.isCheckDatasource()) {
-            String header = HttpRequestUtil.getHeader(request, Constants.DATASOURCE_HEADER);
-            if(header.equals("*")) {
-                retVal.put("datasources", yanagishimaConfig.getDatasources());
+        Optional<String> engineOptional = Optional.ofNullable(request.getParameter("engine"));
+        if (engineOptional.isPresent()) {
+            String engine = engineOptional.get();
+            if (yanagishimaConfig.isCheckDatasource()) {
+                String header = HttpRequestUtil.getHeader(request, Constants.DATASOURCE_HEADER);
+                if (header.equals("*")) {
+                    retVal.put("datasources", yanagishimaConfig.getDatasources(engine));
+                } else {
+                    List<String> headerDatasources = Arrays.asList(header.split(","));
+                    retVal.put("datasources", yanagishimaConfig.getDatasources(engine).stream().filter(datasource -> headerDatasources.contains(datasource)).collect(Collectors.toList()));
+                }
             } else {
-                List<String> headerDatasources = Arrays.asList(header.split(","));
-                retVal.put("datasources", yanagishimaConfig.getDatasources().stream().filter(datasource -> headerDatasources.contains(datasource)).collect(Collectors.toList()));
+                retVal.put("datasources", yanagishimaConfig.getDatasources(engine));
             }
         } else {
-            retVal.put("datasources", yanagishimaConfig.getDatasources());
+            if (yanagishimaConfig.isCheckDatasource()) {
+                String header = HttpRequestUtil.getHeader(request, Constants.DATASOURCE_HEADER);
+                if (header.equals("*")) {
+                    retVal.put("datasources", yanagishimaConfig.getDatasources());
+                } else {
+                    List<String> headerDatasources = Arrays.asList(header.split(","));
+                    retVal.put("datasources", yanagishimaConfig.getDatasources().stream().filter(datasource -> headerDatasources.contains(datasource)).collect(Collectors.toList()));
+                }
+            } else {
+                retVal.put("datasources", yanagishimaConfig.getDatasources());
+            }
         }
 
         JsonUtil.writeJSON(response, retVal);

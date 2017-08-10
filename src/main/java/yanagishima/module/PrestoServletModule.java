@@ -26,6 +26,7 @@ public class PrestoServletModule extends ServletModule {
 		bind(BookmarkServlet.class);
 		bind(ToValuesQueryServlet.class);
 		bind(TableListServlet.class);
+		bind(EngineServlet.class);
 
 		serve("/presto").with(PrestoServlet.class);
 		serve("/prestoAsync").with(PrestoAsyncServlet.class);
@@ -47,6 +48,7 @@ public class PrestoServletModule extends ServletModule {
 		serve("/bookmark").with(BookmarkServlet.class);
 		serve("/toValuesQuery").with(ToValuesQueryServlet.class);
 		serve("/tableList").with(TableListServlet.class);
+		serve("/engine").with(EngineServlet.class);
 
 	}
 }

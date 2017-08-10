@@ -42,8 +42,29 @@ public class YanagishimaConfig {
 		return properties.getProperty("audit.http.header.name");
 	}
 
+	public List<String> getDatasources(String engine) {
+		String datasourceProperties = properties.getProperty(engine + ".datasources");
+		if(datasourceProperties == null) {
+			return new ArrayList<>();
+		} else {
+			return Arrays.asList(datasourceProperties.split(","));
+		}
+	}
+
 	public List<String> getDatasources() {
-		return Arrays.asList(Optional.ofNullable(properties.getProperty("presto.datasources")).get().split(","));
+		Set<String> datasources = new HashSet<>();
+		List<String> engines = getEngines();
+		for(String engine : engines) {
+			List<String> datasourceList = getDatasources(engine);
+			for(String datasource : datasourceList) {
+				datasources.add(datasource);
+			}
+		}
+		return new ArrayList<>(datasources);
+	}
+
+	public List<String> getEngines() {
+		return Arrays.asList(Optional.ofNullable(properties.getProperty("sql.query.engines")).get().split(","));
 	}
 
 	public double getQueryMaxRunTimeSeconds() {
