@@ -60,8 +60,9 @@ public class BookmarkServlet extends HttpServlet {
 
             String query = HttpRequestUtil.getParam(request, "query");
             String title = request.getParameter("title");
-            db.insert(Bookmark.class).value("datasource", datasource).value("query", query).value("title", title).execute();
-            List<Bookmark> bookmarkList = db.searchBySQL(Bookmark.class, "select bookmark_id, datasource, query, title from bookmark where rowid = last_insert_rowid()");
+            String engine = HttpRequestUtil.getParam(request, "engine");
+            db.insert(Bookmark.class).value("datasource", datasource).value("query", query).value("title", title).value("engine", engine).execute();
+            List<Bookmark> bookmarkList = db.searchBySQL(Bookmark.class, "select bookmark_id, datasource, engine, query, title from bookmark where rowid = last_insert_rowid()");
             if(bookmarkList.size() == 1) {
                 retVal.put("bookmark_id", bookmarkList.get(0).getBookmarkId());
             } else {
@@ -94,11 +95,12 @@ public class BookmarkServlet extends HttpServlet {
                     }
                 }
             }
+            String engine = HttpRequestUtil.getParam(request, "engine");
             String[] bookmarkIds = HttpRequestUtil.getParam(request, "bookmark_id").split(",");
 
             String placeholder = Arrays.stream(bookmarkIds).map(r -> "?").collect(Collectors.joining(", "));
             List<Bookmark> bookmarkList = db.searchBySQL(Bookmark.class,
-                    "SELECT bookmark_id, datasource, query, title FROM bookmark WHERE datasource=\'" + datasource + "\' and bookmark_id IN (" + placeholder + ")",
+                    "SELECT bookmark_id, datasource, query, title FROM bookmark WHERE datasource=\'" + datasource + "\' and engine=\'" + engine + "\' and bookmark_id IN (" + placeholder + ")",
                     Arrays.stream(bookmarkIds).map(s -> Integer.parseInt(s)).collect(Collectors.toList()));
 
             List<Map> resultMapList = new ArrayList<>();
@@ -106,6 +108,7 @@ public class BookmarkServlet extends HttpServlet {
                 Map<String, Object> m = new HashMap<>();
                 m.put("bookmark_id", bookmark.getBookmarkId());
                 m.put("datasource", bookmark.getDatasource());
+                m.put("engine", bookmark.getEngine());
                 m.put("query", bookmark.getQuery());
                 m.put("title", bookmark.getTitle());
                 resultMapList.add(m);

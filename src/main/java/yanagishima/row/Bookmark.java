@@ -19,6 +19,9 @@ public class Bookmark extends Row<Bookmark>{
     @Column("datasource")
     private String datasource;
 
+    @Column("engine")
+    private String engine;
+
     @Column("query")
     private String query;
 

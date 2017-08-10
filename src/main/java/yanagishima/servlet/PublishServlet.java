@@ -66,15 +66,17 @@ public class PublishServlet extends HttpServlet {
                     }
                 }
             }
+            String engine = HttpRequestUtil.getParam(request, "engine");
             String queryid = Optional.ofNullable(request.getParameter("queryid")).get();
-            Optional<Publish> publishOptional = db.single(Publish.class).where("datasource=? and query_id=?", datasource, queryid).execute();
+            Optional<Publish> publishOptional = db.single(Publish.class).where("datasource=? and engine=? query_id=?", datasource, engine, queryid).execute();
             if(publishOptional.isPresent()) {
                 retVal.put("publish_id", publishOptional.get().getPublishId());
             } else {
-                String publish_id = DigestUtils.md5Hex(datasource + ";" + queryid);
+                String publish_id = DigestUtils.md5Hex(datasource + ";" + engine + ";" + queryid);
                 db.insert(Publish.class)
                         .value("publish_id", publish_id)
                         .value("datasource", datasource)
+                        .value("engine", engine)
                         .value("query_id", queryid)
                         .execute();
                 retVal.put("publish_id", publish_id);

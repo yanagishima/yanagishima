@@ -19,6 +19,9 @@ public class Publish extends Row<Publish>{
     @Column("datasource")
     private String datasource;
 
+    @Column("engine")
+    private String engine;
+
     @Column("query_id")
     private String queryId;
 
