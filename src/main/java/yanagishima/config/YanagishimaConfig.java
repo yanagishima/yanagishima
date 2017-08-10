@@ -1,5 +1,7 @@
 package yanagishima.config;
 
+import yanagishima.util.PropertiesUtil;
+
 import java.util.*;
 
 public class YanagishimaConfig {
@@ -11,19 +13,19 @@ public class YanagishimaConfig {
 	}
 
 	public String getPrestoCoordinatorServer(String datasource) {
-		return Optional.ofNullable(properties.getProperty("presto.coordinator.server." + datasource)).get();
+		return PropertiesUtil.getParam(properties, "presto.coordinator.server." + datasource);
 	}
 
 	public String getPrestoRedirectServer(String datasource) {
-		return Optional.ofNullable(properties.getProperty("presto.redirect.server." + datasource)).get();
+		return PropertiesUtil.getParam(properties, "presto.redirect.server." + datasource);
 	}
 
 	public String getCatalog(String datasource) {
-		return Optional.ofNullable(properties.getProperty("catalog." + datasource)).get();
+		return PropertiesUtil.getParam(properties, "catalog." + datasource);
 	}
 
 	public String getSchema(String datasource) {
-		return Optional.ofNullable(properties.getProperty("schema." + datasource)).get();
+		return PropertiesUtil.getParam(properties, "schema." + datasource);
 	}
 	
 	public String getUser() {
@@ -35,7 +37,7 @@ public class YanagishimaConfig {
 	}
 
 	public int getSelectLimit() {
-		return Integer.parseInt(Optional.ofNullable(properties.getProperty("select.limit")).get());
+		return Integer.parseInt(PropertiesUtil.getParam(properties, "select.limit"));
 	}
 
 	public String getAuditHttpHeaderName() {
@@ -66,11 +68,11 @@ public class YanagishimaConfig {
 	}
 
 	public List<String> getEngines() {
-		return Arrays.asList(Optional.ofNullable(properties.getProperty("sql.query.engines")).get().split(","));
+		return Arrays.asList(PropertiesUtil.getParam(properties, "sql.query.engines").split(","));
 	}
 
 	public double getQueryMaxRunTimeSeconds() {
-		return Double.parseDouble(Optional.ofNullable(properties.getProperty("presto.query.max-run-time-seconds")).get());
+		return Double.parseDouble(PropertiesUtil.getParam(properties, "presto.query.max-run-time-seconds"));
 	}
 
 	public double getQueryMaxRunTimeSeconds(String datasource) {
@@ -83,11 +85,11 @@ public class YanagishimaConfig {
 	}
 
 	public int getMaxResultFileByteSize() {
-		return Integer.parseInt(Optional.ofNullable(properties.getProperty("presto.max-result-file-byte-size")).get());
+		return Integer.parseInt(PropertiesUtil.getParam(properties,"presto.max-result-file-byte-size"));
 	}
 
 	public int getToValuesQueryLimit() {
-		return Integer.parseInt(Optional.ofNullable(properties.getProperty("to.values.query.limit")).get());
+		return Integer.parseInt(PropertiesUtil.getParam(properties,"to.values.query.limit"));
 	}
 
 	public boolean isCheckDatasource() {
@@ -136,7 +138,7 @@ public class YanagishimaConfig {
 	}
 
 	public double getHiveQueryMaxRunTimeSeconds() {
-		return Double.parseDouble(Optional.ofNullable(properties.getProperty("hive.query.max-run-time-seconds")).get());
+		return Double.parseDouble(properties.getProperty("hive.query.max-run-time-seconds"));
 	}
 
 	public double getHiveQueryMaxRunTimeSeconds(String datasource) {
