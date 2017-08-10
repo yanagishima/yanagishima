@@ -52,12 +52,14 @@ public class YanagishimaConfig {
 	}
 
 	public List<String> getDatasources() {
-		Set<String> datasources = new HashSet<>();
+		List<String> datasources = new ArrayList<>();
 		List<String> engines = getEngines();
 		for(String engine : engines) {
 			List<String> datasourceList = getDatasources(engine);
 			for(String datasource : datasourceList) {
-				datasources.add(datasource);
+				if(!datasources.contains(datasource)) {
+					datasources.add(datasource);
+				}
 			}
 		}
 		return new ArrayList<>(datasources);
