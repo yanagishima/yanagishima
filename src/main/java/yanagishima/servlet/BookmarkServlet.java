@@ -95,12 +95,11 @@ public class BookmarkServlet extends HttpServlet {
                     }
                 }
             }
-            String engine = HttpRequestUtil.getParam(request, "engine");
             String[] bookmarkIds = HttpRequestUtil.getParam(request, "bookmark_id").split(",");
 
             String placeholder = Arrays.stream(bookmarkIds).map(r -> "?").collect(Collectors.joining(", "));
             List<Bookmark> bookmarkList = db.searchBySQL(Bookmark.class,
-                    "SELECT bookmark_id, datasource, query, title FROM bookmark WHERE datasource=\'" + datasource + "\' and engine=\'" + engine + "\' and bookmark_id IN (" + placeholder + ")",
+                    "SELECT bookmark_id, datasource, engine, query, title FROM bookmark WHERE datasource=\'" + datasource + "\' and bookmark_id IN (" + placeholder + ")",
                     Arrays.stream(bookmarkIds).map(s -> Integer.parseInt(s)).collect(Collectors.toList()));
 
             List<Map> resultMapList = new ArrayList<>();
