@@ -73,7 +73,7 @@ You need to edit conf/yanagishima.properties.
 jetty.port=8080 # yanagishima web port
 presto.query.max-run-time-seconds=1800 # 30 minutes. If presto query exceeds this time, yanagishima cancel the query.
 presto.max-result-file-byte-size=1073741824 # 1GB. If presto query result file size exceeds this value, yanagishima cancel the query.
-presto.datasources=your-presto # you can speciy freely. But you need to spedify same name to presto.coordinator.server.[...] and presto.redirect.server.[...] and catalog.[...] and schema.[...]
+presto.datasources=your-presto # you can specify freely. But you need to specify same name to presto.coordinator.server.[...] and presto.redirect.server.[...] and catalog.[...] and schema.[...]
 presto.coordinator.server.your-presto=http://presto.coordinator:8080 # presto coordinator url
 presto.redirect.server.your-presto=http://presto.coordinator:8080 # almost same as presto coordinator url. If you use reverse proxy, specify it
 catalog.your-presto=hive # presto catalog name
@@ -81,7 +81,7 @@ schema.your-presto=default # presto schema name
 select.limit=500 # if query result exceeds this limit, to show rest of result is skipped
 audit.http.header.name=some.auth.header # http header name for audit log
 to.values.query.limit=500 # limit to convert from csv to values query
-check.datasource=false # authroization feature
+check.datasource=false # authorization feature
 ```
 
 If you want to handle multiple presto clusters, you need to specify as follows.
