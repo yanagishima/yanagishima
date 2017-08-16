@@ -12,10 +12,7 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Singleton
@@ -36,32 +33,23 @@ public class DatasourceServlet extends HttpServlet {
 
         HashMap<String, Object> retVal = new HashMap<String, Object>();
 
-        Optional<String> engineOptional = Optional.ofNullable(request.getParameter("engine"));
-        if (engineOptional.isPresent()) {
-            String engine = engineOptional.get();
-            if (yanagishimaConfig.isCheckDatasource()) {
-                String header = HttpRequestUtil.getHeader(request, Constants.DATASOURCE_HEADER);
-                if (header.equals("*")) {
-                    retVal.put("datasources", yanagishimaConfig.getDatasources(engine));
-                } else {
-                    List<String> headerDatasources = Arrays.asList(header.split(","));
-                    retVal.put("datasources", yanagishimaConfig.getDatasources(engine).stream().filter(datasource -> headerDatasources.contains(datasource)).collect(Collectors.toList()));
-                }
+        Map<String, List<String>> datasourceEngineMap = yanagishimaConfig.getDatasourceEngineMap();
+        if (yanagishimaConfig.isCheckDatasource()) {
+            String header = HttpRequestUtil.getHeader(request, Constants.DATASOURCE_HEADER);
+            if (header.equals("*")) {
+                retVal.put("datasources", datasourceEngineMap);
             } else {
-                retVal.put("datasources", yanagishimaConfig.getDatasources(engine));
+                List<String> headerDatasources = Arrays.asList(header.split(","));
+                List<String> allowedDatasources = yanagishimaConfig.getDatasources().stream().filter(datasource -> headerDatasources.contains(datasource)).collect(Collectors.toList());
+                for (String datasource : allowedDatasources) {
+                    if(!datasourceEngineMap.containsKey(datasource)) {
+                        datasourceEngineMap.remove(datasource);
+                    }
+                }
+                retVal.put("datasources", datasourceEngineMap);
             }
         } else {
-            if (yanagishimaConfig.isCheckDatasource()) {
-                String header = HttpRequestUtil.getHeader(request, Constants.DATASOURCE_HEADER);
-                if (header.equals("*")) {
-                    retVal.put("datasources", yanagishimaConfig.getDatasources());
-                } else {
-                    List<String> headerDatasources = Arrays.asList(header.split(","));
-                    retVal.put("datasources", yanagishimaConfig.getDatasources().stream().filter(datasource -> headerDatasources.contains(datasource)).collect(Collectors.toList()));
-                }
-            } else {
-                retVal.put("datasources", yanagishimaConfig.getDatasources());
-            }
+            retVal.put("datasources", datasourceEngineMap);
         }
 
         JsonUtil.writeJSON(response, retVal);

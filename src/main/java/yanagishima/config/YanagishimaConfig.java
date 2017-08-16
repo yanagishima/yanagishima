@@ -67,6 +67,26 @@ public class YanagishimaConfig {
 		return new ArrayList<>(datasources);
 	}
 
+	public Map<String, List<String>> getDatasourceEngineMap() {
+		Map<String, List<String>> datasourceEngineMap = new LinkedHashMap<>();
+		List<String> allEngines = getEngines();
+		for(String engine : allEngines) {
+			List<String> datasourceList = getDatasources(engine);
+			for(String datasource : datasourceList) {
+				if(!datasourceEngineMap.containsKey(datasource)) {
+					List<String> engines = new ArrayList<>();
+					engines.add(engine);
+					datasourceEngineMap.put(datasource, engines);
+				} else {
+					List<String> tmpEngines = datasourceEngineMap.get(datasource);
+					tmpEngines.add(engine);
+					datasourceEngineMap.put(datasource, tmpEngines);
+				}
+			}
+		}
+		return datasourceEngineMap;
+	}
+
 	public List<String> getEngines() {
 		return Arrays.asList(PropertiesUtil.getParam(properties, "sql.query.engines").split(","));
 	}
