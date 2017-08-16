@@ -29,6 +29,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
+import static yanagishima.util.Constants.YANAGISHIAM_HIVE_JOB_PREFIX;
 import static yanagishima.util.DbUtil.insertQueryHistory;
 import static yanagishima.util.DbUtil.storeError;
 import static yanagishima.util.PathUtil.getResultFilePath;
@@ -144,7 +145,7 @@ public class HiveServiceImpl implements HiveService {
         try(Statement statement = connection.createStatement()) {
             int timeout = (int) queryMaxRunTime.toMillis() / 1000;
             statement.setQueryTimeout(timeout);
-            String jobName = "yanagishima-hive-" + queryId;
+            String jobName = YANAGISHIAM_HIVE_JOB_PREFIX + queryId;
             statement.execute("set mapreduce.job.name=" + jobName);
             try(ResultSet resultSet = statement.executeQuery(query)) {
                 ResultSetMetaData resultSetMetaData = resultSet.getMetaData();
