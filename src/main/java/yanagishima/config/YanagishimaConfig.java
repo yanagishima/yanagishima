@@ -174,4 +174,13 @@ public class YanagishimaConfig {
 		return Optional.ofNullable(properties.getProperty("resource.manager.url." + datasource));
 	}
 
+	public List<String> getHiveDisallowedKeywords(String datasource) {
+		String property = properties.getProperty("hive.disallowed.keywords." + datasource);
+		if(property == null) {
+			return Collections.emptyList();
+		} else {
+			return Arrays.asList(property.split(","));
+		}
+	}
+
 }

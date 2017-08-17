@@ -87,6 +87,16 @@ public class HiveServiceImpl implements HiveService {
     }
 
     private HiveQueryResult getHiveQueryResult(String queryId, String datasource, String query, boolean storeFlag, int limit, String userName) throws HiveQueryErrorException {
+
+        List<String> hiveDisallowedKeywords = yanagishimaConfig.getHiveDisallowedKeywords(datasource);
+        for(String hiveDisallowedKeyword : hiveDisallowedKeywords) {
+            if(query.toLowerCase().indexOf(hiveDisallowedKeyword) != -1) {
+                String message = "query contains the disallowed keywords.";
+                storeError(db, datasource, "hive", queryId, query, message);
+                throw new RuntimeException(message);
+            }
+        }
+
         try {
             Class.forName("org.apache.hive.jdbc.HiveDriver");
         } catch (ClassNotFoundException e) {
