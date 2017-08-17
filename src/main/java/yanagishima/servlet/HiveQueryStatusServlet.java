@@ -28,8 +28,6 @@ public class HiveQueryStatusServlet extends HttpServlet {
 
 	private YanagishimaConfig yanagishimaConfig;
 
-	private static final int LIMIT = 100;
-
 	@Inject
 	public HiveQueryStatusServlet(YanagishimaConfig yanagishimaConfig) {
 		this.yanagishimaConfig = yanagishimaConfig;
