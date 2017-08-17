@@ -53,7 +53,8 @@ public class KillHiveServlet extends HttpServlet {
             }
 
             String resourceManagerUrl = yanagishimaConfig.getResourceManagerUrl(datasource).get();
-            Optional<Map> applicationOptional = YarnUtil.getApplication(resourceManagerUrl, queryId);
+            String userName = request.getHeader(yanagishimaConfig.getAuditHttpHeaderName());
+            Optional<Map> applicationOptional = YarnUtil.getApplication(resourceManagerUrl, queryId, userName);
             applicationOptional.ifPresent(application -> {
                 String applicationId = (String)application.get("id");
                 try {

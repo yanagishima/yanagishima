@@ -52,7 +52,8 @@ public class HiveQueryStatusServlet extends HttpServlet {
 		}
 		String queryid = Optional.ofNullable(request.getParameter("queryid")).get();
 		String resourceManagerUrl = yanagishimaConfig.getResourceManagerUrl(datasource).get();
-		Optional<Map> applicationOptional = YarnUtil.getApplication(resourceManagerUrl, queryid);
+		String userName = request.getHeader(yanagishimaConfig.getAuditHttpHeaderName());
+		Optional<Map> applicationOptional = YarnUtil.getApplication(resourceManagerUrl, queryid, userName);
 
 		applicationOptional.ifPresent(application -> {
 			try {

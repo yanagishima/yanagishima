@@ -21,10 +21,7 @@ import java.nio.file.Path;
 import java.sql.*;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -104,7 +101,7 @@ public class HiveServiceImpl implements HiveService {
             long start = System.currentTimeMillis();
             HiveQueryResult hiveQueryResult = new HiveQueryResult();
             hiveQueryResult.setQueryId(queryId);
-            processData(datasource, query, limit, connection, queryId, start, hiveQueryResult);
+            processData(datasource, query, limit, userName, connection, queryId, start, hiveQueryResult);
             if (storeFlag) {
                 insertQueryHistory(db, datasource, "hive", query, queryId);
             }
@@ -140,12 +137,17 @@ public class HiveServiceImpl implements HiveService {
         return yyyyMMddHHmmss + "_" + DigestUtils.md5Hex(datasource + ";" + query + ";" + ZonedDateTime.now().toString() + ";" + String.valueOf(rand));
     }
 
-    private void processData(String datasource, String query, int limit, Connection connection, String queryId, long start, HiveQueryResult hiveQueryResult) throws SQLException {
+    private void processData(String datasource, String query, int limit, String userName, Connection connection, String queryId, long start, HiveQueryResult hiveQueryResult) throws SQLException {
         Duration queryMaxRunTime = new Duration(this.yanagishimaConfig.getHiveQueryMaxRunTimeSeconds(datasource), TimeUnit.SECONDS);
         try(Statement statement = connection.createStatement()) {
             int timeout = (int) queryMaxRunTime.toMillis() / 1000;
             statement.setQueryTimeout(timeout);
-            String jobName = YANAGISHIAM_HIVE_JOB_PREFIX + queryId;
+            String jobName = null;
+            if(userName == null) {
+                jobName = YANAGISHIAM_HIVE_JOB_PREFIX + queryId;
+            } else {
+                jobName = YANAGISHIAM_HIVE_JOB_PREFIX + userName + "-" + queryId;
+            }
             statement.execute("set mapreduce.job.name=" + jobName);
             try(ResultSet resultSet = statement.executeQuery(query)) {
                 ResultSetMetaData resultSetMetaData = resultSet.getMetaData();
