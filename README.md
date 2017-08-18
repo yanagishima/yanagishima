@@ -121,7 +121,7 @@ bin/yanagishima-start.sh
 
 # Stop
 ```
-bin/yanagishima-stop.sh
+bin/yanagishima-shutdown.sh
 ```
 
 # Requirements
