@@ -67,24 +67,22 @@ public class YanagishimaConfig {
 		return new ArrayList<>(datasources);
 	}
 
-	public Map<String, List<String>> getDatasourceEngineMap() {
-		Map<String, List<String>> datasourceEngineMap = new LinkedHashMap<>();
-		List<String> allEngines = getEngines();
-		for(String engine : allEngines) {
-			List<String> datasourceList = getDatasources(engine);
-			for(String datasource : datasourceList) {
-				if(!datasourceEngineMap.containsKey(datasource)) {
-					List<String> engines = new ArrayList<>();
+	public List<Map<String, List<String>>> getDatasourceEngineList() {
+		List<Map<String, List<String>>> datasourceEngineList = new ArrayList<>();
+		List<String> datasourceList = getDatasources();
+		for(String datasource : datasourceList) {
+			Map<String, List<String>> datasourceMap = new HashMap<>();
+			List<String> allEngines = getEngines();
+			List<String> engines = new ArrayList<>();
+			for(String engine : allEngines) {
+				if(getDatasources(engine).contains(datasource)) {
 					engines.add(engine);
-					datasourceEngineMap.put(datasource, engines);
-				} else {
-					List<String> tmpEngines = datasourceEngineMap.get(datasource);
-					tmpEngines.add(engine);
-					datasourceEngineMap.put(datasource, tmpEngines);
 				}
 			}
+			datasourceMap.put(datasource, engines);
+			datasourceEngineList.add(datasourceMap);
 		}
-		return datasourceEngineMap;
+		return datasourceEngineList;
 	}
 
 	public List<String> getEngines() {

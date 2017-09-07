@@ -33,23 +33,30 @@ public class DatasourceServlet extends HttpServlet {
 
         HashMap<String, Object> retVal = new HashMap<String, Object>();
 
-        Map<String, List<String>> datasourceEngineMap = yanagishimaConfig.getDatasourceEngineMap();
         if (yanagishimaConfig.isCheckDatasource()) {
             String header = HttpRequestUtil.getHeader(request, Constants.DATASOURCE_HEADER);
             if (header.equals("*")) {
-                retVal.put("datasources", datasourceEngineMap);
+                retVal.put("datasources", yanagishimaConfig.getDatasourceEngineList());
             } else {
                 List<String> headerDatasources = Arrays.asList(header.split(","));
                 List<String> allowedDatasources = yanagishimaConfig.getDatasources().stream().filter(datasource -> headerDatasources.contains(datasource)).collect(Collectors.toList());
-                for (String datasource : allowedDatasources) {
-                    if(!datasourceEngineMap.containsKey(datasource)) {
-                        datasourceEngineMap.remove(datasource);
+                List<Map<String, List<String>>> datasourceEngineList = new ArrayList<>();
+                for(String datasource : allowedDatasources) {
+                    Map<String, List<String>> datasourceMap = new HashMap<>();
+                    List<String> allEngines = yanagishimaConfig.getEngines();
+                    List<String> engines = new ArrayList<>();
+                    for(String engine : allEngines) {
+                        if(yanagishimaConfig.getDatasources(engine).contains(datasource)) {
+                            engines.add(engine);
+                        }
                     }
+                    datasourceMap.put(datasource, engines);
+                    datasourceEngineList.add(datasourceMap);
                 }
-                retVal.put("datasources", datasourceEngineMap);
+                retVal.put("datasources", datasourceEngineList);
             }
         } else {
-            retVal.put("datasources", datasourceEngineMap);
+            retVal.put("datasources", yanagishimaConfig.getDatasourceEngineList());
         }
 
         JsonUtil.writeJSON(response, retVal);
