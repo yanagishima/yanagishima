@@ -38,8 +38,8 @@ public class KillHiveServlet extends HttpServlet {
     protected void doGet(HttpServletRequest request,
                          HttpServletResponse response) throws ServletException, IOException {
 
-        Optional<String> queryIdOptinal = Optional.ofNullable(request.getParameter("queryid"));
-        queryIdOptinal.ifPresent(queryId -> {
+        Optional<String> idOptinal = Optional.ofNullable(request.getParameter("id"));
+        idOptinal.ifPresent(id -> {
             String datasource = HttpRequestUtil.getParam(request, "datasource");
             if (yanagishimaConfig.isCheckDatasource()) {
                 if (!AccessControlUtil.validateDatasource(request, datasource)) {
@@ -54,18 +54,29 @@ public class KillHiveServlet extends HttpServlet {
 
             String resourceManagerUrl = yanagishimaConfig.getResourceManagerUrl(datasource).get();
             String userName = request.getHeader(yanagishimaConfig.getAuditHttpHeaderName());
-            Optional<Map> applicationOptional = YarnUtil.getApplication(resourceManagerUrl, queryId, userName);
-            applicationOptional.ifPresent(application -> {
-                String applicationId = (String)application.get("id");
+            if (id.startsWith("application_")) {
                 try {
-                    String json = YarnUtil.kill(resourceManagerUrl, applicationId);
+                    String json = YarnUtil.kill(resourceManagerUrl, id);
                     response.setContentType("application/json");
                     PrintWriter writer = response.getWriter();
                     writer.println(json);
                 } catch (IOException e) {
                     throw new RuntimeException(e);
                 }
-            });
+            } else {
+                Optional<Map> applicationOptional = YarnUtil.getApplication(resourceManagerUrl, id, userName);
+                applicationOptional.ifPresent(application -> {
+                    String applicationId = (String) application.get("id");
+                    try {
+                        String json = YarnUtil.kill(resourceManagerUrl, applicationId);
+                        response.setContentType("application/json");
+                        PrintWriter writer = response.getWriter();
+                        writer.println(json);
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    }
+                });
+            }
 
         });
 

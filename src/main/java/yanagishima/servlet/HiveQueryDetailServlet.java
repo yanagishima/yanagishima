@@ -45,15 +45,25 @@ public class HiveQueryDetailServlet extends HttpServlet {
             }
         }
         String resourceManagerUrl = yanagishimaConfig.getResourceManagerUrl(datasource).get();
-        String queryId = request.getParameter("queryid");
-        String userName = request.getHeader(yanagishimaConfig.getAuditHttpHeaderName());
-        Optional<Map> applicationOptional = YarnUtil.getApplication(resourceManagerUrl, queryId, userName);
-        applicationOptional.ifPresent(application -> {
-            String applicationId = (String) application.get("id");
-            try {
-                response.sendRedirect(resourceManagerUrl + "/cluster/app/" + applicationId);
-            } catch (IOException e) {
-                throw new RuntimeException(e);
+        Optional<String> idOptinal = Optional.ofNullable(request.getParameter("id"));
+        idOptinal.ifPresent(id -> {
+            if (id.startsWith("application_")) {
+                try {
+                    response.sendRedirect(resourceManagerUrl + "/cluster/app/" + id);
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+            } else {
+                String userName = request.getHeader(yanagishimaConfig.getAuditHttpHeaderName());
+                Optional<Map> applicationOptional = YarnUtil.getApplication(resourceManagerUrl, id, userName);
+                applicationOptional.ifPresent(application -> {
+                    String applicationId = (String) application.get("id");
+                    try {
+                        response.sendRedirect(resourceManagerUrl + "/cluster/app/" + applicationId);
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    }
+                });
             }
         });
     }
