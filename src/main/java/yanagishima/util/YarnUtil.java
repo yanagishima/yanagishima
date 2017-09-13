@@ -34,8 +34,8 @@ public class YarnUtil {
         }
     }
 
-    public static Optional<Map> getApplication(String resourceManagerUrl, String queryId, String userName) {
-        List<Map> yarnJoblist = getJobList(resourceManagerUrl);
+    public static Optional<Map> getApplication(String resourceManagerUrl, String queryId, String userName, Optional<String> beginOptional) {
+        List<Map> yarnJoblist = getJobList(resourceManagerUrl, beginOptional);
         if(userName == null) {
             return yarnJoblist.stream().filter(m -> m.get("name").equals(YANAGISHIAM_HIVE_JOB_PREFIX + queryId)).findFirst();
         } else {
@@ -44,11 +44,20 @@ public class YarnUtil {
 
     }
 
-    public static List<Map> getJobList(String resourceManagerUrl) {
+    public static List<Map> getJobList(String resourceManagerUrl, Optional<String> beginOptional) {
 
         try {
-            String originalJson = Request.Get(resourceManagerUrl + "/ws/v1/cluster/apps")
-                    .execute().returnContent().asString(UTF_8);
+            String originalJson = null;
+            if(beginOptional.isPresent()) {
+                long currentTimeMillis = System.currentTimeMillis();
+                String startedTimeBegin = String.valueOf(currentTimeMillis - Long.valueOf(beginOptional.get()));
+                originalJson = Request.Get(resourceManagerUrl + "/ws/v1/cluster/apps?startedTimeBegin=" + startedTimeBegin)
+                        .execute().returnContent().asString(UTF_8);
+            } else {
+                originalJson = Request.Get(resourceManagerUrl + "/ws/v1/cluster/apps")
+                        .execute().returnContent().asString(UTF_8);
+            }
+
 /*
   "apps": {
     "app": [

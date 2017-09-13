@@ -66,7 +66,7 @@ public class YarnJobListServlet extends HttpServlet {
 		String resourceManagerUrl = yanagishimaConfig.getResourceManagerUrl(datasource).get();
 		response.setContentType("application/json");
 		PrintWriter writer = response.getWriter();
-		List<Map> yarnJobList = YarnUtil.getJobList(resourceManagerUrl);
+		List<Map> yarnJobList = YarnUtil.getJobList(resourceManagerUrl, yanagishimaConfig.getResourceManagerBegin(datasource));
 		List<Map> runningList = yarnJobList.stream().filter(m -> m.get("state").equals("RUNNING")).collect(Collectors.toList());;
 		List<Map> notRunningList = yarnJobList.stream().filter(m -> !m.get("state").equals("RUNNING")).collect(Collectors.toList());;
 		runningList.sort((a,b)-> String.class.cast(b.get("id")).compareTo(String.class.cast(a.get("id"))));

@@ -185,6 +185,10 @@ public class YanagishimaConfig {
 		return Optional.ofNullable(properties.getProperty("resource.manager.url." + datasource));
 	}
 
+	public Optional<String> getResourceManagerBegin(String datasource) {
+		return Optional.ofNullable(properties.getProperty("resource.manager.url." + datasource + ".begin"));
+	}
+
 	public List<String> getHiveDisallowedKeywords(String datasource) {
 		String property = properties.getProperty("hive.disallowed.keywords." + datasource);
 		if(property == null) {

@@ -55,7 +55,7 @@ public class HiveQueryDetailServlet extends HttpServlet {
                 }
             } else {
                 String userName = request.getHeader(yanagishimaConfig.getAuditHttpHeaderName());
-                Optional<Map> applicationOptional = YarnUtil.getApplication(resourceManagerUrl, id, userName);
+                Optional<Map> applicationOptional = YarnUtil.getApplication(resourceManagerUrl, id, userName, yanagishimaConfig.getResourceManagerBegin(datasource));
                 applicationOptional.ifPresent(application -> {
                     String applicationId = (String) application.get("id");
                     try {
