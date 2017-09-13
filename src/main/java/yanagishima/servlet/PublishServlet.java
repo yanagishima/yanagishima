@@ -68,7 +68,7 @@ public class PublishServlet extends HttpServlet {
             }
             String engine = HttpRequestUtil.getParam(request, "engine");
             String queryid = Optional.ofNullable(request.getParameter("queryid")).get();
-            Optional<Publish> publishOptional = db.single(Publish.class).where("datasource=? and engine=? query_id=?", datasource, engine, queryid).execute();
+            Optional<Publish> publishOptional = db.single(Publish.class).where("datasource=? and engine=? and query_id=?", datasource, engine, queryid).execute();
             if(publishOptional.isPresent()) {
                 retVal.put("publish_id", publishOptional.get().getPublishId());
             } else {
