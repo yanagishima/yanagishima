@@ -94,7 +94,7 @@ public class HiveServlet extends HttpServlet {
                     String queryid = hiveQueryResult.getQueryId();
                     retVal.put("queryid", queryid);
                     retVal.put("headers", hiveQueryResult.getColumns());
-                    if(query.toLowerCase().indexOf("show databases") != -1) {
+                    if(query.toLowerCase().indexOf("show schemas") != -1) {
                         List<String> invisibleDatabases = yanagishimaConfig.getInvisibleDatabases(datasource);
                         retVal.put("results", hiveQueryResult.getRecords().stream().filter(list -> !invisibleDatabases.contains(list.get(0))).collect(Collectors.toList()));
                     } else {
