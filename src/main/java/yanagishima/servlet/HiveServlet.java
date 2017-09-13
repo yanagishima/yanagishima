@@ -25,7 +25,9 @@ import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import static javax.servlet.http.HttpServletResponse.SC_FORBIDDEN;
 
@@ -92,8 +94,12 @@ public class HiveServlet extends HttpServlet {
                     String queryid = hiveQueryResult.getQueryId();
                     retVal.put("queryid", queryid);
                     retVal.put("headers", hiveQueryResult.getColumns());
-                    retVal.put("results", hiveQueryResult.getRecords());
-
+                    if(query.toLowerCase().indexOf("show databases") != -1) {
+                        List<String> invisibleDatabases = yanagishimaConfig.getInvisibleDatabases(datasource);
+                        retVal.put("results", hiveQueryResult.getRecords().stream().filter(list -> !invisibleDatabases.contains(list.get(0))).collect(Collectors.toList()));
+                    } else {
+                        retVal.put("results", hiveQueryResult.getRecords());
+                    }
                     retVal.put("lineNumber", Integer.toString(hiveQueryResult.getLineNumber()));
                     retVal.put("rawDataSize", hiveQueryResult.getRawDataSize().toString());
                     Optional<String> warningMessageOptinal = Optional.ofNullable(hiveQueryResult.getWarningMessage());

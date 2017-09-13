@@ -123,6 +123,15 @@ public class YanagishimaConfig {
 		}
 	}
 
+	public List<String> getInvisibleDatabases(String datasource) {
+		String invisibleDatabases = properties.getProperty("invisible.database." + datasource);
+		if(invisibleDatabases == null) {
+			return Collections.emptyList();
+		} else {
+			return Arrays.asList(invisibleDatabases.split(","));
+		}
+	}
+
 	public Optional<String> getFluentdExecutedTag() {
 		return Optional.ofNullable(properties.getProperty("fluentd.executed.tag"));
 	}
