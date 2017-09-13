@@ -83,22 +83,27 @@ public class QueryHistoryServlet extends HttpServlet {
             for (Query query : queryList) {
                 List<Object> row = new ArrayList<>();
                 String queryid = query.getQueryId();
-                row.add(queryid);
-                row.add(query.getQueryString());
 
-                LocalDateTime submitTimeLdt = LocalDateTime.parse(queryid.substring(0, "yyyyMMdd_HHmmss".length()), DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss"));
-                ZonedDateTime submitTimeZdt = submitTimeLdt.atZone(ZoneId.of("GMT", ZoneId.SHORT_IDS));
-                String fetchResultTimeString = query.getFetchResultTimeString();
-                ZonedDateTime fetchResultTime = ZonedDateTime.parse(fetchResultTimeString);
-                long elapsedTimeMillis = ChronoUnit.MILLIS.between(submitTimeZdt, fetchResultTime);
-                row.add(elapsedTimeMillis);
+                Path resultFilePath = PathUtil.getResultFilePath(datasource, queryid, false);
+                if(resultFilePath.toFile().exists()) {
+                    row.add(queryid);
+                    row.add(query.getQueryString());
 
-                long size = Files.size(PathUtil.getResultFilePath(datasource, queryid, false));
-                DataSize rawDataSize = new DataSize(size, DataSize.Unit.BYTE);
-                row.add(rawDataSize.convertToMostSuccinctDataSize().toString());
-                row.add(query.getEngine());
+                    LocalDateTime submitTimeLdt = LocalDateTime.parse(queryid.substring(0, "yyyyMMdd_HHmmss".length()), DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss"));
+                    ZonedDateTime submitTimeZdt = submitTimeLdt.atZone(ZoneId.of("GMT", ZoneId.SHORT_IDS));
+                    String fetchResultTimeString = query.getFetchResultTimeString();
+                    ZonedDateTime fetchResultTime = ZonedDateTime.parse(fetchResultTimeString);
+                    long elapsedTimeMillis = ChronoUnit.MILLIS.between(submitTimeZdt, fetchResultTime);
+                    row.add(elapsedTimeMillis);
 
-                queryHistoryList.add(row);
+                    long size = Files.size(resultFilePath);
+                    DataSize rawDataSize = new DataSize(size, DataSize.Unit.BYTE);
+                    row.add(rawDataSize.convertToMostSuccinctDataSize().toString());
+                    row.add(query.getEngine());
+
+                    queryHistoryList.add(row);
+                }
+
             }
             retVal.put("headers", Arrays.asList("Id", "Query", "Time", "rawDataSize", "engine"));
             retVal.put("results", queryHistoryList);
