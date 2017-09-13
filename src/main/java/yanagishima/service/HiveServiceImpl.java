@@ -170,7 +170,7 @@ public class HiveServiceImpl implements HiveService {
 
                 Path dst = getResultFilePath(datasource, queryId, false);
                 int lineNumber = 0;
-                int maxResultFileByteSize = yanagishimaConfig.getMaxResultFileByteSize();
+                int maxResultFileByteSize = yanagishimaConfig.getHiveMaxResultFileByteSize();
                 int resultBytes = 0;
                 try (BufferedWriter bw = Files.newBufferedWriter(dst, StandardCharsets.UTF_8)) {
                     ObjectMapper columnsMapper = new ObjectMapper();

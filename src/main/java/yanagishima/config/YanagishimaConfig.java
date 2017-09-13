@@ -106,6 +106,10 @@ public class YanagishimaConfig {
 		return Integer.parseInt(PropertiesUtil.getParam(properties,"presto.max-result-file-byte-size"));
 	}
 
+	public int getHiveMaxResultFileByteSize() {
+		return Integer.parseInt(PropertiesUtil.getParam(properties,"hive.max-result-file-byte-size"));
+	}
+
 	public int getToValuesQueryLimit() {
 		return Integer.parseInt(PropertiesUtil.getParam(properties,"to.values.query.limit"));
 	}
