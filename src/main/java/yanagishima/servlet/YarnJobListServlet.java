@@ -81,12 +81,43 @@ public class YarnJobListServlet extends HttpServlet {
 			limitedList = yarnJobList;
 		}
 
+		String userName = request.getHeader(yanagishimaConfig.getAuditHttpHeaderName());
+
+		List<String> queryidList = new ArrayList<>();
 		for(Map m : limitedList) {
 			String name = (String)m.get("name");
 			if(name.startsWith(YANAGISHIAM_HIVE_JOB_PREFIX)) {
-				String queryId = name.substring(YANAGISHIAM_HIVE_JOB_PREFIX.length());
-				Optional<Query> queryOptional = db.single(Query.class).where("engine='hive' and query_id=? and datasource=?", queryId, datasource).execute();
-				if(queryOptional.isPresent()) {
+				if(userName == null) {
+					String queryId = name.substring(YANAGISHIAM_HIVE_JOB_PREFIX.length());
+					queryidList.add(queryId);
+				} else {
+					String queryId = name.substring(YANAGISHIAM_HIVE_JOB_PREFIX.length() + userName.length() + 1);
+					queryidList.add(queryId);
+				}
+
+			}
+		}
+
+		String placeholder = queryidList.stream().map(r -> "?").collect(Collectors.joining(", "));
+		List<Query> queryList = db.searchBySQL(Query.class,
+				"SELECT engine, query_id, fetch_result_time_string, query_string FROM query WHERE engine='hive' and datasource=\'" + datasource + "\' and query_id IN (" + placeholder + ")",
+				queryidList.stream().collect(Collectors.toList()));
+
+		List<String> existdbQueryidList = new ArrayList<>();
+		for(Query query : queryList) {
+			existdbQueryidList.add(query.getQueryId());
+		}
+
+		for(Map m : limitedList) {
+			String name = (String)m.get("name");
+			if(name.startsWith(YANAGISHIAM_HIVE_JOB_PREFIX)) {
+				String queryId = null;
+				if(userName == null) {
+					queryId = name.substring(YANAGISHIAM_HIVE_JOB_PREFIX.length());
+				} else {
+					queryId = name.substring(YANAGISHIAM_HIVE_JOB_PREFIX.length() + userName.length() + 1);
+				}
+				if(existdbQueryidList.contains(queryId)) {
 					m.put("existdb", true);
 				} else {
 					m.put("existdb", false);

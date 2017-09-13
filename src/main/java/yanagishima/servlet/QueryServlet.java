@@ -80,9 +80,23 @@ public class QueryServlet extends HttpServlet {
 			limitedList = list;
 		}
 
+		List<String> queryidList = new ArrayList<>();
 		for(Map m : limitedList) {
-			Optional<Query> queryOptional = db.single(Query.class).where("query_id=? and datasource=?", m.get("queryId"), datasource).execute();
-			if(queryOptional.isPresent()) {
+			queryidList.add((String)m.get("queryId"));
+		}
+
+		String placeholder = queryidList.stream().map(r -> "?").collect(Collectors.joining(", "));
+		List<Query> queryList = db.searchBySQL(Query.class,
+				"SELECT engine, query_id, fetch_result_time_string, query_string FROM query WHERE engine='presto' and datasource=\'" + datasource + "\' and query_id IN (" + placeholder + ")",
+				queryidList.stream().collect(Collectors.toList()));
+
+		List<String> existdbQueryidList = new ArrayList<>();
+		for(Query query : queryList) {
+			existdbQueryidList.add(query.getQueryId());
+		}
+		for(Map m : limitedList) {
+			String queryid = (String)m.get("queryId");
+			if(existdbQueryidList.contains(queryid)) {
 				m.put("existdb", true);
 			} else {
 				m.put("existdb", false);
