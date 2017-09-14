@@ -100,12 +100,13 @@ public class QueryHistoryServlet extends HttpServlet {
                     DataSize rawDataSize = new DataSize(size, DataSize.Unit.BYTE);
                     row.add(rawDataSize.convertToMostSuccinctDataSize().toString());
                     row.add(query.getEngine());
+                    row.add(fetchResultTimeString);
 
                     queryHistoryList.add(row);
                 }
 
             }
-            retVal.put("headers", Arrays.asList("Id", "Query", "Time", "rawDataSize", "engine"));
+            retVal.put("headers", Arrays.asList("Id", "Query", "Time", "rawDataSize", "engine", "finishedTime"));
             retVal.put("results", queryHistoryList);
 
         } catch (Throwable e) {
