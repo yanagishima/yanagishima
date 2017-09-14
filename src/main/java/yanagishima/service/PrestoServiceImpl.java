@@ -112,13 +112,13 @@ public class PrestoServiceImpl implements PrestoService {
             }
         }
 
+        PrestoQueryResult prestoQueryResult = new PrestoQueryResult();
         if ((!client.isFailed()) && (!client.isGone()) && (!client.isClosed())) {
             QueryResults results = client.isValid() ? client.current() : client.finalResults();
             String queryId = results.getId();
             if (results.getColumns() == null) {
                 throw new QueryErrorException(new SQLException(format("Query %s has no columns\n", results.getId())));
             } else {
-                PrestoQueryResult prestoQueryResult = new PrestoQueryResult();
                 prestoQueryResult.setQueryId(queryId);
                 prestoQueryResult.setUpdateType(results.getUpdateType());
                 List<String> columns = Lists.transform(results.getColumns(), Column::getName);
@@ -147,7 +147,6 @@ public class PrestoServiceImpl implements PrestoService {
                         LOGGER.error(e.getMessage(), e);
                     }
                 }
-                return prestoQueryResult;
             }
         }
 
@@ -157,7 +156,24 @@ public class PrestoServiceImpl implements PrestoService {
             throw new RuntimeException("Query is gone (server restarted?)");
         } else if (client.isFailed()) {
             QueryResults results = client.finalResults();
-            storeError(db, datasource, "presto", results.getId(), query, results.getError().getMessage());
+            if(prestoQueryResult.getQueryId() == null) {
+                storeError(db, datasource, "presto", results.getId(), query, results.getError().getMessage());
+            } else {
+                Path successDst = getResultFilePath(datasource, prestoQueryResult.getQueryId(), false);
+                try {
+                    Files.delete(successDst);
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+                Path dst = getResultFilePath(datasource, prestoQueryResult.getQueryId(), true);
+                String message = format("Query failed (#%s): %s", prestoQueryResult.getQueryId(), results.getError().getMessage());
+
+                try (BufferedWriter bw = Files.newBufferedWriter(dst, StandardCharsets.UTF_8)) {
+                    bw.write(message);
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+            }
             if(yanagishimaConfig.getFluentdFaliedTag().isPresent()) {
                 String fluentdHost = yanagishimaConfig.getFluentdHost().orElse("localhost");
                 int fluentdPort = Integer.parseInt(yanagishimaConfig.getFluentdPort().orElse("24224"));
@@ -182,7 +198,7 @@ public class PrestoServiceImpl implements PrestoService {
             }
             throw resultsException(results);
         }
-        throw new RuntimeException("should not reach");
+        return prestoQueryResult;
     }
 
     private void processData(StatementClient client, String datasource, String queryId, String query, PrestoQueryResult prestoQueryResult, List<String> columns, List<List<String>> rowDataList, long start, int limit) {
