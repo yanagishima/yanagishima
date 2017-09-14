@@ -22,6 +22,7 @@ public class HistoryUtil {
 
     public static void createHistoryResult(HashMap<String, Object> retVal, int limit, String datasource, String queryid, String queryString, String fetchResultTimeString) {
         retVal.put("queryString", queryString);
+        retVal.put("finishedTime", fetchResultTimeString);
 
         Path errorFilePath = PathUtil.getResultFilePath(datasource, queryid, true);
         if (errorFilePath.toFile().exists()) {
