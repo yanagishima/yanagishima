@@ -33,6 +33,7 @@ yanagishima is a Web UI for presto/hive.
 * validation(Shift+Enter, presto only)
 * export/import history
 * export/import bookmark
+* desktop notification
 
 # Limitation
 
