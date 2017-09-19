@@ -41,6 +41,10 @@
 									<i class="fa fa-fw fa-file-text-o" title="Publish ID" data-toggle="tooltip" data-placement="left"></i>
 									<strong>{{publish_id}}</strong>
 								</span>
+								<span class="mr-2" v-if="response.share.finishedTime">
+									<i class="fa fa-clock-o" title="Finished time" data-toggle="tooltip" data-animation="false" data-placement="left"></i>
+									{{response.share.finishedTime | extractDate}}
+								</span>
 								<span class="mr-2" v-if="response.share.elapsedTimeMillis">
 									<strong>{{(response.share.elapsedTimeMillis / 1000).ceil(2)}}</strong><span class="text-muted ml-1">sec</span>
 								</span>
@@ -94,6 +98,7 @@
   					<div class="card-block">
 						<template v-if="chart == key" v-for="(val, key) in chart_types">
 							<vue-chart :chart-type="val.type" :columns="chart_columns" :rows="chart_rows" :options="Object.merge(chart_options, val.option)"></vue-chart>
+							<div class="text-right text-muted" v-if="response.share.lineNumber > 501">This data is only top 500.</div>
 						</template>
 					</div>
 					</div>

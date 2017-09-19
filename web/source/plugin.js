@@ -1,7 +1,7 @@
 // Vue component for Ace Editor
 Vue.component('ace', {
 	template: '<div :id="aceId" style="width: 100%; height: 100%;"></div>',
-	props: ['code', 'lang', 'theme', 'readonly', 'gotoline', 'errorline', 'errortext', 'focus', 'minline', 'maxline', 'css_class', 'complate_words'],
+	props: ['code', 'lang', 'theme', 'disabled', 'readonly', 'gotoline', 'errorline', 'errortext', 'focus', 'minline', 'maxline', 'css_class', 'complate_words'],
 	data: function() {
 		return {
 			ace: Object,
@@ -23,6 +23,9 @@ Vue.component('ace', {
 					this.ace.gotoLine(value);
 				}
 			}
+		},
+		'disabled': function(value, oldValue) {
+			this.ace.setReadOnly(value);
 		},
 		'errorline': function(value, oldValue) {
 			if (value !== -1) {
@@ -89,6 +92,7 @@ Vue.component('ace', {
 		self.ace.setStyle(self.css_class || '', true);
 		self.ace.commands.bindKey("Ctrl-P", "golineup");
 		self.ace.commands.bindKey("Ctrl-T", "");
+		self.ace.commands.bindKey("Command-L", "");
 		self.ace.commands.removeCommand('find');
 
 		if (readonly) {
@@ -131,6 +135,16 @@ Vue.component('ace', {
 					self.$emit('validate-code', self.ace.getValue());
 				}
 			});
+			self.ace.commands.addCommand({
+				name: 'format',
+				bindKey: {
+					win: 'Ctrl-Shift-F',
+					mac: 'Ctrl-Shift-F'
+				},
+				exec: function() {
+					self.$emit('format-code', self.ace.getValue());
+				}
+			});
 		}
 	}
 });
@@ -141,15 +155,17 @@ Vue.component('highlight', {
 		result: function() {
 			var self = this;
 			var sentense = self.sentense;
-			var keyword = self.keyword;
-			var before, after;
+			var keyword = self.keyword.trim();
 			if (keyword.length) {
-				before = new RegExp('({0})'.format(keyword), 'ig');
-				after = '<mark>$1</mark>';
-				return sentense.replace(before, after);
-			} else {
-				return sentense;
+				var keywords = keyword.includes(' ') ? keyword.split(' ').unique() : [keyword];
+				keywords.map(function(n) {
+					var before, after;
+					before = new RegExp('({0})'.format(RegExp.escape(n)), 'ig');
+					after = '<mark>$1</mark>';
+					sentense = sentense.replace(before, after);
+				});
 			}
+			return sentense;
 		}
 	}
 });

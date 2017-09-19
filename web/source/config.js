@@ -1,5 +1,5 @@
 yanagishima = {
-	version: '6.0',
+	version: '7.0',
 	sitename: 'yanagishima',
 	domain: '',
 	apis: {
@@ -14,15 +14,21 @@ yanagishima = {
 		queryHistory: '/queryHistory?datasource={datasource}',
 		download: '/download?datasource={datasource}&queryid={queryid}',
 		csvdownload: '/csvdownload?datasource={datasource}&queryid={queryid}',
-		publish: '/publish?datasource={datasource}&queryid={queryid}',
-		bookmark: '/bookmark?datasource={datasource}',
+		publish: '/publish?datasource={datasource}&engine={engine}&queryid={queryid}',
+		bookmark: '/bookmark?datasource={datasource}&engine={engine}',
 		format: '/format',
 		kill: '/kill?datasource={datasource}&queryid={queryid}',
 		detail: '/queryDetail?datasource={datasource}&queryid={queryid}',
 		shareHistory: '/share/shareHistory?publish_id={publish_id}',
 		shareDownload: '/share/download?publish_id={publish_id}',
 		shareCsvDownload: '/share/csvdownload?publish_id={publish_id}',
-		toValuesQuery: '/toValuesQuery'
+		toValuesQuery: '/toValuesQuery',
+		hive: '/hive?datasource={datasource}',
+		hiveAsync: '/hiveAsync?datasource={datasource}',
+		hiveQueryStatus: '/hiveQueryStatus?datasource={datasource}&queryid={queryid}',
+		yarnJobList: '/yarnJobList?datasource={datasource}',
+		killHive: '/killHive?datasource={datasource}&id={id}',
+		hiveQueryDetail: '/hiveQueryDetail?datasource={datasource}&id={id}',
 	},
 	links: {
 		about_this: 'https://github.com/wyukawa/yanagishima/blob/master/README.md',
