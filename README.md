@@ -1,6 +1,6 @@
 # yanagishima
 
-yanagishima is a Web UI for presto.
+yanagishima is a Web UI for presto/hive.
 
 ![preview](v4.gif)
 
@@ -22,16 +22,15 @@ yanagishima is a Web UI for presto.
 * share query
 * share query result
 * search table
-* handle multiple presto clusters
+* handle multiple presto/hive clusters
 * auto detection of partition key
 * show progress of running query
 * query parameters substitution
 * insert chart
-* format query
-* run in the background
-* convert from TSV to values query
-* function, table completion(Ctrl+Space)
-* validation(Shift+Enter)
+* format query(Ctrl+Shift+Enter)
+* convert from TSV to values query(presto only)
+* function, table completion(Ctrl+Space, presto only)
+* validation(Shift+Enter, presto only)
 * export/import history
 * export/import bookmark
 
@@ -42,6 +41,27 @@ yanagishima is a Web UI for presto.
 * Authentication
 
 # Versions
+* 7.0
+  * support hive on MapReduce(yanagishima executes ```set mapreduce.job.name=...```)
+  * metadata of 7.0 is NOT compatible with 6.0, so migration is required
+  * migration process is as follows
+  ```
+  cp data/yanagishima.db data/yanagishima.db.bak
+  sqlite3 data/yanagishima.db
+  sqlite> create table query_new (datasource text, engine text, query_id text, fetch_result_time_string text, query_string text, primary key(datasource, engine, query_id));
+  sqlite> insert into query_new select datasource, 'presto', query_id, fetch_result_time_string, query_string from query;
+  sqlite> alter table query rename to query_old;
+  sqlite> alter table query_new rename to query;
+  sqlite> create table publish_new (publish_id text, datasource text, engine text, query_id text, primary key(publish_id));
+  sqlite> insert into publish_new select publish_id, datasource, 'presto', query_id from publish;
+  sqlite> alter table publish rename to publish_old;
+  sqlite> alter table publish_new rename to publish;
+  sqlite> create table bookmark_new (bookmark_id integer primary key autoincrement, datasource text, engine text, query text, title text);
+  sqlite> insert into bookmark_new select bookmark_id, datasource, 'presto', query, title from bookmark;
+  sqlite> alter table bookmark rename to bookmark_old;
+  sqlite> alter table bookmark_new rename to bookmark;
+  If you confirmed, drop table bookmark_old;
+  ```
 * 6.0
   * support bookmark title, so add title column to bookmark table
   * metadata of 6.0 is NOT compatible with 5.0, so migration is required
@@ -58,9 +78,9 @@ yanagishima is a Web UI for presto.
 
 # Quick Start
 ```
-wget https://bintray.com/artifact/download/wyukawa/generic/yanagishima-6.0.zip
-unzip yanagishima-6.0.zip
-cd yanagishima-6.0
+wget https://bintray.com/artifact/download/wyukawa/generic/yanagishima-7.0.zip
+unzip yanagishima-7.0.zip
+cd yanagishima-7.0
 vim conf/yanagishima.properties
 nohup bin/yanagishima-start.sh >y.log 2>&1 &
 ```
@@ -90,10 +110,36 @@ schema.your-presto=default
 select.limit=500
 # http header name for audit log
 audit.http.header.name=some.auth.header
-# limit to convert from csv to values query
+# limit to convert from tsv to values query
 to.values.query.limit=500
 # authorization feature
 check.datasource=false
+hive.jdbc.url.your-hive=jdbc:hive2://localhost:10000/default;auth=noSasl
+hive.jdbc.user.your-hive=yanagishima-hive
+hive.jdbc.password.your-hive=yanagishima-hive
+hive.query.max-run-time-seconds=3600
+hive.query.max-run-time-seconds.your-hive=3600
+resource.manager.url.your-hive=http://localhost:8088
+sql.query.engines=presto,hive
+hive.datasources=your-hive
+hive.disallowed.keywords.your-hive=insert,drop
+# 1GB. If hive query result file size exceeds this value, yanagishima cancel the query.
+hive.max-result-file-byte-size=1073741824
+```
+
+If you use a single presto cluster, you need to specify as follows.
+```
+jetty.port=8080
+presto.query.max-run-time-seconds=1800
+presto.max-result-file-byte-size=1073741824
+select.limit=500
+to.values.query.limit=500
+presto.datasources=your-presto
+presto.coordinator.server.your-presto=http://presto.coordinator:8080
+presto.redirect.server.your-presto=http://presto.coordinator:8080
+catalog.your-presto=hive
+schema.your-presto=default
+sql.query.engines=presto
 ```
 
 If you want to handle multiple presto clusters, you need to specify as follows.
@@ -107,6 +153,42 @@ catalog.presto1=hive
 schema.presto1=default
 catalog.presto2=hive
 schema.presto2=default
+```
+
+If you use a single hive cluster, you need to specify as follows.
+```
+jetty.port=8080
+select.limit=500
+hive.query.max-run-time-seconds=3600
+hive.max-result-file-byte-size=1073741824
+hive.jdbc.url.your-hive=jdbc:hive2://localhost:10000/default;auth=noSasl
+hive.jdbc.user.your-hive=yanagishima-hive
+hive.jdbc.password.your-hive=yanagishima-hive
+resource.manager.url.your-hive=http://localhost:8088
+sql.query.engines=hive
+hive.datasources=your-hive
+```
+
+If you use presto and hive, you need to specify as follows.
+```
+jetty.port=8080
+presto.query.max-run-time-seconds=1800
+presto.max-result-file-byte-size=1073741824
+select.limit=500
+to.values.query.limit=500
+presto.datasources=your-cluster
+presto.coordinator.server.your-cluster=http://presto.coordinator:8080
+presto.redirect.server.your-cluster=http://presto.coordinator:8080
+catalog.your-cluster=hive
+schema.your-cluster=default
+hive.query.max-run-time-seconds=3600
+hive.max-result-file-byte-size=1073741824
+hive.jdbc.url.your-cluster=jdbc:hive2://localhost:10000/default;auth=noSasl
+hive.jdbc.user.your-cluster=yanagishima-hive
+hive.jdbc.password.your-cluster=yanagishima-hive
+resource.manager.url.your-cluster=http://localhost:8088
+sql.query.engines=presto,hive
+hive.datasources=your-cluster
 ```
 
 # Audit Logging
