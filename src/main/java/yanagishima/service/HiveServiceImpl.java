@@ -15,6 +15,7 @@ import yanagishima.result.HiveQueryResult;
 import javax.inject.Inject;
 import java.io.BufferedWriter;
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -185,6 +186,8 @@ public class HiveServiceImpl implements HiveService {
                             Object resultObject = resultSet.getObject(i);
                             if (resultObject instanceof Long) {
                                 columnDataList.add(((Long) resultObject).toString());
+                            } else if (resultObject instanceof Double) {
+                                columnDataList.add(BigDecimal.valueOf((Double) resultObject).toPlainString());
                             } else {
                                 if (resultObject == null) {
                                     columnDataList.add(null);

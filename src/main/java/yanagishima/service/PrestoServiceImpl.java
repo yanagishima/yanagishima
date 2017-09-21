@@ -19,6 +19,7 @@ import yanagishima.result.PrestoQueryResult;
 import javax.inject.Inject;
 import java.io.BufferedWriter;
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -221,6 +222,8 @@ public class PrestoServiceImpl implements PrestoService {
                         for (Object tmpColumnData : tmpColumnDataList) {
                             if (tmpColumnData instanceof Long) {
                                 columnDataList.add(((Long) tmpColumnData).toString());
+                            } else if (tmpColumnData instanceof Double) {
+                                columnDataList.add(BigDecimal.valueOf((Double) tmpColumnData).toPlainString());
                             } else {
                                 if (tmpColumnData == null) {
                                     columnDataList.add(null);
