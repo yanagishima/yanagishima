@@ -12,6 +12,7 @@ public class HiveServletModule extends ServletModule {
 		bind(KillHiveServlet.class);
 		bind(HiveQueryStatusServlet.class);
 		bind(HiveQueryDetailServlet.class);
+		bind(HivePartitionServlet.class);
 
 		serve("/hive").with(HiveServlet.class);
 		serve("/hiveAsync").with(HiveAsyncServlet.class);
@@ -19,6 +20,7 @@ public class HiveServletModule extends ServletModule {
 		serve("/killHive").with(KillHiveServlet.class);
 		serve("/hiveQueryStatus").with(HiveQueryStatusServlet.class);
 		serve("/hiveQueryDetail").with(HiveQueryDetailServlet.class);
+		serve("/hivePartition").with(HivePartitionServlet.class);
 
 	}
 }
