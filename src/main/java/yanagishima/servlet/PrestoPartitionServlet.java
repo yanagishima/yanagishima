@@ -16,10 +16,7 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Set;
-import java.util.TreeSet;
+import java.util.*;
 
 import static javax.servlet.http.HttpServletResponse.SC_FORBIDDEN;
 import static yanagishima.util.Constants.YANAGISHIMA_COMMENT;
@@ -79,12 +76,21 @@ public class PrestoPartitionServlet extends HttpServlet {
                 }
                 retVal.put("partitions", partitions);
             } else {
-                String query = String.format("%sSHOW PARTITIONS FROM %s.%s.%s WHERE %s='%s'", YANAGISHIMA_COMMENT, catalog, schema, table, partitionColumn, partitionValue);
+                String[] partitionColumnArray = partitionColumn.split(",");
+                String[] partitionValuesArray = partitionValue.split(",");
+                if(partitionColumnArray.length != partitionValuesArray.length) {
+                    throw new RuntimeException("The number of partitionColumn must be same as partitionValue");
+                }
+                List whereList = new ArrayList<>();
+                for(int i=0; i<partitionColumnArray.length; i++) {
+                    whereList.add(String.format("%s = '%s'", partitionColumnArray[i], partitionValuesArray[i]));
+                }
+                String query = String.format("%sSHOW PARTITIONS FROM %s.%s.%s WHERE %s", YANAGISHIMA_COMMENT, catalog, schema, table, String.join(" AND ", whereList));
                 PrestoQueryResult prestoQueryResult = prestoService.doQuery(datasource, query, userName, false, Integer.MAX_VALUE);
                 List<String> columns = prestoQueryResult.getColumns();
                 int index = 0;
                 for (String column : columns) {
-                    if (column.equals(partitionColumn)) {
+                    if (column.equals(partitionColumnArray[partitionColumnArray.length-1])) {
                         break;
                     }
                     index++;
