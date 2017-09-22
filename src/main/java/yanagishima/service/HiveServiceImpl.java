@@ -187,7 +187,11 @@ public class HiveServiceImpl implements HiveService {
                             if (resultObject instanceof Long) {
                                 columnDataList.add(((Long) resultObject).toString());
                             } else if (resultObject instanceof Double) {
-                                columnDataList.add(BigDecimal.valueOf((Double) resultObject).toPlainString());
+                                if(Double.isNaN((Double)resultObject) || Double.isInfinite((Double) resultObject)) {
+                                    columnDataList.add(resultObject.toString());
+                                } else {
+                                    columnDataList.add(BigDecimal.valueOf((Double) resultObject).toPlainString());
+                                }
                             } else {
                                 if (resultObject == null) {
                                     columnDataList.add(null);

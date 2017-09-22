@@ -223,7 +223,11 @@ public class PrestoServiceImpl implements PrestoService {
                             if (tmpColumnData instanceof Long) {
                                 columnDataList.add(((Long) tmpColumnData).toString());
                             } else if (tmpColumnData instanceof Double) {
-                                columnDataList.add(BigDecimal.valueOf((Double) tmpColumnData).toPlainString());
+                                if(Double.isNaN((Double)tmpColumnData) || Double.isInfinite((Double) tmpColumnData)) {
+                                    columnDataList.add(tmpColumnData.toString());
+                                } else {
+                                    columnDataList.add(BigDecimal.valueOf((Double) tmpColumnData).toPlainString());
+                                }
                             } else {
                                 if (tmpColumnData == null) {
                                     columnDataList.add(null);
