@@ -2,6 +2,12 @@ package yanagishima.config;
 
 import yanagishima.util.PropertiesUtil;
 
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.*;
 
 public class YanagishimaConfig {
@@ -195,6 +201,25 @@ public class YanagishimaConfig {
 			return Collections.emptyList();
 		} else {
 			return Arrays.asList(property.split(","));
+		}
+	}
+
+	public List<String> getHiveSetupQueryList(String datasource) {
+		String property = properties.getProperty("hive.setup.query.path." + datasource);
+		List<String> hiveSetupQueryList = new ArrayList<>();
+		if(property == null) {
+			return Collections.emptyList();
+		} else {
+			try (BufferedReader br = Files.newBufferedReader(Paths.get(property), StandardCharsets.UTF_8)) {
+				String line = br.readLine();
+				while (line != null) {
+					hiveSetupQueryList.add(line);
+					line = br.readLine();
+				}
+			} catch (IOException e) {
+				throw new RuntimeException(e);
+			}
+			return hiveSetupQueryList;
 		}
 	}
 
