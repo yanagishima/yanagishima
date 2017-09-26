@@ -92,7 +92,7 @@ public class HiveServiceImpl implements HiveService {
 
         List<String> hiveDisallowedKeywords = yanagishimaConfig.getHiveDisallowedKeywords(datasource);
         for(String hiveDisallowedKeyword : hiveDisallowedKeywords) {
-            if(query.toLowerCase().indexOf(hiveDisallowedKeyword) != -1) {
+            if(query.trim().toLowerCase().startsWith(hiveDisallowedKeyword)) {
                 String message = "query contains the disallowed keywords.";
                 storeError(db, datasource, "hive", queryId, query, message);
                 throw new RuntimeException(message);
