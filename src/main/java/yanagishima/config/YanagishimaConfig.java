@@ -43,7 +43,12 @@ public class YanagishimaConfig {
 	}
 
 	public int getSelectLimit() {
-		return Integer.parseInt(PropertiesUtil.getParam(properties, "select.limit"));
+		String limitStr = properties.getProperty("select.limit");
+		if(limitStr == null) {
+			return 500;
+		} else {
+			return Integer.parseInt(limitStr);
+		}
 	}
 
 	public String getAuditHttpHeaderName() {
@@ -96,7 +101,12 @@ public class YanagishimaConfig {
 	}
 
 	public double getQueryMaxRunTimeSeconds() {
-		return Double.parseDouble(PropertiesUtil.getParam(properties, "presto.query.max-run-time-seconds"));
+		String secondsStr = properties.getProperty("presto.query.max-run-time-seconds");
+		if(secondsStr == null) {
+			return 3600;
+		} else {
+			return Double.parseDouble(secondsStr);
+		}
 	}
 
 	public double getQueryMaxRunTimeSeconds(String datasource) {
@@ -109,15 +119,30 @@ public class YanagishimaConfig {
 	}
 
 	public int getMaxResultFileByteSize() {
-		return Integer.parseInt(PropertiesUtil.getParam(properties,"presto.max-result-file-byte-size"));
+		String sizeStr = properties.getProperty("presto.max-result-file-byte-size");
+		if(sizeStr == null) {
+			return 1073741824;
+		} else {
+			return Integer.parseInt(sizeStr);
+		}
 	}
 
 	public int getHiveMaxResultFileByteSize() {
-		return Integer.parseInt(PropertiesUtil.getParam(properties,"hive.max-result-file-byte-size"));
+		String sizeStr = properties.getProperty("hive.max-result-file-byte-size");
+		if(sizeStr == null) {
+			return 1073741824;
+		} else {
+			return Integer.parseInt(sizeStr);
+		}
 	}
 
 	public int getToValuesQueryLimit() {
-		return Integer.parseInt(PropertiesUtil.getParam(properties,"to.values.query.limit"));
+		String limitStr = properties.getProperty("to.values.query.limit");
+		if(limitStr == null) {
+			return 500;
+		} else {
+			return Integer.parseInt(limitStr);
+		}
 	}
 
 	public boolean isCheckDatasource() {
