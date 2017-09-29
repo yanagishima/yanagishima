@@ -2,12 +2,10 @@ package yanagishima.service;
 
 import com.facebook.presto.client.*;
 import com.google.common.collect.Lists;
-import io.airlift.http.client.HttpClientConfig;
-import io.airlift.http.client.jetty.JettyHttpClient;
-import io.airlift.json.JsonCodec;
 import io.airlift.units.DataSize;
 import io.airlift.units.Duration;
 import me.geso.tinyorm.TinyORM;
+import okhttp3.OkHttpClient;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.komamitsu.fluency.Fluency;
 import org.slf4j.Logger;
@@ -31,9 +29,10 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
-import static io.airlift.json.JsonCodec.jsonCodec;
+import static com.facebook.presto.client.OkHttpUtil.setupTimeouts;
 import static java.lang.String.format;
 import static java.util.concurrent.TimeUnit.MINUTES;
+import static java.util.concurrent.TimeUnit.SECONDS;
 import static yanagishima.util.DbUtil.insertQueryHistory;
 import static yanagishima.util.DbUtil.storeError;
 import static yanagishima.util.PathUtil.getResultFilePath;
@@ -45,7 +44,7 @@ public class PrestoServiceImpl implements PrestoService {
 
     private YanagishimaConfig yanagishimaConfig;
 
-    private JettyHttpClient httpClient;
+    private OkHttpClient httpClient;
 
     private ExecutorService executorService = Executors.newFixedThreadPool(10);
 
@@ -55,8 +54,9 @@ public class PrestoServiceImpl implements PrestoService {
     @Inject
     public PrestoServiceImpl(YanagishimaConfig yanagishimaConfig) {
         this.yanagishimaConfig = yanagishimaConfig;
-        HttpClientConfig httpClientConfig = new HttpClientConfig().setConnectTimeout(new Duration(10, TimeUnit.SECONDS));
-        this.httpClient = new JettyHttpClient(httpClientConfig);
+        OkHttpClient.Builder builder = new OkHttpClient.Builder();
+        setupTimeouts(builder, 5, SECONDS);
+        httpClient = builder.build();
     }
 
     @Override
@@ -287,13 +287,12 @@ public class PrestoServiceImpl implements PrestoService {
         }
         String source = yanagishimaConfig.getSource();
 
-        JsonCodec<QueryResults> jsonCodec = jsonCodec(QueryResults.class);
-
         ClientSession clientSession = new ClientSession(
                 URI.create(prestoCoordinatorServer), user, source, null, catalog,
                 schema, TimeZone.getDefault().getID(), Locale.getDefault(),
                 new HashMap<String, String>(), null, false, new Duration(2, MINUTES));
-        return new StatementClient(httpClient, jsonCodec, clientSession, query);
+
+        return new StatementClient(httpClient, clientSession, query);
     }
 
     private QueryErrorException resultsException(QueryResults results) {
