@@ -66,6 +66,7 @@ public class PublishServlet extends HttpServlet {
                     }
                 }
             }
+            String userName = request.getHeader(yanagishimaConfig.getAuditHttpHeaderName());
             String engine = HttpRequestUtil.getParam(request, "engine");
             String queryid = Optional.ofNullable(request.getParameter("queryid")).get();
             Optional<Publish> publishOptional = db.single(Publish.class).where("datasource=? and engine=? and query_id=?", datasource, engine, queryid).execute();
@@ -78,6 +79,7 @@ public class PublishServlet extends HttpServlet {
                         .value("datasource", datasource)
                         .value("engine", engine)
                         .value("query_id", queryid)
+                        .value("user", userName)
                         .execute();
                 retVal.put("publish_id", publish_id);
             }

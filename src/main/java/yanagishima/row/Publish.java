@@ -25,4 +25,7 @@ public class Publish extends Row<Publish>{
     @Column("query_id")
     private String queryId;
 
+    @Column("user")
+    private String user;
+
 }

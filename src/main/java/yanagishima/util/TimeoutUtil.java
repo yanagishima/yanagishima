@@ -7,10 +7,10 @@ import static yanagishima.util.DbUtil.storeError;
 
 public class TimeoutUtil {
 
-    public static void checkTimeout(TinyORM db, Duration queryMaxRunTime, long start, String datasource, String engine, String queryId, String query) {
+    public static void checkTimeout(TinyORM db, Duration queryMaxRunTime, long start, String datasource, String engine, String queryId, String query, String user) {
         if (System.currentTimeMillis() - start > queryMaxRunTime.toMillis()) {
             String message = "Query exceeded maximum time limit of " + queryMaxRunTime;
-            storeError(db, datasource, engine, queryId, query, message);
+            storeError(db, datasource, engine, queryId, query, user, message);
             throw new RuntimeException(message);
         }
     }

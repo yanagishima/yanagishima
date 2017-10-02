@@ -108,7 +108,7 @@ public class PrestoServiceImpl implements PrestoService {
             client.advance();
             if(System.currentTimeMillis() - start > queryMaxRunTime.toMillis()) {
                 String message = "Query exceeded maximum time limit of " + queryMaxRunTime;
-                storeError(db, datasource, "presto", client.current().getId(), query, message);
+                storeError(db, datasource, "presto", client.current().getId(), query, userName, message);
                 throw new RuntimeException(message);
             }
         }
@@ -125,10 +125,10 @@ public class PrestoServiceImpl implements PrestoService {
                 List<String> columns = Lists.transform(results.getColumns(), Column::getName);
                 prestoQueryResult.setColumns(columns);
                 List<List<String>> rowDataList = new ArrayList<List<String>>();
-                processData(client, datasource, queryId, query, prestoQueryResult, columns, rowDataList, start, limit);
+                processData(client, datasource, queryId, query, prestoQueryResult, columns, rowDataList, start, limit, userName);
                 prestoQueryResult.setRecords(rowDataList);
                 if(storeFlag) {
-                    insertQueryHistory(db, datasource, "presto", query, queryId);
+                    insertQueryHistory(db, datasource, "presto", query, userName, queryId);
                 }
                 if(yanagishimaConfig.getFluentdExecutedTag().isPresent()) {
                     String fluentdHost = yanagishimaConfig.getFluentdHost().orElse("localhost");
@@ -158,7 +158,7 @@ public class PrestoServiceImpl implements PrestoService {
         } else if (client.isFailed()) {
             QueryResults results = client.finalResults();
             if(prestoQueryResult.getQueryId() == null) {
-                storeError(db, datasource, "presto", results.getId(), query, results.getError().getMessage());
+                storeError(db, datasource, "presto", results.getId(), query, userName, results.getError().getMessage());
             } else {
                 Path successDst = getResultFilePath(datasource, prestoQueryResult.getQueryId(), false);
                 try {
@@ -202,7 +202,7 @@ public class PrestoServiceImpl implements PrestoService {
         return prestoQueryResult;
     }
 
-    private void processData(StatementClient client, String datasource, String queryId, String query, PrestoQueryResult prestoQueryResult, List<String> columns, List<List<String>> rowDataList, long start, int limit) {
+    private void processData(StatementClient client, String datasource, String queryId, String query, PrestoQueryResult prestoQueryResult, List<String> columns, List<List<String>> rowDataList, long start, int limit, String userName) {
         Duration queryMaxRunTime = new Duration(this.yanagishimaConfig.getQueryMaxRunTimeSeconds(datasource), TimeUnit.SECONDS);
         Path dst = getResultFilePath(datasource, queryId, false);
         int lineNumber = 0;
@@ -244,7 +244,7 @@ public class PrestoServiceImpl implements PrestoService {
                             resultBytes += resultStr.getBytes(StandardCharsets.UTF_8).length;
                             if(resultBytes > maxResultFileByteSize) {
                                 String message = String.format("Result file size exceeded %s bytes. queryId=%s", maxResultFileByteSize, queryId);
-                                storeError(db, datasource, "presto", client.current().getId(), query, message);
+                                storeError(db, datasource, "presto", client.current().getId(), query, userName, message);
                                 throw new RuntimeException(message);
                             }
                         } catch (IOException e) {
@@ -258,7 +258,7 @@ public class PrestoServiceImpl implements PrestoService {
                     }
                 }
                 client.advance();
-                checkTimeout(db, queryMaxRunTime, start, datasource, "presto", queryId, query);
+                checkTimeout(db, queryMaxRunTime, start, datasource, "presto", queryId, query, userName);
             }
         } catch (IOException e) {
             throw new RuntimeException(e);

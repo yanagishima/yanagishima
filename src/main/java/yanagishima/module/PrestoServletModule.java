@@ -21,9 +21,11 @@ public class PrestoServletModule extends ServletModule {
 		bind(CsvDownloadServlet.class);
 		bind(ShareCsvDownloadServlet.class);
 		bind(QueryHistoryServlet.class);
+		bind(QueryHistoryUserServlet.class);
 		bind(DatasourceServlet.class);
 		bind(QueryStatusServlet.class);
 		bind(BookmarkServlet.class);
+		bind(BookmarkUserServlet.class);
 		bind(ToValuesQueryServlet.class);
 		bind(TableListServlet.class);
 		bind(PrestoPartitionServlet.class);
@@ -43,9 +45,11 @@ public class PrestoServletModule extends ServletModule {
 		serve("/csvdownload").with(CsvDownloadServlet.class);
 		serve("/share/csvdownload").with(ShareCsvDownloadServlet.class);
 		serve("/queryHistory").with(QueryHistoryServlet.class);
+		serve("/queryHistoryUser").with(QueryHistoryUserServlet.class);
 		serve("/datasource").with(DatasourceServlet.class);
 		serve("/queryStatus").with(QueryStatusServlet.class);
 		serve("/bookmark").with(BookmarkServlet.class);
+		serve("/bookmarkUser").with(BookmarkUserServlet.class);
 		serve("/toValuesQuery").with(ToValuesQueryServlet.class);
 		serve("/tableList").with(TableListServlet.class);
 		serve("/prestoPartition").with(PrestoPartitionServlet.class);

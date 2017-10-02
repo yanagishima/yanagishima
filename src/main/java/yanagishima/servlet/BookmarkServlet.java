@@ -58,10 +58,11 @@ public class BookmarkServlet extends HttpServlet {
                 }
             }
 
+            String userName = request.getHeader(yanagishimaConfig.getAuditHttpHeaderName());
             String query = HttpRequestUtil.getParam(request, "query");
             String title = request.getParameter("title");
             String engine = HttpRequestUtil.getParam(request, "engine");
-            db.insert(Bookmark.class).value("datasource", datasource).value("query", query).value("title", title).value("engine", engine).execute();
+            db.insert(Bookmark.class).value("datasource", datasource).value("query", query).value("title", title).value("engine", engine).value("user", userName).execute();
             List<Bookmark> bookmarkList = db.searchBySQL(Bookmark.class, "select bookmark_id, datasource, engine, query, title from bookmark where rowid = last_insert_rowid()");
             if(bookmarkList.size() == 1) {
                 retVal.put("bookmark_id", bookmarkList.get(0).getBookmarkId());

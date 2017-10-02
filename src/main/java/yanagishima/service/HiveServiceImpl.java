@@ -94,7 +94,7 @@ public class HiveServiceImpl implements HiveService {
         for(String hiveDisallowedKeyword : hiveDisallowedKeywords) {
             if(query.trim().toLowerCase().startsWith(hiveDisallowedKeyword)) {
                 String message = "query contains the disallowed keywords.";
-                storeError(db, datasource, "hive", queryId, query, message);
+                storeError(db, datasource, "hive", queryId, query, userName, message);
                 throw new RuntimeException(message);
             }
         }
@@ -115,7 +115,7 @@ public class HiveServiceImpl implements HiveService {
             hiveQueryResult.setQueryId(queryId);
             processData(datasource, query, limit, userName, connection, queryId, start, hiveQueryResult);
             if (storeFlag) {
-                insertQueryHistory(db, datasource, "hive", query, queryId);
+                insertQueryHistory(db, datasource, "hive", query, userName, queryId);
             }
             if (yanagishimaConfig.getFluentdExecutedTag().isPresent()) {
                 String fluentdHost = yanagishimaConfig.getFluentdHost().orElse("localhost");
@@ -138,7 +138,7 @@ public class HiveServiceImpl implements HiveService {
             return hiveQueryResult;
 
         } catch (SQLException e) {
-            storeError(db, datasource, "hive", queryId, query, e.getMessage());
+            storeError(db, datasource, "hive", queryId, query, userName, e.getMessage());
             throw new HiveQueryErrorException(queryId, e);
         }
     }
@@ -213,7 +213,7 @@ public class HiveServiceImpl implements HiveService {
                             resultBytes += resultStr.getBytes(StandardCharsets.UTF_8).length;
                             if (resultBytes > maxResultFileByteSize) {
                                 String message = String.format("Result file size exceeded %s bytes. queryId=%s", maxResultFileByteSize, queryId);
-                                storeError(db, datasource, "hive", queryId, query, message);
+                                storeError(db, datasource, "hive", queryId, query, userName, message);
                                 throw new RuntimeException(message);
                             }
                         } catch (IOException e) {
@@ -225,7 +225,7 @@ public class HiveServiceImpl implements HiveService {
                             hiveQueryResult.setWarningMessage(String.format("now fetch size is %d. This is more than %d. So, fetch operation stopped.", rowDataList.size(), limit));
                         }
 
-                        checkTimeout(db, queryMaxRunTime, start, datasource, "hive", queryId, query);
+                        checkTimeout(db, queryMaxRunTime, start, datasource, "hive", queryId, userName, query);
                     }
                     hiveQueryResult.setLineNumber(lineNumber);
                     hiveQueryResult.setRecords(rowDataList);

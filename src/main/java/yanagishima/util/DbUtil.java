@@ -15,13 +15,14 @@ import static yanagishima.util.PathUtil.getResultFilePath;
 
 public class DbUtil {
 
-    public static void storeError(TinyORM db, String datasource, String engine, String queryId, String query, String errorMessage) {
+    public static void storeError(TinyORM db, String datasource, String engine, String queryId, String query, String user, String errorMessage) {
         db.insert(Query.class)
                 .value("datasource", datasource)
                 .value("engine", engine)
                 .value("query_id", queryId)
                 .value("fetch_result_time_string", ZonedDateTime.now().toString())
                 .value("query_string", query)
+                .value("user", user)
                 .execute();
         Path dst = getResultFilePath(datasource, queryId, true);
         String message = format("Query failed (#%s): %s", queryId, errorMessage);
@@ -34,13 +35,14 @@ public class DbUtil {
 
     }
 
-    public static void insertQueryHistory(TinyORM db, String datasource, String engine, String query, String queryId) {
+    public static void insertQueryHistory(TinyORM db, String datasource, String engine, String query, String user, String queryId) {
         db.insert(Query.class)
                 .value("datasource", datasource)
                 .value("engine", engine)
                 .value("query_id", queryId)
                 .value("fetch_result_time_string", ZonedDateTime.now().toString())
                 .value("query_string", query)
+                .value("user", user)
                 .execute();
     }
 }

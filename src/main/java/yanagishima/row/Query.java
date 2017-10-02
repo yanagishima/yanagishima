@@ -29,4 +29,7 @@ public class Query extends Row<Query>{
 
     @Column("query_string")
     private String queryString;
+
+    @Column("user")
+    private String user;
 }
