@@ -62,7 +62,7 @@ public class BookmarkUserServlet extends HttpServlet {
 
             String engine = HttpRequestUtil.getParam(request, "engine");
             String userName = request.getHeader(yanagishimaConfig.getAuditHttpHeaderName());
-            List<Bookmark> bookmarkList = db.search(Bookmark.class).where("datasource = ? and engine = ? and user =?", datasource, engine, userName).execute();
+            List<Bookmark> bookmarkList = db.search(Bookmark.class).where("datasource = ? and engine = ? and user = ?", datasource, engine, userName).execute();
 
             List<Map> resultMapList = new ArrayList<>();
             for(Bookmark bookmark : bookmarkList) {
