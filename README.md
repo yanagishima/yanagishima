@@ -190,7 +190,7 @@ hive.datasources=your-cluster
 yanagishima doesn't have authentication/authorization feature.
 
 But, if you have any reverse proxy server for yanagishima and that reverse proxy server provides HTTP level authentication, you can use it for yanagishima too.
-yanagishima can log username for each query executions by using it.
+yanagishima can log username for each query executions and authorize per datasource.
 
 If your reverse proxy server sets username on HTTP header just after authentication, before proxied requests you can use it.
 
@@ -199,6 +199,8 @@ In this case, please specify ```audit.http.header.name``` which is http header n
 If you want to deny to access without usename, please specify ```user.require=true```
 
 If you set ```check.datasource=true``` and datasource list on HTTP header ```X-yanagishima-datasources``` through your proxy, authorization feature is enabled.
+
+For example, if there are three datasources(aaa and bbb and ccc) and X-yanagishima-datasources=aaa,bbb,ccc is set, user can access three datasouces.
 
 # Start
 ```
