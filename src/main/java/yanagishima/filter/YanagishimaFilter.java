@@ -33,6 +33,7 @@ public class YanagishimaFilter implements Filter {
                 res.setHeader("Access-Control-Allow-Headers", Constants.DATASOURCE_HEADER + ", " + auditHttpHeaderName);
             }
             res.setHeader("Access-Control-Allow-Origin", "*");
+            res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS, DELETE");
         }
         chain.doFilter(request, response);
     }
