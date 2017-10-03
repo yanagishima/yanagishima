@@ -9,6 +9,7 @@ import joptsimple.OptionSpec;
 import me.geso.tinyorm.TinyORM;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.servlet.DefaultServlet;
+import org.eclipse.jetty.servlet.FilterHolder;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,6 +22,7 @@ import java.sql.Connection;
 import java.sql.Statement;
 import java.util.Arrays;
 import java.util.EnumSet;
+import java.util.Optional;
 import java.util.Properties;
 
 public class YanagishimaServer {
@@ -57,7 +59,7 @@ public class YanagishimaServer {
 
 		ServletContextHandler servletContextHandler = new ServletContextHandler(
 				server, "/", ServletContextHandler.SESSIONS);
-		servletContextHandler.addFilter(YanagishimaFilter.class, "/*", EnumSet.of(DispatcherType.REQUEST));
+		servletContextHandler.addFilter(new FilterHolder(new YanagishimaFilter(Boolean.parseBoolean(Optional.ofNullable(properties.getProperty("cors.enabled")).orElse("false")), properties.getProperty("audit.http.header.name"))), "/*", EnumSet.of(DispatcherType.REQUEST));
 		servletContextHandler.addFilter(GuiceFilter.class, "/*",
 				EnumSet.allOf(DispatcherType.class));
 
