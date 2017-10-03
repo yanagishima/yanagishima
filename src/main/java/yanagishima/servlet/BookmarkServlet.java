@@ -124,4 +124,52 @@ public class BookmarkServlet extends HttpServlet {
 
     }
 
+
+    @Override
+    protected void doDelete(HttpServletRequest request,
+                          HttpServletResponse response) throws ServletException, IOException {
+
+        HashMap<String, Object> retVal = new HashMap<String, Object>();
+
+        try {
+            String datasource = HttpRequestUtil.getParam(request, "datasource");
+            if(yanagishimaConfig.isCheckDatasource()) {
+                if(!AccessControlUtil.validateDatasource(request, datasource)) {
+                    try {
+                        response.sendError(SC_FORBIDDEN);
+                        return;
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    }
+                }
+            }
+
+            String bookmarkId = HttpRequestUtil.getParam(request, "bookmark_id");
+            Bookmark deletedBookmark = db.single(Bookmark.class).where("bookmark_id=?", bookmarkId).execute().get();
+            deletedBookmark.delete();
+
+            String engine = HttpRequestUtil.getParam(request, "engine");
+            String userName = request.getHeader(yanagishimaConfig.getAuditHttpHeaderName());
+            List<Bookmark> bookmarkList = db.search(Bookmark.class).where("datasource = ? and engine = ? and user = ?", datasource, engine, userName).execute();
+
+            List<Map> resultMapList = new ArrayList<>();
+            for(Bookmark bookmark : bookmarkList) {
+                Map<String, Object> m = new HashMap<>();
+                m.put("bookmark_id", bookmark.getBookmarkId());
+                m.put("datasource", bookmark.getDatasource());
+                m.put("engine", bookmark.getEngine());
+                m.put("query", bookmark.getQuery());
+                m.put("title", bookmark.getTitle());
+                resultMapList.add(m);
+            }
+            retVal.put("bookmarkList", resultMapList);
+        } catch (Throwable e) {
+            LOGGER.error(e.getMessage(), e);
+            retVal.put("error", e.getMessage());
+        }
+
+        JsonUtil.writeJSON(response, retVal);
+
+    }
+
 }
