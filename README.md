@@ -200,7 +200,7 @@ If you want to deny to access without usename, please specify ```user.require=tr
 
 If you set ```check.datasource=true``` and datasource list on HTTP header ```X-yanagishima-datasources``` through your proxy, authorization feature is enabled.
 
-For example, if there are three datasources(aaa and bbb and ccc) and X-yanagishima-datasources=aaa,bbb,ccc is set, user can access three datasouces.
+For example, if there are three datasources(aaa and bbb and ccc) and ```X-yanagishima-datasources=aaa,bbb,ccc``` is set, user can access three datasources.
 
 # Start
 ```
