@@ -21,25 +21,19 @@ yanagishima is a Web UI for presto/hive.
 * show presto view ddl
 * share query
 * share query result
-* search table
+* search table(presto only)
 * handle multiple presto/hive clusters
 * auto detection of partition key
 * show progress of running query
 * query parameters substitution
 * insert chart
-* format query(Ctrl+Shift+Enter)
+* format query(Ctrl+Shift+F, presto only)
 * convert from TSV to values query(presto only)
 * function, table completion(Ctrl+Space, presto only)
 * validation(Shift+Enter, presto only)
 * export/import history
 * export/import bookmark
 * desktop notification
-
-# Limitation
-
-* paging results is not supported
-* Access Control
-* Authentication
 
 # Versions
 * 7.0
@@ -192,10 +186,19 @@ sql.query.engines=presto,hive
 hive.datasources=your-cluster
 ```
 
-# Audit Logging
-yanagishima doesn't have authentication feature.
-but, if you use reverse proxy server like Nginx for authentication, you can add audit logging.
-In this case, please specify ```audit.http.header.name``` which is http header name to be passed through Nginx.
+# Authentication and authorization
+yanagishima doesn't have authentication/authorization feature.
+
+But, if you have any reverse proxy server for yanagishima and that reverse proxy server provides HTTP level authentication, you can use it for yanagishima too.
+yanagishima can log username for each query executions by using it.
+
+If your reverse proxy server sets username on HTTP header just after authentication, before proxied requests you can use it.
+
+In this case, please specify ```audit.http.header.name``` which is http header name to be passed through your proxy.
+
+If you want to deny to access without usename, please specify ```user.require=true```
+
+If you set ```check.datasource=true``` and datasource list on HTTP header ```X-yanagishima-datasources``` through your proxy, authorization feature is enabled.
 
 # Start
 ```
