@@ -169,3 +169,39 @@ Vue.component('highlight', {
 		}
 	}
 });
+Vue.component('column', {
+	template: '<div v-html="result"></div>',
+	props: ['value', 'disable'],
+	computed: {
+		result: function() {
+			var self = this;
+			var value = self.value;
+			var disable = self.disable || false;
+			if (value === null) {
+				value = '<span class="text-muted">(null)</span>';
+			} else {
+				if (!disable) {
+					if (isJSON(value)) {
+						var o = (new Function("return " + value))();
+						if (Object.isObject(o)) {
+							value = '<pre>{0}</pre>'.format(JSON.stringify(o, undefined, 4));
+						}
+					}
+					function isJSON(arg) {
+						var arg = (typeof arg === 'function') ? arg() : arg;
+						if (typeof arg  !== 'string') {
+							return false;
+						}
+						try {
+							arg = (!JSON) ? eval('(' + arg + ')') : JSON.parse(arg);
+							return true;
+						} catch (e) {
+							return false;
+						}
+					};
+				}
+			}
+			return value;
+		}
+	}
+});

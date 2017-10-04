@@ -13,6 +13,16 @@ $colors: $brand-primary, #1B5E20, #880E4F, #827717, #212121;
 @mixin datasource($color: $brand-primary) {
 	#header-main {
 		background: linear-gradient(lighten($color, 2.5%) 0%, lighten($color, 12.5%) 100%);
+		&.engine_hive {
+			background-image: linear-gradient(
+				-45deg,
+				lighten($color, 2.5%) 25%,
+				lighten($color, 8%) 25%, lighten($color, 8%) 50%,
+				lighten($color, 2.5%) 50%, lighten($color, 2.5%) 75%,
+				lighten($color, 8%) 75%, lighten($color, 8%)
+			);
+			background-size: 1rem 1rem;
+		}
 		.btn:not(.btn-secondary) {
 			background-color: darken($color, 5%);
 		}
@@ -138,6 +148,20 @@ $colors: $brand-primary, #1B5E20, #880E4F, #827717, #212121;
 		}
 	}
 }
+#partition {
+	.card {
+		background: $gray-lighter;
+	}
+	.list-group,
+	.card-block {
+		height: 500px;
+		overflow-y: scroll;
+		.list-group-item {
+			flex: none;
+		}
+	}
+}
+
 #explain {
 	background: $black;
 	color: $white;
@@ -178,6 +202,7 @@ $colors: $brand-primary, #1B5E20, #880E4F, #827717, #212121;
 	.auto-complate {
 		font-style: italic;
 	}
+	position: relative;
 }
 .table {
 	&.table-auto {
@@ -223,14 +248,16 @@ $colors: $brand-primary, #1B5E20, #880E4F, #827717, #212121;
 .modal-body {
 	background: $gray-lightest;
 }
-.btn.clip {
+.btn.clip,
+.btn.set {
 	position: absolute;
 	margin-top: -0.1rem;
 	right: 0.4rem;
 	display: none;
 	z-index: 10;
 }
-a:hover .btn.clip {
+.list-group-item:hover .btn.clip,
+.list-group-item:hover .btn.set {
 	display: inline-block;
 }
 .table-base {

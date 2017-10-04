@@ -1,5 +1,5 @@
 yanagishima = {
-	version: '7.0',
+	version: '8.0',
 	sitename: 'yanagishima',
 	domain: '',
 	apis: {
@@ -29,6 +29,10 @@ yanagishima = {
 		yarnJobList: '/yarnJobList?datasource={datasource}',
 		killHive: '/killHive?datasource={datasource}&id={id}',
 		hiveQueryDetail: '/hiveQueryDetail?datasource={datasource}&id={id}',
+		prestoPartition: '/prestoPartition?datasource={datasource}&catalog={catalog}&schema={schema}&table={table}',
+		hivePartition: '/hivePartition?datasource={datasource}&schema={schema}&table={table}',
+		queryHistoryUser: '/queryHistoryUser?datasource={datasource}&engine={engine}',
+		bookmarkUser: '/bookmarkUser?datasource={datasource}&engine={engine}',
 	},
 	links: {
 		about_this: 'https://github.com/wyukawa/yanagishima/blob/master/README.md',

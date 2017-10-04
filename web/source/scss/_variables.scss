@@ -578,7 +578,7 @@ $dropdown-link-active-bg:        $component-active-bg !default;
 
 $dropdown-link-disabled-color:   $gray-light !default;
 
-$dropdown-item-padding-x:        1rem !default;
+$dropdown-item-padding-x:        0.75rem !default;
 
 $dropdown-header-color:          $gray-light !default;
 
@@ -792,7 +792,7 @@ $badge-pill-border-radius:    10rem !default;
 $modal-inner-padding:         15px !default;
 
 $modal-dialog-margin:         10px !default;
-$modal-dialog-sm-up-margin-y: 30px !default;
+$modal-dialog-sm-up-margin-y: 60px !default;
 
 $modal-title-line-height:     $line-height-base !default;
 

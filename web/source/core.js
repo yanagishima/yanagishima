@@ -52,6 +52,7 @@ jQuery(document).ready(function($) {
 					bookmark: false,
 					table: false,
 					share: false,
+					partition: false,
 				},
 				error: {
 					qlist: false,
@@ -78,6 +79,11 @@ jQuery(document).ready(function($) {
 						id: 'history',
 						icon: 'history',
 						name: 'History',
+					},
+					{
+						id: 'bookmark',
+						icon: 'star',
+						name: 'Bookmark',
 					},
 					{
 						id: 'result',
@@ -139,6 +145,10 @@ jQuery(document).ready(function($) {
 				schemata: [],
 				tables: [],
 				columns: [],
+				partition_keys: [],
+				partition_vals: [],
+				partition_lists: [],
+				partition_index: 0,
 				table_q: '',
 				datasource: '',
 				engine: '',
@@ -146,6 +156,8 @@ jQuery(document).ready(function($) {
 				schema: '',
 				table: '',
 				table_type: '',
+				column_date: '',
+				val: '',
 				cols: [],
 				col_date: '',
 				snippets: yanagishima.snippets,
@@ -280,6 +292,10 @@ jQuery(document).ready(function($) {
 					},
 				},
 
+				// expand
+				is_pretty: false,
+				is_database: Number(localStorage.getItem('database')) || 0,
+
 				// demo
 				demo: {
 					variables: 'SELECT ${x} FROM ${y} LIMIT ${z}',
@@ -329,7 +345,7 @@ jQuery(document).ready(function($) {
 			if (self.domain) {
 				$.ajaxSetup({
 					headers: {
-						'X-yanagishima-datasources': '*'
+						'X-yanagishima-datasources': '*',
 					},
 				});
 			}
@@ -378,6 +394,7 @@ jQuery(document).ready(function($) {
 			}).on('hidden.bs.modal', function(e) {
 				self.is_modal = false;
 				self.focus = 1;
+				$(document).scrollTop(0);
 			});
 
 			$(document).on('show.bs.modal', '#bookmark', function(e) {
@@ -404,6 +421,18 @@ jQuery(document).ready(function($) {
 				}
 			});
 
+			// hidden command
+			var inputs = [];
+			var configs = {
+				'konami': [38, 38, 40, 40, 37, 39, 37, 39, 66, 65],
+			};
+			$(window).keyup(function(e) {
+				inputs.push(e.keyCode);
+				if (inputs.toString().indexOf(configs.konami) >= 0) {
+					self.superadminMode = true;
+					toastr.success('You can watch all queries.', 'Super Admin Mode');
+				}
+			});
 		},
 		computed: {
 			hash: {
@@ -723,6 +752,10 @@ jQuery(document).ready(function($) {
 				self.schemata = [];
 				self.tables = [];
 				self.columns = [];
+				self.partition_keys = [];
+				self.partition_vals = [];
+				self.partition_lists = [];
+				self.partition_index = 0;
 				self.filter_schema = '';
 				self.filter_table = '';
 				self.filter_user = '';
@@ -781,8 +814,6 @@ jQuery(document).ready(function($) {
 				self.response.table = [];
 				if (q === '') {
 					return false;
-				} else {
-					self.trm('table_search', q);
 				}
 				self.loading.table = true;
 				$.ajax({
@@ -1072,6 +1103,25 @@ jQuery(document).ready(function($) {
 				var snippet = self.is_presto ? self.snippet : self.snippet.remove('{catalog}.');
 				self.input_query = snippet.format(config);
 			},
+			setWhere: function(index) {
+				var self = this;
+				var conditions = [];
+				var keys = self.partition_keys.first(index);
+				var vals = self.partition_vals.first(index);
+				var keyVals = keys.zip(vals);
+				keyVals.map(function(n) {
+					conditions.push("{0}='{1}'".format(n));
+				});
+				var config = {
+					catalog: self.catalog,
+					schema: self.schema,
+					table: self.table,
+					condition: conditions.join(' AND '),
+				};
+				var template = "SELECT * FROM {catalog}.{schema}.{table} WHERE {condition} LIMIT 100";
+				var where = self.is_presto ? template : template.remove('{catalog}.');
+				self.input_query = where.format(config);
+			},
 			runSnippet: function() {
 				var self = this;
 				self.setSnippet();
@@ -1187,22 +1237,23 @@ jQuery(document).ready(function($) {
 			},
 			getBookmarks: function() {
 				var self = this;
-				self.getBookmarkItems();
+				var is_database = self.is_database;
+				is_database || self.getBookmarkItems();
 
-				var bookmarks = self.bookmarks;
-				if (!bookmarks.length) {
-					return false;
-				}
+				var api = {
+					url: is_database ? self.domain + self.apis.bookmarkUser : self.domain + self.apis.bookmark,
+					data: is_database ? {} : {bookmark_id: self.bookmarks.join(',')},
+					type: is_database ? 'GET' : 'POST',
+				};
+
 				self.loading.bookmark = true;
 				$.ajax({
 					type: 'GET',
-					url: self.domain + self.apis.bookmark.format({
+					url: api.url.format({
 						datasource: self.datasource,
 						engine: self.engine,
 					}),
-					data: {
-						bookmark_id: bookmarks.join(',')
-					},
+					data: api.data,
 					timeout: 300000,
 				}).done(function(data) {
 					if (data.bookmarkList) {
@@ -1222,20 +1273,23 @@ jQuery(document).ready(function($) {
 			},
 			getHistories: function() {
 				var self = this;
-				self.getHistoryItems();
-				var histories = self.histories;
-				if (!histories.length) {
-					return false;
-				}
+				var is_database = self.is_database;
+				is_database || self.getHistoryItems();
+
+				var api = {
+					url: is_database ? self.domain + self.apis.queryHistoryUser : self.domain + self.apis.queryHistory,
+					data: is_database ? {} : {queryids: self.histories.join(',')},
+					type: is_database ? 'GET' : 'POST',
+				};
+
 				self.loading.history = true;
 				$.ajax({
-					type: 'POST',
-					url: self.domain + self.apis.queryHistory.format({
+					type: api.type,
+					url: api.url.format({
 						datasource: self.datasource,
+						engine: self.engine,
 					}),
-					data: {
-						queryids: histories.join(',')
-					},
+					data: api.data,
 					timeout: 300000,
 				}).done(function(data) {
 					if (data.results) {
@@ -1332,6 +1386,40 @@ jQuery(document).ready(function($) {
 					}
 				}).fail(function(xhr, status, error) {});
 			},
+			getPartition: function(index) {
+				var self = this;
+				var api = self.is_presto ? self.apis.prestoPartition : self.apis.hivePartition;
+				var params = {
+					datasource: self.datasource,
+					schema: self.schema,
+					table: self.table
+				};
+				if (self.is_presto) {
+					params.catalog = self.catalog;
+				}
+				var apiParams = api.format(params);
+				if (index) {
+					self.partition_index = index;
+					var keys = self.partition_keys.first(index);
+					var vals = self.partition_vals.first(index);
+					apiParams += '&partitionColumn={0}&partitionValue={1}'.format(keys.join(','), vals.join(','));
+				}
+				self.loading.partition = true;
+				$.ajax({
+					type: 'GET',
+					url: self.domain + apiParams,
+				}).done(function(data) {
+					if (data.error) {
+						toastr.error(data.error);
+					} else if (data.column && data.partitions && data.partitions.length) {
+						var index = self.partition_keys.indexOf(data.column);
+						self.partition_lists.splice(index, 1, data.partitions);
+					}
+					self.loading.partition = false;
+				}).fail(function(xhr, status, error) {
+					self.loading.partition = true;
+				});
+			},
 			getTree: function() {
 				var self = this;
 				var catalog = self.catalog;
@@ -1373,6 +1461,7 @@ jQuery(document).ready(function($) {
 								self.schemata = data.results.map(function(n) {
 									return n[0];
 								});
+								self.schema = self.schema || self.schemata[0];
 							}
 						}).fail(function(xhr, status, error) {});
 					} else if (!table) {
@@ -1405,6 +1494,8 @@ jQuery(document).ready(function($) {
 						}).done(function(data) {
 							var col_date = '';
 							var cols = [];
+							var partition_keys = [];
+
 							if (data.results && data.results.length) {
 								self.columns = data.results;
 								data.results.map(function(n) {
@@ -1413,8 +1504,12 @@ jQuery(document).ready(function($) {
 									} else {
 										cols.push(n[0]);
 									}
+									if (n[2] == 'partition key') {
+										partition_keys.push(n[0]);
+									}
 								});
 								self.cols = col_date ? cols.add(col_date, 0) : cols;
+								self.partition_keys = partition_keys;
 								self.col_date = col_date;
 							}
 						}).fail(function(xhr, status, error) {});
@@ -1434,6 +1529,7 @@ jQuery(document).ready(function($) {
 								self.schemata = data.results.map(function(n) {
 									return n[0];
 								});
+								self.schema = self.schema || self.schemata[0];
 							}
 						}).fail(function(xhr, status, error) {});
 					} else if (!table) {
@@ -1467,7 +1563,7 @@ jQuery(document).ready(function($) {
 							var col_date = '';
 							var cols = [];
 							var columns = [];
-							// self.columns = data.results;
+							var partition_keys = [];
 
 							if (data.results && data.results.length) {
 								data.results.map(function(n) {
@@ -1485,11 +1581,13 @@ jQuery(document).ready(function($) {
 											columns.push(column);
 										} else {
 											columns[indexOfColumn][2] = 'partition key';
+											partition_keys.push(n[0]);
 										}
 									}
 								});
 								self.columns = columns;
 								self.cols = col_date ? cols.add(col_date, 0) : cols;
+								self.partition_keys = partition_keys;
 								self.col_date = col_date;
 							}
 						}).fail(function(xhr, status, error) {});
@@ -1594,7 +1692,8 @@ jQuery(document).ready(function($) {
 					self.queryString = '';
 					self.response.result = '';
 					self.bookmark_id = bookmark_id;
-					$('#bookmark').modal('show');
+					self.tab = 'bookmark';
+					// $('#bookmark').modal('show');
 				}).fail(function(xhr, status, error) {
 					console.log('error');
 				});
@@ -1602,7 +1701,17 @@ jQuery(document).ready(function($) {
 			delBookmarkItem: function(bookmark_id) {
 				var self = this;
 				self.delItem('bookmarks_' + self.datasource, String(bookmark_id));
-				self.getBookmarkItems();
+				$.ajax({
+					type: 'DELETE',
+					url: self.domain + self.apis.bookmark.format({
+						datasource: self.datasource,
+						engine: self.engine,
+					}) + '&bookmark_id=' + bookmark_id,
+					timeout: 300000,
+				}).done(function(data) {
+					self.is_database || self.getBookmarkItems();
+				}).fail(function(xhr, status, error) {
+				});
 			},
 			delBookmarkAll: function() {
 				var self = this;
@@ -1755,7 +1864,7 @@ jQuery(document).ready(function($) {
 				if (!val.length) {
 					location.replace('/error/?403');
 				}
-				self.datasource = self.datasource || self.rememberDatasource ? (localStorage.getItem('datasource') || self.datasources[0]) : self.datasources[0];
+				self.datasource = self.datasource || (self.rememberDatasource ? (localStorage.getItem('datasource') || self.datasources[0]) : self.datasources[0]);
 				self.tab = self.tab || self.tabs[0].id;
 			},
 			datasource: function(val, oldVal) {
@@ -1829,7 +1938,19 @@ jQuery(document).ready(function($) {
 			table: function(val) {
 				var self = this;
 				self.getTree();
+				self.partition_lists = [];
+				self.partition_keys = [];
+				self.partition_vals = [];
+				self.partition_index = 0;
 				localStorage.setItem('table', val);
+			},
+			partition_keys: function(vals) {
+				var self = this;
+				var i = 0;
+				vals.map(function(n) {
+					self.partition_lists[i] = [];
+					i++;
+				});
 			},
 			is_autoQlist: function(val) {
 				var self = this;
@@ -1880,6 +2001,11 @@ jQuery(document).ready(function($) {
 			is_adminMode: function(val) {
 				var self = this;
 				localStorage.setItem('adminMode', Number(val));
+			},
+			is_database: function(val) {
+				var self = this;
+				localStorage.setItem('database', Number(val));
+				self.init();
 			},
 			table_q: function(val) {
 				var self = this;

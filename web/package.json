@@ -1,7 +1,7 @@
 {
   "name": "yanagishima",
-  "version": "7.0.0",
-  "description": "Web UI for PrestoDB",
+  "version": "8.0.0",
+  "description": "Web UI for Presto/Hive",
   "main": "index.js",
   "repository": {
     "type": "git",
