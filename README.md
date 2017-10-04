@@ -40,7 +40,7 @@ yanagishima is a Web UI for presto/hive.
   * pretty print for json data
   * store query history/bookmark to server side db, but default setting is to use local storage
   * improve partition display
-  * metadata of 7.0 is NOT compatible with 6.0, so migration is required
+  * metadata of 8.0 is NOT compatible with 7.0, so migration is required
   * migration process is as follows
   ```
   cp data/yanagishima.db data/yanagishima.db.bak
