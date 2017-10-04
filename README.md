@@ -78,7 +78,7 @@ yanagishima is a Web UI for presto/hive.
   sqlite> insert into bookmark_new select bookmark_id, datasource, 'presto', query, title from bookmark;
   sqlite> alter table bookmark rename to bookmark_old;
   sqlite> alter table bookmark_new rename to bookmark;
-  If you confirmed, drop table bookmark_old;
+  If you confirmed, drop table query_old, publish_old, bookmark_old;
   ```
 * 6.0
   * support bookmark title, so add title column to bookmark table
