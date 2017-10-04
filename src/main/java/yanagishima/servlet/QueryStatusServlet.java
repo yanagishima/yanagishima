@@ -1,5 +1,6 @@
 package yanagishima.servlet;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.http.client.fluent.Request;
 import yanagishima.config.YanagishimaConfig;
 import yanagishima.util.AccessControlUtil;
@@ -14,6 +15,8 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.nio.charset.StandardCharsets;
+import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import static javax.servlet.http.HttpServletResponse.SC_FORBIDDEN;
@@ -54,7 +57,12 @@ public class QueryStatusServlet extends HttpServlet {
 		PrintWriter writer = response.getWriter();
 		String json = Request.Get(prestoCoordinatorServer + "/v1/query/" + queryid)
 				.execute().returnContent().asString(StandardCharsets.UTF_8);
-		writer.println(json);
+		ObjectMapper mapper = new ObjectMapper();
+		Map map = mapper.readValue(json, Map.class);
+		if(map.containsKey("outputStage")) {
+			map.remove("outputStage");
+		}
+		writer.println(mapper.writeValueAsString(map));
 	}
 
 }
