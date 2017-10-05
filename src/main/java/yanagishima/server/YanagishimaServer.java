@@ -11,6 +11,7 @@ import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.servlet.DefaultServlet;
 import org.eclipse.jetty.servlet.FilterHolder;
 import org.eclipse.jetty.servlet.ServletContextHandler;
+import org.mortbay.servlet.GzipFilter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import yanagishima.filter.YanagishimaFilter;
@@ -59,6 +60,7 @@ public class YanagishimaServer {
 
 		ServletContextHandler servletContextHandler = new ServletContextHandler(
 				server, "/", ServletContextHandler.SESSIONS);
+		servletContextHandler.addFilter(new FilterHolder(GzipFilter.class), "/*", EnumSet.of(DispatcherType.REQUEST));
 		servletContextHandler.addFilter(new FilterHolder(new YanagishimaFilter(Boolean.parseBoolean(Optional.ofNullable(properties.getProperty("cors.enabled")).orElse("false")), properties.getProperty("audit.http.header.name"))), "/*", EnumSet.of(DispatcherType.REQUEST));
 		servletContextHandler.addFilter(GuiceFilter.class, "/*",
 				EnumSet.allOf(DispatcherType.class));
