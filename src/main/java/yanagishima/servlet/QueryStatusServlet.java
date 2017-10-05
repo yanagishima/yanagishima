@@ -62,6 +62,9 @@ public class QueryStatusServlet extends HttpServlet {
 		if(map.containsKey("outputStage")) {
 			map.remove("outputStage");
 		}
+		if(map.containsKey("session")) {
+			map.remove("session");
+		}
 		writer.println(mapper.writeValueAsString(map));
 	}
 
