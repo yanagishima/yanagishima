@@ -73,10 +73,11 @@ public class QueryHistoryUserServlet extends HttpServlet {
             String userName = request.getHeader(yanagishimaConfig.getAuditHttpHeaderName());
             String limit = request.getParameter("limit");
             String offset = request.getParameter("offset");
+            String search = request.getParameter("search");
             List<Query> queryList = null;
-            if(limit == null || offset == null) {
-                queryList = db.search(Query.class).where("datasource = ? and engine = ? and user =?", datasource, engine, userName).execute();
-            } else {
+            if (search != null) {
+                queryList = db.search(Query.class).where("datasource = ? and engine = ? and user = ?", datasource, engine, userName).where("query_string LIKE '%" + search + "%'").execute();
+            } else if(limit != null && offset != null) {
                 queryList = db.search(Query.class).where("datasource = ? and engine = ? and user =?", datasource, engine, userName).orderBy("query_id").limit(Long.valueOf(limit) + 1).offset(Long.valueOf(offset)).execute();
                 if(queryList.size() == Integer.parseInt(limit) + 1) {
                     queryList.remove(queryList.size() - 1);
@@ -84,6 +85,8 @@ public class QueryHistoryUserServlet extends HttpServlet {
                 } else {
                     retVal.put("hasNext", false);
                 }
+            } else {
+                queryList = db.search(Query.class).where("datasource = ? and engine = ? and user =?", datasource, engine, userName).execute();
             }
 
             List<List<Object>> queryHistoryList = new ArrayList<List<Object>>();
