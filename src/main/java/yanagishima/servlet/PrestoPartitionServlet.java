@@ -65,9 +65,11 @@ public class PrestoPartitionServlet extends HttpServlet {
             String table = HttpRequestUtil.getParam(request, "table");
             String partitionColumn = request.getParameter("partitionColumn");
             String partitionValue = request.getParameter("partitionValue");
+            Optional<String> prestoUser = Optional.ofNullable(request.getParameter("presto_user"));
+            Optional<String> prestoPassword = Optional.ofNullable(request.getParameter("presto_password"));
             if (partitionColumn == null || partitionValue == null) {
                 String query = String.format("%sSHOW PARTITIONS FROM %s.%s.%s", YANAGISHIMA_COMMENT, catalog, schema, table);
-                PrestoQueryResult prestoQueryResult = prestoService.doQuery(datasource, query, userName, false, Integer.MAX_VALUE);
+                PrestoQueryResult prestoQueryResult = prestoService.doQuery(datasource, query, userName, prestoUser, prestoPassword, false, Integer.MAX_VALUE);
                 retVal.put("column", prestoQueryResult.getColumns().get(0));
                 Set<String> partitions = new TreeSet<>();
                 List<List<String>> records = prestoQueryResult.getRecords();
@@ -89,7 +91,7 @@ public class PrestoPartitionServlet extends HttpServlet {
                     whereList.add(String.format("%s = '%s'", partitionColumnArray[i], partitionValuesArray[i]));
                 }
                 String query = String.format("%sSHOW PARTITIONS FROM %s.%s.%s WHERE %s", YANAGISHIMA_COMMENT, catalog, schema, table, String.join(" AND ", whereList));
-                PrestoQueryResult prestoQueryResult = prestoService.doQuery(datasource, query, userName, false, Integer.MAX_VALUE);
+                PrestoQueryResult prestoQueryResult = prestoService.doQuery(datasource, query, userName, prestoUser, prestoPassword, false, Integer.MAX_VALUE);
                 List<String> columns = prestoQueryResult.getColumns();
                 int index = 0;
                 for (String column : columns) {

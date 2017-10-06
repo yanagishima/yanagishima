@@ -87,9 +87,11 @@ public class PrestoServlet extends HttpServlet {
 					if(userName != null) {
 						LOGGER.info(String.format("%s executed %s in %s", userName, query, datasource));
 					}
+					Optional<String> prestoUser = Optional.ofNullable(request.getParameter("presto_user"));
+					Optional<String> prestoPassword = Optional.ofNullable(request.getParameter("presto_password"));
 					boolean storeFlag = Boolean.parseBoolean(Optional.ofNullable(request.getParameter("store")).orElse("false"));
 					int limit = yanagishimaConfig.getSelectLimit();
-					PrestoQueryResult prestoQueryResult = prestoService.doQuery(datasource, query, userName, storeFlag, limit);
+					PrestoQueryResult prestoQueryResult = prestoService.doQuery(datasource, query, userName, prestoUser, prestoPassword, storeFlag, limit);
 					String queryid = prestoQueryResult.getQueryId();
 					retVal.put("queryid", queryid);
 					if (prestoQueryResult.getUpdateType() == null) {

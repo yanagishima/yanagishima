@@ -29,7 +29,9 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
+import static com.facebook.presto.client.OkHttpUtil.basicAuth;
 import static com.facebook.presto.client.OkHttpUtil.setupTimeouts;
+import static com.google.common.base.Preconditions.checkArgument;
 import static java.lang.String.format;
 import static java.util.concurrent.TimeUnit.MINUTES;
 import static java.util.concurrent.TimeUnit.SECONDS;
@@ -60,8 +62,8 @@ public class PrestoServiceImpl implements PrestoService {
     }
 
     @Override
-    public String doQueryAsync(String datasource, String query, String userName) {
-        StatementClient client = getStatementClient(datasource, query, userName);
+    public String doQueryAsync(String datasource, String query, String userName, Optional<String> prestoUser, Optional<String> prestoPassword) {
+        StatementClient client = getStatementClient(datasource, query, userName, prestoUser, prestoPassword);
         executorService.submit(new Task(datasource, query, client, userName));
         return client.current().getId();
     }
@@ -95,8 +97,8 @@ public class PrestoServiceImpl implements PrestoService {
     }
 
     @Override
-    public PrestoQueryResult doQuery(String datasource, String query, String userName, boolean storeFlag, int limit) throws QueryErrorException {
-        try (StatementClient client = getStatementClient(datasource, query, userName)) {
+    public PrestoQueryResult doQuery(String datasource, String query, String userName, Optional<String> prestoUser, Optional<String> prestoPassword, boolean storeFlag, int limit) throws QueryErrorException {
+        try (StatementClient client = getStatementClient(datasource, query, userName, prestoUser, prestoPassword)) {
             return getPrestoQueryResult(datasource, query, client, storeFlag, limit, userName);
         }
     }
@@ -274,18 +276,32 @@ public class PrestoServiceImpl implements PrestoService {
         }
     }
 
-    private StatementClient getStatementClient(String datasource, String query, String userName) {
+    private StatementClient getStatementClient(String datasource, String query, String userName, Optional<String> prestoUser, Optional<String> prestoPassword) {
         String prestoCoordinatorServer = yanagishimaConfig
                 .getPrestoCoordinatorServer(datasource);
         String catalog = yanagishimaConfig.getCatalog(datasource);
         String schema = yanagishimaConfig.getSchema(datasource);
+
+        String source = yanagishimaConfig.getSource();
+
+        if (prestoUser.isPresent() && prestoPassword.isPresent()) {
+            ClientSession clientSession = new ClientSession(
+                    URI.create(prestoCoordinatorServer), prestoUser.get(), source, null, catalog,
+                    schema, TimeZone.getDefault().getID(), Locale.getDefault(),
+                    new HashMap<String, String>(), null, false, new Duration(2, MINUTES));
+            checkArgument(clientSession.getServer().getScheme().equalsIgnoreCase("https"),
+                    "Authentication using username/password requires HTTPS to be enabled");
+            OkHttpClient.Builder clientBuilder = httpClient.newBuilder();
+            clientBuilder.addInterceptor(basicAuth(prestoUser.get(), prestoPassword.get()));
+            return new StatementClient(clientBuilder.build(), clientSession, query);
+        }
+
         String user = null;
         if(userName == null ) {
             user = yanagishimaConfig.getUser();
         } else {
             user = userName;
         }
-        String source = yanagishimaConfig.getSource();
 
         ClientSession clientSession = new ClientSession(
                 URI.create(prestoCoordinatorServer), user, source, null, catalog,
