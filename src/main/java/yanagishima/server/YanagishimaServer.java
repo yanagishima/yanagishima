@@ -34,7 +34,7 @@ public class YanagishimaServer {
 	public static void main(String[] args) throws Exception {
 		
 		Properties properties = loadProps(args, new OptionParser());
-		int jettyPort = Integer.parseInt(properties.getProperty("jetty.port"));
+		int jettyPort = Integer.parseInt(Optional.ofNullable(properties.getProperty("jetty.port")).orElse("8080"));
 		String webResourceDir = properties.getProperty("web.resource.dir", "web");
 
 		PrestoServiceModule prestoServiceModule = new PrestoServiceModule(properties);
