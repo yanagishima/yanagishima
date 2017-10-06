@@ -2,7 +2,9 @@ package yanagishima.servlet;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import me.geso.tinyorm.TinyORM;
-import org.apache.http.client.fluent.Request;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.Response;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import yanagishima.config.YanagishimaConfig;
@@ -22,6 +24,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static com.facebook.presto.client.OkHttpUtil.basicAuth;
 import static javax.servlet.http.HttpServletResponse.SC_FORBIDDEN;
 
 @Singleton
@@ -38,6 +41,8 @@ public class QueryServlet extends HttpServlet {
 
 	private static final int LIMIT = 100;
 
+	private OkHttpClient httpClient = new OkHttpClient();
+
 	@Inject
 	public QueryServlet(YanagishimaConfig yanagishimaConfig) {
 		this.yanagishimaConfig = yanagishimaConfig;
@@ -45,6 +50,12 @@ public class QueryServlet extends HttpServlet {
 
 	@Override
 	protected void doGet(HttpServletRequest request,
+						  HttpServletResponse response) throws ServletException, IOException {
+		doPost(request, response);
+	}
+
+	@Override
+	protected void doPost(HttpServletRequest request,
 			HttpServletResponse response) throws ServletException, IOException {
 
 		String datasource = HttpRequestUtil.getParam(request, "datasource");
@@ -62,8 +73,24 @@ public class QueryServlet extends HttpServlet {
 				.getPrestoCoordinatorServer(datasource);
 		response.setContentType("application/json");
 		PrintWriter writer = response.getWriter();
-		String originalJson = Request.Get(prestoCoordinatorServer + "/v1/query")
-				.execute().returnContent().asString(StandardCharsets.UTF_8);
+
+		String originalJson = null;
+		Request prestoRequest = new Request.Builder().url(prestoCoordinatorServer + "/v1/query").build();
+
+		Optional<String> prestoUser = Optional.ofNullable(request.getParameter("presto_user"));
+		Optional<String> prestoPassword = Optional.ofNullable(request.getParameter("presto_password"));
+		if (prestoUser.isPresent() && prestoPassword.isPresent()) {
+			OkHttpClient.Builder clientBuilder = httpClient.newBuilder();
+			clientBuilder.addInterceptor(basicAuth(prestoUser.get(), prestoPassword.get()));
+			try (Response prestoResponse = clientBuilder.build().newCall(prestoRequest).execute()) {
+				originalJson = prestoResponse.body().string();
+			}
+		} else {
+			try (Response prestoResponse = httpClient.newCall(prestoRequest).execute()) {
+				originalJson = prestoResponse.body().string();
+			}
+		}
+
 		ObjectMapper mapper = new ObjectMapper();
 		List<Map> list = mapper.readValue(originalJson, List.class);
 		List<Map> runningList = list.stream().filter(m -> m.get("state").equals("RUNNING")).collect(Collectors.toList());;
