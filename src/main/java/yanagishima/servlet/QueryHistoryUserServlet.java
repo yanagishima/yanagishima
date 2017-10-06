@@ -78,7 +78,7 @@ public class QueryHistoryUserServlet extends HttpServlet {
             if (search != null) {
                 queryList = db.search(Query.class).where("datasource = ? and engine = ? and user = ?", datasource, engine, userName).where("query_string LIKE '%" + search + "%'").execute();
             } else if(limit != null && offset != null) {
-                queryList = db.search(Query.class).where("datasource = ? and engine = ? and user =?", datasource, engine, userName).orderBy("query_id").limit(Long.valueOf(limit) + 1).offset(Long.valueOf(offset)).execute();
+                queryList = db.search(Query.class).where("datasource = ? and engine = ? and user = ?", datasource, engine, userName).orderBy("query_id").limit(Long.valueOf(limit) + 1).offset(Long.valueOf(offset)).execute();
                 if(queryList.size() == Integer.parseInt(limit) + 1) {
                     queryList.remove(queryList.size() - 1);
                     retVal.put("hasNext", true);
