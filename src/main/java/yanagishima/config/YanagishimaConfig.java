@@ -59,6 +59,10 @@ public class YanagishimaConfig {
 		return properties.getProperty("audit.http.header.name");
 	}
 
+	public boolean isUseAuditHttpHeaderName() {
+		return Boolean.parseBoolean(Optional.ofNullable(properties.getProperty("use.audit.http.header.name")).orElse("false"));
+	}
+
 	public List<String> getDatasources(String engine) {
 		String datasourceProperties = properties.getProperty(engine + ".datasources");
 		if(datasourceProperties == null) {

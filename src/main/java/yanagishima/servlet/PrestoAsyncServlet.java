@@ -46,7 +46,16 @@ public class PrestoAsyncServlet extends HttpServlet {
 		try {
 			Optional<String> queryOptional = Optional.ofNullable(request.getParameter("query"));
 			queryOptional.ifPresent(query -> {
-				String userName = request.getHeader(yanagishimaConfig.getAuditHttpHeaderName());
+				String userName = null;
+				Optional<String> prestoUser = Optional.ofNullable(request.getParameter("presto_user"));
+				Optional<String> prestoPassword = Optional.ofNullable(request.getParameter("presto_password"));
+				if(yanagishimaConfig.isUseAuditHttpHeaderName()) {
+					userName = request.getHeader(yanagishimaConfig.getAuditHttpHeaderName());
+				} else {
+					if (prestoUser.isPresent() && prestoPassword.isPresent()) {
+						userName = prestoUser.get();
+					}
+				}
 				if(yanagishimaConfig.isUserRequired() && userName == null) {
 					try {
 						response.sendError(SC_FORBIDDEN);
@@ -69,8 +78,6 @@ public class PrestoAsyncServlet extends HttpServlet {
 				if(userName != null) {
 					LOGGER.info(String.format("%s executed %s in %s", userName, query, datasource));
 				}
-				Optional<String> prestoUser = Optional.ofNullable(request.getParameter("presto_user"));
-				Optional<String> prestoPassword = Optional.ofNullable(request.getParameter("presto_password"));
 				String queryid = prestoService.doQueryAsync(datasource, query, userName, prestoUser, prestoPassword);
 				retVal.put("queryid", queryid);
 			});

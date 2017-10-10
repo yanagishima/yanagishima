@@ -63,7 +63,16 @@ public class PrestoServlet extends HttpServlet {
 		try {
 			Optional<String> queryOptional = Optional.ofNullable(request.getParameter("query"));
 			queryOptional.ifPresent(query -> {
-				String userName = request.getHeader(yanagishimaConfig.getAuditHttpHeaderName());
+				String userName = null;
+				Optional<String> prestoUser = Optional.ofNullable(request.getParameter("presto_user"));
+				Optional<String> prestoPassword = Optional.ofNullable(request.getParameter("presto_password"));
+				if(yanagishimaConfig.isUseAuditHttpHeaderName()) {
+					userName = request.getHeader(yanagishimaConfig.getAuditHttpHeaderName());
+				} else {
+					if (prestoUser.isPresent() && prestoPassword.isPresent()) {
+						userName = prestoUser.get();
+					}
+				}
 				if(yanagishimaConfig.isUserRequired() && userName == null) {
 					try {
 						response.sendError(SC_FORBIDDEN);
@@ -87,8 +96,6 @@ public class PrestoServlet extends HttpServlet {
 					if(userName != null) {
 						LOGGER.info(String.format("%s executed %s in %s", userName, query, datasource));
 					}
-					Optional<String> prestoUser = Optional.ofNullable(request.getParameter("presto_user"));
-					Optional<String> prestoPassword = Optional.ofNullable(request.getParameter("presto_password"));
 					boolean storeFlag = Boolean.parseBoolean(Optional.ofNullable(request.getParameter("store")).orElse("false"));
 					int limit = yanagishimaConfig.getSelectLimit();
 					PrestoQueryResult prestoQueryResult = prestoService.doQuery(datasource, query, userName, prestoUser, prestoPassword, storeFlag, limit);
