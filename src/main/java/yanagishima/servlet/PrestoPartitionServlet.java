@@ -80,8 +80,6 @@ public class PrestoPartitionServlet extends HttpServlet {
             String table = HttpRequestUtil.getParam(request, "table");
             String partitionColumn = request.getParameter("partitionColumn");
             String partitionValue = request.getParameter("partitionValue");
-            Optional<String> prestoUser = Optional.ofNullable(request.getParameter("presto_user"));
-            Optional<String> prestoPassword = Optional.ofNullable(request.getParameter("presto_password"));
             if (partitionColumn == null || partitionValue == null) {
                 String query = String.format("%sSHOW PARTITIONS FROM %s.%s.%s", YANAGISHIMA_COMMENT, catalog, schema, table);
                 PrestoQueryResult prestoQueryResult = prestoService.doQuery(datasource, query, userName, prestoUser, prestoPassword, false, Integer.MAX_VALUE);
