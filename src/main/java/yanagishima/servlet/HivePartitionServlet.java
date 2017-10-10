@@ -19,7 +19,6 @@ import java.io.IOException;
 import java.util.*;
 
 import static javax.servlet.http.HttpServletResponse.SC_FORBIDDEN;
-import static yanagishima.util.Constants.YANAGISHIMA_COMMENT;
 
 @Singleton
 public class HivePartitionServlet extends HttpServlet {

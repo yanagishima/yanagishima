@@ -1,7 +1,6 @@
 package yanagishima.servlet;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.apache.http.client.fluent.Request;
 import yanagishima.config.YanagishimaConfig;
 import yanagishima.util.AccessControlUtil;
 import yanagishima.util.HttpRequestUtil;
@@ -15,7 +14,6 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.nio.charset.StandardCharsets;
 import java.util.Map;
 import java.util.Optional;
 

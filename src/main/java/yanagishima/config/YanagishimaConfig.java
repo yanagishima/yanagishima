@@ -3,7 +3,6 @@ package yanagishima.config;
 import yanagishima.util.PropertiesUtil;
 
 import java.io.BufferedReader;
-import java.io.BufferedWriter;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;

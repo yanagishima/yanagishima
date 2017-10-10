@@ -5,8 +5,6 @@ import javax.servlet.http.HttpServletRequest;
 import java.util.Arrays;
 import java.util.List;
 
-import yanagishima.util.Constants;
-
 public class AccessControlUtil {
 
     public static boolean validateDatasource(HttpServletRequest request, String datasource) {

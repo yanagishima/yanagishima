@@ -1,7 +1,5 @@
 package yanagishima.exception;
 
-import com.facebook.presto.client.QueryError;
-
 import java.sql.SQLException;
 
 public class HiveQueryErrorException extends Exception {
