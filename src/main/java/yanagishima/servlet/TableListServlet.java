@@ -44,6 +44,12 @@ public class TableListServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request,
                          HttpServletResponse response) throws ServletException, IOException {
+        doPost(request, response);
+    }
+
+    @Override
+    protected void doPost(HttpServletRequest request,
+                         HttpServletResponse response) throws ServletException, IOException {
 
         HashMap<String, Object> retVal = new HashMap<String, Object>();
 
@@ -62,9 +68,16 @@ public class TableListServlet extends HttpServlet {
             }
 
             String catalog = HttpRequestUtil.getParam(request, "catalog");
-            String userName = request.getHeader(yanagishimaConfig.getAuditHttpHeaderName());
+            String userName = null;
             Optional<String> prestoUser = Optional.ofNullable(request.getParameter("presto_user"));
             Optional<String> prestoPassword = Optional.ofNullable(request.getParameter("presto_password"));
+            if(yanagishimaConfig.isUseAuditHttpHeaderName()) {
+                userName = request.getHeader(yanagishimaConfig.getAuditHttpHeaderName());
+            } else {
+                if (prestoUser.isPresent() && prestoPassword.isPresent()) {
+                    userName = prestoUser.get();
+                }
+            }
             List<String> invisibleSchemas = yanagishimaConfig.getInvisibleSchemas(datasource, catalog);
             String notin = "('" + String.join("','", invisibleSchemas) + "')";
             String query = String.format("%sSELECT table_catalog || '.' || table_schema || '.' || table_name FROM %s.information_schema.tables WHERE table_schema NOT IN %s", YANAGISHIMA_COMMENT, catalog, notin);

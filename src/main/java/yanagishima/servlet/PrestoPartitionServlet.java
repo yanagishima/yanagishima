@@ -42,6 +42,12 @@ public class PrestoPartitionServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request,
                          HttpServletResponse response) throws ServletException, IOException {
+        doPost(request, response);
+    }
+
+    @Override
+    protected void doPost(HttpServletRequest request,
+                         HttpServletResponse response) throws ServletException, IOException {
 
         HashMap<String, Object> retVal = new HashMap<String, Object>();
 
@@ -59,7 +65,16 @@ public class PrestoPartitionServlet extends HttpServlet {
                 }
             }
 
-            String userName = request.getHeader(yanagishimaConfig.getAuditHttpHeaderName());
+            String userName = null;
+            Optional<String> prestoUser = Optional.ofNullable(request.getParameter("presto_user"));
+            Optional<String> prestoPassword = Optional.ofNullable(request.getParameter("presto_password"));
+            if(yanagishimaConfig.isUseAuditHttpHeaderName()) {
+                userName = request.getHeader(yanagishimaConfig.getAuditHttpHeaderName());
+            } else {
+                if (prestoUser.isPresent() && prestoPassword.isPresent()) {
+                    userName = prestoUser.get();
+                }
+            }
             String catalog = HttpRequestUtil.getParam(request, "catalog");
             String schema = HttpRequestUtil.getParam(request, "schema");
             String table = HttpRequestUtil.getParam(request, "table");
