@@ -33,6 +33,12 @@ public class HiveQueryStatusServlet extends HttpServlet {
 
 	@Override
 	protected void doGet(HttpServletRequest request,
+						 HttpServletResponse response) throws ServletException, IOException {
+		doPost(request, response);
+	}
+
+	@Override
+	protected void doPost(HttpServletRequest request,
 			HttpServletResponse response) throws ServletException, IOException {
 
 		String datasource = HttpRequestUtil.getParam(request, "datasource");
@@ -48,7 +54,16 @@ public class HiveQueryStatusServlet extends HttpServlet {
 		}
 		String queryid = Optional.ofNullable(request.getParameter("queryid")).get();
 		String resourceManagerUrl = yanagishimaConfig.getResourceManagerUrl(datasource).get();
-		String userName = request.getHeader(yanagishimaConfig.getAuditHttpHeaderName());
+		String userName = null;
+		Optional<String> hiveUser = Optional.ofNullable(request.getParameter("hive_user"));
+		Optional<String> hivePassword = Optional.ofNullable(request.getParameter("hive_password"));
+		if(yanagishimaConfig.isUseAuditHttpHeaderName()) {
+			userName = request.getHeader(yanagishimaConfig.getAuditHttpHeaderName());
+		} else {
+			if (hiveUser.isPresent() && hivePassword.isPresent()) {
+				userName = hiveUser.get();
+			}
+		}
 		Optional<Map> applicationOptional = YarnUtil.getApplication(resourceManagerUrl, queryid, userName, yanagishimaConfig.getResourceManagerBegin(datasource));
 
 		applicationOptional.ifPresent(application -> {

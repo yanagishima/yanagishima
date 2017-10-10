@@ -23,10 +23,7 @@ import java.sql.*;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -54,9 +51,9 @@ public class HiveServiceImpl implements HiveService {
     }
 
     @Override
-    public String doQueryAsync(String datasource, String query, String userName) {
+    public String doQueryAsync(String datasource, String query, String userName, Optional<String> hiveUser, Optional<String> hivePassword) {
         String queryId = generateQueryId(datasource, query);
-        executorService.submit(new Task(queryId, datasource, query, userName));
+        executorService.submit(new Task(queryId, datasource, query, userName, hiveUser, hivePassword));
         return queryId;
     }
 
@@ -66,19 +63,23 @@ public class HiveServiceImpl implements HiveService {
         private String datasource;
         private String query;
         private String userName;
+        private Optional<String> hiveUser;
+        private Optional<String> hivePassword;
 
-        public Task(String queryId, String datasource, String query, String userName) {
+        public Task(String queryId, String datasource, String query, String userName, Optional<String> hiveUser, Optional<String> hivePassword) {
             this.queryId = queryId;
             this.datasource = datasource;
             this.query = query;
             this.userName = userName;
+            this.hiveUser = hiveUser;
+            this.hivePassword = hivePassword;
         }
 
         @Override
         public void run() {
             try {
                 int limit = yanagishimaConfig.getSelectLimit();
-                getHiveQueryResult(this.queryId, this.datasource, this.query, true, limit, this.userName);
+                getHiveQueryResult(this.queryId, this.datasource, this.query, true, limit, this.userName, this.hiveUser, this.hivePassword);
             } catch (Throwable e) {
                 LOGGER.error(e.getMessage(), e);
             }
@@ -86,12 +87,12 @@ public class HiveServiceImpl implements HiveService {
     }
 
     @Override
-    public HiveQueryResult doQuery(String datasource, String query, String userName, boolean storeFlag, int limit) throws HiveQueryErrorException {
+    public HiveQueryResult doQuery(String datasource, String query, String userName, Optional<String> hiveUser, Optional<String> hivePassword, boolean storeFlag, int limit) throws HiveQueryErrorException {
         String queryId = generateQueryId(datasource, query);
-        return getHiveQueryResult(queryId, datasource, query, storeFlag, limit, userName);
+        return getHiveQueryResult(queryId, datasource, query, storeFlag, limit, userName, hiveUser, hivePassword);
     }
 
-    private HiveQueryResult getHiveQueryResult(String queryId, String datasource, String query, boolean storeFlag, int limit, String userName) throws HiveQueryErrorException {
+    private HiveQueryResult getHiveQueryResult(String queryId, String datasource, String query, boolean storeFlag, int limit, String userName, Optional<String> hiveUser, Optional<String> hivePassword) throws HiveQueryErrorException {
 
         List<String> hiveDisallowedKeywords = yanagishimaConfig.getHiveDisallowedKeywords(datasource);
         for(String hiveDisallowedKeyword : hiveDisallowedKeywords) {
@@ -109,8 +110,13 @@ public class HiveServiceImpl implements HiveService {
         }
 
         String url = yanagishimaConfig.getHiveJdbcUrl(datasource).get();
-        String user = yanagishimaConfig.getHiveJdbcUser(datasource).get();
-        String password = yanagishimaConfig.getHiveJdbcPassword(datasource).get();
+        String user = null;
+        String password = null;
+
+        if (hiveUser.isPresent() && hivePassword.isPresent()) {
+            user = hiveUser.get();
+            password = hivePassword.get();
+        }
 
         try (Connection connection = DriverManager.getConnection(url, user, password)) {
             long start = System.currentTimeMillis();

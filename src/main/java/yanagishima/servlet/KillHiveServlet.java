@@ -37,6 +37,12 @@ public class KillHiveServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request,
                          HttpServletResponse response) throws ServletException, IOException {
+        doPost(request, response);
+    }
+
+    @Override
+    protected void doPost(HttpServletRequest request,
+                         HttpServletResponse response) throws ServletException, IOException {
 
         Optional<String> idOptinal = Optional.ofNullable(request.getParameter("id"));
         idOptinal.ifPresent(id -> {
@@ -53,7 +59,16 @@ public class KillHiveServlet extends HttpServlet {
             }
 
             String resourceManagerUrl = yanagishimaConfig.getResourceManagerUrl(datasource).get();
-            String userName = request.getHeader(yanagishimaConfig.getAuditHttpHeaderName());
+            String userName = null;
+            Optional<String> hiveUser = Optional.ofNullable(request.getParameter("hive_user"));
+            Optional<String> hivePassword = Optional.ofNullable(request.getParameter("hive_password"));
+            if(yanagishimaConfig.isUseAuditHttpHeaderName()) {
+                userName = request.getHeader(yanagishimaConfig.getAuditHttpHeaderName());
+            } else {
+                if (hiveUser.isPresent() && hivePassword.isPresent()) {
+                    userName = hiveUser.get();
+                }
+            }
             if (id.startsWith("application_")) {
                 try {
                     String json = YarnUtil.kill(resourceManagerUrl, id);

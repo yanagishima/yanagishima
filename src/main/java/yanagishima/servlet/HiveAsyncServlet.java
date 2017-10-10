@@ -51,8 +51,16 @@ public class HiveAsyncServlet extends HttpServlet {
         Optional<String> queryOptional = Optional.ofNullable(request.getParameter("query"));
         queryOptional.ifPresent(query -> {
             try {
-
-                String userName = request.getHeader(yanagishimaConfig.getAuditHttpHeaderName());
+                String userName = null;
+                Optional<String> hiveUser = Optional.ofNullable(request.getParameter("hive_user"));
+                Optional<String> hivePassword = Optional.ofNullable(request.getParameter("hive_password"));
+                if(yanagishimaConfig.isUseAuditHttpHeaderName()) {
+                    userName = request.getHeader(yanagishimaConfig.getAuditHttpHeaderName());
+                } else {
+                    if (hiveUser.isPresent() && hivePassword.isPresent()) {
+                        userName = hiveUser.get();
+                    }
+                }
                 if (yanagishimaConfig.isUserRequired() && userName == null) {
                     try {
                         response.sendError(SC_FORBIDDEN);
@@ -77,7 +85,7 @@ public class HiveAsyncServlet extends HttpServlet {
                     LOGGER.info(String.format("%s executed %s in %s", userName, query, datasource));
                 }
 
-                String queryid = hiveService.doQueryAsync(datasource, query, userName);
+                String queryid = hiveService.doQueryAsync(datasource, query, userName, hiveUser, hivePassword);
                 retVal.put("queryid", queryid);
 
 

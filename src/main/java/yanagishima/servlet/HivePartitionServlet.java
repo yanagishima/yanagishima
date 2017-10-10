@@ -41,6 +41,12 @@ public class HivePartitionServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request,
                          HttpServletResponse response) throws ServletException, IOException {
+        doPost(request, response);
+    }
+
+    @Override
+    protected void doPost(HttpServletRequest request,
+                         HttpServletResponse response) throws ServletException, IOException {
 
         HashMap<String, Object> retVal = new HashMap<String, Object>();
 
@@ -58,14 +64,23 @@ public class HivePartitionServlet extends HttpServlet {
                 }
             }
 
-            String userName = request.getHeader(yanagishimaConfig.getAuditHttpHeaderName());
+            String userName = null;
+            Optional<String> hiveUser = Optional.ofNullable(request.getParameter("hive_user"));
+            Optional<String> hivePassword = Optional.ofNullable(request.getParameter("hive_password"));
+            if(yanagishimaConfig.isUseAuditHttpHeaderName()) {
+                userName = request.getHeader(yanagishimaConfig.getAuditHttpHeaderName());
+            } else {
+                if (hiveUser.isPresent() && hivePassword.isPresent()) {
+                    userName = hiveUser.get();
+                }
+            }
             String schema = HttpRequestUtil.getParam(request, "schema");
             String table = HttpRequestUtil.getParam(request, "table");
             String partitionColumn = request.getParameter("partitionColumn");
             String partitionValue = request.getParameter("partitionValue");
             if (partitionColumn == null || partitionValue == null) {
                 String query = String.format("SHOW PARTITIONS %s.%s", schema, table);
-                HiveQueryResult hiveQueryResult = hiveService.doQuery(datasource, query, userName, false, Integer.MAX_VALUE);
+                HiveQueryResult hiveQueryResult = hiveService.doQuery(datasource, query, userName, hiveUser, hivePassword, false, Integer.MAX_VALUE);
                 Set<String> partitions = new TreeSet<>();
                 List<List<String>> records = hiveQueryResult.getRecords();
                 String cell = records.get(0).get(0);// part1=val1/part2=val2/part3=val3'...
@@ -85,7 +100,7 @@ public class HivePartitionServlet extends HttpServlet {
                     whereList.add(String.format("%s = '%s'", partitionColumnArray[i], partitionValuesArray[i]));
                 }
                 String query = String.format("SHOW PARTITIONS %s.%s PARTITION(%s)", schema, table, String.join(", ", whereList));
-                HiveQueryResult hiveQueryResult = hiveService.doQuery(datasource, query, userName, false, Integer.MAX_VALUE);
+                HiveQueryResult hiveQueryResult = hiveService.doQuery(datasource, query, userName, hiveUser, hivePassword, false, Integer.MAX_VALUE);
                 List<List<String>> records = hiveQueryResult.getRecords();
                 String cell = records.get(0).get(0);// part1=val1/part2=val2/part3=val3'...
                 String[] keyValues = cell.split("/");

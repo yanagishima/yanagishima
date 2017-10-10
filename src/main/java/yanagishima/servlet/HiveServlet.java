@@ -61,8 +61,16 @@ public class HiveServlet extends HttpServlet {
         Optional<String> queryOptional = Optional.ofNullable(request.getParameter("query"));
         queryOptional.ifPresent(query -> {
             try {
-
-                String userName = request.getHeader(yanagishimaConfig.getAuditHttpHeaderName());
+                String userName = null;
+                Optional<String> hiveUser = Optional.ofNullable(request.getParameter("hive_user"));
+                Optional<String> hivePassword = Optional.ofNullable(request.getParameter("hive_password"));
+                if(yanagishimaConfig.isUseAuditHttpHeaderName()) {
+                    userName = request.getHeader(yanagishimaConfig.getAuditHttpHeaderName());
+                } else {
+                    if (hiveUser.isPresent() && hivePassword.isPresent()) {
+                        userName = hiveUser.get();
+                    }
+                }
                 if (yanagishimaConfig.isUserRequired() && userName == null) {
                     try {
                         response.sendError(SC_FORBIDDEN);
@@ -90,7 +98,7 @@ public class HiveServlet extends HttpServlet {
                 boolean storeFlag = Boolean.parseBoolean(Optional.ofNullable(request.getParameter("store")).orElse("false"));
                 int limit = yanagishimaConfig.getSelectLimit();
                 try {
-                    HiveQueryResult hiveQueryResult = hiveService.doQuery(datasource, query, userName, storeFlag, limit);
+                    HiveQueryResult hiveQueryResult = hiveService.doQuery(datasource, query, userName, hiveUser, hivePassword, storeFlag, limit);
                     String queryid = hiveQueryResult.getQueryId();
                     retVal.put("queryid", queryid);
                     retVal.put("headers", hiveQueryResult.getColumns());
