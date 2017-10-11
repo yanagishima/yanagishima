@@ -202,7 +202,7 @@ public class PrestoServiceImpl implements PrestoService {
                     LOGGER.error(e.getMessage(), e);
                 }
             }
-            throw resultsException(results);
+            throw resultsException(results, datasource);
         }
         return prestoQueryResult;
     }
@@ -314,9 +314,9 @@ public class PrestoServiceImpl implements PrestoService {
         return new StatementClient(httpClient, clientSession, query);
     }
 
-    private QueryErrorException resultsException(QueryResults results) {
+    private QueryErrorException resultsException(QueryResults results, String datasource) {
         QueryError error = results.getError();
-        String message = format("Query failed (#%s): %s", results.getId(), error.getMessage());
+        String message = format("Query failed (#%s) in %s: %s", results.getId(), datasource, error.getMessage());
         Throwable cause = (error.getFailureInfo() == null) ? null : error.getFailureInfo().toException();
         return new QueryErrorException(results.getId(), error, new SQLException(message, error.getSqlState(), error.getErrorCode(), cause));
     }
