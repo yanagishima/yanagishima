@@ -97,7 +97,7 @@ public class HiveServiceImpl implements HiveService {
         List<String> hiveDisallowedKeywords = yanagishimaConfig.getHiveDisallowedKeywords(datasource);
         for(String hiveDisallowedKeyword : hiveDisallowedKeywords) {
             if(query.trim().toLowerCase().startsWith(hiveDisallowedKeyword)) {
-                String message = String.format("query contains %s. This is the disallowed keywords.", hiveDisallowedKeyword);
+                String message = String.format("query contains %s. This is the disallowed keywords in %s", hiveDisallowedKeyword, datasource);
                 storeError(db, datasource, "hive", queryId, query, userName, message);
                 throw new RuntimeException(message);
             }
@@ -221,7 +221,7 @@ public class HiveServiceImpl implements HiveService {
                             lineNumber++;
                             resultBytes += resultStr.getBytes(StandardCharsets.UTF_8).length;
                             if (resultBytes > maxResultFileByteSize) {
-                                String message = String.format("Result file size exceeded %s bytes. queryId=%s", maxResultFileByteSize, queryId);
+                                String message = String.format("Result file size exceeded %s bytes. queryId=%s, datasource=%s", maxResultFileByteSize, queryId, datasource);
                                 storeError(db, datasource, "hive", queryId, query, userName, message);
                                 throw new RuntimeException(message);
                             }

@@ -25,10 +25,8 @@ public class DbUtil {
                 .value("user", user)
                 .execute();
         Path dst = getResultFilePath(datasource, queryId, true);
-        String message = format("Query failed (#%s): %s", queryId, errorMessage);
-
         try (BufferedWriter bw = Files.newBufferedWriter(dst, StandardCharsets.UTF_8)) {
-            bw.write(message);
+            bw.write(errorMessage);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
