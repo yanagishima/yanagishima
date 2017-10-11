@@ -199,6 +199,14 @@ public class YanagishimaConfig {
 		return Optional.ofNullable(properties.getProperty("hive.jdbc.url." + datasource));
 	}
 
+	public String getHiveJdbcUser(String datasource) {
+		return properties.getProperty("hive.jdbc.user." + datasource);
+	}
+
+	public String getHiveJdbcPassword(String datasource) {
+		return properties.getProperty("hive.jdbc.password." + datasource);
+	}
+
 	public double getHiveQueryMaxRunTimeSeconds() {
 		return Double.parseDouble(properties.getProperty("hive.query.max-run-time-seconds"));
 	}

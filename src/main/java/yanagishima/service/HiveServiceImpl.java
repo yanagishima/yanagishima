@@ -110,8 +110,8 @@ public class HiveServiceImpl implements HiveService {
         }
 
         String url = yanagishimaConfig.getHiveJdbcUrl(datasource).get();
-        String user = null;
-        String password = null;
+        String user = yanagishimaConfig.getHiveJdbcUser(datasource);
+        String password = yanagishimaConfig.getHiveJdbcPassword(datasource);
 
         if (hiveUser.isPresent() && hivePassword.isPresent()) {
             user = hiveUser.get();
