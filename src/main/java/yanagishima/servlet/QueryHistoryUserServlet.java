@@ -25,10 +25,7 @@ import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
+import java.util.*;
 
 import static javax.servlet.http.HttpServletResponse.SC_FORBIDDEN;
 
@@ -71,15 +68,17 @@ public class QueryHistoryUserServlet extends HttpServlet {
 
             String engine = HttpRequestUtil.getParam(request, "engine");
             String userName = request.getHeader(yanagishimaConfig.getAuditHttpHeaderName());
-            String limit = HttpRequestUtil.getParam(request, "limit");
-            String offset = HttpRequestUtil.getParam(request, "offset");
-            String search = HttpRequestUtil.getParam(request, "search");
+            String limit = request.getParameter("limit");
+            String offset = request.getParameter("offset");
+            String search = request.getParameter("search");
             List<Query> queryList = null;
-            if(limit.length() > 0 && offset.length() > 0) {
-                queryList = db.search(Query.class).where("datasource = ? and engine = ? and user = ? and query_string LIKE '%" + search + "%'", datasource, engine, userName).orderBy("query_id desc").limit(Long.valueOf(limit)).offset(Long.valueOf(offset)).execute();
-            } else {
-                queryList = db.search(Query.class).where("datasource = ? and engine = ? and user = ?", datasource, engine, userName).where("query_string LIKE '%" + search + "%'").orderBy("query_id desc").execute();
+            if(limit == null || limit.length() == 0) {
+                limit = "100";
             }
+            if(offset == null || offset.length() == 0) {
+                offset = "0";
+            }
+            queryList = db.search(Query.class).where("datasource = ? and engine = ? and user = ? and query_string LIKE '%" + Optional.ofNullable(search).orElse("") + "%'", datasource, engine, userName).orderBy("query_id desc").limit(Long.valueOf(limit)).offset(Long.valueOf(offset)).execute();
 
             List<List<Object>> queryHistoryList = new ArrayList<List<Object>>();
             for (Query query : queryList) {
@@ -111,7 +110,14 @@ public class QueryHistoryUserServlet extends HttpServlet {
             retVal.put("headers", Arrays.asList("Id", "Query", "Time", "rawDataSize", "engine", "finishedTime"));
             retVal.put("results", queryHistoryList);
             retVal.put("hit", queryHistoryList.size());
-            long total = db.count(Query.class).where("datasource = ? and engine = ? and user = ?", datasource, engine, userName).execute();
+            List<Query> totalQueryList = db.searchBySQL(Query.class, String.format("select query_id from query where datasource='%s' and engine='%s' and user='%s'", datasource, engine, userName));
+            int total = 0;
+            for (Query query : totalQueryList) {
+                Path resultFilePath = PathUtil.getResultFilePath(datasource, query.getQueryId(), false);
+                if (resultFilePath.toFile().exists()) {
+                    total++;
+                }
+            }
             retVal.put("total", total);
 
         } catch (Throwable e) {
