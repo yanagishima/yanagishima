@@ -71,22 +71,14 @@ public class QueryHistoryUserServlet extends HttpServlet {
 
             String engine = HttpRequestUtil.getParam(request, "engine");
             String userName = request.getHeader(yanagishimaConfig.getAuditHttpHeaderName());
-            String limit = request.getParameter("limit");
-            String offset = request.getParameter("offset");
-            String search = request.getParameter("search");
+            String limit = HttpRequestUtil.getParam(request, "limit");
+            String offset = HttpRequestUtil.getParam(request, "offset");
+            String search = HttpRequestUtil.getParam(request, "search");
             List<Query> queryList = null;
-            if (search != null) {
-                queryList = db.search(Query.class).where("datasource = ? and engine = ? and user = ?", datasource, engine, userName).where("query_string LIKE '%" + search + "%'").execute();
-            } else if(limit != null && offset != null) {
-                queryList = db.search(Query.class).where("datasource = ? and engine = ? and user = ?", datasource, engine, userName).orderBy("query_id").limit(Long.valueOf(limit) + 1).offset(Long.valueOf(offset)).execute();
-                if(queryList.size() == Integer.parseInt(limit) + 1) {
-                    queryList.remove(queryList.size() - 1);
-                    retVal.put("hasNext", true);
-                } else {
-                    retVal.put("hasNext", false);
-                }
+            if(limit.length() > 0 && offset.length() > 0) {
+                queryList = db.search(Query.class).where("datasource = ? and engine = ? and user = ? and query_string LIKE '%" + search + "%'", datasource, engine, userName).orderBy("query_id desc").limit(Long.valueOf(limit)).offset(Long.valueOf(offset)).execute();
             } else {
-                queryList = db.search(Query.class).where("datasource = ? and engine = ? and user =?", datasource, engine, userName).execute();
+                queryList = db.search(Query.class).where("datasource = ? and engine = ? and user = ?", datasource, engine, userName).where("query_string LIKE '%" + search + "%'").orderBy("query_id desc").execute();
             }
 
             List<List<Object>> queryHistoryList = new ArrayList<List<Object>>();
@@ -118,6 +110,9 @@ public class QueryHistoryUserServlet extends HttpServlet {
             }
             retVal.put("headers", Arrays.asList("Id", "Query", "Time", "rawDataSize", "engine", "finishedTime"));
             retVal.put("results", queryHistoryList);
+            retVal.put("hit", queryHistoryList.size());
+            long total = db.count(Query.class).where("datasource = ? and engine = ? and user = ?", datasource, engine, userName).execute();
+            retVal.put("total", total);
 
         } catch (Throwable e) {
             LOGGER.error(e.getMessage(), e);
