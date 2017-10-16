@@ -68,18 +68,10 @@ public class QueryHistoryUserServlet extends HttpServlet {
 
             String engine = HttpRequestUtil.getParam(request, "engine");
             String userName = request.getHeader(yanagishimaConfig.getAuditHttpHeaderName());
-            String limit = request.getParameter("limit");
-            String offset = request.getParameter("offset");
             String search = request.getParameter("search");
-            List<Query> queryList = null;
-            if(limit == null || limit.length() == 0) {
-                limit = "100";
-            }
-            if(offset == null || offset.length() == 0) {
-                offset = "0";
-            }
-            queryList = db.search(Query.class).where("datasource = ? and engine = ? and user = ? and query_string LIKE '%" + Optional.ofNullable(search).orElse("") + "%'", datasource, engine, userName).orderBy("query_id desc").limit(Long.valueOf(limit)).offset(Long.valueOf(offset)).execute();
 
+            retVal.put("headers", Arrays.asList("Id", "Query", "Time", "rawDataSize", "engine", "finishedTime"));
+            List<Query> queryList = db.search(Query.class).where("datasource = ? and engine = ? and user = ? and query_string LIKE '%" + Optional.ofNullable(search).orElse("") + "%'", datasource, engine, userName).orderBy("query_id desc").execute();
             List<List<Object>> queryHistoryList = new ArrayList<List<Object>>();
             for (Query query : queryList) {
                 List<Object> row = new ArrayList<>();
@@ -107,9 +99,28 @@ public class QueryHistoryUserServlet extends HttpServlet {
                 }
 
             }
-            retVal.put("headers", Arrays.asList("Id", "Query", "Time", "rawDataSize", "engine", "finishedTime"));
-            retVal.put("results", queryHistoryList);
             retVal.put("hit", queryHistoryList.size());
+
+            String offsetStr = request.getParameter("offset");
+            int offset = 0;
+            if(offsetStr != null && offsetStr.length() > 0) {
+                offset = Integer.parseInt(offsetStr);
+            }
+
+            String limitStr = request.getParameter("limit");
+            int limit = 100;
+            if(limitStr != null && limitStr.length() > 0) {
+                limit = Integer.parseInt(limitStr);
+            }
+
+            List<List<Object>> subQueryHistoryList = null;
+            if(offset + limit <= queryHistoryList.size()) {
+                subQueryHistoryList = queryHistoryList.subList(offset, offset + limit);
+            } else {
+                subQueryHistoryList = queryHistoryList.subList(offset, queryHistoryList.size());
+            }
+            retVal.put("results", subQueryHistoryList);
+
             List<Query> totalQueryList = db.searchBySQL(Query.class, String.format("select query_id from query where datasource='%s' and engine='%s' and user='%s'", datasource, engine, userName));
             int total = 0;
             for (Query query : totalQueryList) {
