@@ -114,7 +114,9 @@ public class QueryHistoryUserServlet extends HttpServlet {
             }
 
             List<List<Object>> subQueryHistoryList = null;
-            if(offset + limit <= queryHistoryList.size()) {
+            if(queryHistoryList.isEmpty()) {
+                subQueryHistoryList = Collections.emptyList();
+            } else if(offset + limit <= queryHistoryList.size()) {
                 subQueryHistoryList = queryHistoryList.subList(offset, offset + limit);
             } else {
                 subQueryHistoryList = queryHistoryList.subList(offset, queryHistoryList.size());
