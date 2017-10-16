@@ -23,6 +23,7 @@ public class PrestoServletModule extends ServletModule {
 		bind(QueryHistoryServlet.class);
 		bind(QueryHistoryUserServlet.class);
 		bind(DatasourceServlet.class);
+		bind(DatasourceAuthServlet.class);
 		bind(QueryStatusServlet.class);
 		bind(BookmarkServlet.class);
 		bind(BookmarkUserServlet.class);
@@ -47,6 +48,7 @@ public class PrestoServletModule extends ServletModule {
 		serve("/queryHistory").with(QueryHistoryServlet.class);
 		serve("/queryHistoryUser").with(QueryHistoryUserServlet.class);
 		serve("/datasource").with(DatasourceServlet.class);
+		serve("/datasourceAuth").with(DatasourceAuthServlet.class);
 		serve("/queryStatus").with(QueryStatusServlet.class);
 		serve("/bookmark").with(BookmarkServlet.class);
 		serve("/bookmarkUser").with(BookmarkUserServlet.class);

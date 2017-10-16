@@ -256,4 +256,8 @@ public class YanagishimaConfig {
 		}
 	}
 
+	public boolean isAuth(String datasource) {
+		return Boolean.parseBoolean(Optional.ofNullable(properties.getProperty("auth." + datasource)).orElse("false"));
+	}
+
 }
