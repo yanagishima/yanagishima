@@ -60,8 +60,8 @@ public class KillHiveServlet extends HttpServlet {
 
             String resourceManagerUrl = yanagishimaConfig.getResourceManagerUrl(datasource).get();
             String userName = null;
-            Optional<String> hiveUser = Optional.ofNullable(request.getParameter("hive_user"));
-            Optional<String> hivePassword = Optional.ofNullable(request.getParameter("hive_password"));
+            Optional<String> hiveUser = Optional.ofNullable(request.getParameter("user"));
+            Optional<String> hivePassword = Optional.ofNullable(request.getParameter("password"));
             if(yanagishimaConfig.isUseAuditHttpHeaderName()) {
                 userName = request.getHeader(yanagishimaConfig.getAuditHttpHeaderName());
             } else {

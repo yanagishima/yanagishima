@@ -63,8 +63,8 @@ public class QueryStatusServlet extends HttpServlet {
 		PrintWriter writer = response.getWriter();
 		String json = null;
 		okhttp3.Request prestoRequest = new okhttp3.Request.Builder().url(prestoCoordinatorServer + "/v1/query/" + queryid).build();
-		Optional<String> prestoUser = Optional.ofNullable(request.getParameter("presto_user"));
-		Optional<String> prestoPassword = Optional.ofNullable(request.getParameter("presto_password"));
+		Optional<String> prestoUser = Optional.ofNullable(request.getParameter("user"));
+		Optional<String> prestoPassword = Optional.ofNullable(request.getParameter("password"));
 		if (prestoUser.isPresent() && prestoPassword.isPresent()) {
 			OkHttpClient.Builder clientBuilder = httpClient.newBuilder();
 			clientBuilder.addInterceptor(basicAuth(prestoUser.get(), prestoPassword.get()));

@@ -64,8 +64,8 @@ public class PrestoServlet extends HttpServlet {
 			Optional<String> queryOptional = Optional.ofNullable(request.getParameter("query"));
 			queryOptional.ifPresent(query -> {
 				String userName = null;
-				Optional<String> prestoUser = Optional.ofNullable(request.getParameter("presto_user"));
-				Optional<String> prestoPassword = Optional.ofNullable(request.getParameter("presto_password"));
+				Optional<String> prestoUser = Optional.ofNullable(request.getParameter("user"));
+				Optional<String> prestoPassword = Optional.ofNullable(request.getParameter("password"));
 				if(yanagishimaConfig.isUseAuditHttpHeaderName()) {
 					userName = request.getHeader(yanagishimaConfig.getAuditHttpHeaderName());
 				} else {

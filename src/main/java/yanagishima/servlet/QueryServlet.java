@@ -79,8 +79,8 @@ public class QueryServlet extends HttpServlet {
 		String originalJson = null;
 		Request prestoRequest = new Request.Builder().url(prestoCoordinatorServer + "/v1/query").build();
 
-		Optional<String> prestoUser = Optional.ofNullable(request.getParameter("presto_user"));
-		Optional<String> prestoPassword = Optional.ofNullable(request.getParameter("presto_password"));
+		Optional<String> prestoUser = Optional.ofNullable(request.getParameter("user"));
+		Optional<String> prestoPassword = Optional.ofNullable(request.getParameter("password"));
 		if (prestoUser.isPresent() && prestoPassword.isPresent()) {
 			OkHttpClient.Builder clientBuilder = httpClient.newBuilder();
 			clientBuilder.addInterceptor(basicAuth(prestoUser.get(), prestoPassword.get()));

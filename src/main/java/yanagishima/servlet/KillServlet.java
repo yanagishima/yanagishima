@@ -66,8 +66,8 @@ public class KillServlet extends HttpServlet {
 			try {
 				String prestoCoordinatorServer = yanagishimaConfig.getPrestoCoordinatorServer(datasource);
 				okhttp3.Request prestoRequest = new okhttp3.Request.Builder().url(prestoCoordinatorServer + "/v1/query/" + queryId).delete().build();
-				Optional<String> prestoUser = Optional.ofNullable(request.getParameter("presto_user"));
-				Optional<String> prestoPassword = Optional.ofNullable(request.getParameter("presto_password"));
+				Optional<String> prestoUser = Optional.ofNullable(request.getParameter("user"));
+				Optional<String> prestoPassword = Optional.ofNullable(request.getParameter("password"));
 				Response prestoResponse = null;
 				if (prestoUser.isPresent() && prestoPassword.isPresent()) {
 					OkHttpClient.Builder clientBuilder = httpClient.newBuilder();
