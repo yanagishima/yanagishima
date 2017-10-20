@@ -20,14 +20,13 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static com.facebook.presto.client.OkHttpUtil.basicAuth;
 import static javax.servlet.http.HttpServletResponse.SC_FORBIDDEN;
+import static javax.servlet.http.HttpServletResponse.SC_HTTP_VERSION_NOT_SUPPORTED;
+import static javax.servlet.http.HttpServletResponse.SC_OK;
 
 @Singleton
 public class QueryServlet extends HttpServlet {
@@ -90,6 +89,17 @@ public class QueryServlet extends HttpServlet {
 		} else {
 			try (Response prestoResponse = httpClient.newCall(prestoRequest).execute()) {
 				originalJson = prestoResponse.body().string();
+				int code = prestoResponse.code();
+				if(code != SC_OK) {
+					HashMap<String, Object> retVal = new HashMap<String, Object>();
+					retVal.put("code", code);
+					retVal.put("error", prestoResponse.message());
+					ObjectMapper mapper = new ObjectMapper();
+					String json = mapper.writeValueAsString(retVal);
+					writer.println(json);
+					return;
+				}
+
 			}
 		}
 
