@@ -1,7 +1,9 @@
 package yanagishima.util;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import io.airlift.units.DataSize;
+import org.apache.commons.csv.CSVFormat;
+import org.apache.commons.csv.CSVParser;
+import org.apache.commons.csv.CSVRecord;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -35,21 +37,21 @@ public class HistoryUtil {
             List<List<String>> rowDataList = new ArrayList<List<String>>();
             int lineNumber = 0;
             try (BufferedReader br = Files.newBufferedReader(PathUtil.getResultFilePath(datasource, queryid, false), StandardCharsets.UTF_8)) {
-                String line = br.readLine();
-                while (line != null) {
+                CSVParser parse = CSVFormat.EXCEL.withDelimiter('\t').parse(br);
+                for (CSVRecord csvRecord : parse) {
+                    List<String> columnList = new ArrayList<>();
+                    for(String column : csvRecord) {
+                        columnList.add(column);
+                    }
                     if (lineNumber == 0) {
-                        ObjectMapper columnsMapper = new ObjectMapper();
-                        List columns = columnsMapper.readValue(line, List.class);
-                        retVal.put("headers", columns);
+                        retVal.put("headers", columnList);
                     } else {
                         if (queryString.toLowerCase().startsWith("show") || lineNumber <= limit) {
-                            ObjectMapper resultsMapper = new ObjectMapper();
-                            List row = resultsMapper.readValue(line, List.class);
-                            rowDataList.add(row);
+                            rowDataList.add(columnList);
                         }
                     }
                     lineNumber++;
-                    line = br.readLine();
+
                 }
             } catch (IOException e) {
                 throw new RuntimeException(e);

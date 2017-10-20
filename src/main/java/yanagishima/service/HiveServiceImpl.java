@@ -4,7 +4,8 @@ import io.airlift.units.DataSize;
 import io.airlift.units.Duration;
 import me.geso.tinyorm.TinyORM;
 import org.apache.commons.codec.digest.DigestUtils;
-import org.codehaus.jackson.map.ObjectMapper;
+import org.apache.commons.csv.CSVFormat;
+import org.apache.commons.csv.CSVPrinter;
 import org.komamitsu.fluency.Fluency;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -186,10 +187,9 @@ public class HiveServiceImpl implements HiveService {
                 int lineNumber = 0;
                 int maxResultFileByteSize = yanagishimaConfig.getHiveMaxResultFileByteSize();
                 int resultBytes = 0;
-                try (BufferedWriter bw = Files.newBufferedWriter(dst, StandardCharsets.UTF_8)) {
-                    ObjectMapper columnsMapper = new ObjectMapper();
-                    String columnsStr = columnsMapper.writeValueAsString(columnNameList) + "\n";
-                    bw.write(columnsStr);
+                try (BufferedWriter bw = Files.newBufferedWriter(dst, StandardCharsets.UTF_8);
+                     CSVPrinter csvPrinter = new CSVPrinter(bw, CSVFormat.EXCEL.withDelimiter('\t').withRecordSeparator(System.getProperty("line.separator")));) {
+                    csvPrinter.printRecord(columnNameList);
                     lineNumber++;
                     hiveQueryResult.setColumns(columnNameList);
                     List<List<String>> rowDataList = new ArrayList<>();
@@ -215,11 +215,9 @@ public class HiveServiceImpl implements HiveService {
                         }
 
                         try {
-                            ObjectMapper resultMapper = new ObjectMapper();
-                            String resultStr = resultMapper.writeValueAsString(columnDataList) + "\n";
-                            bw.write(resultStr);
+                            csvPrinter.printRecord(columnDataList);
                             lineNumber++;
-                            resultBytes += resultStr.getBytes(StandardCharsets.UTF_8).length;
+                            resultBytes += columnDataList.toString().getBytes(StandardCharsets.UTF_8).length;
                             if (resultBytes > maxResultFileByteSize) {
                                 String message = String.format("Result file size exceeded %s bytes. queryId=%s, datasource=%s", maxResultFileByteSize, queryId, datasource);
                                 storeError(db, datasource, "hive", queryId, query, userName, message);
