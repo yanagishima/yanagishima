@@ -22,9 +22,11 @@ public class DownloadUtil {
         response.setHeader("Content-Disposition", "inline; filename=\"" + fileName + "\"");
         try (PrintWriter printWriter = new PrintWriter(new OutputStreamWriter(response.getOutputStream(), "UTF-8"))) {
             try(BufferedReader br = Files.newBufferedReader(PathUtil.getResultFilePath(datasource, queryid, false))) {
-                br.lines().forEach(line -> {
+                String line = br.readLine();
+                while (line != null) {
                     printWriter.println(line);
-                });
+                    line = br.readLine();
+                }
             }
         } catch (IOException e) {
             throw new RuntimeException(e);
