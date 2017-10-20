@@ -32,12 +32,6 @@ public class HiveQueryDetailServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request,
                          HttpServletResponse response) throws ServletException, IOException {
-        doPost(request, response);
-    }
-
-    @Override
-    protected void doPost(HttpServletRequest request,
-                         HttpServletResponse response) throws ServletException, IOException {
 
         String datasource = HttpRequestUtil.getParam(request, "datasource");
         if (yanagishimaConfig.isCheckDatasource()) {
@@ -62,11 +56,10 @@ public class HiveQueryDetailServlet extends HttpServlet {
             } else {
                 String userName = null;
                 Optional<String> hiveUser = Optional.ofNullable(request.getParameter("user"));
-                Optional<String> hivePassword = Optional.ofNullable(request.getParameter("password"));
                 if(yanagishimaConfig.isUseAuditHttpHeaderName()) {
                     userName = request.getHeader(yanagishimaConfig.getAuditHttpHeaderName());
                 } else {
-                    if (hiveUser.isPresent() && hivePassword.isPresent()) {
+                    if (hiveUser.isPresent()) {
                         userName = hiveUser.get();
                     }
                 }
