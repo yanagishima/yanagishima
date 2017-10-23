@@ -7,6 +7,7 @@ import org.apache.commons.csv.CSVRecord;
 
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -36,7 +37,8 @@ public class HistoryUtil {
         } else {
             List<List<String>> rowDataList = new ArrayList<List<String>>();
             int lineNumber = 0;
-            try (BufferedReader br = Files.newBufferedReader(PathUtil.getResultFilePath(datasource, queryid, false), StandardCharsets.UTF_8)) {
+            Path resultFilePath = PathUtil.getResultFilePath(datasource, queryid, false);
+            try (BufferedReader br = Files.newBufferedReader(resultFilePath, StandardCharsets.UTF_8)) {
                 CSVParser parse = CSVFormat.EXCEL.withDelimiter('\t').withNullString("\\N").parse(br);
                 for (CSVRecord csvRecord : parse) {
                     List<String> columnList = new ArrayList<>();
@@ -48,6 +50,8 @@ public class HistoryUtil {
                     } else {
                         if (queryString.toLowerCase().startsWith("show") || lineNumber <= limit) {
                             rowDataList.add(columnList);
+                        } else {
+                            break;
                         }
                     }
                     lineNumber++;
@@ -57,7 +61,18 @@ public class HistoryUtil {
                 throw new RuntimeException(e);
             }
             retVal.put("results", rowDataList);
-            retVal.put("lineNumber", Integer.toString(lineNumber));
+
+            try {
+                ProcessBuilder pb = new ProcessBuilder("wc", "-l", resultFilePath.toFile().getAbsolutePath());
+                Process proc = pb.start();
+                try(BufferedReader br = new BufferedReader(new InputStreamReader(proc.getInputStream()))){
+                    String line = br.readLine();
+                    retVal.put("lineNumber", line.trim().split("\\s+")[0]);
+                }
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+
             LocalDateTime submitTimeLdt = LocalDateTime.parse(queryid.substring(0, "yyyyMMdd_HHmmss".length()), DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss"));
             ZonedDateTime submitTimeZdt = submitTimeLdt.atZone(ZoneId.of("GMT", ZoneId.SHORT_IDS));
             ZonedDateTime fetchResultTime = ZonedDateTime.parse(fetchResultTimeString);
