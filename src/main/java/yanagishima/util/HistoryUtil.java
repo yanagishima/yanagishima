@@ -37,7 +37,7 @@ public class HistoryUtil {
             List<List<String>> rowDataList = new ArrayList<List<String>>();
             int lineNumber = 0;
             try (BufferedReader br = Files.newBufferedReader(PathUtil.getResultFilePath(datasource, queryid, false), StandardCharsets.UTF_8)) {
-                CSVParser parse = CSVFormat.EXCEL.withDelimiter('\t').parse(br);
+                CSVParser parse = CSVFormat.EXCEL.withDelimiter('\t').withNullString("\\N").parse(br);
                 for (CSVRecord csvRecord : parse) {
                     List<String> columnList = new ArrayList<>();
                     for(String column : csvRecord) {

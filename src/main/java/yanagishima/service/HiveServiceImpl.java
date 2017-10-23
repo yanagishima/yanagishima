@@ -188,7 +188,7 @@ public class HiveServiceImpl implements HiveService {
                 int maxResultFileByteSize = yanagishimaConfig.getHiveMaxResultFileByteSize();
                 int resultBytes = 0;
                 try (BufferedWriter bw = Files.newBufferedWriter(dst, StandardCharsets.UTF_8);
-                     CSVPrinter csvPrinter = new CSVPrinter(bw, CSVFormat.EXCEL.withDelimiter('\t').withRecordSeparator(System.getProperty("line.separator")));) {
+                     CSVPrinter csvPrinter = new CSVPrinter(bw, CSVFormat.EXCEL.withDelimiter('\t').withNullString("\\N").withRecordSeparator(System.getProperty("line.separator")));) {
                     csvPrinter.printRecord(columnNameList);
                     lineNumber++;
                     hiveQueryResult.setColumns(columnNameList);

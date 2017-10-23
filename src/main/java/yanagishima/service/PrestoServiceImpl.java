@@ -215,7 +215,7 @@ public class PrestoServiceImpl implements PrestoService {
         int maxResultFileByteSize = yanagishimaConfig.getMaxResultFileByteSize();
         int resultBytes = 0;
         try (BufferedWriter bw = Files.newBufferedWriter(dst, StandardCharsets.UTF_8);
-             CSVPrinter csvPrinter = new CSVPrinter(bw, CSVFormat.EXCEL.withDelimiter('\t').withRecordSeparator(System.getProperty("line.separator")));) {
+             CSVPrinter csvPrinter = new CSVPrinter(bw, CSVFormat.EXCEL.withDelimiter('\t').withNullString("\\N").withRecordSeparator(System.getProperty("line.separator")));) {
             csvPrinter.printRecord(columns);
             lineNumber++;
             while (client.isValid()) {

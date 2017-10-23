@@ -48,7 +48,7 @@ public class MigrateV9 {
                 Path destPath = Paths.get(destDir, datasourceDir.getName(), yyyymmddDir.getName(), destFileName);
                 try(BufferedReader br = Files.newBufferedReader(srcPath);
                     BufferedWriter bw = Files.newBufferedWriter(destPath);
-                    CSVPrinter csvPrinter = new CSVPrinter(bw, CSVFormat.EXCEL.withDelimiter('\t').withRecordSeparator(System.getProperty("line.separator")));) {
+                    CSVPrinter csvPrinter = new CSVPrinter(bw, CSVFormat.EXCEL.withDelimiter('\t').withNullString("\\N").withRecordSeparator(System.getProperty("line.separator")));) {
                     String line = br.readLine();
                     while (line != null) {
                         try {

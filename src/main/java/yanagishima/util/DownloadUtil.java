@@ -21,11 +21,15 @@ public class DownloadUtil {
         response.setContentType("application/octet-stream");
         response.setHeader("Content-Disposition", "inline; filename=\"" + fileName + "\"");
         try (PrintWriter printWriter = new PrintWriter(new OutputStreamWriter(response.getOutputStream(), "UTF-8"))) {
-            try(BufferedReader br = Files.newBufferedReader(PathUtil.getResultFilePath(datasource, queryid, false))) {
-                String line = br.readLine();
-                while (line != null) {
-                    printWriter.println(line);
-                    line = br.readLine();
+            try(BufferedReader br = Files.newBufferedReader(PathUtil.getResultFilePath(datasource, queryid, false));
+                CSVPrinter csvPrinter = new CSVPrinter(printWriter, CSVFormat.EXCEL.withDelimiter('\t').withRecordSeparator(System.getProperty("line.separator")));) {
+                CSVParser parse = CSVFormat.EXCEL.withDelimiter('\t').withNullString("\\N").parse(br);
+                for (CSVRecord csvRecord : parse) {
+                    List<String> columnList = new ArrayList<>();
+                    for (String column : csvRecord) {
+                        columnList.add(column);
+                    }
+                    csvPrinter.printRecord(columnList);
                 }
             }
         } catch (IOException e) {
@@ -39,7 +43,7 @@ public class DownloadUtil {
         try (PrintWriter printWriter = new PrintWriter(new OutputStreamWriter(response.getOutputStream(), "Shift_JIS"))) {
             try(BufferedReader br = Files.newBufferedReader(PathUtil.getResultFilePath(datasource, queryid, false));
                 CSVPrinter csvPrinter = new CSVPrinter(printWriter, CSVFormat.EXCEL.withRecordSeparator(System.getProperty("line.separator")));) {
-                CSVParser parse = CSVFormat.EXCEL.withDelimiter('\t').parse(br);
+                CSVParser parse = CSVFormat.EXCEL.withDelimiter('\t').withNullString("\\N").parse(br);
                 for (CSVRecord csvRecord : parse) {
                     List<String> columnList = new ArrayList<>();
                     for (String column : csvRecord) {
