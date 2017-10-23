@@ -33,7 +33,7 @@ public class MigrateV9 {
 
         for(File file : findFile(srcDir)) {
             String filePath = file.getAbsolutePath();
-            //System.out.println("process " + filePath);
+            System.out.println("processing " + filePath);
             File yyyymmddDir = file.getParentFile();
             File datasourceDir = yyyymmddDir.getParentFile();
             String srcAbsolutePath = file.getAbsolutePath();
