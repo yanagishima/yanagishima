@@ -41,6 +41,7 @@ public class MigrateV9 {
             Paths.get(destDir).toFile().mkdir();
             Paths.get(destDir, datasourceDir.getName()).toFile().mkdir();
             Paths.get(destDir, datasourceDir.getName(), yyyymmddDir.getName()).toFile().mkdir();
+
             ObjectMapper mapper = new ObjectMapper();
 
             if(filePath.endsWith(".json")) {
@@ -59,6 +60,10 @@ public class MigrateV9 {
                         }
                         line = br.readLine();
                     }
+                } catch (Exception e) {
+                    Files.delete(destPath);
+                    System.out.println("error " + filePath);
+                    e.printStackTrace();
                 }
             } else if(filePath.endsWith(".err")) {
                 String destFileName = file.getName();
