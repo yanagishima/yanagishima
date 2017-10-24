@@ -277,7 +277,7 @@ cd ..
 wget http://.../yanagishima-yyy.zip
 unzip yanagishima-yyy.zip
 cd yanagishima-yyy
-mv result result.old
+mv result result_bak
 mv yanagishima-xxx/result .
 cp yanagishima-xxx/data/yanagishima.db data/
 cp yanagishima-xxx/conf/yanagishima.properties conf/
