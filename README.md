@@ -36,6 +36,40 @@ yanagishima is a Web UI for presto/hive.
 * desktop notification
 
 # Versions
+* 9.0(not yet released)
+  * support presto/hive authentication with user/password
+  * if you want to use presto TLS, you need to execute ```keytool -import``` https://prestodb.io/docs/current/security/tls.html
+  * search query history
+  * paging query history 
+  * improve performance to write/read result file
+  * result file format of 9.0 is tsv, prior to 9.0 is json, so migration is required
+  * migrateV9.sh is the script to migrate result file.
+  * if migration error occur, you can check it.
+  ```
+  $ bin/migrateV9.sh result dest
+  ...
+  processing /path/to/yanagishima-9.0/result/your-presto/20171010/20171010_072513_02895_xxvvj.json
+  error /path/to/yanagishima-9.0/result/your-presto/20171010/20171010_072513_02895_xxvvj.json
+  java.lang.RuntimeException: org.codehaus.jackson.JsonParseException: Unexpected end-of-input: expected close marker for ARRAY (from [Source: java.io.StringReader@e320068; line: 1, column: 0])
+   at [Source: java.io.StringReader@e320068; line: 1, column: 241]
+          at yanagishima.migration.MigrateV9.main(MigrateV9.java:59)
+  Caused by: org.codehaus.jackson.JsonParseException: Unexpected end-of-input: expected close marker for ARRAY (from [Source: java.io.StringReader@e320068; line: 1, column: 0])
+   at [Source: java.io.StringReader@e320068; line: 1, column: 241]
+          at org.codehaus.jackson.JsonParser._constructError(JsonParser.java:1433)
+          at org.codehaus.jackson.impl.JsonParserMinimalBase._reportError(JsonParserMinimalBase.java:521)
+          at org.codehaus.jackson.impl.JsonParserMinimalBase._reportInvalidEOF(JsonParserMinimalBase.java:454)
+          at org.codehaus.jackson.impl.JsonParserBase._handleEOF(JsonParserBase.java:473)
+          at org.codehaus.jackson.impl.ReaderBasedParser._skipWSOrEnd(ReaderBasedParser.java:1496)
+          at org.codehaus.jackson.impl.ReaderBasedParser.nextToken(ReaderBasedParser.java:368)
+          at org.codehaus.jackson.map.deser.std.CollectionDeserializer.deserialize(CollectionDeserializer.java:211)
+          at org.codehaus.jackson.map.deser.std.CollectionDeserializer.deserialize(CollectionDeserializer.java:194)
+          at org.codehaus.jackson.map.deser.std.CollectionDeserializer.deserialize(CollectionDeserializer.java:30)
+          at org.codehaus.jackson.map.ObjectMapper._readMapAndClose(ObjectMapper.java:2732)
+          at org.codehaus.jackson.map.ObjectMapper.readValue(ObjectMapper.java:1863)
+          at yanagishima.migration.MigrateV9.main(MigrateV9.java:56)
+  processing /path/to/yanagishima-9.0/result/your-presto/20171010/20171010_072517_02897_xxvvj.json
+  ...
+  ```
 * 8.0
   * pretty print for json data
   * store query history/bookmark to server side db, but default setting is to use local storage
@@ -233,6 +267,23 @@ bin/yanagishima-shutdown.sh
 ```
 ./gradlew distZip
 ```
+
+## How to upgrade
+If you want to ugprade yanagishima from xxx to yyyy, steps are as follows
+```
+cd yanagishima-xxx
+bin/yanagishima-shutdown.sh
+cd ..
+wget http://.../yanagishima-yyy.zip
+unzip yanagishima-yyy.zip
+cd yanagishima-yyy
+mv result result.old
+mv yanagishima-xxx/result .
+cp yanagishima-xxx/data/yanagishima.db data/
+cp yanagishima-xxx/conf/yanagishima.properties conf/
+bin/yanagishima-start.sh
+```
+If it is necessary to migrate yanagishima.db or result file, you need to migrate.
 
 ## For Front-end Engineer
 
