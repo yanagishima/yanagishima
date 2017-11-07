@@ -260,4 +260,22 @@ public class YanagishimaConfig {
 		return Boolean.parseBoolean(Optional.ofNullable(properties.getProperty("auth." + datasource)).orElse("false"));
 	}
 
+	public List<String> getHiveSecretKeywords(String datasource) {
+		String property = properties.getProperty("hive.secret.keywords." + datasource);
+		if(property == null) {
+			return Collections.emptyList();
+		} else {
+			return Arrays.asList(property.split(","));
+		}
+	}
+
+	public List<String> getPrestoSecretKeywords(String datasource) {
+		String property = properties.getProperty("presto.secret.keywords." + datasource);
+		if(property == null) {
+			return Collections.emptyList();
+		} else {
+			return Arrays.asList(property.split(","));
+		}
+	}
+
 }

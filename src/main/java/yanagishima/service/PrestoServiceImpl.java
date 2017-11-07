@@ -105,6 +105,16 @@ public class PrestoServiceImpl implements PrestoService {
     }
 
     private PrestoQueryResult getPrestoQueryResult(String datasource, String query, StatementClient client, boolean storeFlag, int limit, String userName) throws QueryErrorException {
+
+        List<String> prestoSecretKeywords = yanagishimaConfig.getPrestoSecretKeywords(datasource);
+        for(String prestoSecretKeyword : prestoSecretKeywords) {
+            if(query.indexOf(prestoSecretKeyword) != -1) {
+                String message = "query error occurs";
+                storeError(db, datasource, "presto", client.current().getId(), query, userName, message);
+                throw new RuntimeException(message);
+            }
+        }
+
         Duration queryMaxRunTime = new Duration(this.yanagishimaConfig.getQueryMaxRunTimeSeconds(datasource), TimeUnit.SECONDS);
         long start = System.currentTimeMillis();
         while (client.isValid() && (client.current().getData() == null)) {

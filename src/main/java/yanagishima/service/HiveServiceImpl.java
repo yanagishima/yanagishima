@@ -104,6 +104,15 @@ public class HiveServiceImpl implements HiveService {
             }
         }
 
+        List<String> hiveSecretKeywords = yanagishimaConfig.getHiveSecretKeywords(datasource);
+        for(String hiveSecretKeyword : hiveSecretKeywords) {
+            if(query.indexOf(hiveSecretKeyword) != -1) {
+                String message = "query error occurs";
+                storeError(db, datasource, "hive", queryId, query, userName, message);
+                throw new RuntimeException(message);
+            }
+        }
+
         try {
             Class.forName("org.apache.hive.jdbc.HiveDriver");
         } catch (ClassNotFoundException e) {
