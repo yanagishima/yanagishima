@@ -104,13 +104,12 @@ public class QueryServlet extends HttpServlet {
 		runningList.sort((a,b)-> String.class.cast(b.get("queryId")).compareTo(String.class.cast(a.get("queryId"))));
 		notRunningList.sort((a,b)-> String.class.cast(b.get("queryId")).compareTo(String.class.cast(a.get("queryId"))));
 
-		List<Map> limitedList;
+		List<Map> limitedList = new ArrayList<>();
+		limitedList.addAll(runningList);
 		if(list.size() > LIMIT) {
-			limitedList = new ArrayList<>();
-			limitedList.addAll(runningList);
 			limitedList.addAll(notRunningList.subList(0, LIMIT - runningList.size()));
 		} else {
-			limitedList = list;
+			limitedList.addAll(notRunningList.subList(0, list.size() - runningList.size()));
 		}
 
 		List<String> queryidList = new ArrayList<>();
