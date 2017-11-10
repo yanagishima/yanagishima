@@ -278,4 +278,21 @@ public class YanagishimaConfig {
 		}
 	}
 
+	public List<String> getPrestoMustSpectifyConditions(String datasource) {
+		String property = properties.getProperty("presto.must.specify.conditions." + datasource);
+		if(property == null) {
+			return Collections.emptyList();
+		} else {
+			return Arrays.asList(property.split(","));
+		}
+	}
+
+	public List<String> getHiveMustSpectifyConditions(String datasource) {
+		String property = properties.getProperty("hive.must.specify.conditions." + datasource);
+		if(property == null) {
+			return Collections.emptyList();
+		} else {
+			return Arrays.asList(property.split(","));
+		}
+	}
 }

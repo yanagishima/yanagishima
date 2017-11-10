@@ -14,6 +14,7 @@ import org.slf4j.LoggerFactory;
 import yanagishima.config.YanagishimaConfig;
 import yanagishima.exception.QueryErrorException;
 import yanagishima.result.PrestoQueryResult;
+import yanagishima.util.Constants;
 
 import javax.inject.Inject;
 import java.io.BufferedWriter;
@@ -112,6 +113,24 @@ public class PrestoServiceImpl implements PrestoService {
                 String message = "query error occurs";
                 storeError(db, datasource, "presto", client.current().getId(), query, userName, message);
                 throw new RuntimeException(message);
+            }
+        }
+
+        List<String> prestoMustSpectifyConditions = yanagishimaConfig.getPrestoMustSpectifyConditions(datasource);
+        for(String prestoMustSpectifyCondition : prestoMustSpectifyConditions) {
+            String[] conditions = prestoMustSpectifyCondition.split(",");
+            for(String condition : conditions) {
+                String table = condition.split(":")[0];
+                if(!query.startsWith(Constants.YANAGISHIMA_COMMENT) && query.indexOf(table) != -1) {
+                    String[] partitionKeys = condition.split(":")[1].split("\\|");
+                    for(String partitionKey : partitionKeys) {
+                        if(query.indexOf(partitionKey) == -1) {
+                            String message = String.format("If you query %s, you must specify %s in where clause", table, partitionKey);
+                            storeError(db, datasource, "presto", client.current().getId(), query, userName, message);
+                            throw new RuntimeException(message);
+                        }
+                    }
+                }
             }
         }
 

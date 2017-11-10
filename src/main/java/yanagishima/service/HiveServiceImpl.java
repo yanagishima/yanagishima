@@ -113,6 +113,24 @@ public class HiveServiceImpl implements HiveService {
             }
         }
 
+        List<String> hiveMustSpectifyConditions = yanagishimaConfig.getHiveMustSpectifyConditions(datasource);
+        for(String hiveMustSpectifyCondition : hiveMustSpectifyConditions) {
+            String[] conditions = hiveMustSpectifyCondition.split(",");
+            for(String condition : conditions) {
+                String table = condition.split(":")[0];
+                if(!query.startsWith("SHOW") && !query.startsWith("DESCRIBE") && query.indexOf(table) != -1) {
+                    String[] partitionKeys = condition.split(":")[1].split("\\|");
+                    for(String partitionKey : partitionKeys) {
+                        if(query.indexOf(partitionKey) == -1) {
+                            String message = String.format("If you query %s, you must specify %s in where clause", table, partitionKey);
+                            storeError(db, datasource, "hive", queryId, query, userName, message);
+                            throw new RuntimeException(message);
+                        }
+                    }
+                }
+            }
+        }
+
         try {
             Class.forName("org.apache.hive.jdbc.HiveDriver");
         } catch (ClassNotFoundException e) {
