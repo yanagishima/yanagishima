@@ -176,20 +176,37 @@ Vue.component('column', {
 		result: function() {
 			var self = this;
 			var value = self.value;
+			var formatedValue = null;
 			var disable = self.disable || false;
 			if (value === null) {
-				value = '<span class="text-muted">(null)</span>';
+				formatedValue = '<span class="text-muted">(null)</span>';
 			} else {
 				if (!disable) {
 					if (isJSON(value)) {
 						var o = (new Function("return " + value))();
 						if (Object.isObject(o)) {
-							value = '<pre>{0}</pre>'.format(JSON.stringify(o, undefined, 4));
+							formatedValue = '<pre class="mb-0">{0}</pre>'.format((JSON.stringify(o, undefined, 4)).escapeHTML());
+						} else {
+							formatedValue = value.escapeHTML();
+						}
+					} else {
+						if (isMAP(value)) {
+							var lines = [];
+							var values = value.removeAll(/[\{\}]/).split(', ');
+							var lastIndex = values.length - 1;
+							values.map(function(n, i) {
+								var item = n.trim().replace('=', ' = ');
+								var delimiter = i != lastIndex ? ',' : '';
+								lines.push('    {0}{1}'.format(item, delimiter));
+							});
+							formatedValue = '<pre class="mb-0">{{\n{0}\n}}</pre>'.format(lines.join('\n').escapeHTML());
+						} else {
+							formatedValue = value.escapeHTML();
 						}
 					}
 					function isJSON(arg) {
 						var arg = (typeof arg === 'function') ? arg() : arg;
-						if (typeof arg  !== 'string') {
+						if (typeof arg !== 'string') {
 							return false;
 						}
 						try {
@@ -199,9 +216,14 @@ Vue.component('column', {
 							return false;
 						}
 					};
+					function isMAP(arg) {
+						return /^\{.*=.*\}$/.test(arg);
+					}
+				} else {
+					formatedValue = value.escapeHTML();
 				}
 			}
-			return value;
+			return formatedValue;
 		}
 	}
 });

@@ -66,6 +66,8 @@ jQuery(document).ready(function($) {
 					qlist: [],
 					result: '',
 					history: [],
+					historyTotal: 0,
+					historyHit: 0,
 					bookmark: [],
 					table: [],
 					share: '',
@@ -103,6 +105,7 @@ jQuery(document).ready(function($) {
 				is_modal: false,
 				theme: localStorage.getItem('theme') || 'chrome',
 				is_wide: Number(localStorage.getItem('wide')) || 0,
+				is_panel: Number(localStorage.getItem('panel')) || 0,
 
 				// setting
 				setting: Number(localStorage.getItem('setting')) || 0,
@@ -130,16 +133,15 @@ jQuery(document).ready(function($) {
 						sql: 'EXPLAIN ANALYZE {0}',
 					},
 				},
-				historySizes: [
-					10,
-					25,
-					50,
-					100,
-					256
-				],
+
+				// auth
+				auth_user: null,
+				auth_pass: null,
+				auth_done: false,
 
 				// treeview
 				datasources: [],
+				auths: {},
 				engines: {},
 				catalogs: [],
 				schemata: [],
@@ -166,7 +168,7 @@ jQuery(document).ready(function($) {
 				filter_table: '',
 				is_expandColumns: false,
 
-				// query editoer
+				// query editor
 				input_query: '',
 				query: '',
 				queryString: '',
@@ -176,10 +178,9 @@ jQuery(document).ready(function($) {
 				errortext: '',
 				focus: 1,
 				minline: Number(localStorage.getItem('minline')) || 4,
-				historySize: Number(localStorage.getItem('historySize')) || 25,
 
 				// qlist
-				is_autoQlist: Number(localStorage.getItem('autoQlist')) && true,
+				is_autoQlist: Number(localStorage.getItem('autoQlist')),
 				refresh_period: 1,
 				filter_user: '',
 				is_openQuery: Number(localStorage.getItem('openQuery')) || false,
@@ -190,6 +191,7 @@ jQuery(document).ready(function($) {
 				bookmark_id: '',
 				bookmarks: [],
 				bookmark_addId: false,
+				history_limit: 100,
 				histories: [],
 				filter_history: '',
 
@@ -199,6 +201,8 @@ jQuery(document).ready(function($) {
 				running_progress: -1,
 				running_time: '',
 				running_queries: 0,
+				history_queryid: '',
+				history_result: [],
 
 				// error page
 				status_code: '200',
@@ -294,7 +298,7 @@ jQuery(document).ready(function($) {
 
 				// expand
 				is_pretty: false,
-				is_database: Number(localStorage.getItem('database')) || 0,
+				is_localstorage: (localStorage.getItem('localstorage') == null ) ? true : Number(localStorage.getItem('localstorage')),
 
 				// demo
 				demo: {
@@ -342,47 +346,48 @@ jQuery(document).ready(function($) {
 			};
 
 			// Ajax setup and preflight
-			if (self.domain) {
-				$.ajaxSetup({
-					headers: {
-						'X-yanagishima-datasources': '*',
+			$.ajaxSetup({
+				statusCode: {
+					403: function() {
+						location.replace('/error/?403');
 					},
-				});
-			}
+					500: function() {
+						location.replace('/error/?500');
+					}
+				}
+			});
 
 			// Get datasources
 			$.ajax({
 				type: 'GET',
-				url: self.domain + self.apis.datasource
+				url: self.domain + self.apis.datasourceAuth
 			}).done(function(data) {
 				if (data.datasources && data.datasources.length) {
-					var engines = {};
 					var datasources = [];
+					var auths = {};
+					var engines = {};
 					data.datasources.map(function(n) {
 						Object.map(n, function(val, key) {
 							datasources.push(key);
-							engines[key] = val;
+							engines[key] = val.engines;
+							auths[key] = val.auth;
 						});
 					});
 					self.datasources = datasources;
+					self.auths = auths;
 					self.engines = engines;
 				} else {
 					location.replace('/error/?403');
 				}
 			}).fail(function(xhr, status, error) {
-				if (xhr.status === 403) {
-					location.replace('/error/?403');
-				}
+				// if (xhr.status === 403) {
+				// 	location.replace('/error/?403');
+				// }
 			});
 
 			// Start
 			$('#page').removeClass('unload');
 
-			// iframe Modal
-			$('body').magnificPopup({
-				delegate: '.link-iframe',
-				type: 'iframe'
-			});
 		},
 		mounted: function() {
 			var self = this;
@@ -431,6 +436,7 @@ jQuery(document).ready(function($) {
 				if (inputs.toString().indexOf(configs.konami) >= 0) {
 					self.superadminMode = true;
 					toastr.success('You can watch all queries.', 'Super Admin Mode');
+					inputs = [];
 				}
 			});
 		},
@@ -451,6 +457,19 @@ jQuery(document).ready(function($) {
 						deep: true
 					});
 				}
+			},
+			auth_info: function() {
+				var self = this;
+				return !self.auths[self.datasource] ? {} : {
+					user: self.auth_user,
+					password: self.auth_pass
+				};
+			},
+			auth_userInfo: function() {
+				var self = this;
+				return !self.auths[self.datasource] ? {} : {
+					user: self.auth_user,
+				};
 			},
 			datasource_engine: function() {
 				var self = this;
@@ -552,13 +571,14 @@ jQuery(document).ready(function($) {
 			},
 			filteredHistory: function() {
 				var self = this;
+				var is_localstorage = self.is_localstorage;
 				var filter_history = self.filter_history.trim();
 				var filters = filter_history.includes(' ') ? filter_history.split(' ').unique() : [filter_history];
 				var history_data = self.response.history.filter(function(n) {
 					return n[4] == self.engine;
 				});
 
-				if (filters.length) {
+				if (is_localstorage && filters.length) {
 					var history = history_data.filter(function(n) {
 						var enable = true;
 						filters.map(function(m) {
@@ -575,7 +595,7 @@ jQuery(document).ready(function($) {
 			variables: function() {
 				var self = this;
 				var variables = [];
-				var detected_variables = self.input_query.match(/\$\{[a-z]([a-z0-9]+)?\}/g);
+				var detected_variables = self.input_query.match(/\$\{[a-zA-Z]([a-zA-Z0-9]+)?\}/g);
 				if (detected_variables !== null) {
 					detected_variables.unique().map(function(n) {
 						var variable = n;
@@ -612,6 +632,66 @@ jQuery(document).ready(function($) {
 			},
 		},
 		methods: {
+			checkAuth: function() {
+				var self = this;
+				var auths = self.auths;
+				var datasource = self.datasource;
+
+				if (!auths[datasource]) {
+					return false;
+				}
+				self.getAuth();
+				if (self.auth_user && self.auth_pass) {
+					self.auth_verify = true;
+				} else {
+					$('#auth').modal('show');
+				}
+			},
+			testAuth: function() {
+				var self = this;
+				var api = self.is_presto ? self.apis.presto : self.apis.hive;
+				var params = Object.merge(
+					{
+						datasource: self.datasource,
+						query: 'SELECT -1'
+					},
+					self.auth_info,
+				);
+				$.ajax({
+					type: 'POST',
+					url: self.domain + api,
+					data: params,
+				}).done(function(data) {
+					if (data.results && data.results.length) {
+						toastr.success('Your can access.', 'Success', {
+							positionClass: "toast-top-right"
+						});
+						self.auth_done = true;
+					} else {
+						toastr.error(data.error || 'Error', 'Fail', {
+							positionClass: "toast-top-right"
+						});
+					}
+				}).fail(function(xhr, status, error) {});
+			},
+			getAuth: function() {
+				var self = this;
+				var datasource = self.datasource;
+
+				if (datasource) {
+					self.auth_user = localStorage.getItem(datasource + '_user');
+					self.auth_pass = localStorage.getItem(datasource + '_pass');
+				}
+			},
+			setAuth: function() {
+				var self = this;
+				var datasource = self.datasource;
+
+				if (datasource) {
+					localStorage.setItem(datasource + '_user', self.auth_user);
+					localStorage.setItem(datasource + '_pass', self.auth_pass);
+				}
+			},
 			infoBookmark: function(query) {
 				var self = this;
 				var info = '';
@@ -626,11 +706,12 @@ jQuery(document).ready(function($) {
 				var self = this;
 				$.ajax({
 					type: 'POST',
-					url: self.domain + self.apis.publish.format({
+					url: self.domain + self.apis.publish,
+					data: {
 						datasource: self.datasource,
 						engine: self.engine,
 						queryid: queryid
-					}),
+					},
 				}).done(function(data) {
 					var publish_id = data.publish_id;
 					if (publish_id) {
@@ -644,9 +725,9 @@ jQuery(document).ready(function($) {
 						});
 					}
 				}).fail(function(xhr, status, error) {
-					if (xhr.status === 403) {
-						location.replace('/error/?403');
-					}
+					// if (xhr.status === 403) {
+					// 	location.replace('/error/?403');
+					// }
 				});
 			},
 			viewError: function() {
@@ -677,9 +758,9 @@ jQuery(document).ready(function($) {
 						self.chart = chart;
 						$('#page').removeClass('unload');
 					}).fail(function(xhr, status, error) {
-						if (xhr.status === 403) {
-							location.replace('/error/?403');
-						}
+						// if (xhr.status === 403) {
+						// 	location.replace('/error/?403');
+						// }
 					});
 				}
 			},
@@ -706,8 +787,12 @@ jQuery(document).ready(function($) {
 							n = [].concat(arr);
 						n.map(function(m) {
 							if (i === 0) {
-								if (columns[0].type === 'date' && /^[0-9]{8}$/.test(n[0])) {
-									n[0] = Date.create(n[0]);
+								if (columns[0].type === 'date') {
+									if (/^[0-9]{8}$/.test(n[0])) {
+										n[0] = Date.create(n[0]);
+									} else {
+										enable = false;
+									}
 								}
 							} else {
 								n[i] = (n[i] == 'null') ? 0 : Number(n[i]);
@@ -737,7 +822,7 @@ jQuery(document).ready(function($) {
 				};
 				
 				Object.map(self.response, function(val, key) {
-					self.response[key] = Object.isArray(val) ? [] : '';
+					self.response[key] = Object.isArray(val) ? [] : Object.isNumber(val) ? 0 : '';
 				});
 				$('[data-toggle="tooltip"]').tooltip('hide');
 				self.query = '';
@@ -763,6 +848,8 @@ jQuery(document).ready(function($) {
 				self.table_q = '';
 				self.running_queryid = '';
 				self.running_queries = 0;
+				self.history_queryid = '';
+				self.history_result = [];
 				self.setTitle();
 				self.getHistories();
 				self.getBookmarks();
@@ -818,10 +905,9 @@ jQuery(document).ready(function($) {
 				self.loading.table = true;
 				$.ajax({
 					type: 'POST',
-					url: self.domain + self.apis.presto.format({
-						datasource: self.datasource
-					}),
+					url: self.domain + self.apis.presto,
 					data: {
+						datasource: self.datasource,
 						query: "SELECT table_catalog, table_schema, table_name, table_type FROM {catalog}.information_schema.tables WHERE table_name LIKE '%{q}%'".format({
 							catalog: self.catalog,
 							q: q
@@ -831,9 +917,9 @@ jQuery(document).ready(function($) {
 					self.response.table = data.results;
 					self.loading.table = false;
 				}).fail(function(xhr, status, error) {
-					if (xhr.status === 403) {
-						location.replace('/error/?403');
-					}
+					// if (xhr.status === 403) {
+					// 	location.replace('/error/?403');
+					// }
 					self.loading.table = false;
 				});
 			},
@@ -849,10 +935,9 @@ jQuery(document).ready(function($) {
 				var query = query || self.query;
 				$.ajax({
 					type: 'POST',
-					url: self.domain + self.apis.presto.format({
-						datasource: self.datasource
-					}),
+					url: self.domain + self.apis.presto,
 					data: {
+						datasource: self.datasource,
 						query: "EXPLAIN (TYPE VALIDATE) {0}".format(query)
 					}
 				}).done(function(data) {
@@ -864,9 +949,9 @@ jQuery(document).ready(function($) {
 						self.errorline = -1;
 					}
 				}).fail(function(xhr, status, error) {
-					if (xhr.status === 403) {
-						location.replace('/error/?403');
-					}
+					// if (xhr.status === 403) {
+					// 	location.replace('/error/?403');
+					// }
 				});
 			},
 			runQuery: function(query) {
@@ -897,6 +982,8 @@ jQuery(document).ready(function($) {
 					if (error_variables.length) {
 						alert('Input to variables ' + error_variables.join(', '));
 						return false;
+					} else {
+						self.input_query = query;
 					}
 				}
 
@@ -906,15 +993,18 @@ jQuery(document).ready(function($) {
 				self.queryid = '';
 
 				var api = self.is_presto ? self.apis.prestoAsync : self.apis.hiveAsync;
+				var params = Object.merge(
+					{
+						datasource: self.datasource,
+						query: query,
+					},
+					self.auth_info,
+				);
 
 				$.ajax({
 					type: 'POST',
-					url: self.domain + api.format({
-						datasource: self.datasource
-					}),
-					data: {
-						query: query
-					}
+					url: self.domain + api,
+					data: params,
 				}).done(function(data) {
 					var queryid = data.queryid;
 					var period = self.is_presto ? 500 : 5000;
@@ -934,11 +1024,11 @@ jQuery(document).ready(function($) {
 						self.running_queries--;
 					}
 				}).fail(function(xhr, status, error) {
-					if (xhr.status === 403) {
-						location.replace('/error/?403');
-					}
+					// if (xhr.status === 403) {
+					// 	location.replace('/error/?403');
+					// }
 					self.loading.result = false;
-					self.error.result = error || true;
+					self.error.result = error || yanagishima.messages.error;
 					self.running_queries--;
 				});
 				self.tab = 'result';
@@ -946,13 +1036,18 @@ jQuery(document).ready(function($) {
 				function getResult(queryid) {
 					var def = $.Deferred();
 					var api = self.is_presto ? self.apis.queryStatus : self.apis.hiveQueryStatus;
+					var params = Object.merge(
+						{
+							datasource: self.datasource,
+							queryid: queryid,
+						},
+						self.is_presto ? self.auth_info : self.auth_userInfo,
+					);
 
 					$.ajax({
-						type: 'GET',
-						url: self.domain + api.format({
-							datasource: self.datasource,
-							queryid: queryid
-						})
+						type: 'POST',
+						url: self.domain + api,
+						data: params,
 					}).done(function(status) {
 						var state = status.state;
 						if (state === 'FINISHED' || state === 'FAILED' || state === 'KILLED' || Object.isEmpty(status)) {
@@ -1022,11 +1117,11 @@ jQuery(document).ready(function($) {
 							}
 						}
 					}).fail(function(xhr, status, error) {
-						if (xhr.status === 403) {
-							location.replace('/error/?403');
-						}
+						// if (xhr.status === 403) {
+						// 	location.replace('/error/?403');
+						// }
 						self.loading.result = false;
-						self.error.result = error || true;
+						self.error.result = error || yanagishima.messages.error;
 						self.running_queries--;
 						
 						if (self.desktopNotification && document.visibilityState != 'visible') {
@@ -1079,16 +1174,35 @@ jQuery(document).ready(function($) {
 						self.loading.result = false;
 					}
 				}).fail(function(xhr, status, error) {
-					if (xhr.status === 403) {
-						location.replace('/error/?403');
-					}
+					// if (xhr.status === 403) {
+					// 	location.replace('/error/?403');
+					// }
 					self.loading.result = false;
-					self.error.result = error || true;
+					self.error.result = error || yanagishima.messages.error;
 				});
 			},
 			abortQuery: function(queryid) {
 				var self = this;
 				self.killQuery(queryid);
+			},
+			loadHistoryQuery: function(queryid) {
+				var self = this;
+				if (!queryid) {
+					return false;
+				}
+				$.ajax({
+					type: 'GET',
+					url: self.domain + self.apis.history.format({
+						datasource: self.datasource,
+						queryid: queryid
+					}),
+					timeout: 300000,
+				}).done(function(data, status, xhr) {
+					if (!Object.isEmpty(data)) {
+						self.history_result = data;
+					}
+				}).fail(function(xhr, status, error) {
+				});
 			},
 			setSnippet: function() {
 				var self = this;
@@ -1138,33 +1252,28 @@ jQuery(document).ready(function($) {
 			},
 			killQuery: function(val) {
 				var self = this;
+				var api = self.is_presto ? self.apis.kill : self.apis.killHive;
+				var params = Object.merge(
+					{
+						datasource: self.datasource,
+					},
+					self.is_presto ? self.auth_info : self.auth_userInfo,
+				);
 				if (self.is_presto) {
-					$.ajax({
-						type: 'GET',
-						url: self.domain + self.apis.kill.format({
-							datasource: self.datasource,
-							queryid: val
-						})
-					}).done(function(data) {
-					}).fail(function(xhr, status, error) {
-						if (xhr.status === 403) {
-							location.replace('/error/?403');
-						}
-					});
+					params.queryid = val;
 				} else {
-					$.ajax({
-						type: 'GET',
-						url: self.domain + self.apis.killHive.format({
-							datasource: self.datasource,
-							id: val
-						})
-					}).done(function(data) {
-					}).fail(function(xhr, status, error) {
-						if (xhr.status === 403) {
-							location.replace('/error/?403');
-						}
-					});
+					params.id = val;
 				}
+				$.ajax({
+					type: 'POST',
+					url: self.domain + api,
+					data: params,
+				}).done(function(data) {
+				}).fail(function(xhr, status, error) {
+					// if (xhr.status === 403) {
+					// 	location.replace('/error/?403');
+					// }
+				});
 			},
 			formatQuery: function(queryid) {
 				var self = this;
@@ -1174,8 +1283,8 @@ jQuery(document).ready(function($) {
 						type: 'POST',
 						url: self.domain + self.apis.format,
 						data: {
-							query: query
-						}
+							query: query,
+						},
 					}).done(function(data) {
 						if (data.formattedQuery) {
 							self.input_query = data.formattedQuery;
@@ -1184,9 +1293,9 @@ jQuery(document).ready(function($) {
 							self.errorline = data.errorLineNumber - 1;
 						}
 					}).fail(function(xhr, status, error) {
-						if (xhr.status === 403) {
-							location.replace('/error/?403');
-						}
+						// if (xhr.status === 403) {
+						// 	location.replace('/error/?403');
+						// }
 					});
 				}
 			},
@@ -1197,8 +1306,8 @@ jQuery(document).ready(function($) {
 						type: 'POST',
 						url: self.domain + self.apis.toValuesQuery,
 						data: {
-							csv: values
-						}
+							csv: values,
+						},
 					}).done(function(data) {
 						if (data.error) {
 							alert(data.error);
@@ -1206,9 +1315,9 @@ jQuery(document).ready(function($) {
 							self.input_query = data.query;
 						}
 					}).fail(function(xhr, status, error) {
-						if (xhr.status === 403) {
-							location.replace('/error/?403');
-						}
+						// if (xhr.status === 403) {
+						// 	location.replace('/error/?403');
+						// }
 					});
 				}
 			},
@@ -1237,13 +1346,21 @@ jQuery(document).ready(function($) {
 			},
 			getBookmarks: function() {
 				var self = this;
-				var is_database = self.is_database;
-				is_database || self.getBookmarkItems();
+				var is_localstorage = self.is_localstorage;
+				if (is_localstorage) {
+					self.getBookmarkItems();
+					if (self.bookmarks.length == 0) {
+						return false;
+					}
+				}
+				if (!(self.datasource && self.engine)) {
+					return false;
+				}
 
 				var api = {
-					url: is_database ? self.domain + self.apis.bookmarkUser : self.domain + self.apis.bookmark,
-					data: is_database ? {} : {bookmark_id: self.bookmarks.join(',')},
-					type: is_database ? 'GET' : 'POST',
+					url: is_localstorage ? self.domain + self.apis.bookmark : self.domain + self.apis.bookmarkUser,
+					data: is_localstorage ? {bookmark_id: self.bookmarks.join(',')} : {},
+					type: is_localstorage ? 'POST' : 'GET',
 				};
 
 				self.loading.bookmark = true;
@@ -1265,24 +1382,39 @@ jQuery(document).ready(function($) {
 					}
 					self.loading.bookmark = false;
 				}).fail(function(xhr, status, error) {
-					if (xhr.status === 403) {
-						location.replace('/error/?403');
-					}
+					// if (xhr.status === 403) {
+					// 	location.replace('/error/?403');
+					// }
 					self.loading.bookmark = false;
 				});
 			},
-			getHistories: function() {
+			getHistories: function(not_loading) {
 				var self = this;
-				var is_database = self.is_database;
-				is_database || self.getHistoryItems();
+				var not_loading = not_loading || false;
+				var is_localstorage = self.is_localstorage;
+				if (is_localstorage) {
+					self.getHistoryItems();
+					if (self.histories.length == 0) {
+						return false;
+					}
+				}
+				if (!not_loading) {
+					self.history_limit = 100;
+					self.loading.history = true;
+				}
 
 				var api = {
-					url: is_database ? self.domain + self.apis.queryHistoryUser : self.domain + self.apis.queryHistory,
-					data: is_database ? {} : {queryids: self.histories.join(',')},
-					type: is_database ? 'GET' : 'POST',
+					url: is_localstorage ? self.domain + self.apis.queryHistory : self.domain + self.apis.queryHistoryUser,
+					data: is_localstorage ? {
+						queryids: self.histories.join(',')
+					} : {
+						search: self.filter_history,
+						offset: 0,
+						limit: self.history_limit,
+					},
+					type: is_localstorage ? 'POST' : 'GET',
 				};
 
-				self.loading.history = true;
 				$.ajax({
 					type: api.type,
 					url: api.url.format({
@@ -1297,11 +1429,15 @@ jQuery(document).ready(function($) {
 							return n[0];
 						}, true);
 					}
+					if (!is_localstorage) {
+						self.response.historyTotal = data.total;
+						self.response.historyHit = data.hit;
+					}
 					self.loading.history = false;
 				}).fail(function(xhr, status, error) {
-					if (xhr.status === 403) {
-						location.replace('/error/?403');
-					}
+					// if (xhr.status === 403) {
+					// 	location.replace('/error/?403');
+					// }
 					self.loading.history = false;
 				});
 			},
@@ -1310,19 +1446,25 @@ jQuery(document).ready(function($) {
 				var is_autoQlist = is_autoQlist || false;
 				self.now = Date.create().format('{yyyy}/{M}/{d} {24hr}:{mm}:{ss}');
 				self.loading.qlist = !is_autoQlist;
-				var api = (self.is_presto) ? self.apis.query : self.apis.yarnJobList;
+				var api = self.is_presto ? self.apis.query : self.apis.yarnJobList;
+				var type = self.is_presto ? 'POST' : 'GET';
+				var params = {
+					datasource: self.datasource,
+				};
+				if (self.is_presto) {
+					params = Object.merge(params, self.auth_info);
+				}
 				$.ajax({
-					type: 'GET',
-					url: self.domain + api.format({
-						datasource: self.datasource,
-					}),
+					type: type,
+					url: self.domain + api,
+					data: params,
 				}).done(function(data) {
 					self.response.qlist = data;
 					self.loading.qlist = false;
 				}).fail(function(xhr, status, error) {
-					if (xhr.status === 403) {
-						location.replace('/error/?403');
-					}
+					// if (xhr.status === 403) {
+					// 	location.replace('/error/?403');
+					// }
 					self.loading.qlist = false;
 				});
 			},
@@ -1349,12 +1491,22 @@ jQuery(document).ready(function($) {
 			},
 			getTable: function() {
 				var self = this;
-				$.ajax({
-					type: 'GET',
-					url: self.domain + self.apis.tableList.format({
+
+				if (!(self.datasource && self.catalog)) {
+					return false;
+				}
+				var params = Object.merge(
+					{
 						datasource: self.datasource,
 						catalog: self.catalog,
-					}),
+					},
+					self.auth_info,
+				);
+
+				$.ajax({
+					type: 'POST',
+					url: self.domain + self.apis.tableList,
+					data: params,
 				}).done(function(data) {
 					if (data.tableList) {
 						var complate_words = [];
@@ -1389,25 +1541,29 @@ jQuery(document).ready(function($) {
 			getPartition: function(index) {
 				var self = this;
 				var api = self.is_presto ? self.apis.prestoPartition : self.apis.hivePartition;
-				var params = {
-					datasource: self.datasource,
-					schema: self.schema,
-					table: self.table
-				};
+				var params = Object.merge(
+					{
+						datasource: self.datasource,
+						schema: self.schema,
+						table: self.table
+					},
+					self.auth_info,
+				);
 				if (self.is_presto) {
 					params.catalog = self.catalog;
 				}
-				var apiParams = api.format(params);
 				if (index) {
 					self.partition_index = index;
 					var keys = self.partition_keys.first(index);
 					var vals = self.partition_vals.first(index);
-					apiParams += '&partitionColumn={0}&partitionValue={1}'.format(keys.join(','), vals.join(','));
+					params.partitionColumn = keys.join(',');
+					params.partitionValue = vals.join(',');
 				}
 				self.loading.partition = true;
 				$.ajax({
-					type: 'GET',
-					url: self.domain + apiParams,
+					type: 'POST',
+					url: self.domain + api,
+					data: params,
 				}).done(function(data) {
 					if (data.error) {
 						toastr.error(data.error);
@@ -1429,15 +1585,18 @@ jQuery(document).ready(function($) {
 				var hiddenQuery_prefix = self.hiddenQuery_prefix;
 
 				if (self.is_presto) {
-					if (!self.catalogs.length) {
+					if (!(self.catalogs.length && catalog)) {
+						var params = Object.merge(
+							{
+								datasource: self.datasource,
+								query: '{0}SHOW catalogs'.format(hiddenQuery_prefix)
+							},
+							self.auth_info,
+						);
 						$.ajax({
 							type: 'POST',
-							url: self.domain + self.apis.presto.format({
-								datasource: self.datasource
-							}),
-							data: {
-								query: '{0}SHOW catalogs'.format(hiddenQuery_prefix)
-							}
+							url: self.domain + self.apis.presto,
+							data: params,
 						}).done(function(data) {
 							if (data.results && data.results.length) {
 								self.catalogs = data.results.map(function(n) {
@@ -1447,32 +1606,40 @@ jQuery(document).ready(function($) {
 							}
 						}).fail(function(xhr, status, error) {});
 					}
-					if (!schema) {
+					if (!schema && catalog) {
+						var params = Object.merge(
+							{
+								datasource: self.datasource,
+								query: '{0}SHOW schemas from {1}'.format(hiddenQuery_prefix, catalog)
+							},
+							self.auth_info,
+						);
 						$.ajax({
 							type: 'POST',
-							url: self.domain + self.apis.presto.format({
-								datasource: self.datasource
-							}),
-							data: {
-								query: '{0}SHOW schemas from {1}'.format(hiddenQuery_prefix, catalog)
-							}
+							url: self.domain + self.apis.presto,
+							data: params,
 						}).done(function(data) {
 							if (data.results && data.results.length) {
 								self.schemata = data.results.map(function(n) {
 									return n[0];
 								});
 								self.schema = self.schema || self.schemata[0];
+							} else {
+								self.schemata = [];
 							}
 						}).fail(function(xhr, status, error) {});
-					} else if (!table) {
+					} else if (!table && catalog && schema) {
+						var params = Object.merge(
+							{
+								datasource: self.datasource,
+								query: "{0}SELECT table_name, table_type FROM {1}.information_schema.tables WHERE table_schema='{2}'".format(hiddenQuery_prefix, catalog, schema)
+							},
+							self.auth_info,
+						);
 						$.ajax({
 							type: 'POST',
-							url: self.domain + self.apis.presto.format({
-								datasource: self.datasource
-							}),
-							data: {
-								query: "{0}SELECT table_name, table_type FROM {1}.information_schema.tables WHERE table_schema='{2}'".format(hiddenQuery_prefix, catalog, schema)
-							}
+							url: self.domain + self.apis.presto,
+							data: params,
 						}).done(function(data) {
 							if (data.results && data.results.length) {
 								self.tables = data.results.map(function(n) {
@@ -1480,17 +1647,26 @@ jQuery(document).ready(function($) {
 									var table_type = n[1];
 									return [table_name, table_type];
 								});
+							} else {
+								self.tables = [];
 							}
 						}).fail(function(xhr, status, error) {});
 					} else {
+						if (!(catalog && schema && table)) {
+							return false;
+						}
+
+						var params = Object.merge(
+							{
+								datasource: self.datasource,
+								query: "{0}DESCRIBE {1}".format(hiddenQuery_prefix, [catalog, schema, table].join('.'))
+							},
+							self.auth_info,
+						);
 						$.ajax({
 							type: 'POST',
-							url: self.domain + self.apis.presto.format({
-								datasource: self.datasource
-							}),
-							data: {
-								query: "{0}DESCRIBE {1}".format(hiddenQuery_prefix, [catalog, schema, table].join('.'))
-							}
+							url: self.domain + self.apis.presto,
+							data: params,
 						}).done(function(data) {
 							var col_date = '';
 							var cols = [];
@@ -1511,19 +1687,24 @@ jQuery(document).ready(function($) {
 								self.cols = col_date ? cols.add(col_date, 0) : cols;
 								self.partition_keys = partition_keys;
 								self.col_date = col_date;
+							} else {
+								self.columns = [];
 							}
 						}).fail(function(xhr, status, error) {});
 					}
 				} else {
 					if (!schema) {
+						var params = Object.merge(
+							{
+								datasource: self.datasource,
+								query: 'SHOW schemas'
+							},
+							self.auth_info,
+						);
 						$.ajax({
 							type: 'POST',
-							url: self.domain + self.apis.hive.format({
-								datasource: self.datasource
-							}),
-							data: {
-								query: 'SHOW schemas'
-							}
+							url: self.domain + self.apis.hive,
+							data: params,
 						}).done(function(data) {
 							if (data.results && data.results.length) {
 								self.schemata = data.results.map(function(n) {
@@ -1532,15 +1713,18 @@ jQuery(document).ready(function($) {
 								self.schema = self.schema || self.schemata[0];
 							}
 						}).fail(function(xhr, status, error) {});
-					} else if (!table) {
+					} else if (!table && schema) {
+						var params = Object.merge(
+							{
+								datasource: self.datasource,
+								query: "SHOW tables IN {0}".format(schema)
+							},
+							self.auth_info,
+						);
 						$.ajax({
 							type: 'POST',
-							url: self.domain + self.apis.hive.format({
-								datasource: self.datasource
-							}),
-							data: {
-								query: "SHOW tables IN {0}".format(schema)
-							}
+							url: self.domain + self.apis.hive,
+							data: params,
 						}).done(function(data) {
 							if (data.results && data.results.length) {
 								self.tables = data.results.map(function(n) {
@@ -1551,14 +1735,21 @@ jQuery(document).ready(function($) {
 							}
 						}).fail(function(xhr, status, error) {});
 					} else {
+						if (!(schema && table)) {
+							return false;
+						}
+
+						var params = Object.merge(
+							{
+								datasource: self.datasource,
+								query: "DESCRIBE {0}".format([schema, table].join('.'))
+							},
+							self.auth_info,
+						);
 						$.ajax({
 							type: 'POST',
-							url: self.domain + self.apis.hive.format({
-								datasource: self.datasource
-							}),
-							data: {
-								query: "DESCRIBE {0}".format([schema, table].join('.'))
-							}
+							url: self.domain + self.apis.hive,
+							data: params,
 						}).done(function(data) {
 							var col_date = '';
 							var cols = [];
@@ -1674,11 +1865,10 @@ jQuery(document).ready(function($) {
 				}
 				$.ajax({
 					type: 'POSt',
-					url: self.domain + self.apis.bookmark.format({
+					url: self.domain + self.apis.bookmark,
+					data: {
 						datasource: self.datasource,
 						engine: self.engine,
-					}),
-					data: {
 						title: title || defaultTitle,
 						query: query
 					},
@@ -1709,7 +1899,7 @@ jQuery(document).ready(function($) {
 					}) + '&bookmark_id=' + bookmark_id,
 					timeout: 300000,
 				}).done(function(data) {
-					self.is_database || self.getBookmarkItems();
+					self.is_localstorage && self.getBookmarkItems();
 				}).fail(function(xhr, status, error) {
 				});
 			},
@@ -1733,7 +1923,7 @@ jQuery(document).ready(function($) {
 			},
 			getHistoryItems: function(max) {
 				var self = this;
-				var max = max || 256;
+				var max = max || 1024;
 				self.histories = self.getItem('histories_' + self.datasource, max);
 			},
 			addHistoryItem: function(queryid) {
@@ -1774,7 +1964,7 @@ jQuery(document).ready(function($) {
 				} else {
 					return self.domain + self.apis.hiveQueryDetail.format({
 						id: val,
-						datasource: self.datasource
+						datasource: self.datasource,
 					});
 				}
 			},
@@ -1838,6 +2028,13 @@ jQuery(document).ready(function($) {
 					return Date.create(dt[0]).format('{yyyy}/{MM}/{dd} {24hr}:{mm}:{ss}');
 				}
 			},
+			relativeDate: function(val) {
+				if (val) {
+					var dt = val.split('+');
+					var d = Date.create(dt[0]);
+					return d.isToday() ? d.format('{24hr}:{mm}') : d.relative();
+				}
+			},
 			humanize: function(val) {
 				if (val) {
 					return val.replace(/_/g, ' ').capitalize(true, true);
@@ -1880,7 +2077,14 @@ jQuery(document).ready(function($) {
 				if (self.engines[val] && !self.engines[val].includes(self.engine)) {
 					self.engine = self.engines[val][0];
 				}
-				localStorage.setItem('datasource', val);
+				if (self.datasources.includes(val)) {
+					localStorage.setItem('datasource', val);
+				}
+				self.checkAuth();
+			},
+			auths: function(val, oldVal) {
+				var self = this;
+				self.checkAuth();
 			},
 			engines: function(val, oldVal) {
 				var self = this;
@@ -1965,13 +2169,13 @@ jQuery(document).ready(function($) {
 				var self = this;
 				localStorage.setItem('wide', Number(val));
 			},
+			is_panel: function(val) {
+				var self = this;
+				localStorage.setItem('panel', Number(val));
+			},
 			theme: function(val) {
 				var self = this;
 				localStorage.setItem('theme', val);
-			},
-			historySize: function(val) {
-				var self = this;
-				localStorage.setItem('historySize', val);
 			},
 			setting: function(val) {
 				var self = this;
@@ -2002,9 +2206,9 @@ jQuery(document).ready(function($) {
 				var self = this;
 				localStorage.setItem('adminMode', Number(val));
 			},
-			is_database: function(val) {
+			is_localstorage: function(val) {
 				var self = this;
-				localStorage.setItem('database', Number(val));
+				localStorage.setItem('localstorage', Number(val));
 				self.init();
 			},
 			table_q: function(val) {
@@ -2022,7 +2226,9 @@ jQuery(document).ready(function($) {
 				}
 			},
 			running_queries: function(val) {
+				var self = this;
 				favicon.badge(val);
+				self.getHistories();
 			},
 		}
 	});

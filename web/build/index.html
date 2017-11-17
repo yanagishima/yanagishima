@@ -4,13 +4,14 @@
 <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" id="favicon">
 <link href="https://fonts.googleapis.com/css?family=Droid+Sans" rel="stylesheet">
 <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet">
-<link href="https://cdnjs.cloudflare.com/ajax/libs/magnific-popup.js/1.1.0/magnific-popup.css" rel="stylesheet">
 <link href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/2.1.3/toastr.min.css" rel="stylesheet">
 <style>.unload {display: none;}</style>
 </head>
 <body>
 <div id="page" class="unload" :class="'datasource_' + datasources.indexOf(datasource)">
-<header id="header" :class="{'sticky-top': fixedHeader}">
+<div id="wrapper" :class="{open: is_panel}">
+<main id="main">
+<header id="header">
 	<div id="header-setting" v-if="setting">
 		<div class="container">
 			<div class="card-deck">
@@ -18,15 +19,15 @@
 					<div class="card-header">General</div>
 					<div class="card-block pb-1">
 						<div>
-							<label :class="{'text-white': fixedHeader}">
-								<input type="checkbox" class="mr-1" v-model="fixedHeader">
-								Sticky Header
-							</label>
-						</div>
-						<div>
 							<label :class="{'text-white': is_wide}">
 								<input type="checkbox" class="mr-1" v-model="is_wide">
 								Wide Screen
+							</label>
+						</div>
+						<div>
+							<label :class="{'text-white': is_panel}">
+								<input type="checkbox" class="mr-1" v-model="is_panel">
+								History panel
 							</label>
 						</div>
 					<!-- /card-block --></div>
@@ -81,8 +82,8 @@
 							</div>
 							<div class="col-6 text-right">
 								<div class="btn-group">
-									<a class="btn btn-sm btn-secondary" href="#" @click.prevent="is_database = 1" :class="{'selected': is_database}">Server</a>
-									<a class="btn btn-sm btn-secondary" href="#" @click.prevent="is_database = 0" :class="{'selected': !is_database}">Browser</a>
+									<a class="btn btn-sm btn-secondary" href="#" @click.prevent="is_localstorage = 0" :class="{'selected': !is_localstorage}">Server</a>
+									<a class="btn btn-sm btn-secondary" href="#" @click.prevent="is_localstorage = 1" :class="{'selected': is_localstorage}">Browser</a>
 								<!-- /btn-group --></div>
 							</div>
 						</div>
@@ -93,7 +94,7 @@
 							<div class="col-8 text-right">
 								<span class="mr-2"><strong>{{response.history.length}}</strong> items</span>
 								<div class="btn-group">
-									<button class="btn btn-sm btn-secondary selected dropdown-toggle" data-toggle="dropdown" :disabled="!!is_database">Action</button>
+									<button class="btn btn-sm btn-secondary selected dropdown-toggle" data-toggle="dropdown" :disabled="!is_localstorage">Action</button>
 									<div class="dropdown-menu dropdown-menu-right">
 										<a class="dropdown-item" href="#" @click="input_query = histories.join(',')">Export</a>
 										<a class="dropdown-item" href="#" @click="importHistory()">Import</a>
@@ -108,7 +109,7 @@
 							<div class="col-8 text-right">
 								<span class="mr-2"><strong>{{response.bookmark.length}}</strong> items</span>
 								<div class="btn-group">
-									<button class="btn btn-sm btn-secondary selected dropdown-toggle" data-toggle="dropdown" :disabled="!!is_database">Action</button>
+									<button class="btn btn-sm btn-secondary selected dropdown-toggle" data-toggle="dropdown" :disabled="!is_localstorage">Action</button>
 									<div class="dropdown-menu dropdown-menu-right">
 										<a class="dropdown-item" href="#" @click="input_query = bookmarks.join(',')">Export</a>
 										<a class="dropdown-item" href="#" @click="importBookmark()">Import</a>
@@ -128,7 +129,7 @@
 			<div id="header-upper" class="py-2">
 				<div class="row align-items-center">
 					<div class="col-8">
-						<h1 id="logo" class="d-inline-block mr-4"><a :href="'#datasource={0}&engine={1}'.format(datasource, engine)" @click.prevent="init(true)"><span id="logo-figure" class="mr-2"></span>{{sitename}}</a><span class="ml-2 font-weight-normal">{{version}}</span></h1>
+						<h1 id="logo" class="d-inline-block mr-4"><a :href="'#datasource={0}&amp;engine={1}'.format(datasource, engine)" @click.prevent="init(true)"><span id="logo-figure" class="mr-2"></span>{{sitename}}</a><span class="ml-2 font-weight-normal">{{version}}</span></h1>
 						<span class="mr-2">
 							<small class="mr-1">Datasource</small>
 							<template v-if="datasources.length > 1">
@@ -157,6 +158,17 @@
 								<strong>{{engine}}</strong>
 							</template>
 						</span>
+						<span class="mr-2" v-if="auths[datasource]">
+							<small class="mr-1">User</small>
+							<button type="button" class="btn btn-sm btn-primary" data-toggle="modal" data-target="#auth">
+								<template v-if="auth_user">
+									{{auth_user}}
+								</template>
+								<template v-else>
+									?
+								</template>
+							</button>
+						</span>
 					<!-- /col --></div>
 					<div class="col-4 text-right">
 						<template v-if="is_presto">
@@ -181,12 +193,12 @@
 				<!-- /editor --></div>
 				<fieldset id="variables" class="mb-3" v-if="variables.length">
 					<legend>{{variables.length}} variables</legend>
-					<form class="form-inline mb-0" @keyup.ctrl.enter="runQuery(input_query)">
+					<div class="form-inline">
 						<template v-for="(items, index) in variables">
 							<label class="mr-2">{{items[1]}}</label>
-							<input type="text" :id="'variable_' + items[1]" v-model="variables[index][2]" class="form-control form-control-sm mr-3" size="10">
+							<input type="text" :id="'variable_' + items[1]" v-model="variables[index][2]" @enter="" class="form-control form-control-sm mr-3" size="10" autocomplete="off">
 						</template>
-					</form>
+					</div>
 				<!-- /variables --></fieldset>
 				<div class="row align-items-end">
 					<div class="col">
@@ -247,16 +259,29 @@
 				<div class="row align-items-center pt-3">
 					<div class="col">
 						<strong class="mr-1">Executed History</strong>
-						<span v-if="filteredHistory.length">{{filteredHistory.first(historySize).length}}</span>
+						<template v-if="is_localstorage">
+							<span v-if="filteredHistory.length">{{filteredHistory.length}}</span>
+						</template>
+						<template v-else>
+							<template v-if="response.historyTotal">
+								<template v-if="response.historyTotal != response.historyHit">
+									<span>{{response.historyHit}}</span>
+									/
+								</template>
+								<span>{{response.historyTotal}}</span>
+								<template v-if="response.historyTotal != response.historyHit">
+									<span class="text-muted ml-1">({{(response.historyHit/response.historyTotal*100).round()}}%)</span>
+								</template>
+							</template>
+						</template>
 					<!-- /col --></div>
 					<div class="col text-right">
-						<input type="text" class="form-control form-control-sm d-inline-block mr-2 w-50" placeholder="Filter by Query" v-model="filter_history" v-focus>
-						<div class="btn-group">
-							<button class="btn btn-sm btn-secondary dropdown-toggle" data-toggle="dropdown">Last <strong>{{historySize}}</strong></button>
-							<div class="dropdown-menu dropdown-menu-right">
-								<a class="dropdown-item" href="#" v-for="item in historySizes" @click.prevent="historySize = item" :class="{'active': item == historySize}">{{item}}</a>
-							<!-- dropdown-menu --></div>
-						<!-- /btn-group --></div>
+						<template v-if="is_localstorage">
+							<input type="text" class="form-control form-control-sm d-inline-block w-50" placeholder="Filter by Query" v-model="filter_history" v-focus>
+						</template>
+						<template v-else>
+							<input type="text" class="form-control form-control-sm d-inline-block w-50" placeholder="Search by Query" v-model.lazy="filter_history" v-focus @keyup.enter="getHistories()">
+						</template>
 					<!-- /col --></div>
 				<!-- /row --></div>
 			<!-- /history --></template>
@@ -270,7 +295,7 @@
 						<input type="text" class="form-control form-control-sm d-inline-block mr-2 w-50 invisible" placeholder="Filter by Title">
 					<!-- /col --></div>
 				<!-- /row --></div>
-			<!-- /history --></template>
+			<!-- /bookmark --></template>
 			<template v-else-if="tab === 'result'">
 				<div class="row align-items-center pt-3">
 					<div class="col-8">
@@ -361,7 +386,7 @@
 		<!-- /container --></div>
 	<!-- /header-sub --></div>
 </header>
-<div id="content">
+<div id="content" :class="{open: is_panel && history_queryid}">
 	<div :class="is_wide ? 'container-fluid' : 'container'">
 		<template v-if="tab === 'qlist'">
 			<template v-if="loading.qlist">
@@ -404,7 +429,7 @@
 								</td>
 								<td>
 									<template v-if="item.existdb && (item.state === 'FINISHED' || item.state === 'FAILED')">
-										<a :href="'#datasource={0}&tab=result&queryid={1}'.format(datasource, item.queryId)">{{item.queryId}}</a>
+										<a :href="'#datasource={0}&amp;engine={1}&amp;tab=result&amp;queryid={2}'.format(datasource, engine,  item.queryId)">{{item.queryId}}</a>
 									</template>
 									<template v-else>
 										{{item.queryId}}
@@ -418,7 +443,7 @@
 								<td>{{item.session.source}}</td>
 								<td><a href="#" @click.prevent="filter_user = item.session.user">{{item.session.user}}</a></td>
 								<td class="text-center"><a href="#" class="btn btn-sm btn-secondary p-1" @click.prevent="confirm('Do you want to do it?') && killQuery(item.queryId)" v-if="isRunning(item.state)"><i class="fa fa-fw fa-times text-danger"></i></a></td>
-								<td class="text-center"><a target="_blank" class="btn btn-sm btn-secondary p-1 link-iframe" :href="linkDetail(item.queryId)"><i class="fa fa-fw fa-info"></i></a></td>
+								<td class="text-center"><a target="_blank" class="btn btn-sm btn-secondary p-1" :href="linkDetail(item.queryId)"><i class="fa fa-fw fa-info"></i></a></td>
 							</tr>
 						</tbody>
 					</table>
@@ -457,7 +482,7 @@
 								<td class="text-right">{{item.elapsedTime | formatUnit}}</td>
 								<td class="ace-font">
 									<template v-if="item.existdb && (item.state === 'FINISHED' || item.state === 'FAILED')">
-										<a :href="'#datasource={0}&tab=result&queryid={1}'.format(datasource, getHiveQueryid(item.name))">{{item.name}}</a>
+										<a :href="'#datasource={0}&amp;engine={1}&amp;tab=result&amp;queryid={2}'.format(datasource, engine,  getHiveQueryid(item.name))">{{item.name}}</a>
 									</template>
 									<template v-else>
 										{{item.name}}
@@ -498,10 +523,10 @@
 						</tr>
 					</thead>
 					<tbody>
-						<tr class="vertical-top" v-for="(items, index) in filteredHistory.first(historySize)">
-							<td class="text-right text-muted">{{index}}</td>
+						<tr class="vertical-top" v-for="(items, index) in filteredHistory">
+							<td class="text-right text-muted">{{index + 1}}</td>
 							<td>
-								<a :href="'#datasource={0}&amp;tab=result&amp;queryid={1}'.format(datasource, items[0])" @click="line = 0">{{items[0]}}</a>
+								<a :href="'#datasource={0}&amp;engine={1}&amp;tab=result&amp;queryid={2}'.format(datasource, engine, items[0])" @click="line = 0">{{items[0]}}</a>
 							</td>
 							<td>
 								{{items[5] | extractDate}}
@@ -511,7 +536,7 @@
 							</td>
 							<td>
 								<!-- <pre class="ace-font mb-0">{{items[1]}}</pre> -->
-								<pre class="ace-font mb-0"><highlight :sentense="items[1]" :keyword="filter_history"></highlight></pre>
+								<pre class="ace-font mb-0"><highlight :sentense="items[1].escapeHTML()" :keyword="filter_history.escapeHTML()"></highlight></pre>
 							</td>
 							<td class="text-center">
 								<a href="#" class="btn btn-sm btn-secondary" @click.prevent="input_query = items[1], focus++"><i class="fa fa-fw fa-keyboard-o"></i></a>
@@ -534,6 +559,11 @@
 				<div class="alert alert-warning" v-else>
 					<i class="fa fa-fw fa-frown-o mr-1"></i>No result
 				<!-- /alert --></div>
+				<div class="p-3 text-center" v-if="!is_localstorage && (response.historyHit > history_limit)">
+					<button type="button" class="btn btn-primary" @click="history_limit = 1024, getHistories(1)">
+						More
+					</button>
+				</div>
 			</template>
 		<!-- /history --></template>
 		<template v-else-if="tab === 'bookmark'">
@@ -595,13 +625,13 @@
 							<div class="col-2">
 								<div class="btn-group">
 									<a href="#" class="btn btn-sm btn-secondary" @click.prevent="abortQuery(running_queryid)"><i class="fa fa-fw fa-times mr-1 text-danger"></i>Kill</a>
-									<a class="btn btn-sm btn-secondary" :class="{'link-iframe': is_presto}" :href="linkDetail(running_queryid)" :target="is_presto ? 'self' : '_blank'"><i class="fa fa-fw fa-info"></i>Info</a>
+									<a class="btn btn-sm btn-secondary" :href="linkDetail(running_queryid)" :target="is_presto ? 'self' : '_blank'"><i class="fa fa-fw fa-info"></i>Info</a>
 								</div>
 							</div>
 						</div>
 					<!-- /alert --></div>
 					<div class="alert alert-info" v-else>
-						<i class="fa fa-fw fa-clock-o fa-spin mr-1"></i>Preparing
+						<i class="fa fa-fw fa-spinner fa-spin mr-1"></i>Preparing
 					<!-- /alert --></div>
 				</template>
 				<template v-else>
@@ -712,7 +742,7 @@
 					<div class="col-7">
 						<template v-if="!table_q.length">
 							<div class="row">
-								<div class="col">
+								<div class="col-6">
 									<div class="card mb-3">
 										<div class="card-header">
 											<strong>Schema</strong>
@@ -741,7 +771,7 @@
 										<!-- /list-group --></div>
 									<!-- /card --></div>
 								<!-- /col --></div>
-								<div class="col">
+								<div class="col-6">
 									<div class="card mb-3">
 										<div class="card-header">
 											<strong>Table</strong>
@@ -754,7 +784,7 @@
 											<template v-if="is_presto">
 												<template v-if="schema && filteredTables.length">
 													<a href="#" class="list-group-item" v-for="items in filteredTables" :class="{active: items[0] == table, 'table-base': items[1] !== 'VIEW', 'table-view': items[1] === 'VIEW'}" @click.prevent="table = items[0], table_type = items[1]">
-														<button class="btn btn-sm btn-secondary clip px-2" v-clipboard="[catalog, schema, items[0]].join('.')" @click.stop=""><i class="fa fa-fw fa-clipboard"></i></button>
+														<button class="btn btn-sm btn-secondary clip px-2" v-clipboard="[catalog, schema, items[0]].join('.')" @click.stop.prevent=""><i class="fa fa-fw fa-clipboard"></i></button>
 														<highlight :sentense="items[0]" :keyword="filter_table"></highlight>
 													<!-- /list-group-item --></a>
 												</template>
@@ -855,7 +885,7 @@
 <!-- /content --></div>
 <footer id="footer" class="py-3">
 	<address class="text-center">
-		<span><strong><a href="https://github.com/wyukawa/yanagishima"><i class="fa fa-github mr-1"></i>yanagishima</a></strong> by wyukawa and okazou</span><teamplte v-if="links.bugs_feedback">, <a :href="links.bugs_feedback" class="mr-2">Bugs and Feedback</a></teamplte>
+		<span><strong><a href="https://github.com/yanagishima/yanagishima"><i class="fa fa-github mr-1"></i>yanagishima</a></strong> by wyukawa and okazou</span><teamplte v-if="links.bugs_feedback">, <a :href="links.bugs_feedback" class="mr-2">Bugs and Feedback</a></teamplte>
 	</address>
 </footer>
 
@@ -1017,6 +1047,107 @@
 		<!-- /modal-content --></div>
 	<!-- /modal-dialog --></div>
 <!-- /modal --></div>
+<div id="auth" class="modal fade">
+	<div class="modal-dialog modal-sm" role="document">
+		<div class="modal-content">
+			<div class="modal-header">
+				<h5 class="modal-title"><strong>{{datasource}}</strong></h5>
+				<button type="button" class="close" data-dismiss="modal"><span>&times;</span></button>
+			<!-- /modal-header --></div>
+			<form class="mb-0" @submit.prevent="setAuth(), $('#auth').modal('hide')">
+			<div class="modal-body p-3">
+				<div class="mb-3">
+					<label class="mb-1">User account</label>
+					<input type="text" class="form-control" v-model.lazy="auth_user">
+				</div>
+				<div class="mb-3">
+					<label class="mb-1">Password</label>
+					<input type="password" class="form-control" v-model.lazy="auth_pass">
+				</div>
+				<div class="text-center">
+					<button type="button" class="btn btn-sm btn-secondary" @click="testAuth()"><i class="fa fa-fw fa-check mr-1"></i>Login Check</button>
+				</div>
+			<!-- /modal-body --></div>
+			<div class="modal-footer justify-content-center" v-if="auth_done">
+				<button type="submit" class="btn btn-primary w-25">Save</button>
+				<button type="button" class="btn btn-secondary w-25" data-dismiss="modal">Cancel</button>
+			<!-- /modal-footer --></div>
+			</form>
+		<!-- /modal-content --></div>
+	<!-- /modal-dialog --></div>
+<!-- /modal --></div>
+<div id="panel" v-if="is_panel && history_queryid">
+	<div id="panel-header" class="sticky-top" :class="'datasource_' + datasources.indexOf(datasource) + '-bgcolor'"></div>
+	<div id="panel-body" :class="is_wide ? 'container-fluid' : 'container'">
+		<div class="d-flex justify-content-between align-items-center mb-3">
+			<div>
+				<span class="mr-3" v-if="history_result.lineNumber">
+					<i class="fa fa-file-text-o" title="query ID" data-toggle="tooltip" data-animation="false" data-placement="left"></i>
+					<strong>{{history_queryid}}</strong>
+				</span>
+				<span class="mr-2" v-if="history_result.finishedTime">
+					<i class="fa fa-clock-o" title="Finished time" data-toggle="tooltip" data-animation="false" data-placement="left"></i>
+					{{history_result.finishedTime | extractDate}}
+				</span>
+				<span class="mr-2" v-if="history_result.elapsedTimeMillis">
+					<strong>{{(history_result.elapsedTimeMillis / 1000).ceil(2)}}</strong><span class="text-muted ml-1">sec</span>
+				</span>
+				<span class="mr-2" v-if="history_result.rawDataSize">
+					<strong>{{history_result.rawDataSize.remove('B')}}</strong><span class="text-muted ml-1">byte</span>
+				</span>
+				<span class="mr-2" v-if="history_result.lineNumber">
+					<strong>{{history_result.results.length | formatNumber}}</strong><template v-if="history_result.results.length != history_result.lineNumber -1"><span class="mx-1">/</span><strong>{{history_result.lineNumber -1 | formatNumber}}</strong></template><span class="text-muted ml-1">results</span>
+				</span>
+			</div>
+			<a href="#" @click.prevent="history_queryid = null">
+				<i class="fa fa-fw fa-times"></i>
+			</a>
+		</div>
+		<table class="table table-auto table-bordered table-hover table-responsive">
+			<thead>
+				<tr>
+					<th class="text-muted">line</th>
+					<th v-for="item in history_result.headers">{{item}}</th>
+				</tr>
+			</thead>
+			<tbody>
+				<tr v-for="(items, index) in history_result.results" :class="{'table-info': line == (index + 1)}" :id="'L' + (index + 1)">
+					<td class="text-right"><a href="#" @click.prevent="line = (line === (index + 1)) ? 0 : (index + 1)" class="text-muted">{{index + 1}}</a></td>
+					<td v-for="item in items">
+						<column :value="item" :disable="!is_pretty"></column>
+					</td>
+				</tr>
+			</tbody>
+		</table>
+	</div>
+</div>
+<!-- /main --></main>
+<button id="btn-panel" class="btn btn-secondary px-0 py-2" @click.prevent="is_panel = true" v-if="!is_panel" title="Latest history">
+	<i class="fa fa-fw fa-caret-right text-primary"></i>
+</button>
+<aside id="sub">
+	<div class="card">
+		<div class="card-header sticky-top">
+			<div class="d-flex justify-content-between align-items-center">
+				<strong>Latest history</strong>
+				<a href="#" @click.prevent="is_panel = false">
+					<i class="fa fa-times"></i>
+				</a>
+			</div>
+		</div>
+		<div class="list-group list-group-flush">
+			<template v-for="(items, index) in response.history">
+				<a class="list-group-item" href="'#datasource={0}&amp;engine={1}&amp;tab=result&amp;queryid={2}'.format(datasource, engine, items[0])" @click.prevent="queryid = items[0], loadQuery(), tab = 'result'" :class="{active: queryid == items[0]}" :title="items[1]">
+					<button class="btn btn-sm btn-secondary panel px-2" @click.stop.prevent="history_queryid = items[0], loadHistoryQuery(items[0])"><i class="fa fa-fw fa-columns fa-rotate-270"></i></button>
+					<div class="ace-font word-break">
+						{{items[1].compact().truncate(128)}}
+					</div>
+				</a>
+			</template>
+		</div>
+	</div>
+</aside>
+<!-- /wrapper --></div>
 <!-- /page --></div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tether/1.4.0/js/tether.min.js"></script>
@@ -1026,7 +1157,6 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/vue/2.3.0/vue.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/sugar/2.0.4/sugar.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/favico.js/0.3.10/favico.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/magnific-popup.js/1.1.0/jquery.magnific-popup.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/2.1.3/toastr.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/push.js/1.0.4/push.min.js"></script>
 <script src="/index.js"></script>

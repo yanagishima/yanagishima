@@ -59,6 +59,32 @@ $colors: $brand-primary, #1B5E20, #880E4F, #827717, #212121;
 		background-size: contain;
 	}
 }
+#page {
+	#wrapper {
+		position: relative;
+		#sub {
+			margin-left: -300px;
+			width: 300px;
+			height: 100vh;
+			position: fixed;
+			top: 0;
+			left: 0;
+			overflow-y: scroll;
+		}
+		&.open {
+			#main {
+				transition: margin .3s linear;
+				margin-left: 300px;
+			}
+			#sub {
+				transition: margin .15s linear;
+				margin-left: 0;
+				box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
+				-webki-tbox-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
+			}
+		}
+	}
+}
 #header {
 	#header-setting {
 		padding: 1rem;
@@ -111,8 +137,32 @@ $colors: $brand-primary, #1B5E20, #880E4F, #827717, #212121;
 	background-size: 320px;
 	background-attachment: fixed;
 	position: relative;
+	&.open {
+		padding-bottom: 35vh;
+	}
 }
 #footer {
+}
+#btn-panel {
+	position: fixed;
+	top: .5rem;
+	left: -2px;
+}
+#panel {
+	border-left: 1px solid $gray-lighter;
+	width: calc(100% - 300px);
+	position: fixed;
+	bottom: 0;
+	z-index: 5;
+	background: rgba($white, 0.9);
+	height: 35vh;
+	overflow-y: scroll;
+	#panel-header {
+		height: .3rem;
+		margin-bottom: 1rem;
+	}
+	#panel-body {
+	}
 }
 #treeview {
 	.list-group {
@@ -166,16 +216,6 @@ $colors: $brand-primary, #1B5E20, #880E4F, #827717, #212121;
 	background: $black;
 	color: $white;
 	padding: 0.5rem;
-}
-#gotop {
-	opacity: .9;
-	position: fixed;
-	bottom: 1rem;
-	right: 1rem;
-	box-shadow: 1px 1px 5px rgba(#000, 0.3);
-	&:hover {
-		opacity: 1;
-	}
 }
 #error {
 	background: $brand-primary;
@@ -249,6 +289,7 @@ $colors: $brand-primary, #1B5E20, #880E4F, #827717, #212121;
 	background: $gray-lightest;
 }
 .btn.clip,
+.btn.panel,
 .btn.set {
 	position: absolute;
 	margin-top: -0.1rem;
@@ -257,6 +298,7 @@ $colors: $brand-primary, #1B5E20, #880E4F, #827717, #212121;
 	z-index: 10;
 }
 .list-group-item:hover .btn.clip,
+.list-group-item:hover .btn.panel,
 .list-group-item:hover .btn.set {
 	display: inline-block;
 }
@@ -302,6 +344,9 @@ $colors: $brand-primary, #1B5E20, #880E4F, #827717, #212121;
 	label {
 		font-weight: bold;
 	}
+}
+.word-break {
+	word-break: break-all;
 }
 .ace-font {
 	font: 12px/normal 'Monaco', 'Menlo', 'Ubuntu Mono', 'Consolas', 'source-code-pro', monospace;
