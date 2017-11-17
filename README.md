@@ -34,9 +34,13 @@ yanagishima is a Web UI for presto/hive.
 * export/import history
 * export/import bookmark
 * desktop notification
+* pretty print for json/map data
+* enable to compare query result
 
 # Versions
-* 9.0(not yet released)
+* 9.0
+  * pretty print for map data
+  * add left panel to compare query result
   * support presto/hive authentication with user/password
   * if you want to use presto TLS, you need to execute ```keytool -import``` https://prestodb.io/docs/current/security/tls.html
   * search query history
@@ -74,7 +78,7 @@ yanagishima is a Web UI for presto/hive.
   * pretty print for json data
   * store query history/bookmark to server side db, but default setting is to use local storage
   * improve partition display
-  * metadata of 8.0 is NOT compatible with 7.0, so migration is required
+  * metadata of 9.0 is NOT compatible with 7.0, so migration is required
   * migration process is as follows
   ```
   cp data/yanagishima.db data/yanagishima.db.bak
@@ -130,9 +134,9 @@ yanagishima is a Web UI for presto/hive.
 
 # Quick Start
 ```
-wget https://bintray.com/artifact/download/wyukawa/generic/yanagishima-8.0.zip
-unzip yanagishima-8.0.zip
-cd yanagishima-8.0
+wget https://bintray.com/artifact/download/wyukawa/generic/yanagishima-9.0.zip
+unzip yanagishima-9.0.zip
+cd yanagishima-9.0
 vim conf/yanagishima.properties
 nohup bin/yanagishima-start.sh >y.log 2>&1 &
 ```
