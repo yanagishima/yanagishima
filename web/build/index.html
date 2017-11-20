@@ -838,8 +838,10 @@
 						</template>
 						<div class="py-3 text-right" v-if="table">
 							<label class="form-check-label mr-2"><input class="form-check-input mr-1" type="checkbox" v-model="is_expandColumns">Expand Columns</label>
-							<select id="snippet" class="custom-select" v-model="snippet">
-								<option v-for="item in snippets" :value="item.sql" v-if="item.enable.includes(table_type)">{{item.label}}</option>
+							<select id="snippet" class="custom-select" style="width:60%;" v-model="snippet">
+								<template v-for="(item, i) in snippets" v-if="item.enable.includes(table_type)">
+									<option :value="i">{{item.label}}</option>
+								</template>
 							</select>
 							<div class="btn-group">
 								<button class="btn btn-primary" data-dismiss="modal" @click="setSnippet"><i class="fa fa-fw fa-keyboard-o mr-1"></i>Set</button>

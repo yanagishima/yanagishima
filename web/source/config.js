@@ -33,7 +33,7 @@ yanagishima = {
 		prestoPartition: '/prestoPartition',
 		hivePartition: '/hivePartition',
 		queryHistoryUser: '/queryHistoryUser?datasource={datasource}&engine={engine}',
-		bookmarkUser: '/bookmarkUser?datasource={datasource}&engine={engine}',
+		bookmarkUser: '/bookmarkUser',
 	},
 	links: {
 		about_this: 'https://github.com/yanagishima/yanagishima/blob/master/README.md',
@@ -50,33 +50,6 @@ yanagishima = {
 	messages: {
 		error: 'Auth may have expired. Please reload.',
 	},
-	snippets: [
-		{
-			label: "SELECT * FROM ... WHERE ${column_date}=${yesterday} LIMIT 100",
-			sql: "SELECT {columns} FROM {catalog}.{schema}.{table} WHERE {column_date}='{yesterday}' LIMIT 100",
-			enable: ['BASE TABLE', 'VIEW']
-		},
-		{
-			label: "SHOW PRESTO VIEW DDL",
-			sql: "SELECT VIEW_DEFINITION FROM {catalog}.INFORMATION_SCHEMA.VIEWS WHERE table_catalog='{catalog}' AND table_schema='{schema}' AND table_name='{table}'",
-			enable: ['VIEW']
-		},
-		{
-			label: "SHOW CREATE TABLE ...",
-			sql: "SHOW CREATE TABLE {catalog}.{schema}.{table}",
-			enable: ['BASE TABLE']
-		},
-		{
-			label: "SHOW PARTITIONS FROM ...",
-			sql: "SHOW PARTITIONS FROM {catalog}.{schema}.{table}",
-			enable: ['BASE TABLE']
-		},
-		{
-			label: "DESCRIBE ...",
-			sql: "DESCRIBE {catalog}.{schema}.{table}",
-			enable: ['BASE TABLE', 'VIEW']
-		}
-	],
 	themes: [
 		'ambiance',
 		'chaos',

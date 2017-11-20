@@ -162,8 +162,7 @@ jQuery(document).ready(function($) {
 				val: '',
 				cols: [],
 				col_date: '',
-				snippets: yanagishima.snippets,
-				snippet: yanagishima.snippets[0].sql,
+				snippets: 0,
 				filter_schema: '',
 				filter_table: '',
 				is_expandColumns: false,
@@ -380,9 +379,6 @@ jQuery(document).ready(function($) {
 					location.replace('/error/?403');
 				}
 			}).fail(function(xhr, status, error) {
-				// if (xhr.status === 403) {
-				// 	location.replace('/error/?403');
-				// }
 			});
 
 			// Start
@@ -630,6 +626,41 @@ jQuery(document).ready(function($) {
 					return '';
 				}
 			},
+			snippets: function() {
+				var self = this;
+				var snippets = [
+					{
+						label: "SHOW PRESTO VIEW DDL",
+						sql: "SELECT VIEW_DEFINITION FROM {catalog}.INFORMATION_SCHEMA.VIEWS WHERE table_catalog='{catalog}' AND table_schema='{schema}' AND table_name='{table}'",
+						enable: ['VIEW'],
+					},
+					{
+						label: "SHOW CREATE TABLE ...",
+						sql: "SHOW CREATE TABLE {catalog}.{schema}.{table}",
+						enable: ['BASE TABLE'],
+					},
+					{
+						label: "SHOW PARTITIONS FROM ...",
+						sql: "SHOW PARTITIONS FROM {catalog}.{schema}.{table}",
+						enable: ['BASE TABLE'],
+					},
+					{
+						label: "DESCRIBE ...",
+						sql: "DESCRIBE {catalog}.{schema}.{table}",
+						enable: ['BASE TABLE', 'VIEW'],
+					}
+				];
+				var defaultSnippet = self.partition_keys.length ? {
+					label: "SELECT * FROM ... WHERE ${column_date}=${yesterday} LIMIT 100",
+					sql: "SELECT {columns} FROM {catalog}.{schema}.{table} WHERE {column_date}='{yesterday}' LIMIT 100",
+					enable: ['BASE TABLE', 'VIEW'],
+				} : {
+					label: "SELECT * FROM ... LIMIT 100",
+					sql: "SELECT {columns} FROM {catalog}.{schema}.{table} LIMIT 100",
+					enable: ['BASE TABLE', 'VIEW'],
+				};
+				return snippets.add(defaultSnippet, 0);
+			},
 		},
 		methods: {
 			checkAuth: function() {
@@ -725,9 +756,6 @@ jQuery(document).ready(function($) {
 						});
 					}
 				}).fail(function(xhr, status, error) {
-					// if (xhr.status === 403) {
-					// 	location.replace('/error/?403');
-					// }
 				});
 			},
 			viewError: function() {
@@ -758,9 +786,6 @@ jQuery(document).ready(function($) {
 						self.chart = chart;
 						$('#page').removeClass('unload');
 					}).fail(function(xhr, status, error) {
-						// if (xhr.status === 403) {
-						// 	location.replace('/error/?403');
-						// }
 					});
 				}
 			},
@@ -917,9 +942,6 @@ jQuery(document).ready(function($) {
 					self.response.table = data.results;
 					self.loading.table = false;
 				}).fail(function(xhr, status, error) {
-					// if (xhr.status === 403) {
-					// 	location.replace('/error/?403');
-					// }
 					self.loading.table = false;
 				});
 			},
@@ -949,9 +971,6 @@ jQuery(document).ready(function($) {
 						self.errorline = -1;
 					}
 				}).fail(function(xhr, status, error) {
-					// if (xhr.status === 403) {
-					// 	location.replace('/error/?403');
-					// }
 				});
 			},
 			runQuery: function(query) {
@@ -1024,9 +1043,6 @@ jQuery(document).ready(function($) {
 						self.running_queries--;
 					}
 				}).fail(function(xhr, status, error) {
-					// if (xhr.status === 403) {
-					// 	location.replace('/error/?403');
-					// }
 					self.loading.result = false;
 					self.error.result = error || yanagishima.messages.error;
 					self.running_queries--;
@@ -1117,9 +1133,6 @@ jQuery(document).ready(function($) {
 							}
 						}
 					}).fail(function(xhr, status, error) {
-						// if (xhr.status === 403) {
-						// 	location.replace('/error/?403');
-						// }
 						self.loading.result = false;
 						self.error.result = error || yanagishima.messages.error;
 						self.running_queries--;
@@ -1174,9 +1187,6 @@ jQuery(document).ready(function($) {
 						self.loading.result = false;
 					}
 				}).fail(function(xhr, status, error) {
-					// if (xhr.status === 403) {
-					// 	location.replace('/error/?403');
-					// }
 					self.loading.result = false;
 					self.error.result = error || yanagishima.messages.error;
 				});
@@ -1214,7 +1224,8 @@ jQuery(document).ready(function($) {
 					columns: self.is_expandColumns ? self.cols : '*',
 					yesterday: Date.create().addDays(-1).format('{yyyy}{MM}{dd}')
 				};
-				var snippet = self.is_presto ? self.snippet : self.snippet.remove('{catalog}.');
+				var snippet = self.snippets[self.snippet].sql;
+				!self.is_presto && (snippet = snippet.remove('{catalog}.'));
 				self.input_query = snippet.format(config);
 			},
 			setWhere: function(index) {
@@ -1270,9 +1281,6 @@ jQuery(document).ready(function($) {
 					data: params,
 				}).done(function(data) {
 				}).fail(function(xhr, status, error) {
-					// if (xhr.status === 403) {
-					// 	location.replace('/error/?403');
-					// }
 				});
 			},
 			formatQuery: function(queryid) {
@@ -1293,9 +1301,6 @@ jQuery(document).ready(function($) {
 							self.errorline = data.errorLineNumber - 1;
 						}
 					}).fail(function(xhr, status, error) {
-						// if (xhr.status === 403) {
-						// 	location.replace('/error/?403');
-						// }
 					});
 				}
 			},
@@ -1315,9 +1320,6 @@ jQuery(document).ready(function($) {
 							self.input_query = data.query;
 						}
 					}).fail(function(xhr, status, error) {
-						// if (xhr.status === 403) {
-						// 	location.replace('/error/?403');
-						// }
 					});
 				}
 			},
@@ -1357,22 +1359,40 @@ jQuery(document).ready(function($) {
 					return false;
 				}
 
-				var api = {
-					url: is_localstorage ? self.domain + self.apis.bookmark : self.domain + self.apis.bookmarkUser,
-					data: is_localstorage ? {bookmark_id: self.bookmarks.join(',')} : {},
-					type: is_localstorage ? 'POST' : 'GET',
-				};
-
 				self.loading.bookmark = true;
-				$.ajax({
-					type: 'GET',
-					url: api.url.format({
-						datasource: self.datasource,
-						engine: self.engine,
-					}),
-					data: api.data,
-					timeout: 300000,
-				}).done(function(data) {
+				if (is_localstorage) {
+					$.ajax({
+						type: 'GET',
+						url: self.domain + self.apis.bookmark,
+						data: {
+							datasource: self.datasource,
+							engine: self.engine,
+							bookmark_id: self.bookmarks.join(','),
+						},
+						timeout: 300000,
+					}).done(function(data) {
+						sortBookmarks(data);
+						self.loading.bookmark = false;
+					}).fail(function(xhr, status, error) {
+						self.loading.bookmark = false;
+					});
+				} else {
+					$.ajax({
+						type: 'GET',
+						url: self.domain + self.apis.bookmarkUser,
+						data: {
+							datasource: self.datasource,
+							engine: self.engine,
+						},
+						timeout: 300000,
+					}).done(function(data) {
+						sortBookmarks(data);
+						self.loading.bookmark = false;
+					}).fail(function(xhr, status, error) {
+						self.loading.bookmark = false;
+					});
+				}
+				function sortBookmarks(data) {
 					if (data.bookmarkList) {
 						self.response.bookmark = data.bookmarkList.filter(function(n) {
 							return n.engine == self.engine;
@@ -1380,13 +1400,7 @@ jQuery(document).ready(function($) {
 							return n.bookmark_id;
 						}, true);
 					}
-					self.loading.bookmark = false;
-				}).fail(function(xhr, status, error) {
-					// if (xhr.status === 403) {
-					// 	location.replace('/error/?403');
-					// }
-					self.loading.bookmark = false;
-				});
+				}
 			},
 			getHistories: function(not_loading) {
 				var self = this;
@@ -1435,9 +1449,6 @@ jQuery(document).ready(function($) {
 					}
 					self.loading.history = false;
 				}).fail(function(xhr, status, error) {
-					// if (xhr.status === 403) {
-					// 	location.replace('/error/?403');
-					// }
 					self.loading.history = false;
 				});
 			},
@@ -1462,9 +1473,6 @@ jQuery(document).ready(function($) {
 					self.response.qlist = data;
 					self.loading.qlist = false;
 				}).fail(function(xhr, status, error) {
-					// if (xhr.status === 403) {
-					// 	location.replace('/error/?403');
-					// }
 					self.loading.qlist = false;
 				});
 			},
