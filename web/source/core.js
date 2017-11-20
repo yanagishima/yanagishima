@@ -162,7 +162,7 @@ jQuery(document).ready(function($) {
 				val: '',
 				cols: [],
 				col_date: '',
-				snippets: 0,
+				snippet: 0,
 				filter_schema: '',
 				filter_table: '',
 				is_expandColumns: false,
