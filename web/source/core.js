@@ -351,7 +351,8 @@ jQuery(document).ready(function($) {
 						location.replace('/error/?403');
 					},
 					500: function() {
-						location.replace('/error/?500');
+						toastr.error('Please inform to admin', '500');
+						// location.replace('/error/?500');
 					}
 				}
 			});

@@ -78,8 +78,13 @@ public class PrestoAsyncServlet extends HttpServlet {
 				if(userName != null) {
 					LOGGER.info(String.format("%s executed %s in %s", userName, query, datasource));
 				}
-				String queryid = prestoService.doQueryAsync(datasource, query, userName, prestoUser, prestoPassword);
-				retVal.put("queryid", queryid);
+				try {
+					String queryid = prestoService.doQueryAsync(datasource, query, userName, prestoUser, prestoPassword);
+					retVal.put("queryid", queryid);
+				} catch (Throwable e) {
+					LOGGER.error(e.getMessage(), e);
+					retVal.put("error", e.getMessage());
+				}
 			});
 		} catch (Throwable e) {
 			LOGGER.error(e.getMessage(), e);

@@ -79,6 +79,16 @@ public class QueryServlet extends HttpServlet {
 			clientBuilder.addInterceptor(basicAuth(prestoUser.get(), prestoPassword.get()));
 			try (Response prestoResponse = clientBuilder.build().newCall(prestoRequest).execute()) {
 				originalJson = prestoResponse.body().string();
+				int code = prestoResponse.code();
+				if(code != SC_OK) {
+					HashMap<String, Object> retVal = new HashMap<String, Object>();
+					retVal.put("code", code);
+					retVal.put("error", prestoResponse.message());
+					ObjectMapper mapper = new ObjectMapper();
+					String json = mapper.writeValueAsString(retVal);
+					writer.println(json);
+					return;
+				}
 			}
 		} else {
 			try (Response prestoResponse = httpClient.newCall(prestoRequest).execute()) {
