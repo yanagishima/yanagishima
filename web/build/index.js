@@ -1059,11 +1059,6 @@ jQuery(document).ready(function($) {
 						enable: ['BASE TABLE'],
 					},
 					{
-						label: "SHOW PARTITIONS FROM ...",
-						sql: "SHOW PARTITIONS FROM {catalog}.{schema}.{table}",
-						enable: ['BASE TABLE'],
-					},
-					{
 						label: "DESCRIBE ...",
 						sql: "DESCRIBE {catalog}.{schema}.{table}",
 						enable: ['BASE TABLE', 'VIEW'],
