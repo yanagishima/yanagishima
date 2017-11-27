@@ -259,7 +259,7 @@ public class HiveServiceImpl implements HiveService {
                             hiveQueryResult.setWarningMessage(String.format("now fetch size is %d. This is more than %d. So, fetch operation stopped.", rowDataList.size(), limit));
                         }
 
-                        checkTimeout(db, queryMaxRunTime, start, datasource, "hive", queryId, userName, query);
+                        checkTimeout(db, queryMaxRunTime, start, datasource, "hive", queryId, query, userName);
                     }
                     hiveQueryResult.setLineNumber(lineNumber);
                     hiveQueryResult.setRecords(rowDataList);
