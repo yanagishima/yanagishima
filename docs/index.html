@@ -1,1 +1,79 @@
-it works.
+<html>
+<head>
+<title>yanagishima</title>
+<link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" id="favicon">
+<link href="https://fonts.googleapis.com/css?family=Droid+Sans" rel="stylesheet">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet">
+<meta name="description" content="Web UI for Presto and Hive">
+<style>
+* {
+	 font-family: "Droid Sans", Roboto, "Helvetica Neue", Arial, sans-serif;
+	 text-align: center;
+}
+body {
+	margin: 0;
+	padding: 0;
+}
+main {
+	position: fixed;
+	top: 50%;
+	left: 50%;
+	min-width: 33%;
+	min-height: 33%;
+	width: auto;
+	height: auto;
+	transform: translateX(-50%) translateY(-50%);
+	background: rgba(0,0,0,0.5);
+	opacity: 0.95;
+	color: #fff;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+video { 
+	position: fixed;
+	top: 50%;
+	left: 50%;
+	min-width: 100%;
+	min-height: 100%;
+	width: auto;
+	height: auto;
+	z-index: -100;
+	transform: translateX(-50%) translateY(-50%);
+	transition: 1s opacity;
+	/*filter: blur(3px);*/
+	filter: brightness(0.25);
+	/*filter: grayscale(100%);*/
+}
+p,
+h1 {
+	margin-bottom: 3rem;
+}
+#logo {
+	width: 300px;
+}
+#go {
+	display: inline-block;
+	padding: .75rem 3rem;
+	color: #fff;
+	text-decoration: none;
+	border: 1px solid #fff;
+	transition: all 1s ease-in-out;
+}
+#go:hover {
+	background: rgba(255,255,255,0.15);
+}
+</style>
+</head>
+<body>
+<main>
+<div>
+<p>Web UI for Presto and Hive</p>
+<h1><img src="yanagishima.svg" alt="yanagishima" id="logo"></h1>
+<a href="https://github.com/yanagishima/yanagishima" id="go">Get started</a>
+</div>
+</main>
+<video src="yanagishima9.mp4" playsinline autoplay muted loop>
+</video>
+</body>
+</html>
