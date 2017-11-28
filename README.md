@@ -2,7 +2,7 @@
 
 yanagishima is a Web UI for presto/hive.
 
-![preview](v4.gif)
+[![IMAGE ALT TEXT HERE](http://img.youtube.com/vi/SoneFYNCXJE/0.jpg)](http://www.youtube.com/watch?v=SoneFYNCXJE)
 
 # Features
 * easy to install
