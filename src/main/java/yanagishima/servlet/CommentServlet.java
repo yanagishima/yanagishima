@@ -17,6 +17,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.time.ZonedDateTime;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
@@ -131,23 +132,17 @@ public class CommentServlet extends HttpServlet {
 
             String engine = HttpRequestUtil.getParam(request, "engine");
             String queryid = request.getParameter("queryid");
+            List<Comment> comments = null;
             if(queryid != null) {
                 Comment c = db.single(Comment.class).where("datasource = ? and engine = ? and query_id = ?", datasource, engine, queryid).execute().get();
-                retVal.put("datasource", c.getDatasource());
-                retVal.put("engine", c.getEngine());
-                retVal.put("queryid", c.getQueryid());
-                retVal.put("user", c.getUser());
-                retVal.put("content", c.getContent());
-                retVal.put("likeCount", c.getLikeCount());
-                retVal.put("updateTimeString", c.getUpdateTimeString());
+                comments = new ArrayList<>();
+                comments.add(c);
             } else {
                 String search = request.getParameter("search");
                 String sort = Optional.ofNullable(request.getParameter("sort")).orElse("update_time_string");
-                List<Comment> comments = db.search(Comment.class).where("datasource = ? and engine = ? and content LIKE '%" + Optional.ofNullable(search).orElse("") + "%'", datasource, engine).orderBy(sort + " DESC").execute();
-                retVal.put("comments", comments);
+                comments = db.search(Comment.class).where("datasource = ? and engine = ? and content LIKE '%" + Optional.ofNullable(search).orElse("") + "%'", datasource, engine).orderBy(sort + " DESC").execute();
             }
-
-
+            retVal.put("comments", comments);
         } catch (Throwable e) {
             LOGGER.error(e.getMessage(), e);
             retVal.put("error", e.getMessage());
