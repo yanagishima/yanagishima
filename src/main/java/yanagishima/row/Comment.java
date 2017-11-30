@@ -22,13 +22,13 @@ public class Comment extends Row<Comment> {
 
     @PrimaryKey
     @Column("query_id")
-    private String queryId;
+    private String queryid;
 
     @Column("update_time_string")
     private String updateTimeString;
 
-    @Column("comment_text")
-    private String commentText;
+    @Column("content")
+    private String content;
 
     @Column("user")
     private String user;

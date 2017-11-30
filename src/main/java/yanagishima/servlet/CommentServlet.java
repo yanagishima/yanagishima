@@ -59,35 +59,47 @@ public class CommentServlet extends HttpServlet {
 
             String userName = request.getHeader(yanagishimaConfig.getAuditHttpHeaderName());
             String engine = HttpRequestUtil.getParam(request, "engine");
-            String queryId = HttpRequestUtil.getParam(request, "query_id");
+            String queryid = HttpRequestUtil.getParam(request, "queryid");
 
             retVal.put("datasource", datasource);
             retVal.put("engine", engine);
-            retVal.put("queryId", queryId);
+            retVal.put("queryid", queryid);
             retVal.put("user", userName);
             String updateTimeString = ZonedDateTime.now().toString();
             retVal.put("updateTimeString", updateTimeString);
 
             String like = request.getParameter("like");
             if (like == null) {
-                String comment = HttpRequestUtil.getParam(request, "comment");
-                db.insert(Comment.class).value("datasource", datasource)
-                        .value("engine", engine)
-                        .value("query_id", queryId)
-                        .value("user", userName)
-                        .value("comment_text", comment)
-                        .value("like_count", 0)
-                        .value("update_time_string", updateTimeString)
-                        .execute();
-                retVal.put("comment", comment);
-                retVal.put("like_count", 0);
+                String content = HttpRequestUtil.getParam(request, "content");
+                Optional<Comment> commentOptional = db.single(Comment.class).where("datasource = ? and engine = ? and query_id = ?", datasource, engine, queryid).execute();
+                if(commentOptional.isPresent()) {
+                    String updateSql = String.format("UPDATE comment SET user = '%s', content = '%s', update_time_string = '%s' WHERE datasource = '%s' and engine = '%s' and query_id = '%s'", userName, content, updateTimeString, datasource, engine, queryid);
+                    db.updateBySQL(updateSql);
+                    retVal.put("content", content);
+                    retVal.put("likeCount", commentOptional.get().getLikeCount());
+                } else {
+                    db.insert(Comment.class).value("datasource", datasource)
+                            .value("engine", engine)
+                            .value("query_id", queryid)
+                            .value("user", userName)
+                            .value("content", content)
+                            .value("like_count", 0)
+                            .value("update_time_string", updateTimeString)
+                            .execute();
+                    retVal.put("content", content);
+                    retVal.put("likeCount", 0);
+                }
             } else {
-                Comment likedComment = db.single(Comment.class).where("datasource = ? and engine = ? and query_id = ?", datasource, engine, queryId).execute().get();
-                int likeCount = likedComment.getLikeCount() + 1;
-                String updateSql = String.format("UPDATE comment SET like_count=%d WHERE datasource = '%s' and engine = '%s' and query_id = '%s'", likeCount, datasource, engine, queryId);
+                Comment likedComment = db.single(Comment.class).where("datasource = ? and engine = ? and query_id = ?", datasource, engine, queryid).execute().get();
+                int likeCount = 0;
+                if(like.length() == 0) {
+                    likeCount = likedComment.getLikeCount() + 1;
+                } else {
+                    likeCount = likedComment.getLikeCount() + Integer.parseInt(like);
+                }
+                String updateSql = String.format("UPDATE comment SET like_count=%d WHERE datasource = '%s' and engine = '%s' and query_id = '%s'", likeCount, datasource, engine, queryid);
                 int updateCount = db.updateBySQL(updateSql);
                 retVal.put("likeCount", likeCount);
-                retVal.put("updateCount", updateCount);
             }
         } catch (Throwable e) {
             LOGGER.error(e.getMessage(), e);
@@ -118,11 +130,23 @@ public class CommentServlet extends HttpServlet {
             }
 
             String engine = HttpRequestUtil.getParam(request, "engine");
-            String search = request.getParameter("search");
-            String sort = Optional.ofNullable(request.getParameter("sort")).orElse("update_time_string");
+            String queryid = request.getParameter("queryid");
+            if(queryid != null) {
+                Comment c = db.single(Comment.class).where("datasource = ? and engine = ? and query_id = ?", datasource, engine, queryid).execute().get();
+                retVal.put("datasource", c.getDatasource());
+                retVal.put("engine", c.getEngine());
+                retVal.put("queryid", c.getQueryid());
+                retVal.put("user", c.getUser());
+                retVal.put("content", c.getContent());
+                retVal.put("likeCount", c.getLikeCount());
+                retVal.put("updateTimeString", c.getUpdateTimeString());
+            } else {
+                String search = request.getParameter("search");
+                String sort = Optional.ofNullable(request.getParameter("sort")).orElse("update_time_string");
+                List<Comment> comments = db.search(Comment.class).where("datasource = ? and engine = ? and content LIKE '%" + Optional.ofNullable(search).orElse("") + "%'", datasource, engine).orderBy(sort + " DESC").execute();
+                retVal.put("comments", comments);
+            }
 
-            List<Comment> comments = db.search(Comment.class).where("datasource = ? and engine = ? and comment_text LIKE '%" + Optional.ofNullable(search).orElse("") + "%'", datasource, engine).orderBy(sort + " DESC").execute();
-            retVal.put("comments", comments);
 
         } catch (Throwable e) {
             LOGGER.error(e.getMessage(), e);
@@ -154,12 +178,12 @@ public class CommentServlet extends HttpServlet {
             }
 
             String engine = HttpRequestUtil.getParam(request, "engine");
-            String queryId = HttpRequestUtil.getParam(request, "query_id");
-            Comment deletedComment = db.single(Comment.class).where("datasource = ? and engine = ? and query_id = ?", datasource, engine, queryId).execute().get();
+            String queryid = HttpRequestUtil.getParam(request, "queryid");
+            Comment deletedComment = db.single(Comment.class).where("datasource = ? and engine = ? and query_id = ?", datasource, engine, queryid).execute().get();
             deletedComment.delete();
             retVal.put("datasource", datasource);
             retVal.put("engine", engine);
-            retVal.put("query_id", queryId);
+            retVal.put("queryid", queryid);
         } catch (Throwable e) {
             LOGGER.error(e.getMessage(), e);
             retVal.put("error", e.getMessage());
