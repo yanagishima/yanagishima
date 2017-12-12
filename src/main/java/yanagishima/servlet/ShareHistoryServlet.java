@@ -4,6 +4,7 @@ import me.geso.tinyorm.TinyORM;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import yanagishima.config.YanagishimaConfig;
+import yanagishima.row.Comment;
 import yanagishima.row.Publish;
 import yanagishima.row.Query;
 import yanagishima.util.HistoryUtil;
@@ -52,6 +53,13 @@ public class ShareHistoryServlet extends HttpServlet {
                 Query query = db.single(Query.class).where("query_id=? and datasource=?", queryid, datasource).execute().get();
                 retVal.put("engine", query.getEngine());
                 HistoryUtil.createHistoryResult(retVal, yanagishimaConfig.getSelectLimit(), datasource, queryid, query.getQueryString(), query.getFetchResultTimeString());
+                Optional<Comment> commentOptional = db.single(Comment.class).where("datasource = ? and engine = ? and query_id = ?", datasource, query.getEngine(), queryid).execute();
+                if(commentOptional.isPresent()) {
+                    Comment comment = commentOptional.get();
+                    retVal.put("comment", comment);
+                } else {
+                    retVal.put("comment", null);
+                }
             }
         } catch (Throwable e) {
             LOGGER.error(e.getMessage(), e);
