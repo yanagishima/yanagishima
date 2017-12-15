@@ -132,11 +132,12 @@ public class CommentServlet extends HttpServlet {
 
             String engine = HttpRequestUtil.getParam(request, "engine");
             String queryid = request.getParameter("queryid");
-            List<Comment> comments = null;
+            List<Comment> comments = new ArrayList<>();
             if(queryid != null) {
-                Comment c = db.single(Comment.class).where("datasource = ? and engine = ? and query_id = ?", datasource, engine, queryid).execute().get();
-                comments = new ArrayList<>();
-                comments.add(c);
+                Optional<Comment> commentOptional = db.single(Comment.class).where("datasource = ? and engine = ? and query_id = ?", datasource, engine, queryid).execute();
+                if(commentOptional.isPresent()) {
+                    comments.add(commentOptional.get());
+                }
             } else {
                 String search = request.getParameter("search");
                 String sort = Optional.ofNullable(request.getParameter("sort")).orElse("update_time_string");
