@@ -1,7 +1,7 @@
 // Vue component for Ace Editor
 Vue.component('ace', {
 	template: '<div :id="aceId" style="width: 100%; height: 100%;"></div>',
-	props: ['code', 'lang', 'theme', 'disabled', 'readonly', 'gotoline', 'errorline', 'errortext', 'focus', 'minline', 'maxline', 'css_class', 'complate_words'],
+	props: ['code', 'lang', 'theme', 'disabled', 'readonly', 'gotoline', 'errorline', 'errortext', 'focus', 'minline', 'maxline', 'gutter', 'css_class', 'complate_words'],
 	data: function() {
 		return {
 			ace: Object,
@@ -79,6 +79,7 @@ Vue.component('ace', {
 		var lang = self.lang || 'sql';
 		var theme = self.theme || 'chrome';
 		var readonly = Boolean(self.readonly) || false;
+		var gutter = (self.gutter == undefined) ? true : Number(self.gutter);
 
 		self.ace = window.ace.edit(self.aceId);
 
@@ -94,6 +95,7 @@ Vue.component('ace', {
 		self.ace.commands.bindKey("Ctrl-T", "");
 		self.ace.commands.bindKey("Command-L", "");
 		self.ace.commands.removeCommand('find');
+		self.ace.renderer.setShowGutter(gutter);
 
 		if (readonly) {
 			self.ace.setReadOnly(readonly);
@@ -166,6 +168,17 @@ Vue.component('highlight', {
 				});
 			}
 			return sentense;
+		}
+	}
+});
+Vue.component('autolink', {
+	template: '<span v-html="result"></span>',
+	props: ['content'],
+	computed: {
+		result: function() {
+			var self = this;
+			var content= self.content;
+			return content.replace(/((http|https|ftp)(:\/\/[-_.!~*\'()a-zA-Z0-9;\/?:\@&=+\$,%#]+))$/g, '<a href="$1" target="_blank">$1</a>');
 		}
 	}
 });

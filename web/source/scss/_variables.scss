@@ -205,9 +205,9 @@ $link-hover-decoration: underline !default;
 $grid-breakpoints: (
   xs: 0,
   sm: 576px,
-  md: 768px,
-  lg: 992px,
-  xl: 1340px
+  md: 756px,
+  lg: 1060px,
+  xl: 1316px
 ) !default;
 @include _assert-ascending($grid-breakpoints, "$grid-breakpoints");
 @include _assert-starts-at-zero($grid-breakpoints);
@@ -220,7 +220,7 @@ $grid-breakpoints: (
 $container-max-widths: (
   sm: 540px,
   md: 720px,
-  lg: 960px,
+  lg: 1024px,
   xl: 1280px
 ) !default;
 @include _assert-ascending($container-max-widths, "$container-max-widths");

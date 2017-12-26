@@ -1,3 +1,4 @@
+<!DOCTYPE html>
 <html>
 <head>
 <title>yanagishima</title>
@@ -25,9 +26,9 @@
 							</label>
 						</div>
 						<div>
-							<label :class="{'text-white': is_panel}">
-								<input type="checkbox" class="mr-1" v-model="is_panel">
-								History panel
+							<label :class="{'text-white': is_autoQlist}">
+								<input type="checkbox" class="mr-1" v-model="is_autoQlist">
+								Automatically Refresh Query List
 							</label>
 						</div>
 					<!-- /card-block --></div>
@@ -35,10 +36,10 @@
 				<div class="card card-inverse">
 					<div class="card-header">Useful</div>
 					<div class="card-block pb-1">
-						<div>
+						<div v-if="location.protocol == 'https:'">
 							<label :class="{'text-white': desktopNotification}">
 								<input type="checkbox" class="mr-1" v-model="desktopNotification">
-								Desktop Notification
+								Desktop Notification (when in background)
 							</label>
 						</div>
 						<div v-if="datasources.length > 1">
@@ -133,12 +134,9 @@
 						<span class="mr-2">
 							<small class="mr-1">Datasource</small>
 							<template v-if="datasources.length > 1">
-								<div class="dropdown d-inline-block">
-									<button class="btn btn-sm btn-primary dropdown-toggle" type="button" data-toggle="dropdown">{{datasource}}</button>
-									<div class="dropdown-menu">
-										<a class="dropdown-item" href="#" v-for="item in datasources" @click.prevent="datasource = item" :class="{active: datasource == item}"><i class="fa fa-fw fa-square" :class="'datasource_{0}-color'.format(datasources.indexOf(item))"></i>{{item}}</a>
-									</div>
-								</div>
+								<div class="btn-group">
+									<button class="btn btn-sm" v-for="item in datasources" @click.prevent="datasource = item" :class="{'btn-primary': item != datasource, 'btn-secondary': item == datasource}"><template>{{item}}</template></button>
+								<!-- /btn-group --></div>
 							</template>
 							<template v-else>
 								<strong>{{datasource}}</strong>
@@ -147,12 +145,9 @@
 						<span class="mr-2">
 							<small class="mr-1">Engine</small>
 							<template v-if="engines[datasource] && engines[datasource].length > 1">
-								<div class="dropdown d-inline-block">
-									<button class="btn btn-sm btn-primary dropdown-toggle" type="button" data-toggle="dropdown">{{engine}}</button>
-									<div class="dropdown-menu">
-										<a class="dropdown-item" href="#" v-for="item in engines[datasource]" @click.prevent="engine = item" :class="{active: engine == item}">{{item}}</a>
-									</div>
-								</div>
+								<div class="btn-group">
+									<button class="btn btn-sm" v-for="item in engines[datasource]" @click.prevent="engine = item" :class="{'btn-primary': item != engine, 'btn-secondary': item == engine}"><template>{{item}}</template></button>
+								<!-- /btn-group --></div>
 							</template>
 							<template v-else>
 								<strong>{{engine}}</strong>
@@ -219,14 +214,15 @@
 							<!-- /btn-group --></div>
 							<div class="btn-group ml-3">
 								<button type="button" class="btn btn-primary px-4" :disabled="loading.result || !input_query.length" @click="runQuery(input_query)"><i class="fa fa-fw fa-play mr-1"></i><strong>Run</strong></button>
-								<button type="button" class="btn btn-primary" data-toggle="dropdown" :disabled="loading.result || !input_query.length"><i class="fa fa-ellipsis-v"></i></button>
+								<button type="button" class="btn btn-primary" :disabled="loading.result || !input_query.length" @click="runQuery(explains.explain.sql.format(input_query))">Explain</button>
+								<!-- <button type="button" class="btn btn-primary" data-toggle="dropdown" :disabled="loading.result || !input_query.length"><i class="fa fa-ellipsis-v"></i></button>
 								<div class="dropdown-menu dropdown-menu-right">
 									<a class="dropdown-item" href="#" v-for="(val, key) in explains" @click.prevent="runQuery(val.sql.format(input_query))" v-if="val.engines.includes(engine)">{{key | humanize}}</a>
 									<template v-if="is_presto">
 										<div class="dropdown-divider"></div>
 										<a class="dropdown-item" href="#" @click.present="toValuesQuery(input_query)">From CSV to Query</a>
 									</template>
-								<!-- /dropdown-menu --></div>
+								</div> -->
 							<!-- /btn-group --></div>
 						<!-- /control --></div>
 					<!-- /col --></div>
@@ -244,15 +240,7 @@
 					<div class="col text-right">
 						<label class="form-check-label mr-3" v-if="is_presto"><input class="form-check-input mr-1" type="checkbox" v-model="is_openQuery">Full Query</label>
 						<label class="form-check-label mr-3"><input class="form-check-input mr-1" type="checkbox" v-model="is_adminMode">Admin Mode</label>
-						<div class="btn-group">
-							<button class="btn btn-sm btn-secondary" @click="getQlist()"><i class="fa fa-fw fa-refresh mr-1"></i>Refresh<small class="ml-1" v-if="is_autoQlist">(Auto)</small></button>
-							<button type="button" class="btn btn-sm btn-secondary dropdown-toggle dropdown-toggle-split" data-toggle="dropdown"></button>
-							<div class="dropdown-menu dropdown-menu-right">
-								<a class="dropdown-item" href="#" @click.prevent="is_autoQlist = 0" :class="{active: !is_autoQlist}">Manual</a>
-								<a class="dropdown-item" href="#" @click.prevent="is_autoQlist = 1" :class="{active: is_autoQlist}">Automatic</a>
-							<!-- btn-menu --></div>
-						<!-- btn-group --></div>
-					<!-- /col --></div>
+						<button class="btn btn-sm btn-secondary" @click="getQlist()"><i class="fa fa-fw fa-refresh mr-1"></i>Refresh</button>
 				<!-- /row --></div>
 			<!-- /qlist --></template>
 			<template v-else-if="tab === 'history'">
@@ -320,7 +308,7 @@
 										<strong>{{queryid}}</strong>
 									</span>
 									<span class="mr-2" v-if="response.result.finishedTime">
-										<i class="fa fa-clock-o" title="Finished time" data-toggle="tooltip" data-animation="false" data-placement="left"></i>
+										<i class="fa fa-calendar" title="Finished time" data-toggle="tooltip" data-animation="false" data-placement="left"></i>
 										{{response.result.finishedTime | extractDate}}
 									</span>
 									<span class="mr-2" v-if="response.result.elapsedTimeMillis">
@@ -333,7 +321,7 @@
 										<strong>{{response.result.results.length | formatNumber}}</strong><template v-if="response.result.results.length != response.result.lineNumber -1"><span class="mx-1">/</span><strong>{{response.result.lineNumber -1 | formatNumber}}</strong></template><span class="text-muted ml-1">results</span>
 									</span>
 								</span>
-								<span v-else><strong>Excuted Result</strong></span>
+								<span v-else><strong>Executed Result</strong></span>
 							</template>
 						</template>
 					<!-- /col --></div>
@@ -356,13 +344,13 @@
 						<div class="row align-items-end pt-3">
 							<div class="col">
 								<div class="btn-group mr-2" v-if="datasources.length > 1">
-									<button type="button" class="btn btn-secondary dropdown-toggle" data-toggle="dropdown"><strong>{{datasource}}</strong></button>
+									<button type="button" class="btn btn-sm btn-secondary dropdown-toggle" data-toggle="dropdown"><strong>{{datasource}}</strong></button>
 									<div class="dropdown-menu">
 										<a class="dropdown-item" href="#" v-for="item in datasources" @click.prevent="datasource = item" :class="{active: item === datasource}">{{item}}</a>
 									<!-- /dropdown-menu --></div>
 								<!-- /btn-group --></div>
 								<div class="btn-group" v-if="is_presto">
-									<button type="button" class="btn btn-secondary dropdown-toggle" data-toggle="dropdown"><small class="text-muted mr-1">Catalog</small><strong>{{catalog}}</strong></button>
+									<button type="button" class="btn btn-sm btn-secondary dropdown-toggle" data-toggle="dropdown"><small class="text-muted mr-1">Catalog</small><strong>{{catalog}}</strong></button>
 									<div class="dropdown-menu" v-if="catalogs.length">
 										<a class="dropdown-item" href="#" v-for="item in catalogs" @click.prevent="catalog = item, schema = '', table = ''" :class="{active: item === catalog}">{{item}}</a>
 									<!-- /dropdown-menu --></div>
@@ -378,11 +366,22 @@
 					<!-- /col --></div>
 					<div class="col-5 text-right">
 						<template v-if="is_presto">
-							<input type="text" class="form-control  d-inline-block w-50" :placeholder="'Search by Table in ' + catalog" v-model.lazy="table_q" @keyup.enter="searchTable()" v-focus>
+							<input type="text" class="form-control form-control-sm d-inline-block w-50" :placeholder="'Search by Table in ' + catalog" v-model.lazy="table_q" @keyup.enter="searchTable()" v-focus>
 						</template>
 					<!-- /col --></div>
 				<!-- /row --></div>
 			<!-- /treeview --></template>
+			<template v-else-if="tab === 'timeline'">
+				<div class="row align-items-center pt-3">
+					<div class="col">
+						<strong class="mr-1">Timeline</strong>
+						<span v-if="timelines.length">{{timelines.length}}</span>
+					<!-- /col --></div>
+					<div class="col text-right">
+						<input type="text" class="form-control form-control-sm d-inline-block w-50" placeholder="Search by Comment" v-model="filter_timeline" v-focus @keyup.enter="getTimeline">
+					<!-- /col --></div>
+				<!-- /row --></div>
+			<!-- /timeline --></template>
 		<!-- /container --></div>
 	<!-- /header-sub --></div>
 </header>
@@ -487,8 +486,6 @@
 									<template v-else>
 										{{item.name}}
 									</template>
-									<!-- <pre class="ace-font mb-0" v-if="is_openQuery">{{item.name}}</pre>
-									<span :title="item.name" v-else>{{item.name.compact()}}</span> -->
 								</td>
 								<td>{{item.user}}</td>
 								<td class="text-center"><a href="#" class="btn btn-sm btn-secondary p-1" @click.prevent="confirm('Do you want to do it?') && killQuery(item.id)" v-if="isRunning(item.state)"><i class="fa fa-fw fa-times text-danger"></i></a></td>
@@ -541,9 +538,6 @@
 							<td class="text-center">
 								<a href="#" class="btn btn-sm btn-secondary" @click.prevent="input_query = items[1], focus++"><i class="fa fa-fw fa-keyboard-o"></i></a>
 							</td>
-							<!-- <td class="text-center">
-								<a href="#" class="btn btn-sm btn-secondary" @click.prevent="delHistoryItem(items[0]), response.history.remove(items)"><i class="fa fa-fw fa-trash"></i></a>
-							</td> -->
 							<td class="text-right overflow-visible">
 								<div class="btn-group">
 									<a href="#" data-toggle="dropdown">{{items[3]}}<i class="fa fa-fw fa-download ml-1"></i></a>
@@ -838,7 +832,7 @@
 						</template>
 						<div class="py-3 text-right" v-if="table">
 							<label class="form-check-label mr-2"><input class="form-check-input mr-1" type="checkbox" v-model="is_expandColumns">Expand Columns</label>
-							<select id="snippet" class="custom-select" style="width:60%;" v-model="snippet">
+							<select id="snippet" class="custom-select ace-font" style="width:60%;" v-model="snippet">
 								<template v-for="(item, i) in snippets" v-if="item.enable.includes(table_type)">
 									<option :value="i">{{item.label}}</option>
 								</template>
@@ -883,6 +877,48 @@
 				<!-- /row --></div>
 			</div>
 		<!-- /treeview --></template>
+		<template v-else-if="tab === 'timeline'">
+			<template v-if="loading.timeline">
+				<div class="alert alert-info">
+					<i class="fa fa-fw fa-spinner fa-pulse mr-1"></i>Loading
+				<!-- /alert --></div>
+			</template>
+			<template v-else>
+				<table class="table table-bordered table-fixed table-hover" v-if="timelines.length">
+					<thead>
+						<tr>
+							<th width="42.5%">Comment</th>
+							<th width="12.5%">When</th>
+							<th width="5%">Like</th>
+							<th width="20%">User</th>
+							<th width="17.5%">query ID</th>
+						</tr>
+					</thead>
+					<tbody>
+						<tr class="vertical-top" v-for="(comment, index) in timelines">
+							<td>
+								<pre class="comment"><autolink :content="comment.content.escapeHTML()"></autolink></pre>
+							</td>
+							<td>
+								{{comment.updateTimeString | relativeDate}}
+							</td>
+							<td class="text-right">
+								<template v-if="comment.likeCount">{{comment.likeCount}}</template>
+							</td>
+							<td>
+								{{comment.user || 'Someone'}}
+							</td>
+							<td>
+								<a :href="'#datasource={0}&amp;engine={1}&amp;tab=result&amp;queryid={2}'.format(datasource, engine, comment.queryid)" @click="line = 0">{{comment.queryid}}</a>
+							</td>
+						</tr>
+					</tbody>
+				</table>
+				<div class="alert alert-warning" v-else>
+					<i class="fa fa-fw fa-frown-o mr-1"></i>No result
+				<!-- /alert --></div>
+			</template>
+		<!-- /timeline --></template>
 	<!-- /container --></div>
 <!-- /content --></div>
 <footer id="footer" class="py-3">
@@ -1122,7 +1158,71 @@
 			</tbody>
 		</table>
 	</div>
-</div>
+<!-- /panel --></div>
+<div id="comment" class="card" :class="{conpact: !visible_comment}" v-if="!(is_panel && history_queryid) && (tab == 'result' && queryid)">
+	<div class="card-header">
+		<div class="d-flex justify-content-between align-items-center">
+			<div>
+				<template v-if="visible_comment">
+					<i class="fa fa-commenting-o fa-flip-horizontal mr-1"></i>
+					<template v-if="comment.edit">
+						Comment on this result
+					</template>t
+					<template v-else>
+						<strong>{{comment.user || 'Someone'}}</strong> commented {{comment.update | relativeDate}}
+					</template>
+				</template>t
+				<template v-else>
+					<a href="#" @click.prevent="visible_comment = true">
+						<i class="fa fa-commenting fa-flip-horizontal mr-1"></i>
+						<template v-if="comment.edit">
+							Comment on this result
+						</template>t
+						<template v-else>
+							<strong>{{comment.user || 'Someone'}}</strong> commented {{comment.update | relativeDate}}
+						</template>
+					</a>
+				</template>
+			</div>
+			<div v-if="visible_comment">
+				<a href="#" @click.prevent="visible_comment = false"><i class="fa fa-fw fa-times"></i></a>
+			</div>
+		</div>
+	</div>
+	<div class="card-block">
+		<div id="comment-body">
+			<template v-if="comment.edit">
+				<textarea class="form-control mb-3" v-model="input_comment" :rows="input_comment_rows" placeholder="Input your comment."></textarea>
+			</template>
+			<template v-else>
+				<pre class="comment"><template v-if="comment.content"><autolink :content="comment.content.escapeHTML()"></autolink></template><template v-else><span class="text-muted">(none)</span></template></pre>
+			</template>
+		</div>
+		<div class="d-flex justify-content-between align-items-center mb-2">
+			<div>
+				<button type="button" class="btn btn-sm btn-secondary" :disabled="comment.edit" @click="postCommentLike">
+					<i class="fa fa-thumbs-o-up mr-1"></i>Like
+					<span class="badge badge-pill badge-primary ml-1" v-if="comment.like">{{comment.like}}</span>
+				</button>
+			</div>
+			<div>
+				<template v-if="comment.edit">
+					<button type="button" class="btn btn-sm btn-primary px-3" @click="postComment" :disabled="!input_comment.length">Post</button>
+					<button type="button" class="btn btn-sm btn-secondary ml-1" @click="comment.edit = false" v-if="comment.content">Cancel</button>
+				</template>
+				<template v-else>
+					<div class="btn-group dropup">
+						<button type="button" class="btn btn-sm btn-secondary dropdown-toggle" data-toggle="dropdown">Action</button>
+						<div class="dropdown-menu dropdown-menu-right">
+							<a class="dropdown-item" href="#" @click.prevent="comment.edit = true">Edit</a>
+							<a class="dropdown-item" href="#" @click.prevent="delComment">Delete</a>
+						</div>
+					</div>
+				</template>
+			</div>
+		</div>
+	</div>
+<!-- /comment --></div>
 <!-- /main --></main>
 <button id="btn-panel" class="btn btn-secondary px-0 py-2" @click.prevent="is_panel = true" v-if="!is_panel" title="Latest history">
 	<i class="fa fa-fw fa-caret-right text-primary"></i>
@@ -1160,6 +1260,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/sugar/2.0.4/sugar.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/favico.js/0.3.10/favico.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/2.1.3/toastr.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/push.js/1.0.4/push.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/push.js/1.0.5/push.min.js"></script>
 <script src="/index.js"></script>
 </body>
+</html>

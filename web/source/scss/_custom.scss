@@ -16,9 +16,9 @@ $colors: $brand-primary, #1B5E20, #880E4F, #827717, #212121;
 		&.engine_hive {
 			background-image: linear-gradient(
 				-45deg,
-				lighten($color, 2.5%) 25%,
+				lighten($color, 6%) 25%,
 				lighten($color, 8%) 25%, lighten($color, 8%) 50%,
-				lighten($color, 2.5%) 50%, lighten($color, 2.5%) 75%,
+				lighten($color, 6%) 50%, lighten($color, 6%) 75%,
 				lighten($color, 8%) 75%, lighten($color, 8%)
 			);
 			background-size: 1rem 1rem;
@@ -163,6 +163,40 @@ $colors: $brand-primary, #1B5E20, #880E4F, #827717, #212121;
 	}
 	#panel-body {
 	}
+}
+#comment {
+	position: fixed;
+	bottom: -.5rem;
+	right: .5rem;
+	z-index: 2;
+	box-shadow: 0 5px 5px 0 rgba(0, 0, 0, 0.2);
+	width: 600px;
+	#comment-body {
+		min-height: 8rem * $line-height-base;
+		max-height: 32rem * $line-height-base;
+		overflow-y: scroll;
+	}
+	textarea {
+		line-height: $line-height-base;
+	}
+	pre {
+		padding: $input-padding-y $input-padding-x;
+		font-size: .8rem;
+		font-family: $font-family-sans-serif;
+	}
+	&.conpact {
+		box-shadow: none;
+		bottom: -1px;
+		width: auto;
+		.card-block {
+			display: none;
+		}
+	}
+}
+.comment {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	margin-bottom: 0;
 }
 #treeview {
 	.list-group {

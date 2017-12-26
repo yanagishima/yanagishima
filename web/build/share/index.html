@@ -1,3 +1,4 @@
+<!DOCTYPE html>
 <html>
 <head>
 <title>yanagishima</title>
@@ -41,7 +42,7 @@
 									<strong>{{publish_id}}</strong>
 								</span>
 								<span class="mr-2" v-if="response.share.finishedTime">
-									<i class="fa fa-clock-o" title="Finished time" data-toggle="tooltip" data-animation="false" data-placement="left"></i>
+									<i class="fa fa-calendar" title="Finished time" data-toggle="tooltip" data-animation="false" data-placement="left"></i>
 									{{response.share.finishedTime | extractDate}}
 								</span>
 								<span class="mr-2" v-if="response.share.elapsedTimeMillis">
@@ -141,6 +142,33 @@
 		<span><strong>&copy; yanagishima</strong> by wyukawa and okazou</span>
 	</address>
 </footer>
+
+<div id="comment" class="card" :class="{conpact: !visible_comment}" v-if="response.share.comment">
+	<div class="card-header">
+		<div class="d-flex justify-content-between align-items-center">
+			<div>
+				<template v-if="visible_comment">
+					<i class="fa fa-commenting-o fa-flip-horizontal mr-1"></i>
+					{{response.share.comment.updateTimeString | extractDate}}
+				</template>t
+				<template v-else>
+					<a href="#" @click.prevent="visible_comment = true">
+						<i class="fa fa-commenting fa-flip-horizontal mr-1"></i>
+						{{response.share.comment.updateTimeString | extractDate}}
+					</a>
+				</template>
+			</div>
+			<div v-if="visible_comment">
+				<a href="#" @click.prevent="visible_comment = false"><i class="fa fa-fw fa-times"></i></a>
+			</div>
+		</div>
+	</div>
+	<div class="card-block">
+		<div id="comment-body">
+			<pre class="comment"><template v-if="response.share.comment.content"><autolink :content="response.share.comment.content.escapeHTML()"></autolink></template><template v-else><span class="text-muted">(none)</span></template></pre>
+		</div>
+	</div>
+<!-- /comment --></div>
 <!-- /page --></div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tether/1.4.0/js/tether.min.js"></script>
@@ -152,3 +180,4 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/favico.js/0.3.10/favico.min.js"></script>
 <script src="/index.js"></script>
 </body>
+</html>

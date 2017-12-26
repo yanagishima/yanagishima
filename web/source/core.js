@@ -50,6 +50,7 @@ jQuery(document).ready(function($) {
 					result: false,
 					history: false,
 					bookmark: false,
+					timeline: false,
 					table: false,
 					share: false,
 					partition: false,
@@ -59,6 +60,7 @@ jQuery(document).ready(function($) {
 					result: false,
 					history: false,
 					bookmark: false,
+					timeline: false,
 					table: false,
 					share: false,
 				},
@@ -96,6 +98,11 @@ jQuery(document).ready(function($) {
 						id: 'treeview',
 						icon: 'sitemap',
 						name: 'Treeview',
+					},
+					{
+						id: 'timeline',
+						icon: 'clock-o',
+						name: 'Timeline',
 					},
 				],
 				tab: '',
@@ -193,6 +200,10 @@ jQuery(document).ready(function($) {
 				history_limit: 100,
 				histories: [],
 				filter_history: '',
+
+				// timelines
+				timelines: [],
+				filter_timeline: '',
 
 				// queryid
 				queryid: '',
@@ -299,6 +310,17 @@ jQuery(document).ready(function($) {
 				is_pretty: false,
 				is_localstorage: (localStorage.getItem('localstorage') == null ) ? true : Number(localStorage.getItem('localstorage')),
 
+				// comment
+				visible_comment: false,
+				input_comment: '',
+				comment: {
+					edit: true,
+					update: null,
+					user: null,
+					content: null,
+					like: 0,
+				},
+
 				// demo
 				demo: {
 					variables: 'SELECT ${x} FROM ${y} LIMIT ${z}',
@@ -356,7 +378,6 @@ jQuery(document).ready(function($) {
 					}
 				}
 			});
-
 			// Get datasources
 			$.ajax({
 				type: 'GET',
@@ -393,6 +414,7 @@ jQuery(document).ready(function($) {
 			$(document).on('shown.bs.modal', '.modal', function(e) {
 				self.is_modal = true;
 				self.focus = 0;
+				self.trm('modal', $(this).attr('id'));
 			}).on('hidden.bs.modal', function(e) {
 				self.is_modal = false;
 				self.focus = 1;
@@ -493,6 +515,9 @@ jQuery(document).ready(function($) {
 			orderedQlist: function() {
 				var self = this;
 				var filter_user = self.filter_user;
+				if (self.response.qlist.error) {
+					return [];
+				}
 				if (self.is_presto) {
 					var qlist = self.response.qlist.filter(function(n) {
 						if (filter_user === '' || filter_user === n.session.user) {
@@ -629,6 +654,11 @@ jQuery(document).ready(function($) {
 			},
 			snippets: function() {
 				var self = this;
+				var exist_paritition = self.partition_keys.length;
+				var config = {
+					column_date: self.col_date,
+					yesterday: Date.create().addDays(-1).format('{yyyy}{MM}{dd}')
+				};
 				var snippets = [
 					{
 						label: "SHOW PRESTO VIEW DDL",
@@ -646,16 +676,24 @@ jQuery(document).ready(function($) {
 						enable: ['BASE TABLE', 'VIEW'],
 					}
 				];
-				var defaultSnippet = self.partition_keys.length ? {
-					label: "SELECT * FROM ... WHERE ${column_date}=${yesterday} LIMIT 100",
-					sql: "SELECT {columns} FROM {catalog}.{schema}.{table} WHERE {column_date}='{yesterday}' LIMIT 100",
-					enable: ['BASE TABLE', 'VIEW'],
-				} : {
+				var defaultSnippet = {
 					label: "SELECT * FROM ... LIMIT 100",
 					sql: "SELECT {columns} FROM {catalog}.{schema}.{table} LIMIT 100",
 					enable: ['BASE TABLE', 'VIEW'],
 				};
+				if (exist_paritition || config.column_date) {
+					defaultSnippet = {
+						label: "SELECT * FROM ... WHERE {column_date}='{yesterday}' LIMIT 100".format(config),
+						sql: "SELECT {columns} FROM {catalog}.{schema}.{table} WHERE {column_date}='{yesterday}' LIMIT 100",
+						enable: ['BASE TABLE', 'VIEW'],
+					}					
+				}
 				return snippets.add(defaultSnippet, 0);
+			},
+			input_comment_rows: function() {
+				var self = this;
+				var rows = self.input_comment ? self.input_comment.split('\n').length : 0;
+				return (rows > 32) ? 32 : (rows > 8) ? rows : 8;
 			},
 		},
 		methods: {
@@ -753,6 +791,7 @@ jQuery(document).ready(function($) {
 					}
 				}).fail(function(xhr, status, error) {
 				});
+				self.trm('result', 'publish');
 			},
 			viewError: function() {
 				var self = this;
@@ -780,6 +819,7 @@ jQuery(document).ready(function($) {
 						self.response.share = data;
 						self.drawChart(data);
 						self.chart = chart;
+						self.visible_comment = (data.comment != null);
 						$('#page').removeClass('unload');
 					}).fail(function(xhr, status, error) {
 					});
@@ -910,6 +950,9 @@ jQuery(document).ready(function($) {
 					case 'treeview':
 						self.getTree();
 						break;
+					case 'timeline':
+						self.getTimeline();
+						break;
 				}
 			},
 			changeQuery: function(query) {
@@ -922,6 +965,8 @@ jQuery(document).ready(function($) {
 				self.response.table = [];
 				if (q === '') {
 					return false;
+				} else {
+					self.trm('table_search', q);
 				}
 				self.loading.table = true;
 				$.ajax({
@@ -980,6 +1025,8 @@ jQuery(document).ready(function($) {
 				if (self.loading.result) {
 					return false;
 				}
+				self.initComment();
+				self.trm('run', query);
 
 				// variables expansion
 				if (self.variables.length) {
@@ -999,6 +1046,7 @@ jQuery(document).ready(function($) {
 						return false;
 					} else {
 						self.input_query = query;
+						self.trm('variables', self.variables.length);
 					}
 				}
 
@@ -1149,6 +1197,8 @@ jQuery(document).ready(function($) {
 				if (!queryid) {
 					return false;
 				}
+				self.getComment(self.queryid)
+
 				self.loading.result = true;
 				self.error.result = false;
 				self.bookmark_id = '';
@@ -1223,6 +1273,7 @@ jQuery(document).ready(function($) {
 				var snippet = self.snippets[self.snippet].sql;
 				!self.is_presto && (snippet = snippet.remove('{catalog}.'));
 				self.input_query = snippet.format(config);
+				self.trm('snippet', self.snippet);
 			},
 			setWhere: function(index) {
 				var self = this;
@@ -1242,6 +1293,7 @@ jQuery(document).ready(function($) {
 				var template = "SELECT * FROM {catalog}.{schema}.{table} WHERE {condition} LIMIT 100";
 				var where = self.is_presto ? template : template.remove('{catalog}.');
 				self.input_query = where.format(config);
+				self.trm('where', self.input_query);
 			},
 			runSnippet: function() {
 				var self = this;
@@ -1318,6 +1370,143 @@ jQuery(document).ready(function($) {
 					}).fail(function(xhr, status, error) {
 					});
 				}
+			},
+			getTimeline: function() {
+				var self = this;
+				var config = {
+					datasource: self.datasource,
+					engine: self.engine,
+					search: self.filter_timeline,
+				};
+				self.loading.timeline = true;
+				$.ajax({
+					type: 'GET',
+					url: self.domain + self.apis.comment + '?' + $.param(config),
+					timeout: 300000,
+				}).done(function(data) {
+					if (data.comments) {
+						self.timelines = data.comments;
+					}
+					self.loading.timeline = false;
+				}).fail(function(xhr, status, error) {
+					self.loading.timeline = false;
+				});
+			},
+			initComment: function() {
+				var self = this;
+				self.comment = {
+					edit: true,
+					update: null,
+					user: null,
+					content: null,
+					like: 0,
+				};
+				self.input_comment = '';
+				self.visible_comment = false;
+			},
+			getComment: function() {
+				var self = this;
+				if (!self.queryid) {
+					return false;
+				}
+				var config = {
+					datasource: self.datasource,
+					engine: self.engine,
+					queryid: self.queryid,
+				};
+				self.initComment();
+				$.ajax({
+					type: 'GET',
+					url: self.domain + self.apis.comment + '?' + $.param(config),
+					timeout: 300000,
+				}).done(function(data) {
+					if (data.comments && data.comments.length) {
+						var datum = data.comments[0];
+						self.comment = {
+							edit: false,
+							update: datum.updateTimeString,
+							user: datum.user,
+							content: datum.content,
+							like: datum.likeCount,
+						};
+						self.input_comment = datum.content;
+						self.visible_comment = true;
+					}
+				}).fail(function(xhr, status, error) {
+				});
+			},
+			postComment: function() {
+				var self = this;
+				if (!self.queryid) {
+					return false;
+				}
+				var config = {
+					datasource: self.datasource,
+					engine: self.engine,
+					queryid: self.queryid,
+					content: self.input_comment,
+				};
+				$.ajax({
+					type: 'POST',
+					url: self.domain + self.apis.comment,
+					data: config,
+					timeout: 300000,
+				}).done(function(data) {
+					if (data.updateTimeString) {
+						self.comment = {
+							edit: false,
+							update: data.updateTimeString,
+							user: data.user,
+							content: data.content,
+							like: data.likeCount,
+						};
+					}
+				}).fail(function(xhr, status, error) {
+				});
+			},
+			delComment: function() {
+				var self = this;
+				if (!self.queryid) {
+					return false;
+				}
+				if (!confirm('Do you want to delete it?')) {
+					return false;
+				}
+				var config = {
+					datasource: self.datasource,
+					engine: self.engine,
+					queryid: self.queryid,
+				};
+				$.ajax({
+					type: 'DELETE',
+					url: self.domain + self.apis.comment + '?' + $.param(config),
+					data: config,
+					timeout: 300000,
+				}).done(function(data) {
+					self.initComment();
+				}).fail(function(xhr, status, error) {
+				});
+			},
+			postCommentLike: function() {
+				var self = this;
+				if (!self.queryid) {
+					return false;
+				}
+				self.comment.like++;
+				var config = {
+					datasource: self.datasource,
+					engine: self.engine,
+					queryid: self.queryid,
+					like: 1,
+				};
+				$.ajax({
+					type: 'POST',
+					url: self.domain + self.apis.comment,
+					data: config,
+					timeout: 300000,
+				}).done(function(data) {
+				}).fail(function(xhr, status, error) {
+				});
 			},
 			getBookmark: function(bookmark_id) {
 				var self = this;
@@ -1607,8 +1796,12 @@ jQuery(document).ready(function($) {
 									return n[0];
 								});
 								self.catalog = yanagishima.default_catalog || self.catalogs[0];
+							} else {
+								data.error && toastr.error(data.error);
+								self.catalogs = [];
 							}
-						}).fail(function(xhr, status, error) {});
+						}).fail(function(xhr, status, error) {
+						});
 					}
 					if (!schema && catalog) {
 						var params = Object.merge(
@@ -1629,6 +1822,7 @@ jQuery(document).ready(function($) {
 								});
 								self.schema = self.schema || self.schemata[0];
 							} else {
+								data.error && toastr.error(data.error);
 								self.schemata = [];
 							}
 						}).fail(function(xhr, status, error) {});
@@ -1652,6 +1846,7 @@ jQuery(document).ready(function($) {
 									return [table_name, table_type];
 								});
 							} else {
+								data.error && toastr.error(data.error);
 								self.tables = [];
 							}
 						}).fail(function(xhr, status, error) {});
@@ -1692,6 +1887,7 @@ jQuery(document).ready(function($) {
 								self.partition_keys = partition_keys;
 								self.col_date = col_date;
 							} else {
+								data.error && toastr.error(data.error);
 								self.columns = [];
 							}
 						}).fail(function(xhr, status, error) {});
@@ -1715,6 +1911,9 @@ jQuery(document).ready(function($) {
 									return n[0];
 								});
 								self.schema = self.schema || self.schemata[0];
+							} else {
+								data.error && toastr.error(data.error);
+								self.schemata = [];
 							}
 						}).fail(function(xhr, status, error) {});
 					} else if (!table && schema) {
@@ -1736,6 +1935,8 @@ jQuery(document).ready(function($) {
 									var table_type = 'BASE TABLE';
 									return [table_name, table_type];
 								});
+							} else {
+								data.error && toastr.error(data.error);
 							}
 						}).fail(function(xhr, status, error) {});
 					} else {
@@ -1863,12 +2064,12 @@ jQuery(document).ready(function($) {
 				var self = this;
 				var query = self.input_query;
 				var defaultTitle = Date.create().format('{yyyy}/{MM}/{dd} {24hr}:{mm}:{ss}');
-				var title = prompt('Input bookmark title. (default: {0})'.format(defaultTitle));
+				var title = prompt('Input bookmark title.', defaultTitle);
 				if (title === null) {
 					return false;
 				}
 				$.ajax({
-					type: 'POSt',
+					type: 'POST',
 					url: self.domain + self.apis.bookmark,
 					data: {
 						datasource: self.datasource,
@@ -1882,28 +2083,31 @@ jQuery(document).ready(function($) {
 					self.setItem('bookmarks_' + self.datasource, bookmark_id);
 					self.bookmark_addId = bookmark_id;
 					self.getBookmarkItems();
+					self.getBookmarks();
 					self.queryid = '';
 					self.queryString = '';
 					self.response.result = '';
 					self.bookmark_id = bookmark_id;
 					self.tab = 'bookmark';
-					// $('#bookmark').modal('show');
 				}).fail(function(xhr, status, error) {
 					console.log('error');
 				});
 			},
 			delBookmarkItem: function(bookmark_id) {
 				var self = this;
-				self.delItem('bookmarks_' + self.datasource, String(bookmark_id));
+				var is_localstorage = self.is_localstorage;
+				var config = $.param({
+					datasource: self.datasource,
+					engine: self.engine,
+					bookmark_id: bookmark_id,
+				});
+				is_localstorage && self.delItem('bookmarks_' + self.datasource, String(bookmark_id));
 				$.ajax({
 					type: 'DELETE',
-					url: self.domain + self.apis.bookmark.format({
-						datasource: self.datasource,
-						engine: self.engine,
-					}) + '&bookmark_id=' + bookmark_id,
+					url: self.domain + self.apis.bookmark + '?' + config,
 					timeout: 300000,
 				}).done(function(data) {
-					self.is_localstorage && self.getBookmarkItems();
+					self.getBookmarks();
 				}).fail(function(xhr, status, error) {
 				});
 			},
@@ -1957,6 +2161,10 @@ jQuery(document).ready(function($) {
 					localStorage.setItem('histories_' + self.datasource, self.input_query);
 					self.getHistories();
 				}
+			},
+			trm: function(action, label) {
+				var self = this;
+				var category = self.datasource_engine;
 			},
 			linkDetail: function(val) {
 				var self = this;
@@ -2036,7 +2244,8 @@ jQuery(document).ready(function($) {
 				if (val) {
 					var dt = val.split('+');
 					var d = Date.create(dt[0]);
-					return d.isToday() ? d.format('{24hr}:{mm}') : d.relative();
+					return d.relative();
+					// return d.isToday() ? d.format('{24hr}:{mm}') : d.relative();
 				}
 			},
 			humanize: function(val) {
@@ -2180,6 +2389,7 @@ jQuery(document).ready(function($) {
 			theme: function(val) {
 				var self = this;
 				localStorage.setItem('theme', val);
+				self.trm('theme', val);
 			},
 			setting: function(val) {
 				var self = this;
@@ -2187,7 +2397,6 @@ jQuery(document).ready(function($) {
 			},
 			desktopNotification: function(val) {
 				var self = this;
-				val && Push.Permission.request();
 				localStorage.setItem('desktopNotification', Number(val));
 			},
 			rememberDatasource: function(val) {
@@ -2222,12 +2431,6 @@ jQuery(document).ready(function($) {
 			queryid: function(val) {
 				var self = this;
 				self.bookmark_addId = false;
-			},
-			bookmarks: function(vals, oldVals) {
-				var self = this;
-				if (vals.length > oldVals.length) {
-					self.getBookmarks();
-				}
 			},
 			running_queries: function(val) {
 				var self = this;

@@ -1,5 +1,5 @@
 yanagishima = {
-	version: '9.0',
+	version: '10.0',
 	sitename: 'yanagishima',
 	domain: '',
 	apis: {
@@ -34,6 +34,7 @@ yanagishima = {
 		hivePartition: '/hivePartition',
 		queryHistoryUser: '/queryHistoryUser?datasource={datasource}&engine={engine}',
 		bookmarkUser: '/bookmarkUser',
+		comment: '/comment',
 	},
 	links: {
 		about_this: 'https://github.com/yanagishima/yanagishima/blob/master/README.md',
