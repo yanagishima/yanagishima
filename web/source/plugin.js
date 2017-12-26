@@ -178,7 +178,7 @@ Vue.component('autolink', {
 		result: function() {
 			var self = this;
 			var content= self.content;
-			return content.replace(/((http|https|ftp)(:\/\/[-_.!~*\'()a-zA-Z0-9;\/?:\@&=+\$,%#]+))$/g, '<a href="$1" target="_blank">$1</a>');
+			return content.replace(/((http|https|ftp)(:\/\/[-_.!~*\'()a-zA-Z0-9;\/?:\@&=+\$,%#]+))/g, '<a href="$1" target="_blank">$1</a>');
 		}
 	}
 });
