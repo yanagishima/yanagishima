@@ -2655,13 +2655,13 @@ jQuery(document).ready(function($) {
 			},
 			extractDate: function(val) {
 				if (val) {
-					var dt = val.split('+');
+					var dt = val.split(/[+-]/);
 					return Date.create(dt[0]).format('{yyyy}/{MM}/{dd} {24hr}:{mm}:{ss}');
 				}
 			},
 			relativeDate: function(val) {
 				if (val) {
-					var dt = val.split('+');
+					var dt = val.split(/[+-]/);
 					var d = Date.create(dt[0]);
 					return d.relative();
 					// return d.isToday() ? d.format('{24hr}:{mm}') : d.relative();
