@@ -271,9 +271,9 @@ public class PrestoServiceImpl implements PrestoService {
                             }
                         }
                         try {
-                            csvPrinter.printRecord(row);
+                            csvPrinter.printRecord(columnDataList);
                             lineNumber++;
-                            resultBytes += row.toString().getBytes(StandardCharsets.UTF_8).length;
+                            resultBytes += columnDataList.toString().getBytes(StandardCharsets.UTF_8).length;
                             if(resultBytes > maxResultFileByteSize) {
                                 String message = String.format("Result file size exceeded %s bytes. queryId=%s, datasource=%s", maxResultFileByteSize, queryId, datasource);
                                 storeError(db, datasource, "presto", client.current().getId(), query, userName, message);
