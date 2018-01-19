@@ -36,7 +36,8 @@ public class ShareCsvDownloadServlet extends HttpServlet {
             publishOptional.ifPresent(publish -> {
                 String datasource = publishOptional.get().getDatasource();
                 String queryid = publishOptional.get().getQueryId();
-                DownloadUtil.csvDownload(response, fileName, datasource, queryid);
+                Optional<String> encodeOptional = Optional.ofNullable(request.getParameter("encode"));
+                DownloadUtil.csvDownload(response, fileName, datasource, queryid, encodeOptional.orElse("Shift_JIS"));
             });
         });
 

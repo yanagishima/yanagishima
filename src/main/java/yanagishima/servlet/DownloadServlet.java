@@ -50,7 +50,8 @@ public class DownloadServlet extends HttpServlet {
                     }
                 }
             }
-            DownloadUtil.tsvDownload(response, fileName, datasource, queryid);
+            Optional<String> encodeOptional = Optional.ofNullable(request.getParameter("encode"));
+            DownloadUtil.tsvDownload(response, fileName, datasource, queryid, encodeOptional.orElse("UTF-8"));
         });
 
     }

@@ -36,7 +36,8 @@ public class ShareDownloadServlet extends HttpServlet {
             publishOptional.ifPresent(publish -> {
                 String datasource = publishOptional.get().getDatasource();
                 String queryid = publishOptional.get().getQueryId();
-                DownloadUtil.tsvDownload(response, fileName, datasource, queryid);
+                Optional<String> encodeOptional = Optional.ofNullable(request.getParameter("encode"));
+                DownloadUtil.tsvDownload(response, fileName, datasource, queryid, encodeOptional.orElse("UTF-8"));
             });
         });
     }

@@ -50,7 +50,8 @@ public class CsvDownloadServlet extends HttpServlet {
                     }
                 }
             }
-            DownloadUtil.csvDownload(response, fileName, datasource, queryid);
+            Optional<String> encodeOptional = Optional.ofNullable(request.getParameter("encode"));
+            DownloadUtil.csvDownload(response, fileName, datasource, queryid, encodeOptional.orElse("Shift_JIS"));
         });
 
     }
