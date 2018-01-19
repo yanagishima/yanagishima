@@ -2,6 +2,7 @@ package yanagishima.servlet;
 
 import com.facebook.presto.sql.SqlFormatter;
 import com.facebook.presto.sql.parser.ParsingException;
+import com.facebook.presto.sql.parser.ParsingOptions;
 import com.facebook.presto.sql.parser.SqlParser;
 import com.facebook.presto.sql.tree.Statement;
 import org.slf4j.Logger;
@@ -36,7 +37,7 @@ public class FormatSqlServlet extends HttpServlet {
 			queryOptional.ifPresent(query -> {
 				try {
 					SqlParser sqlParser = new SqlParser();
-					Statement statement = sqlParser.createStatement(query);
+					Statement statement = sqlParser.createStatement(query, new ParsingOptions());
 					String formattedQuery = SqlFormatter.formatSql(statement, Optional.empty());
 					retVal.put("formattedQuery", formattedQuery);
 				} catch (ParsingException e) {

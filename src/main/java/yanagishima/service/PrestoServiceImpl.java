@@ -1,6 +1,7 @@
 package yanagishima.service;
 
 import com.facebook.presto.client.*;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import io.airlift.units.DataSize;
 import io.airlift.units.Duration;
@@ -35,6 +36,7 @@ import static com.facebook.presto.client.OkHttpUtil.basicAuth;
 import static com.facebook.presto.client.OkHttpUtil.setupTimeouts;
 import static com.google.common.base.Preconditions.checkArgument;
 import static java.lang.String.format;
+import static java.util.Collections.emptyMap;
 import static java.util.concurrent.TimeUnit.MINUTES;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static yanagishima.util.DbUtil.insertQueryHistory;
@@ -67,7 +69,7 @@ public class PrestoServiceImpl implements PrestoService {
     public String doQueryAsync(String datasource, String query, String userName, Optional<String> prestoUser, Optional<String> prestoPassword) {
         StatementClient client = getStatementClient(datasource, query, userName, prestoUser, prestoPassword);
         executorService.submit(new Task(datasource, query, client, userName));
-        return client.current().getId();
+        return client.currentStatusInfo().getId();
     }
 
     public class Task implements Runnable {
@@ -111,7 +113,7 @@ public class PrestoServiceImpl implements PrestoService {
         for(String prestoSecretKeyword : prestoSecretKeywords) {
             if(query.indexOf(prestoSecretKeyword) != -1) {
                 String message = "query error occurs";
-                storeError(db, datasource, "presto", client.current().getId(), query, userName, message);
+                storeError(db, datasource, "presto", client.currentStatusInfo().getId(), query, userName, message);
                 throw new RuntimeException(message);
             }
         }
@@ -126,7 +128,7 @@ public class PrestoServiceImpl implements PrestoService {
                     for(String partitionKey : partitionKeys) {
                         if(query.indexOf(partitionKey) == -1) {
                             String message = String.format("If you query %s, you must specify %s in where clause", table, partitionKey);
-                            storeError(db, datasource, "presto", client.current().getId(), query, userName, message);
+                            storeError(db, datasource, "presto", client.currentStatusInfo().getId(), query, userName, message);
                             throw new RuntimeException(message);
                         }
                     }
@@ -136,10 +138,10 @@ public class PrestoServiceImpl implements PrestoService {
 
         Duration queryMaxRunTime = new Duration(this.yanagishimaConfig.getQueryMaxRunTimeSeconds(datasource), TimeUnit.SECONDS);
         long start = System.currentTimeMillis();
-        while (client.isValid() && (client.current().getData() == null)) {
+        while (client.isValid() && (client.currentData().getData() == null)) {
             client.advance();
             if(System.currentTimeMillis() - start > queryMaxRunTime.toMillis()) {
-                String queryId = client.current().getId();
+                String queryId = client.currentStatusInfo().getId();
                 String message = format("Query failed (#%s) in %s: Query exceeded maximum time limit of %s", queryId, datasource, queryMaxRunTime.toString());
                 storeError(db, datasource, "presto", queryId, query, userName, message);
                 throw new RuntimeException(message);
@@ -148,7 +150,7 @@ public class PrestoServiceImpl implements PrestoService {
 
         PrestoQueryResult prestoQueryResult = new PrestoQueryResult();
         if ((!client.isFailed()) && (!client.isGone()) && (!client.isClosed())) {
-            QueryResults results = client.isValid() ? client.current() : client.finalResults();
+            QueryStatusInfo results = client.isValid() ? client.currentStatusInfo() : client.finalStatusInfo();
             String queryId = results.getId();
             if (results.getColumns() == null) {
                 throw new QueryErrorException(new SQLException(format("Query %s has no columns\n", results.getId())));
@@ -189,7 +191,7 @@ public class PrestoServiceImpl implements PrestoService {
         } else if (client.isGone()) {
             throw new RuntimeException("Query is gone (server restarted?)");
         } else if (client.isFailed()) {
-            QueryResults results = client.finalResults();
+            QueryStatusInfo results = client.finalStatusInfo();
             if(prestoQueryResult.getQueryId() == null) {
                 String queryId = results.getId();
                 String message = format("Query failed (#%s) in %s: %s", queryId, datasource, results.getError().getMessage());
@@ -248,7 +250,7 @@ public class PrestoServiceImpl implements PrestoService {
             csvPrinter.printRecord(columns);
             lineNumber++;
             while (client.isValid()) {
-                Iterable<List<Object>> data = client.current().getData();
+                Iterable<List<Object>> data = client.currentData().getData();
                 if (data != null) {
                     for(List<Object> row : data) {
                         List<String> columnDataList = new ArrayList<>();
@@ -276,7 +278,7 @@ public class PrestoServiceImpl implements PrestoService {
                             resultBytes += columnDataList.toString().getBytes(StandardCharsets.UTF_8).length;
                             if(resultBytes > maxResultFileByteSize) {
                                 String message = String.format("Result file size exceeded %s bytes. queryId=%s, datasource=%s", maxResultFileByteSize, queryId, datasource);
-                                storeError(db, datasource, "presto", client.current().getId(), query, userName, message);
+                                storeError(db, datasource, "presto", client.currentStatusInfo().getId(), query, userName, message);
                                 throw new RuntimeException(message);
                             }
                         } catch (IOException e) {
@@ -316,9 +318,9 @@ public class PrestoServiceImpl implements PrestoService {
 
         if (prestoUser.isPresent() && prestoPassword.isPresent()) {
             ClientSession clientSession = new ClientSession(
-                    URI.create(prestoCoordinatorServer), prestoUser.get(), source, null, catalog,
+                    URI.create(prestoCoordinatorServer), prestoUser.get(), source, ImmutableSet.of(), null, catalog,
                     schema, TimeZone.getDefault().getID(), Locale.getDefault(),
-                    new HashMap<String, String>(), null, false, new Duration(2, MINUTES));
+                    new HashMap<String, String>(), emptyMap(), null, false, new Duration(2, MINUTES));
             checkArgument(clientSession.getServer().getScheme().equalsIgnoreCase("https"),
                     "Authentication using username/password requires HTTPS to be enabled");
             OkHttpClient.Builder clientBuilder = httpClient.newBuilder();
@@ -334,14 +336,14 @@ public class PrestoServiceImpl implements PrestoService {
         }
 
         ClientSession clientSession = new ClientSession(
-                URI.create(prestoCoordinatorServer), user, source, null, catalog,
+                URI.create(prestoCoordinatorServer), user, source, ImmutableSet.of(), null, catalog,
                 schema, TimeZone.getDefault().getID(), Locale.getDefault(),
-                new HashMap<String, String>(), null, false, new Duration(2, MINUTES));
+                new HashMap<String, String>(), emptyMap(), null, false, new Duration(2, MINUTES));
 
         return new StatementClient(httpClient, clientSession, query);
     }
 
-    private QueryErrorException resultsException(QueryResults results, String datasource) {
+    private QueryErrorException resultsException(QueryStatusInfo results, String datasource) {
         QueryError error = results.getError();
         String message = format("Query failed (#%s) in %s: %s", results.getId(), datasource, error.getMessage());
         Throwable cause = (error.getFailureInfo() == null) ? null : error.getFailureInfo().toException();
