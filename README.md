@@ -140,10 +140,10 @@ yanagishima is a Web UI for presto/hive.
   ```
 
 # Quick Start
+You can download a binary file github release.
 ```
-wget https://bintray.com/artifact/download/wyukawa/generic/yanagishima-11.0.zip
-unzip yanagishima-11.0.zip
-cd yanagishima-11.0
+unzip yanagishima-xx.zip
+cd yanagishima-xx
 vim conf/yanagishima.properties
 nohup bin/yanagishima-start.sh >y.log 2>&1 &
 ```
