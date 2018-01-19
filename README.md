@@ -139,15 +139,28 @@ yanagishima is a Web UI for presto/hive.
   If you confirmed, drop table bookmark_old;
   ```
 
-# Quick Start
-You can download a binary file github release.
+# Requirements
+
+* Java 8
+
+## Quick Start
 ```
-unzip yanagishima-xx.zip
-cd yanagishima-xx
+git clone https://github.com/yanagishima/yanagishima.git
+cd yanagishima
+git checkout -b 11.0 refs/tags/11.0
+./gradlew distZip
+cd build/distributions
+unzip yanagishima-11.0.zip
+cd yanagishima-11.0
 vim conf/yanagishima.properties
 nohup bin/yanagishima-start.sh >y.log 2>&1 &
 ```
 see http://localhost:8080/
+
+# Stop
+```
+bin/yanagishima-shutdown.sh
+```
 
 # Configuration
 
@@ -258,26 +271,6 @@ If you want to deny to access without usename, please specify ```user.require=tr
 If you set ```check.datasource=true``` and datasource list which you want to allow on HTTP header ```X-yanagishima-datasources``` through your proxy, authorization feature is enabled.
 
 For example, if there are three datasources(aaa and bbb and ccc) and ```X-yanagishima-datasources=aaa,bbb``` is set, user can't access to datasource ccc.
-
-# Start
-```
-bin/yanagishima-start.sh
-```
-
-# Stop
-```
-bin/yanagishima-shutdown.sh
-```
-
-# Requirements
-
-* Java 8
-
-## Build yanagishima
-
-```
-./gradlew distZip
-```
 
 ## How to upgrade
 If you want to ugprade yanagishima from xxx to yyyy, steps are as follows
