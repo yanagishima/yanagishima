@@ -378,6 +378,7 @@ jQuery(document).ready(function($) {
 					}
 				}
 			});
+
 			// Get datasources
 			$.ajax({
 				type: 'GET',
@@ -414,7 +415,6 @@ jQuery(document).ready(function($) {
 			$(document).on('shown.bs.modal', '.modal', function(e) {
 				self.is_modal = true;
 				self.focus = 0;
-				self.trm('modal', $(this).attr('id'));
 			}).on('hidden.bs.modal', function(e) {
 				self.is_modal = false;
 				self.focus = 1;
@@ -791,7 +791,6 @@ jQuery(document).ready(function($) {
 					}
 				}).fail(function(xhr, status, error) {
 				});
-				self.trm('result', 'publish');
 			},
 			viewError: function() {
 				var self = this;
@@ -965,20 +964,23 @@ jQuery(document).ready(function($) {
 				self.response.table = [];
 				if (q === '') {
 					return false;
-				} else {
-					self.trm('table_search', q);
 				}
+				var params = Object.merge(
+					{
+						datasource: self.datasource,
+						query: "{prefix}SELECT table_catalog, table_schema, table_name, table_type FROM {catalog}.information_schema.tables WHERE table_name LIKE '%{q}%'".format({
+							prefix: self.hiddenQuery_prefix,
+							catalog: self.catalog,
+							q: q
+						}),
+					},
+					self.auth_info,
+				);
 				self.loading.table = true;
 				$.ajax({
 					type: 'POST',
 					url: self.domain + self.apis.presto,
-					data: {
-						datasource: self.datasource,
-						query: "SELECT table_catalog, table_schema, table_name, table_type FROM {catalog}.information_schema.tables WHERE table_name LIKE '%{q}%'".format({
-							catalog: self.catalog,
-							q: q
-						})
-					}
+					data: params,
 				}).done(function(data) {
 					self.response.table = data.results;
 					self.loading.table = false;
@@ -1026,7 +1028,6 @@ jQuery(document).ready(function($) {
 					return false;
 				}
 				self.initComment();
-				self.trm('run', query);
 
 				// variables expansion
 				if (self.variables.length) {
@@ -1046,7 +1047,6 @@ jQuery(document).ready(function($) {
 						return false;
 					} else {
 						self.input_query = query;
-						self.trm('variables', self.variables.length);
 					}
 				}
 
@@ -1273,7 +1273,6 @@ jQuery(document).ready(function($) {
 				var snippet = self.snippets[self.snippet].sql;
 				!self.is_presto && (snippet = snippet.remove('{catalog}.'));
 				self.input_query = snippet.format(config);
-				self.trm('snippet', self.snippet);
 			},
 			setWhere: function(index) {
 				var self = this;
@@ -1293,7 +1292,6 @@ jQuery(document).ready(function($) {
 				var template = "SELECT * FROM {catalog}.{schema}.{table} WHERE {condition} LIMIT 100";
 				var where = self.is_presto ? template : template.remove('{catalog}.');
 				self.input_query = where.format(config);
-				self.trm('where', self.input_query);
 			},
 			runSnippet: function() {
 				var self = this;
@@ -2162,10 +2160,6 @@ jQuery(document).ready(function($) {
 					self.getHistories();
 				}
 			},
-			trm: function(action, label) {
-				var self = this;
-				var category = self.datasource_engine;
-			},
 			linkDetail: function(val) {
 				var self = this;
 				if (self.is_presto) {
@@ -2236,15 +2230,14 @@ jQuery(document).ready(function($) {
 			},
 			extractDate: function(val) {
 				if (val) {
-					var dt = val.split('+');
-					return Date.create(dt[0]).format('{yyyy}/{MM}/{dd} {24hr}:{mm}:{ss}');
+					var dt = val.first(19);
+					return Date.create(dt).format('{yyyy}/{MM}/{dd} {24hr}:{mm}:{ss}');
 				}
 			},
 			relativeDate: function(val) {
 				if (val) {
-					var dt = val.split('+');
-					var d = Date.create(dt[0]);
-					return d.relative();
+					var dt = val.first(19);
+					return Date.create(dt).relative();
 					// return d.isToday() ? d.format('{24hr}:{mm}') : d.relative();
 				}
 			},
@@ -2389,7 +2382,6 @@ jQuery(document).ready(function($) {
 			theme: function(val) {
 				var self = this;
 				localStorage.setItem('theme', val);
-				self.trm('theme', val);
 			},
 			setting: function(val) {
 				var self = this;

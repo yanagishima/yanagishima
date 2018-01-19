@@ -810,7 +810,12 @@
 									<template v-if="response.table.length"><strong class="ml-2">{{response.table.length}}</strong> results</template>
 								<!-- /card-header --></div>
 								<div class="list-group list-group-flush">
-									<template v-if="is_presto">
+									<template v-if="loading.table">
+										<div class="list-group-item">
+											<i class="fa fa-fw fa-spinner fa-pulse mr-1"></i>Searching
+										<!-- /alert --></div>
+									</template>
+									<template v-else>
 										<template v-if="response.table.length">
 											<a href="#" class="list-group-item ellipsis" v-for="items in response.table" @click.prevent="catalog = items[0], schema = items[1], table = items[2], table_type = items[3]" :class="{active: items[0] == catalog && items[1] == schema && items[2] == table, 'table-view': items[3] == 'VIEW'}">
 												<button class="btn btn-sm btn-secondary clip" v-clipboard="[items[0], items[1], items[2]].join('.')"><i class="fa fa-fw fa-clipboard"></i></button>
@@ -824,8 +829,6 @@
 										<template v-else>
 											<a href="#" class="list-group-item disabled">(Not Found)</a>
 										</template>
-									</template>
-									<template v-else>
 									</template>
 								<!-- /list-group --></div>
 							<!-- /card --></div>

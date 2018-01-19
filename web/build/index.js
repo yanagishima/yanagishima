@@ -70,14 +70,14 @@
 /* 0 */
 /***/ (function(module, exports) {
 
-module.exports = "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMjAuODcgMTA0LjY3Ij48ZGVmcz48c3R5bGU+LmNscy0xe2ZpbGw6I2ZmZjtzdHJva2U6I2ZmZjtzdHJva2UtbWl0ZXJsaW1pdDo1O3N0cm9rZS13aWR0aDowLjVweDt9PC9zdHlsZT48L2RlZnM+PHRpdGxlPuOCouOCu+ODg+ODiCAyPC90aXRsZT48ZyBpZD0i44Os44Kk44Ok44O8XzIiIGRhdGEtbmFtZT0i44Os44Kk44Ok44O8IDIiPjxnIGlkPSJkYXJrIj48cGF0aCBpZD0ieWFuYWdpc2hpbWEiIGNsYXNzPSJjbHMtMSIgZD0iTTYwLjQzLDM0Ljg5LDQwLjQzLjI1aDQwWk0yMC40My4yNUguNDNsNDAsNjkuMjgsMTAtMTcuMzJabTgwLDAtMzAsNTItMjAsMzQuNjQsMTAsMTcuMzJMMTIwLjQzLjI1WiIvPjwvZz48L2c+PC9zdmc+"
+module.exports = "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMjAuODcgMTA0LjY3Ij48ZGVmcz48c3R5bGU+LmNscy0xe2ZpbGw6I2ZmZjtzdHJva2U6I2ZmZjtzdHJva2UtbWl0ZXJsaW1pdDo1O3N0cm9rZS13aWR0aDowLjVweDt9PC9zdHlsZT48L2RlZnM+PHBhdGggaWQ9InlhbmFnaXNoaW1hIiBjbGFzcz0iY2xzLTEiIGQ9Ik02MC40MywzNC44OSw0MC40My4yNWg0MFpNMjAuNDMuMjVILjQzbDQwLDY5LjI4LDEwLTE3LjMyWm04MCwwLTMwLDUyLTIwLDM0LjY0LDEwLDE3LjMyTDEyMC40My4yNVoiLz48L3N2Zz4="
 
 /***/ }),
 /* 1 */
 /***/ (function(module, exports) {
 
 yanagishima = {
-	version: '10.0',
+	version: '11.0',
 	sitename: 'yanagishima',
 	domain: '',
 	apis: {
@@ -91,16 +91,16 @@ yanagishima = {
 		history: '/history?datasource={datasource}&queryid={queryid}',
 		historyStatus: '/historyStatus?datasource={datasource}&queryid={queryid}',
 		queryHistory: '/queryHistory?datasource={datasource}',
-		download: '/download?datasource={datasource}&queryid={queryid}',
-		csvdownload: '/csvdownload?datasource={datasource}&queryid={queryid}',
+		download: '/download?datasource={datasource}&queryid={queryid}&encode=UTF-8',
+		csvdownload: '/csvdownload?datasource={datasource}&queryid={queryid}&encode=UTF-8',
 		publish: '/publish',
 		bookmark: '/bookmark',
 		format: '/format',
 		kill: '/kill',
 		detail: '/queryDetail?datasource={datasource}&queryid={queryid}',
 		shareHistory: '/share/shareHistory?publish_id={publish_id}',
-		shareDownload: '/share/download?publish_id={publish_id}',
-		shareCsvDownload: '/share/csvdownload?publish_id={publish_id}',
+		shareDownload: '/share/download?publish_id={publish_id}&encode=UTF-8',
+		shareCsvDownload: '/share/csvdownload?publish_id={publish_id}&encode=UTF-8',
 		toValuesQuery: '/toValuesQuery',
 		hive: '/hive',
 		hiveAsync: '/hiveAsync',
@@ -797,6 +797,7 @@ jQuery(document).ready(function($) {
 					}
 				}
 			});
+
 			// Get datasources
 			$.ajax({
 				type: 'GET',
@@ -833,7 +834,6 @@ jQuery(document).ready(function($) {
 			$(document).on('shown.bs.modal', '.modal', function(e) {
 				self.is_modal = true;
 				self.focus = 0;
-				self.trm('modal', $(this).attr('id'));
 			}).on('hidden.bs.modal', function(e) {
 				self.is_modal = false;
 				self.focus = 1;
@@ -1210,7 +1210,6 @@ jQuery(document).ready(function($) {
 					}
 				}).fail(function(xhr, status, error) {
 				});
-				self.trm('result', 'publish');
 			},
 			viewError: function() {
 				var self = this;
@@ -1384,20 +1383,23 @@ jQuery(document).ready(function($) {
 				self.response.table = [];
 				if (q === '') {
 					return false;
-				} else {
-					self.trm('table_search', q);
 				}
+				var params = Object.merge(
+					{
+						datasource: self.datasource,
+						query: "{prefix}SELECT table_catalog, table_schema, table_name, table_type FROM {catalog}.information_schema.tables WHERE table_name LIKE '%{q}%'".format({
+							prefix: self.hiddenQuery_prefix,
+							catalog: self.catalog,
+							q: q
+						}),
+					},
+					self.auth_info,
+				);
 				self.loading.table = true;
 				$.ajax({
 					type: 'POST',
 					url: self.domain + self.apis.presto,
-					data: {
-						datasource: self.datasource,
-						query: "SELECT table_catalog, table_schema, table_name, table_type FROM {catalog}.information_schema.tables WHERE table_name LIKE '%{q}%'".format({
-							catalog: self.catalog,
-							q: q
-						})
-					}
+					data: params,
 				}).done(function(data) {
 					self.response.table = data.results;
 					self.loading.table = false;
@@ -1445,7 +1447,6 @@ jQuery(document).ready(function($) {
 					return false;
 				}
 				self.initComment();
-				self.trm('run', query);
 
 				// variables expansion
 				if (self.variables.length) {
@@ -1465,7 +1466,6 @@ jQuery(document).ready(function($) {
 						return false;
 					} else {
 						self.input_query = query;
-						self.trm('variables', self.variables.length);
 					}
 				}
 
@@ -1692,7 +1692,6 @@ jQuery(document).ready(function($) {
 				var snippet = self.snippets[self.snippet].sql;
 				!self.is_presto && (snippet = snippet.remove('{catalog}.'));
 				self.input_query = snippet.format(config);
-				self.trm('snippet', self.snippet);
 			},
 			setWhere: function(index) {
 				var self = this;
@@ -1712,7 +1711,6 @@ jQuery(document).ready(function($) {
 				var template = "SELECT * FROM {catalog}.{schema}.{table} WHERE {condition} LIMIT 100";
 				var where = self.is_presto ? template : template.remove('{catalog}.');
 				self.input_query = where.format(config);
-				self.trm('where', self.input_query);
 			},
 			runSnippet: function() {
 				var self = this;
@@ -2581,10 +2579,6 @@ jQuery(document).ready(function($) {
 					self.getHistories();
 				}
 			},
-			trm: function(action, label) {
-				var self = this;
-				var category = self.datasource_engine;
-			},
 			linkDetail: function(val) {
 				var self = this;
 				if (self.is_presto) {
@@ -2807,7 +2801,6 @@ jQuery(document).ready(function($) {
 			theme: function(val) {
 				var self = this;
 				localStorage.setItem('theme', val);
-				self.trm('theme', val);
 			},
 			setting: function(val) {
 				var self = this;
