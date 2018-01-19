@@ -39,6 +39,10 @@ yanagishima is a Web UI for presto/hive.
 * comment about query
 
 # Versions
+* 11.0
+  * fix timezone bug
+  * fix exponential notation bug
+  * support UTF-8 encoding for CSV
 * 10.0
   * add timeline tab
 * 9.0
@@ -137,9 +141,9 @@ yanagishima is a Web UI for presto/hive.
 
 # Quick Start
 ```
-wget https://bintray.com/artifact/download/wyukawa/generic/yanagishima-10.0.zip
-unzip yanagishima-10.0.zip
-cd yanagishima-10.0
+wget https://bintray.com/artifact/download/wyukawa/generic/yanagishima-11.0.zip
+unzip yanagishima-11.0.zip
+cd yanagishima-11.0
 vim conf/yanagishima.properties
 nohup bin/yanagishima-start.sh >y.log 2>&1 &
 ```
