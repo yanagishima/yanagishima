@@ -30,6 +30,7 @@ public class PrestoServletModule extends ServletModule {
 		bind(TableListServlet.class);
 		bind(PrestoPartitionServlet.class);
 		bind(CommentServlet.class);
+		bind(ConvertPrestoServlet.class);
 
 		serve("/presto").with(PrestoServlet.class);
 		serve("/prestoAsync").with(PrestoAsyncServlet.class);
@@ -55,6 +56,7 @@ public class PrestoServletModule extends ServletModule {
 		serve("/tableList").with(TableListServlet.class);
 		serve("/prestoPartition").with(PrestoPartitionServlet.class);
 		serve("/comment").with(CommentServlet.class);
+		serve("/convertPresto").with(ConvertPrestoServlet.class);
 
 	}
 }
