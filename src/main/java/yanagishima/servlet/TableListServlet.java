@@ -61,6 +61,12 @@ public class TableListServlet extends HttpServlet {
                 }
             }
 
+            String prestoCoordinatorServer = yanagishimaConfig.getPrestoCoordinatorServerOrNull(datasource);
+            if(prestoCoordinatorServer == null) {
+                JsonUtil.writeJSON(response, retVal);
+                return;
+            }
+
             String catalog = HttpRequestUtil.getParam(request, "catalog");
             String userName = null;
             Optional<String> prestoUser = Optional.ofNullable(request.getParameter("user"));

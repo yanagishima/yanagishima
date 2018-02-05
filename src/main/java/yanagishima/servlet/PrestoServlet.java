@@ -83,6 +83,11 @@ public class PrestoServlet extends HttpServlet {
 				}
 				try {
 					String datasource = HttpRequestUtil.getParam(request, "datasource");
+					String prestoCoordinatorServer = yanagishimaConfig.getPrestoCoordinatorServerOrNull(datasource);
+					if(prestoCoordinatorServer == null) {
+						JsonUtil.writeJSON(response, retVal);
+						return;
+					}
 					if(yanagishimaConfig.isCheckDatasource()) {
 						if(!AccessControlUtil.validateDatasource(request, datasource)) {
 							try {

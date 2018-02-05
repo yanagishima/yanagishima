@@ -53,6 +53,8 @@ public class QueryServlet extends HttpServlet {
 	protected void doPost(HttpServletRequest request,
 			HttpServletResponse response) throws ServletException, IOException {
 
+		response.setContentType("application/json");
+		PrintWriter writer = response.getWriter();
 		String datasource = HttpRequestUtil.getParam(request, "datasource");
 		if(yanagishimaConfig.isCheckDatasource()) {
 			if(!AccessControlUtil.validateDatasource(request, datasource)) {
@@ -64,10 +66,11 @@ public class QueryServlet extends HttpServlet {
 				}
 			}
 		}
-		String prestoCoordinatorServer = yanagishimaConfig
-				.getPrestoCoordinatorServer(datasource);
-		response.setContentType("application/json");
-		PrintWriter writer = response.getWriter();
+		String prestoCoordinatorServer = yanagishimaConfig.getPrestoCoordinatorServerOrNull(datasource);
+		if(prestoCoordinatorServer == null) {
+			writer.println("[]");
+			return;
+		}
 
 		String originalJson = null;
 		Request prestoRequest = new Request.Builder().url(prestoCoordinatorServer + "/v1/query").build();

@@ -21,6 +21,10 @@ public class YanagishimaConfig {
 		return PropertiesUtil.getParam(properties, "presto.coordinator.server." + datasource);
 	}
 
+	public String getPrestoCoordinatorServerOrNull(String datasource) {
+		return properties.getProperty("presto.coordinator.server." + datasource);
+	}
+
 	public String getPrestoRedirectServer(String datasource) {
 		String redirectStr = properties.getProperty("presto.redirect.server." + datasource);
 		if(redirectStr == null) {
