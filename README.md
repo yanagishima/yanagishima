@@ -37,8 +37,17 @@ yanagishima is a Web UI for presto/hive.
 * pretty print for json/map data
 * enable to compare query result
 * comment about query
+* convert hive/presto query
+* support graphviz to visualize presto explain result
 
 # Versions
+* 12.0
+  * convert hive/presto query
+  * support graphviz to visualize presto explain result
+  * add tooltip to ```Set``` in History/Bookmark tab
+  * add new presto functions(0.196) to completion list
+  * fix bookmark bug
+  * fix presto authentication failed bug
 * 11.0
   * fix timezone bug
   * fix exponential notation bug
@@ -147,11 +156,11 @@ yanagishima is a Web UI for presto/hive.
 ```
 git clone https://github.com/yanagishima/yanagishima.git
 cd yanagishima
-git checkout -b 11.0 refs/tags/11.0
+git checkout -b 12.0 refs/tags/12.0
 ./gradlew distZip
 cd build/distributions
-unzip yanagishima-11.0.zip
-cd yanagishima-11.0
+unzip yanagishima-12.0.zip
+cd yanagishima-12.0
 vim conf/yanagishima.properties
 nohup bin/yanagishima-start.sh >y.log 2>&1 &
 ```

@@ -6,10 +6,11 @@
 <link href="https://fonts.googleapis.com/css?family=Droid+Sans" rel="stylesheet">
 <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet">
 <link href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/2.1.3/toastr.min.css" rel="stylesheet">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/lity/2.3.0/lity.min.css" rel="stylesheet">
 <style>.unload {display: none;}</style>
 </head>
 <body>
-<div id="page" class="unload" :class="'datasource_' + datasources.indexOf(datasource)">
+<div id="page" class="unload" :class="'datasource_' + datasource_index">
 <div id="wrapper" :class="{open: is_panel}">
 <main id="main">
 <header id="header">
@@ -208,13 +209,14 @@
 					<div class="col text-right pb-2">
 						<div id="control" class="d-inline-block">
 							<div class="btn-group ml-3">
+								<button type="button" class="btn btn-secondary px-2" @click.prevent="convertQuery()" data-toggle="tooltip" data-animation="false" title="Convert Query" :disabled="!input_query.length || loading.result"><i class="fa fa-fw fa-exchange"></i></button>
 								<button type="button" class="btn btn-secondary px-2" @click.prevent="formatQuery()" data-toggle="tooltip" data-animation="false" title="Format Query" :disabled="!input_query.length || loading.result" v-if="is_presto"><i class="fa fa-fw fa-indent"></i></button>
 								<button type="button" class="btn btn-secondary px-2" v-clipboard="input_query" data-toggle="tooltip" data-animation="false" title="Copy to Clipboard" :disabled="!input_query.length || loading.result"><i class="fa fa-fw fa-clipboard"></i></button>
 								<button type="button" class="btn btn-secondary px-2" @click.prevent="addBookmarkItem()" :disabled="!input_query.length || exist_bookmark" data-toggle="tooltip" data-animation="false" title="Add to Bookmarks"><i class="fa fa-fw fa-star-o"></i></button>
 							<!-- /btn-group --></div>
 							<div class="btn-group ml-3">
-								<button type="button" class="btn btn-primary px-4" :disabled="loading.result || !input_query.length" @click="runQuery(input_query)"><i class="fa fa-fw fa-play mr-1"></i><strong>Run</strong></button>
-								<button type="button" class="btn btn-primary" :disabled="loading.result || !input_query.length" @click="runQuery(explains.explain.sql.format(input_query))">Explain</button>
+								<button type="button" class="btn btn-primary px-4" :disabled="loading.result || !input_query.length || !datasource_index" @click="runQuery(input_query)"><i class="fa fa-fw fa-play mr-1"></i><strong>Run</strong></button>
+								<button type="button" class="btn btn-primary" :disabled="loading.result || !input_query.length || !datasource_index" @click="runQuery(explains[engine].sql.format(input_query))">Explain</button>
 								<!-- <button type="button" class="btn btn-primary" data-toggle="dropdown" :disabled="loading.result || !input_query.length"><i class="fa fa-ellipsis-v"></i></button>
 								<div class="dropdown-menu dropdown-menu-right">
 									<a class="dropdown-item" href="#" v-for="(val, key) in explains" @click.prevent="runQuery(val.sql.format(input_query))" v-if="val.engines.includes(engine)">{{key | humanize}}</a>
@@ -536,7 +538,7 @@
 								<pre class="ace-font mb-0"><highlight :sentense="items[1].escapeHTML()" :keyword="filter_history.escapeHTML()"></highlight></pre>
 							</td>
 							<td class="text-center">
-								<a href="#" class="btn btn-sm btn-secondary" @click.prevent="input_query = items[1], focus++"><i class="fa fa-fw fa-keyboard-o"></i></a>
+								<a href="#" class="btn btn-sm btn-secondary" @click.prevent="input_query = items[1], focus++" title="Set query to editor"><i class="fa fa-fw fa-keyboard-o"></i></a>
 							</td>
 							<td class="text-right overflow-visible">
 								<div class="btn-group">
@@ -590,7 +592,7 @@
 								<ace :code="item.query" readonly="true" css_class="bg-transparent"></ace>
 							</td>
 							<td class="text-center">
-								<a href="#" class="btn btn-sm btn-secondary" @click.prevent="input_query = item.query, bookmark_id = item.bookmark_id, queryid = '', queryString = '', response.result = '', focus++" data-dismiss="modal"><i class="fa fa-fw fa-keyboard-o"></i></a>
+								<a href="#" class="btn btn-sm btn-secondary" @click.prevent="input_query = item.query, bookmark_id = item.bookmark_id, queryid = '', queryString = '', response.result = '', focus++" data-dismiss="modal" title="Set query to editor"><i class="fa fa-fw fa-keyboard-o"></i></a>
 							</td>
 							<td class="text-center">
 								<a href="#" class="btn btn-sm btn-secondary" @click.prevent="response.bookmark.remove(item), delBookmarkItem(item.bookmark_id)"><i class="fa fa-fw fa-trash"></i></a>
@@ -649,7 +651,12 @@
 						</template>
 						<template v-else>
 							<template v-if="/^explain /i.test(queryString)">
-								<pre id="explain"><code v-html="explain"></code></pre>
+								<template v-if="is_presto && /^explain \(format graphviz\)/i.test(queryString)">
+									<code v-html="explain"></code>
+								</template>
+								<template v-else>
+									<pre id="explain"><code v-html="explain"></code></pre>
+								</template>
 							</template>
 							<template v-else>
 								<template v-if="/^SELECT VIEW_DEFINITION FROM hive.INFORMATION_SCHEMA.VIEWS/i.test(queryString)">
@@ -1117,51 +1124,6 @@
 		<!-- /modal-content --></div>
 	<!-- /modal-dialog --></div>
 <!-- /modal --></div>
-<div id="panel" v-if="is_panel && history_queryid">
-	<div id="panel-header" class="sticky-top" :class="'datasource_' + datasources.indexOf(datasource) + '-bgcolor'"></div>
-	<div id="panel-body" :class="is_wide ? 'container-fluid' : 'container'">
-		<div class="d-flex justify-content-between align-items-center mb-3">
-			<div>
-				<span class="mr-3" v-if="history_result.lineNumber">
-					<i class="fa fa-file-text-o" title="query ID" data-toggle="tooltip" data-animation="false" data-placement="left"></i>
-					<strong>{{history_queryid}}</strong>
-				</span>
-				<span class="mr-2" v-if="history_result.finishedTime">
-					<i class="fa fa-clock-o" title="Finished time" data-toggle="tooltip" data-animation="false" data-placement="left"></i>
-					{{history_result.finishedTime | extractDate}}
-				</span>
-				<span class="mr-2" v-if="history_result.elapsedTimeMillis">
-					<strong>{{(history_result.elapsedTimeMillis / 1000).ceil(2)}}</strong><span class="text-muted ml-1">sec</span>
-				</span>
-				<span class="mr-2" v-if="history_result.rawDataSize">
-					<strong>{{history_result.rawDataSize.remove('B')}}</strong><span class="text-muted ml-1">byte</span>
-				</span>
-				<span class="mr-2" v-if="history_result.lineNumber">
-					<strong>{{history_result.results.length | formatNumber}}</strong><template v-if="history_result.results.length != history_result.lineNumber -1"><span class="mx-1">/</span><strong>{{history_result.lineNumber -1 | formatNumber}}</strong></template><span class="text-muted ml-1">results</span>
-				</span>
-			</div>
-			<a href="#" @click.prevent="history_queryid = null">
-				<i class="fa fa-fw fa-times"></i>
-			</a>
-		</div>
-		<table class="table table-auto table-bordered table-hover table-responsive">
-			<thead>
-				<tr>
-					<th class="text-muted">line</th>
-					<th v-for="item in history_result.headers">{{item}}</th>
-				</tr>
-			</thead>
-			<tbody>
-				<tr v-for="(items, index) in history_result.results" :class="{'table-info': line == (index + 1)}" :id="'L' + (index + 1)">
-					<td class="text-right"><a href="#" @click.prevent="line = (line === (index + 1)) ? 0 : (index + 1)" class="text-muted">{{index + 1}}</a></td>
-					<td v-for="item in items">
-						<column :value="item" :disable="!is_pretty"></column>
-					</td>
-				</tr>
-			</tbody>
-		</table>
-	</div>
-<!-- /panel --></div>
 <div id="comment" class="card" :class="{conpact: !visible_comment}" v-if="!(is_panel && history_queryid) && (tab == 'result' && queryid)">
 	<div class="card-header">
 		<div class="d-flex justify-content-between align-items-center">
@@ -1264,6 +1226,8 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/favico.js/0.3.10/favico.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/2.1.3/toastr.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/push.js/1.0.5/push.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/viz.js/1.8.0/viz.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/lity/2.3.0/lity.min.js"></script>
 <script src="/index.js"></script>
 </body>
 </html>

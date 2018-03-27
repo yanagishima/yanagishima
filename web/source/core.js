@@ -127,17 +127,11 @@ jQuery(document).ready(function($) {
 					16,
 				],
 				explains: {
-					'explain': {
-						engines: ['presto', 'hive'],
+					'presto': {
+						sql: 'EXPLAIN (FORMAT GRAPHVIZ) {0}',
+					},
+					'hive': {
 						sql: 'EXPLAIN {0}',
-					},
-					'explain distributed': {
-						engines: ['presto'],
-						sql: 'EXPLAIN (TYPE DISTRIBUTED) {0}',
-					},
-					'explain analyze': {
-						engines: ['presto'],
-						sql: 'EXPLAIN ANALYZE {0}',
 					},
 				},
 
@@ -397,6 +391,7 @@ jQuery(document).ready(function($) {
 					});
 					self.datasources = datasources;
 					self.auths = auths;
+					localStorage.setItem('auths', JSON.stringify(self.auths));
 					self.engines = engines;
 				} else {
 					location.replace('/error/?403');
@@ -456,6 +451,11 @@ jQuery(document).ready(function($) {
 					self.superadminMode = true;
 					toastr.success('You can watch all queries.', 'Super Admin Mode');
 					inputs = [];
+				} else if (inputs.toString().indexOf(configs.traffic) >= 0) {
+					inputs = [];
+					self.getTraffic();
+					$('#traffic').modal('show');
+					inputs = [];
 				}
 			});
 		},
@@ -479,7 +479,8 @@ jQuery(document).ready(function($) {
 			},
 			auth_info: function() {
 				var self = this;
-				return !self.auths[self.datasource] ? {} : {
+				var auths = JSON.parse(localStorage.getItem('auths'));
+				return !auths[self.datasource] ? {} : {
 					user: self.auth_user,
 					password: self.auth_pass
 				};
@@ -493,6 +494,27 @@ jQuery(document).ready(function($) {
 			datasource_engine: function() {
 				var self = this;
 				return [self.datasource, self.engine].join('_');
+			},
+			datasource_index: function() {
+				var self = this;
+				var i = self.datasources.indexOf(self.datasource)
+				return (i === -1) ? 0 : (i + 1);
+			},
+			sortedUsers: function() {
+				var self = this;
+				return self.traffic.users.sortBy(function(n) {
+					return self.traffic_sort == 'elapsed' ? n.etimes.sum() : n.counts.sum();
+				}, true);
+			},
+			sumUsers: function() {
+				var self = this;
+				return self.traffic.users.length
+			},
+			sumRan: function() {
+				var self = this;
+				return self.traffic.users.sum(function(n) {
+					return n.counts.sum();
+				});
 			},
 			is_error: function() {
 				return $('body').attr('id') === 'error';
@@ -631,11 +653,19 @@ jQuery(document).ready(function($) {
 			explain: function() {
 				var self = this;
 				if (self.response.result && self.response.result.results) {
-					var arr = [];
-					self.response.result.results.map(function(n) {
-						arr.push(n[0].replace(/ {4}/g, ' '));
-					});
-					return arr.join('<br>')
+					if (self.is_presto && /^EXPLAIN \(FORMAT GRAPHVIZ\)/i.test(self.queryString)) {
+						var svg = Viz(self.response.result.results[0][0]);
+						var img = '<img src="data:image/svg+xml,' + encodeURIComponent(svg) + '" class="img-fluid">';
+						var a = '<a href="#inline" data-lity>' + img + '</a>';
+						var div = '<div id="inline" style="background:#fff; overflow: auto;" class="lity-hide">' + '<img src="data:image/svg+xml,' + encodeURIComponent(svg) + '"></div>';
+						return a + div;
+					} else {
+						var arr = [];
+						self.response.result.results.map(function(n) {
+							arr.push(n[0].replace(/ {4}/g, ' '));
+						});
+						return arr.join('<br>')
+					}
 				} else {
 					return '';
 				}
@@ -1024,7 +1054,7 @@ jQuery(document).ready(function($) {
 
 				self.line = 0;
 				self.chart = 0;
-				if (self.loading.result) {
+				if (self.loading.result || !self.datasource_index) {
 					return false;
 				}
 				self.initComment();
@@ -1214,7 +1244,7 @@ jQuery(document).ready(function($) {
 						self.queryString = data.queryString;
 						self.queryid = queryid;
 						self.loading.result = false;
-						self.input_query = data.queryString.remove(/^EXPLAIN( \(TYPE DISTRIBUTED\)| \(TYPE VALIDATE\)| ANALYZE|) /i);
+						self.input_query = data.queryString.remove(/^EXPLAIN( \(TYPE DISTRIBUTED\)| \(TYPE VALIDATE\)| \(FORMAT GRAPHVIZ\)| ANALYZE|) /i);
 						self.engine = data.engine;
 						if (!data.error) {
 							if (data.results && /^show partitions /i.test(data.queryString)) {
@@ -1345,6 +1375,28 @@ jQuery(document).ready(function($) {
 						} else if (data.error) {
 							self.errortext = data.error;
 							self.errorline = data.errorLineNumber - 1;
+						}
+					}).fail(function(xhr, status, error) {
+					});
+				}
+			},
+			convertQuery: function(queryid) {
+				var self = this;
+				var query = self.input_query;
+				var api = self.is_presto ? self.apis.convertHive : self.apis.convertPresto;
+				if (query) {
+					$.ajax({
+						type: 'POST',
+						url: self.domain + api,
+						data: {
+							query: query,
+						},
+					}).done(function(data) {
+						var converted_query = self.is_presto ? data.hiveQuery : data.prestoQuery;
+						if (converted_query) {
+							self.input_query = converted_query;
+						} else if (data.error) {
+							self.errortext = data.error;
 						}
 					}).fail(function(xhr, status, error) {
 					});
@@ -1513,11 +1565,10 @@ jQuery(document).ready(function($) {
 				}
 				$.ajax({
 					type: 'GET',
-					url: self.domain + self.apis.bookmark.format({
+					url: self.domain + self.apis.bookmark,
+					data: {
 						datasource: self.datasource,
 						engine: self.engine,
-					}),
-					data: {
 						bookmark_id: bookmark_id
 					},
 					timeout: 300000,
@@ -1646,6 +1697,7 @@ jQuery(document).ready(function($) {
 					datasource: self.datasource,
 				};
 				if (self.is_presto) {
+					self.getAuth();
 					params = Object.merge(params, self.auth_info);
 				}
 				$.ajax({
@@ -1686,6 +1738,7 @@ jQuery(document).ready(function($) {
 				if (!(self.datasource && self.catalog)) {
 					return false;
 				}
+				self.getAuth();
 				var params = Object.merge(
 					{
 						datasource: self.datasource,
@@ -1777,6 +1830,7 @@ jQuery(document).ready(function($) {
 
 				if (self.is_presto) {
 					if (!(self.catalogs.length && catalog)) {
+						self.getAuth();
 						var params = Object.merge(
 							{
 								datasource: self.datasource,
@@ -2269,6 +2323,9 @@ jQuery(document).ready(function($) {
 				}
 				self.datasource = self.datasource || (self.rememberDatasource ? (localStorage.getItem('datasource') || self.datasources[0]) : self.datasources[0]);
 				self.tab = self.tab || self.tabs[0].id;
+				if (!self.datasource_index) {
+					toastr.warning('<strong>{0}</strong> does not exist.'.format(self.datasource), 'Check datasource');
+				}
 			},
 			datasource: function(val, oldVal) {
 				var self = this;
