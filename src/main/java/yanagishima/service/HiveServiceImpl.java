@@ -43,12 +43,23 @@ public class HiveServiceImpl implements HiveService {
 
     private ExecutorService executorService = Executors.newFixedThreadPool(10);
 
+    private Fluency fluency;
+
     @Inject
     private TinyORM db;
 
     @Inject
     public HiveServiceImpl(YanagishimaConfig yanagishimaConfig) {
         this.yanagishimaConfig = yanagishimaConfig;
+        if(yanagishimaConfig.getFluentdExecutedTag().isPresent()) {
+            String fluentdHost = yanagishimaConfig.getFluentdHost().orElse("localhost");
+            int fluentdPort = Integer.parseInt(yanagishimaConfig.getFluentdPort().orElse("24224"));
+            try {
+                fluency = Fluency.defaultFluency(fluentdHost, fluentdPort);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        }
     }
 
     @Override
@@ -155,9 +166,7 @@ public class HiveServiceImpl implements HiveService {
                 insertQueryHistory(db, datasource, "hive", query, userName, queryId);
             }
             if (yanagishimaConfig.getFluentdExecutedTag().isPresent()) {
-                String fluentdHost = yanagishimaConfig.getFluentdHost().orElse("localhost");
-                int fluentdPort = Integer.parseInt(yanagishimaConfig.getFluentdPort().orElse("24224"));
-                try (Fluency fluency = Fluency.defaultFluency(fluentdHost, fluentdPort)) {
+                try {
                     long end = System.currentTimeMillis();
                     String tag = yanagishimaConfig.getFluentdExecutedTag().get();
                     Map<String, Object> event = new HashMap<>();

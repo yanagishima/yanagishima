@@ -54,6 +54,8 @@ public class PrestoServiceImpl implements PrestoService {
 
     private ExecutorService executorService = Executors.newFixedThreadPool(10);
 
+    private Fluency fluency;
+
     @Inject
     private TinyORM db;
 
@@ -63,6 +65,15 @@ public class PrestoServiceImpl implements PrestoService {
         OkHttpClient.Builder builder = new OkHttpClient.Builder();
         setupTimeouts(builder, 5, SECONDS);
         httpClient = builder.build();
+        if(yanagishimaConfig.getFluentdExecutedTag().isPresent() || yanagishimaConfig.getFluentdFaliedTag().isPresent()) {
+            String fluentdHost = yanagishimaConfig.getFluentdHost().orElse("localhost");
+            int fluentdPort = Integer.parseInt(yanagishimaConfig.getFluentdPort().orElse("24224"));
+            try {
+                fluency = Fluency.defaultFluency(fluentdHost, fluentdPort);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        }
     }
 
     @Override
@@ -166,9 +177,7 @@ public class PrestoServiceImpl implements PrestoService {
                     insertQueryHistory(db, datasource, "presto", query, userName, queryId);
                 }
                 if(yanagishimaConfig.getFluentdExecutedTag().isPresent()) {
-                    String fluentdHost = yanagishimaConfig.getFluentdHost().orElse("localhost");
-                    int fluentdPort = Integer.parseInt(yanagishimaConfig.getFluentdPort().orElse("24224"));
-                    try (Fluency fluency = Fluency.defaultFluency(fluentdHost, fluentdPort)) {
+                    try {
                         long end = System.currentTimeMillis();
                         String tag = yanagishimaConfig.getFluentdExecutedTag().get();
                         Map<String, Object> event = new HashMap<>();
@@ -213,9 +222,7 @@ public class PrestoServiceImpl implements PrestoService {
                 }
             }
             if(yanagishimaConfig.getFluentdFaliedTag().isPresent()) {
-                String fluentdHost = yanagishimaConfig.getFluentdHost().orElse("localhost");
-                int fluentdPort = Integer.parseInt(yanagishimaConfig.getFluentdPort().orElse("24224"));
-                try (Fluency fluency = Fluency.defaultFluency(fluentdHost, fluentdPort)) {
+                try {
                     long end = System.currentTimeMillis();
                     String tag = yanagishimaConfig.getFluentdFaliedTag().get();
                     String queryId = results.getId();
