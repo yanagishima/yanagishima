@@ -148,7 +148,7 @@ public class HiveServiceImpl implements HiveService {
             throw new RuntimeException(e);
         }
 
-        String url = yanagishimaConfig.getHiveJdbcUrl(datasource).get();
+        String url = yanagishimaConfig.getHiveJdbcUrl(datasource);
         String user = yanagishimaConfig.getHiveJdbcUser(datasource);
         String password = yanagishimaConfig.getHiveJdbcPassword(datasource);
 
