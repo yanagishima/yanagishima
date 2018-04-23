@@ -38,6 +38,10 @@ public class HistoryUtil {
             List<List<String>> rowDataList = new ArrayList<List<String>>();
             int lineNumber = 0;
             Path resultFilePath = PathUtil.getResultFilePath(datasource, queryid, false);
+            if(!resultFilePath.toFile().exists()) {
+                retVal.put("error", String.format("%s is not found", resultFilePath.getFileName()));
+                return;
+            }
             try (BufferedReader br = Files.newBufferedReader(resultFilePath, StandardCharsets.UTF_8)) {
                 CSVParser parse = CSVFormat.EXCEL.withDelimiter('\t').withNullString("\\N").parse(br);
                 for (CSVRecord csvRecord : parse) {
