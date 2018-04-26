@@ -84,6 +84,11 @@ public class QueryHistoryServlet extends HttpServlet {
                 List<Object> row = new ArrayList<>();
                 String queryid = query.getQueryId();
 
+                Path errorFilePath = PathUtil.getResultFilePath(datasource, queryid, true);
+                if(errorFilePath.toFile().exists()) {
+                    continue;
+                }
+
                 Path resultFilePath = PathUtil.getResultFilePath(datasource, queryid, false);
                 row.add(queryid);
                 row.add(query.getQueryString());
