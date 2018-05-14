@@ -299,4 +299,8 @@ public class YanagishimaConfig {
 			return Arrays.asList(property.split(","));
 		}
 	}
+
+	public boolean isAllowOtherReadResult(String datasource) {
+		return Boolean.parseBoolean(Optional.ofNullable(properties.getProperty("allow.other.read.result." + datasource)).orElse("true"));
+	}
 }
