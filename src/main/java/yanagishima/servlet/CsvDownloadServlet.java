@@ -1,8 +1,10 @@
 package yanagishima.servlet;
 
+import me.geso.tinyorm.TinyORM;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import yanagishima.config.YanagishimaConfig;
+import yanagishima.row.Query;
 import yanagishima.util.AccessControlUtil;
 import yanagishima.util.DownloadUtil;
 import yanagishima.util.HttpRequestUtil;
@@ -28,6 +30,9 @@ public class CsvDownloadServlet extends HttpServlet {
     private YanagishimaConfig yanagishimaConfig;
 
     @Inject
+    private TinyORM db;
+
+    @Inject
     public CsvDownloadServlet(YanagishimaConfig yanagishimaConfig) {
         this.yanagishimaConfig = yanagishimaConfig;
     }
@@ -51,7 +56,18 @@ public class CsvDownloadServlet extends HttpServlet {
                 }
             }
             Optional<String> encodeOptional = Optional.ofNullable(request.getParameter("encode"));
-            DownloadUtil.csvDownload(response, fileName, datasource, queryid, encodeOptional.orElse("UTF-8"));
+            if(yanagishimaConfig.isAllowOtherReadResult(datasource)) {
+                DownloadUtil.csvDownload(response, fileName, datasource, queryid, encodeOptional.orElse("UTF-8"));
+            } else {
+                String userName = request.getHeader(yanagishimaConfig.getAuditHttpHeaderName());
+                if (userName == null) {
+                    throw new RuntimeException("user is null");
+                }
+                Optional<Query> userQueryOptional = db.single(Query.class).where("query_id=? and datasource=? and user=?", queryidOptional.get(), datasource, userName).execute();
+                if(userQueryOptional.isPresent()) {
+                    DownloadUtil.csvDownload(response, fileName, datasource, queryid, encodeOptional.orElse("UTF-8"));
+                }
+            }
         });
 
     }

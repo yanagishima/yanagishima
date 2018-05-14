@@ -6,7 +6,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import yanagishima.config.YanagishimaConfig;
 import yanagishima.row.Publish;
+import yanagishima.row.Query;
 import yanagishima.util.AccessControlUtil;
+import yanagishima.util.DownloadUtil;
 import yanagishima.util.HttpRequestUtil;
 import yanagishima.util.JsonUtil;
 
@@ -61,19 +63,16 @@ public class PublishServlet extends HttpServlet {
             String userName = request.getHeader(yanagishimaConfig.getAuditHttpHeaderName());
             String engine = HttpRequestUtil.getParam(request, "engine");
             String queryid = Optional.ofNullable(request.getParameter("queryid")).get();
-            Optional<Publish> publishOptional = db.single(Publish.class).where("datasource=? and engine=? and query_id=?", datasource, engine, queryid).execute();
-            if(publishOptional.isPresent()) {
-                retVal.put("publish_id", publishOptional.get().getPublishId());
+            if(yanagishimaConfig.isAllowOtherReadResult(datasource)) {
+                publish(retVal, datasource, userName, engine, queryid);
             } else {
-                String publish_id = DigestUtils.md5Hex(datasource + ";" + engine + ";" + queryid);
-                db.insert(Publish.class)
-                        .value("publish_id", publish_id)
-                        .value("datasource", datasource)
-                        .value("engine", engine)
-                        .value("query_id", queryid)
-                        .value("user", userName)
-                        .execute();
-                retVal.put("publish_id", publish_id);
+                if (userName == null) {
+                    throw new RuntimeException("user is null");
+                }
+                Optional<Query> userQueryOptional = db.single(Query.class).where("query_id=? and datasource=? and user=?", queryid, datasource, userName).execute();
+                if(userQueryOptional.isPresent()) {
+                    publish(retVal, datasource, userName, engine, queryid);
+                }
             }
         } catch (Throwable e) {
             LOGGER.error(e.getMessage(), e);
@@ -82,6 +81,23 @@ public class PublishServlet extends HttpServlet {
 
         JsonUtil.writeJSON(response, retVal);
 
+    }
+
+    private void publish(HashMap<String, Object> retVal, String datasource, String userName, String engine, String queryid) {
+        Optional<Publish> publishOptional = db.single(Publish.class).where("datasource=? and engine=? and query_id=?", datasource, engine, queryid).execute();
+        if(publishOptional.isPresent()) {
+            retVal.put("publish_id", publishOptional.get().getPublishId());
+        } else {
+            String publish_id = DigestUtils.md5Hex(datasource + ";" + engine + ";" + queryid);
+            db.insert(Publish.class)
+                    .value("publish_id", publish_id)
+                    .value("datasource", datasource)
+                    .value("engine", engine)
+                    .value("query_id", queryid)
+                    .value("user", userName)
+                    .execute();
+            retVal.put("publish_id", publish_id);
+        }
     }
 
 }
