@@ -1,5 +1,7 @@
 package yanagishima.servlet;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.apache.http.client.fluent.Request;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import yanagishima.config.YanagishimaConfig;
@@ -18,6 +20,7 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.*;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static javax.servlet.http.HttpServletResponse.SC_FORBIDDEN;
 import static yanagishima.util.Constants.YANAGISHIMA_COMMENT;
 
@@ -75,18 +78,59 @@ public class PrestoPartitionServlet extends HttpServlet {
             String partitionColumn = request.getParameter("partitionColumn");
             String partitionValue = request.getParameter("partitionValue");
             if (partitionColumn == null || partitionValue == null) {
-                String query = String.format("%sSHOW PARTITIONS FROM %s.%s.%s", YANAGISHIMA_COMMENT, catalog, schema, table);
-                PrestoQueryResult prestoQueryResult = prestoService.doQuery(datasource, query, userName, prestoUser, prestoPassword, false, Integer.MAX_VALUE);
-                retVal.put("column", prestoQueryResult.getColumns().get(0));
-                Set<String> partitions = new TreeSet<>();
-                List<List<String>> records = prestoQueryResult.getRecords();
-                for (List<String> row : records) {
-                    String data = row.get(0);
-                    if(data != null) {
-                        partitions.add(data);
+                Optional<String> webhdfsUrlOptional = yanagishimaConfig.getWebhdfsUrl(datasource, catalog, schema, table);
+                if(webhdfsUrlOptional.isPresent()) {
+                    String webhdfsUrl = webhdfsUrlOptional.get();
+                    String json = Request.Get(webhdfsUrl).execute().returnContent().asString(UTF_8);
+//                    {
+//                        "FileStatuses": {
+//                        "FileStatus": [
+//                        {
+//                                "accessTime": 0,
+//                                "blockSize": 0,
+//                                "childrenNum": 271,
+//                                "fileId": 43732679,
+//                                "group": "hdfs",
+//                                "length": 0,
+//                                "modificationTime": 1527567948631,
+//                                "owner": "hive",
+//                                "pathSuffix": "hoge=piyo",
+//                                "permission": "777",
+//                                "replication": 0,
+//                                "storagePolicy": 0,
+//                                "type": "DIRECTORY"
+//                        },
+                    ObjectMapper mapper = new ObjectMapper();
+                    Map map = mapper.readValue(json, Map.class);
+                    List<Map> topLevelPartitionList = (List) ((Map) map.get("FileStatuses")).get("FileStatus");
+                    if(topLevelPartitionList.size() > 0) {
+                        String firstPartitionData = (String)topLevelPartitionList.get(0).get("pathSuffix");
+                        if(firstPartitionData != null) {
+                            retVal.put("column", firstPartitionData.split("=")[0]);
+                            Set<String> partitions = new TreeSet<>();
+                            for(Map m : topLevelPartitionList) {
+                                String data = (String)m.get("pathSuffix");
+                                if(data != null) {
+                                    partitions.add(data.split("=")[1]);
+                                }
+                            }
+                            retVal.put("partitions", partitions);
+                        }
                     }
+                } else {
+                    String query = String.format("%sSHOW PARTITIONS FROM %s.%s.%s", YANAGISHIMA_COMMENT, catalog, schema, table);
+                    PrestoQueryResult prestoQueryResult = prestoService.doQuery(datasource, query, userName, prestoUser, prestoPassword, false, Integer.MAX_VALUE);
+                    retVal.put("column", prestoQueryResult.getColumns().get(0));
+                    Set<String> partitions = new TreeSet<>();
+                    List<List<String>> records = prestoQueryResult.getRecords();
+                    for (List<String> row : records) {
+                        String data = row.get(0);
+                        if(data != null) {
+                            partitions.add(data);
+                        }
+                    }
+                    retVal.put("partitions", partitions);
                 }
-                retVal.put("partitions", partitions);
             } else {
                 String[] partitionColumnArray = partitionColumn.split(",");
                 String[] partitionValuesArray = partitionValue.split(",");

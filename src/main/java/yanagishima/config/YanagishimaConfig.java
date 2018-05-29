@@ -303,4 +303,9 @@ public class YanagishimaConfig {
 	public boolean isAllowOtherReadResult(String datasource) {
 		return Boolean.parseBoolean(Optional.ofNullable(properties.getProperty("allow.other.read.result." + datasource)).orElse("true"));
 	}
+
+	public Optional<String> getWebhdfsUrl(String datasource, String catalog, String schema, String table) {
+		return Optional.ofNullable(properties.getProperty(String.format("webhdfs.url.%s.%s.%s.%s", datasource, catalog, schema, table)));
+	}
+
 }
