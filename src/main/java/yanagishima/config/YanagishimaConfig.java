@@ -308,4 +308,8 @@ public class YanagishimaConfig {
 		return Optional.ofNullable(properties.getProperty(String.format("webhdfs.url.%s.%s.%s.%s", datasource, catalog, schema, table)));
 	}
 
+	public boolean isUseNewShowPartitions(String datasource) {
+		return Boolean.parseBoolean(Optional.ofNullable(properties.getProperty("use.new.show.partitions." + datasource)).orElse("false"));
+	}
+
 }
