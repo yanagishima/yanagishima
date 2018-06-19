@@ -150,7 +150,7 @@ public class PrestoPartitionServlet extends HttpServlet {
                 if(yanagishimaConfig.isUseNewShowPartitions(datasource)) {
                     query = String.format("%sSELECT * FROM  %s.%s.\"%s$partitions\" WHERE %s", YANAGISHIMA_COMMENT, catalog, schema, table, String.join(" AND ", whereList));
                 } else {
-                    String.format("%sSHOW PARTITIONS FROM %s.%s.%s WHERE %s", YANAGISHIMA_COMMENT, catalog, schema, table, String.join(" AND ", whereList));
+                    query = String.format("%sSHOW PARTITIONS FROM %s.%s.%s WHERE %s", YANAGISHIMA_COMMENT, catalog, schema, table, String.join(" AND ", whereList));
                 }
                 PrestoQueryResult prestoQueryResult = prestoService.doQuery(datasource, query, userName, prestoUser, prestoPassword, false, Integer.MAX_VALUE);
                 List<String> columns = prestoQueryResult.getColumns();
