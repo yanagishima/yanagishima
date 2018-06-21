@@ -41,6 +41,16 @@ yanagishima is a Web UI for presto/hive.
 * support graphviz to visualize presto explain result
 
 # Versions
+* 13.0
+  * improve code input performance especially when query result is huge
+  * upgrade ace editor
+  * add message if result count exceeds 500
+  * improve history tab logic when result file is removed
+  * add sort partition feature
+  * fix bug that 3 pane compare result display disappear
+  * don't create fluency instance every request due to performance improvement
+  * handle issue that presto doesn't support ```show paritions``` since 0.202
+  * add option to use webhdfs api when there are too many partitions
 * 12.0
   * convert hive/presto query
   * support graphviz to visualize presto explain result
@@ -156,11 +166,11 @@ yanagishima is a Web UI for presto/hive.
 ```
 git clone https://github.com/yanagishima/yanagishima.git
 cd yanagishima
-git checkout -b 12.0 refs/tags/12.0
+git checkout -b 13.0 refs/tags/13.0
 ./gradlew distZip
 cd build/distributions
-unzip yanagishima-12.0.zip
-cd yanagishima-12.0
+unzip yanagishima-13.0.zip
+cd yanagishima-13.0
 vim conf/yanagishima.properties
 nohup bin/yanagishima-start.sh >y.log 2>&1 &
 ```

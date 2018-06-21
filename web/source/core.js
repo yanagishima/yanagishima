@@ -393,6 +393,7 @@ jQuery(document).ready(function($) {
 					self.auths = auths;
 					localStorage.setItem('auths', JSON.stringify(self.auths));
 					self.engines = engines;
+					localStorage.setItem('engines', JSON.stringify(self.engines));
 				} else {
 					location.replace('/error/?403');
 				}
@@ -523,6 +524,9 @@ jQuery(document).ready(function($) {
 				return $('body').attr('id') === 'share';
 			},
 			is_presto: function() {
+				if(!this.engine) {
+					self.getEngines();
+				}
 				return this.engine == 'presto';
 			},
 			exist_bookmark: function() {
@@ -787,6 +791,14 @@ jQuery(document).ready(function($) {
 					localStorage.setItem(datasource + '_pass', self.auth_pass);
 				}
 			},
+			getEngines: function() {
+				var self = this;
+				var engines = self.engines;
+
+				if (engines) {
+					self.engines = localStorage.getItem('engines');
+				}
+			},
 			infoBookmark: function(query) {
 				var self = this;
 				var info = '';
@@ -933,6 +945,7 @@ jQuery(document).ready(function($) {
 				self.partition_index = 0;
 				self.filter_schema = '';
 				self.filter_table = '';
+				self.sort_order = true;
 				self.filter_user = '';
 				self.filter_history = '';
 				self.table_q = '';
@@ -1784,6 +1797,7 @@ jQuery(document).ready(function($) {
 			},
 			getPartition: function(index) {
 				var self = this;
+				self.sort_order = true;
 				var api = self.is_presto ? self.apis.prestoPartition : self.apis.hivePartition;
 				var params = Object.merge(
 					{
@@ -1819,6 +1833,15 @@ jQuery(document).ready(function($) {
 				}).fail(function(xhr, status, error) {
 					self.loading.partition = true;
 				});
+			},
+			sortPartitions: function(partition_list) {
+				var self = this;
+				var sort_order = self.sort_order;
+				partition_list.sortBy(function(partition) {
+					return partition;
+				}, sort_order);
+				self.sort_order = !sort_order;
+				return partition_list;
 			},
 			getTree: function() {
 				var self = this;
@@ -2245,6 +2268,10 @@ jQuery(document).ready(function($) {
 					return application_id;
 				}
 			},
+			setLine: function(line) {
+				const self = this;
+				self.line = line;
+			}
 		},
 		filters: {
 			formatNumber: function(val, option) {

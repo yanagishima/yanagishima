@@ -148,6 +148,22 @@ $colors: #444, $brand-primary, #1B5E20, #880E4F, #827717, #212121;
 	top: .5rem;
 	left: -2px;
 }
+#panel {	
+	border-left: 1px solid $gray-lighter;	
+	width: calc(100% - 300px);	
+	position: fixed;	
+	bottom: 0;	
+	z-index: 5;	
+	background: rgba($white, 0.9);	
+	height: 35vh;	
+	overflow-y: scroll;	
+	#panel-header {	
+		height: .3rem;	
+		margin-bottom: 1rem;	
+	}	
+	#panel-body {	
+	}	
+}
 #comment {
 	position: fixed;
 	bottom: -.5rem;

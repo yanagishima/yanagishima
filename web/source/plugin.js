@@ -182,6 +182,35 @@ Vue.component('autolink', {
 		}
 	}
 });
+Vue.component('result-table', {
+	template: `
+<div>
+	<table class="table table-auto table-bordered table-hover table-responsive">
+		<thead>
+			<tr>
+				<th class="text-muted">line</th>
+				<th v-for="item in result.headers">{{item}}</th>
+			</tr>
+		</thead>
+		<tbody>
+			<tr v-for="(items, index) in result.results" :class="{'table-info': line == (index + 1)}" :id="'L' + (index + 1)">
+				<td class="text-right"><a href="#" @click.prevent="setLine(index)" class="text-muted">{{index + 1}}</a></td>
+				<td v-for="item in items">
+					<column :value="item" :disable="!is_pretty"></column>
+				</td>
+			</tr>
+		</tbody>
+	</table>
+	<div class="text-left" v-if="result.lineNumber > 501">This data is only top 500.</div>
+</div>`,
+	props: ['result', 'is_pretty', 'line'],
+	methods: {
+		setLine: function (index) {
+			const self = this;
+			self.$emit('set-line', self.line === (index + 1) ? 0 : (index + 1));
+		}
+	}
+});
 Vue.component('column', {
 	template: '<div v-html="result"></div>',
 	props: ['value', 'disable'],

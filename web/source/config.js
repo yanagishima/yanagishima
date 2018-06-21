@@ -1,5 +1,5 @@
 yanagishima = {
-	version: '12.0',
+	version: '13.0',
 	sitename: 'yanagishima',
 	domain: '',
 	apis: {
