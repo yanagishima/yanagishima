@@ -3,6 +3,8 @@ package yanagishima.servlet;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import okhttp3.OkHttpClient;
 import okhttp3.Response;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import yanagishima.config.YanagishimaConfig;
 import yanagishima.util.AccessControlUtil;
 import yanagishima.util.HttpRequestUtil;
@@ -24,6 +26,8 @@ import static javax.servlet.http.HttpServletResponse.SC_FORBIDDEN;
 
 @Singleton
 public class QueryStatusServlet extends HttpServlet {
+
+	private static Logger LOGGER = LoggerFactory.getLogger(QueryStatusServlet.class);
 
 	private static final long serialVersionUID = 1L;
 
@@ -83,6 +87,7 @@ public class QueryStatusServlet extends HttpServlet {
 				map.remove("session");
 			}
 		} catch (IOException e) {
+			LOGGER.error(e.getMessage(), e);
 			map = new HashMap();
 			map.put("state", "FAILED");
 			map.put("failureInfo", "");
