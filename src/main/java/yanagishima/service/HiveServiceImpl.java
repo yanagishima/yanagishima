@@ -11,6 +11,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import yanagishima.config.YanagishimaConfig;
 import yanagishima.exception.HiveQueryErrorException;
+import yanagishima.pool.StatementPool;
 import yanagishima.result.HiveQueryResult;
 
 import javax.inject.Inject;
@@ -47,6 +48,9 @@ public class HiveServiceImpl implements HiveService {
 
     @Inject
     private TinyORM db;
+
+    @Inject
+    private StatementPool statementPool;
 
     @Inject
     public HiveServiceImpl(YanagishimaConfig yanagishimaConfig) {
@@ -211,6 +215,11 @@ public class HiveServiceImpl implements HiveService {
             for(String hiveSetupQuery : hiveSetupQueryList) {
                 statement.execute(hiveSetupQuery);
             }
+
+            if(yanagishimaConfig.isUseJdbcCancel(datasource)) {
+                statementPool.putStatement(queryId, statement);
+            }
+
             try(ResultSet resultSet = statement.executeQuery(query)) {
                 ResultSetMetaData resultSetMetaData = resultSet.getMetaData();
                 int columnCount = resultSetMetaData.getColumnCount();
@@ -284,6 +293,7 @@ public class HiveServiceImpl implements HiveService {
                     throw new RuntimeException(e);
                 }
             }
+
         }
     }
 
