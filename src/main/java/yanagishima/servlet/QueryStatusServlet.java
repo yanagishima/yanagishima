@@ -15,6 +15,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
@@ -71,13 +72,20 @@ public class QueryStatusServlet extends HttpServlet {
 			}
 		}
 
+		Map map = null;
 		ObjectMapper mapper = new ObjectMapper();
-		Map map = mapper.readValue(json, Map.class);
-		if(map.containsKey("outputStage")) {
-			map.remove("outputStage");
-		}
-		if(map.containsKey("session")) {
-			map.remove("session");
+		try {
+			map = mapper.readValue(json, Map.class);
+			if(map.containsKey("outputStage")) {
+				map.remove("outputStage");
+			}
+			if(map.containsKey("session")) {
+				map.remove("session");
+			}
+		} catch (IOException e) {
+			map = new HashMap();
+			map.put("state", "FAILED");
+			map.put("failureInfo", "");
 		}
 		writer.println(mapper.writeValueAsString(map));
 	}
