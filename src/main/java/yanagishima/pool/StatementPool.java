@@ -7,19 +7,28 @@ import java.util.concurrent.ConcurrentHashMap;
 @Singleton
 public class StatementPool {
 
+    private String datasource;
+
     private String queryId;
 
-    private ConcurrentHashMap<String, Statement> statementMap = new ConcurrentHashMap<>();
+    private ConcurrentHashMap<String, ConcurrentHashMap<String, Statement>> statementMap = new ConcurrentHashMap<String, ConcurrentHashMap<String, Statement>>();
 
-    public void putStatement(String queryId, Statement statement) {
-        statementMap.put(queryId, statement);
+    public void putStatement(String datasource, String queryId, Statement statement) {
+        ConcurrentHashMap<String, Statement> map = null;
+        if(statementMap.contains(datasource)) {
+            map = statementMap.get(datasource);
+        } else {
+            map = new ConcurrentHashMap<String, Statement>();
+        }
+        map.put(queryId, statement);
+        statementMap.put(datasource, map);
     }
 
-    public Statement getStatement(String queryId) {
-        return statementMap.get(queryId);
+    public Statement getStatement(String datasource, String queryId) {
+        return statementMap.get(datasource).get(queryId);
     }
 
-    public Statement removeStatement(String queryId) {
-        return statementMap.remove(queryId);
+    public Statement removeStatement(String datasource, String queryId) {
+        return statementMap.get(datasource).remove(queryId);
     }
 }
