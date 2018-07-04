@@ -3,6 +3,7 @@ package yanagishima.servlet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import yanagishima.config.YanagishimaConfig;
+import yanagishima.pool.StatementPool;
 import yanagishima.util.AccessControlUtil;
 import yanagishima.util.HttpRequestUtil;
 import yanagishima.util.YarnUtil;
@@ -15,6 +16,8 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.Map;
 import java.util.Optional;
 
@@ -28,6 +31,9 @@ public class KillHiveServlet extends HttpServlet {
     private static final long serialVersionUID = 1L;
 
     private YanagishimaConfig yanagishimaConfig;
+
+    @Inject
+    private StatementPool statementPool;
 
     @Inject
     public KillHiveServlet(YanagishimaConfig yanagishimaConfig) {
@@ -72,20 +78,33 @@ public class KillHiveServlet extends HttpServlet {
                     throw new RuntimeException(e);
                 }
             } else {
-                Optional<Map> applicationOptional = YarnUtil.getApplication(resourceManagerUrl, id, userName, yanagishimaConfig.getResourceManagerBegin(datasource));
-                applicationOptional.ifPresent(application -> {
-                    String applicationId = (String) application.get("id");
-                    try {
-                        String json = YarnUtil.kill(resourceManagerUrl, applicationId);
-                        response.setContentType("application/json");
-                        PrintWriter writer = response.getWriter();
-                        writer.println(json);
-                    } catch (IOException e) {
+                if(yanagishimaConfig.isUseJdbcCancel(datasource)) {
+                    LOGGER.info(String.format("killing %s in %s by Statement#cancel", id, datasource));
+                    try(Statement statement = statementPool.getStatement(datasource, id)) {
+                        if(statement == null) {
+                            LOGGER.error("statement is null");
+                        } else {
+                            statement.cancel();
+                        }
+                        statementPool.removeStatement(datasource, id);
+                    } catch (SQLException e) {
                         throw new RuntimeException(e);
                     }
-                });
+                } else {
+                    Optional<Map> applicationOptional = YarnUtil.getApplication(resourceManagerUrl, id, userName, yanagishimaConfig.getResourceManagerBegin(datasource));
+                    applicationOptional.ifPresent(application -> {
+                        String applicationId = (String) application.get("id");
+                        try {
+                            String json = YarnUtil.kill(resourceManagerUrl, applicationId);
+                            response.setContentType("application/json");
+                            PrintWriter writer = response.getWriter();
+                            writer.println(json);
+                        } catch (IOException e) {
+                            throw new RuntimeException(e);
+                        }
+                    });
+                }
             }
-
         });
 
     }

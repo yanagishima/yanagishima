@@ -41,9 +41,10 @@ public class YanagishimaServer {
 		HiveServiceModule hiveServiceModule = new HiveServiceModule(properties);
 		HiveServletModule hiveServletModule = new HiveServletModule();
 		DbModule dbModule = new DbModule();
+		PoolModule poolModule = new PoolModule();
 		@SuppressWarnings("unused")
 		Injector injector = Guice.createInjector(prestoServiceModule,
-				prestoServletModule, hiveServiceModule, hiveServletModule, dbModule);
+				prestoServletModule, hiveServiceModule, hiveServletModule, dbModule, poolModule);
 
 		TinyORM tinyORM = injector.getInstance(TinyORM.class);
 		try(Connection connection = tinyORM.getConnection()) {

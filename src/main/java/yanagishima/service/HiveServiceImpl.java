@@ -11,6 +11,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import yanagishima.config.YanagishimaConfig;
 import yanagishima.exception.HiveQueryErrorException;
+import yanagishima.pool.StatementPool;
 import yanagishima.result.HiveQueryResult;
 
 import javax.inject.Inject;
@@ -47,6 +48,9 @@ public class HiveServiceImpl implements HiveService {
 
     @Inject
     private TinyORM db;
+
+    @Inject
+    private StatementPool statementPool;
 
     @Inject
     public HiveServiceImpl(YanagishimaConfig yanagishimaConfig) {
@@ -91,7 +95,7 @@ public class HiveServiceImpl implements HiveService {
         public void run() {
             try {
                 int limit = yanagishimaConfig.getSelectLimit();
-                getHiveQueryResult(this.queryId, this.datasource, this.query, true, limit, this.userName, this.hiveUser, this.hivePassword);
+                getHiveQueryResult(this.queryId, this.datasource, this.query, true, limit, this.userName, this.hiveUser, this.hivePassword, true);
             } catch (Throwable e) {
                 LOGGER.error(e.getMessage(), e);
             }
@@ -101,10 +105,10 @@ public class HiveServiceImpl implements HiveService {
     @Override
     public HiveQueryResult doQuery(String datasource, String query, String userName, Optional<String> hiveUser, Optional<String> hivePassword, boolean storeFlag, int limit) throws HiveQueryErrorException {
         String queryId = generateQueryId(datasource, query);
-        return getHiveQueryResult(queryId, datasource, query, storeFlag, limit, userName, hiveUser, hivePassword);
+        return getHiveQueryResult(queryId, datasource, query, storeFlag, limit, userName, hiveUser, hivePassword, false);
     }
 
-    private HiveQueryResult getHiveQueryResult(String queryId, String datasource, String query, boolean storeFlag, int limit, String userName, Optional<String> hiveUser, Optional<String> hivePassword) throws HiveQueryErrorException {
+    private HiveQueryResult getHiveQueryResult(String queryId, String datasource, String query, boolean storeFlag, int limit, String userName, Optional<String> hiveUser, Optional<String> hivePassword, boolean async) throws HiveQueryErrorException {
 
         List<String> hiveDisallowedKeywords = yanagishimaConfig.getHiveDisallowedKeywords(datasource);
         for(String hiveDisallowedKeyword : hiveDisallowedKeywords) {
@@ -161,7 +165,7 @@ public class HiveServiceImpl implements HiveService {
             long start = System.currentTimeMillis();
             HiveQueryResult hiveQueryResult = new HiveQueryResult();
             hiveQueryResult.setQueryId(queryId);
-            processData(datasource, query, limit, userName, connection, queryId, start, hiveQueryResult);
+            processData(datasource, query, limit, userName, connection, queryId, start, hiveQueryResult, async);
             if (storeFlag) {
                 insertQueryHistory(db, datasource, "hive", query, userName, queryId);
             }
@@ -195,7 +199,7 @@ public class HiveServiceImpl implements HiveService {
         return yyyyMMddHHmmss + "_" + DigestUtils.md5Hex(datasource + ";" + query + ";" + ZonedDateTime.now().toString() + ";" + String.valueOf(rand));
     }
 
-    private void processData(String datasource, String query, int limit, String userName, Connection connection, String queryId, long start, HiveQueryResult hiveQueryResult) throws SQLException {
+    private void processData(String datasource, String query, int limit, String userName, Connection connection, String queryId, long start, HiveQueryResult hiveQueryResult, boolean async) throws SQLException {
         Duration queryMaxRunTime = new Duration(this.yanagishimaConfig.getHiveQueryMaxRunTimeSeconds(datasource), TimeUnit.SECONDS);
         try(Statement statement = connection.createStatement()) {
             int timeout = (int) queryMaxRunTime.toMillis() / 1000;
@@ -211,6 +215,11 @@ public class HiveServiceImpl implements HiveService {
             for(String hiveSetupQuery : hiveSetupQueryList) {
                 statement.execute(hiveSetupQuery);
             }
+
+            if(async && yanagishimaConfig.isUseJdbcCancel(datasource)) {
+                statementPool.putStatement(datasource, queryId, statement);
+            }
+
             try(ResultSet resultSet = statement.executeQuery(query)) {
                 ResultSetMetaData resultSetMetaData = resultSet.getMetaData();
                 int columnCount = resultSetMetaData.getColumnCount();
@@ -272,6 +281,9 @@ public class HiveServiceImpl implements HiveService {
                     }
                     hiveQueryResult.setLineNumber(lineNumber);
                     hiveQueryResult.setRecords(rowDataList);
+                    if(async && yanagishimaConfig.isUseJdbcCancel(datasource)) {
+                        statementPool.removeStatement(datasource, queryId);
+                    }
                 } catch (IOException e) {
                     throw new RuntimeException(e);
                 }
@@ -284,6 +296,7 @@ public class HiveServiceImpl implements HiveService {
                     throw new RuntimeException(e);
                 }
             }
+
         }
     }
 
