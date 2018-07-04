@@ -81,7 +81,11 @@ public class KillHiveServlet extends HttpServlet {
                 if(yanagishimaConfig.isUseJdbcCancel(datasource)) {
                     LOGGER.info(String.format("killing %s in %s by Statement#cancel", id, datasource));
                     try(Statement statement = statementPool.getStatement(datasource, id)) {
-                        statement.cancel();
+                        if(statement == null) {
+                            LOGGER.error("statement is null");
+                        } else {
+                            statement.cancel();
+                        }
                         statementPool.removeStatement(datasource, id);
                     } catch (SQLException e) {
                         throw new RuntimeException(e);
