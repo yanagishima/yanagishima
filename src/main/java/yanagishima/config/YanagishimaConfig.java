@@ -316,4 +316,62 @@ public class YanagishimaConfig {
 		return Boolean.parseBoolean(Optional.ofNullable(properties.getProperty("use.jdbc.cancel." + datasource)).orElse("false"));
 	}
 
+	public List<String> getElasticsearchSecretKeywords(String datasource) {
+		String property = properties.getProperty("elasticsearch.secret.keywords." + datasource);
+		if(property == null) {
+			return Collections.emptyList();
+		} else {
+			return Arrays.asList(property.split(","));
+		}
+	}
+
+	public List<String> getElasticsearchMustSpectifyConditions(String datasource) {
+		String property = properties.getProperty("elasticsearch.must.specify.conditions." + datasource);
+		if(property == null) {
+			return Collections.emptyList();
+		} else {
+			return Arrays.asList(property.split(","));
+		}
+	}
+
+	public String getElasticsearchJdbcUrl(String datasource) {
+		return PropertiesUtil.getParam(properties, "elasticsearch.jdbc.url." + datasource);
+	}
+
+	public List<String> getElasticsearchDisallowedKeywords(String datasource) {
+		String property = properties.getProperty("elasticsearch.disallowed.keywords." + datasource);
+		if(property == null) {
+			return Collections.emptyList();
+		} else {
+			return Arrays.asList(property.split(","));
+		}
+	}
+
+	public int getElasticsearchMaxResultFileByteSize() {
+		String sizeStr = properties.getProperty("elasticsearch.max-result-file-byte-size");
+		if(sizeStr == null) {
+			return 1073741824;
+		} else {
+			return Integer.parseInt(sizeStr);
+		}
+	}
+
+	public double getElasticsearchQueryMaxRunTimeSeconds() {
+		String secondsStr = properties.getProperty("elasticsearch.query.max-run-time-seconds");
+		if(secondsStr == null) {
+			return 3600;
+		} else {
+			return Double.parseDouble(secondsStr);
+		}
+	}
+
+	public double getElasticsearchQueryMaxRunTimeSeconds(String datasource) {
+		String property = properties.getProperty("elasticsearch.query.max-run-time-seconds" + "." + datasource);
+		if(property == null) {
+			return getElasticsearchQueryMaxRunTimeSeconds();
+		} else {
+			return Double.parseDouble(property);
+		}
+	}
+
 }
