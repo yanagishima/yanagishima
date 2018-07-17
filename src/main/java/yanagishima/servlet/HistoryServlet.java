@@ -64,7 +64,7 @@ public class HistoryServlet extends HttpServlet {
                 queryOptional.ifPresent(query -> {
                     retVal.put("engine", query.getEngine());
                     if(yanagishimaConfig.isAllowOtherReadResult(datasource)) {
-                        HistoryUtil.createHistoryResult(retVal, yanagishimaConfig.getSelectLimit(), datasource, query.getQueryId(), query.getQueryString(), query.getFetchResultTimeString());
+                        HistoryUtil.createHistoryResult(retVal, yanagishimaConfig.getSelectLimit(), datasource, query);
                     } else {
                         String userName = request.getHeader(yanagishimaConfig.getAuditHttpHeaderName());
                         if (userName == null) {
@@ -72,7 +72,7 @@ public class HistoryServlet extends HttpServlet {
                         }
                         Optional<Query> userQueryOptional = db.single(Query.class).where("query_id=? and datasource=? and user=?", queryidOptional.get(), datasource, userName).execute();
                         if(userQueryOptional.isPresent()) {
-                            HistoryUtil.createHistoryResult(retVal, yanagishimaConfig.getSelectLimit(), datasource, query.getQueryId(), query.getQueryString(), query.getFetchResultTimeString());
+                            HistoryUtil.createHistoryResult(retVal, yanagishimaConfig.getSelectLimit(), datasource, query);
                         } else {
                             retVal.put("queryString", query.getQueryString());
                         }

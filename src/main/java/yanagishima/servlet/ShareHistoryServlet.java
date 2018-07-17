@@ -52,7 +52,7 @@ public class ShareHistoryServlet extends HttpServlet {
                 String queryid = publishOptional.get().getQueryId();
                 Query query = db.single(Query.class).where("query_id=? and datasource=?", queryid, datasource).execute().get();
                 retVal.put("engine", query.getEngine());
-                HistoryUtil.createHistoryResult(retVal, yanagishimaConfig.getSelectLimit(), datasource, queryid, query.getQueryString(), query.getFetchResultTimeString());
+                HistoryUtil.createHistoryResult(retVal, yanagishimaConfig.getSelectLimit(), datasource, query);
                 Optional<Comment> commentOptional = db.single(Comment.class).where("datasource = ? and engine = ? and query_id = ?", datasource, query.getEngine(), queryid).execute();
                 if(commentOptional.isPresent()) {
                     Comment comment = commentOptional.get();

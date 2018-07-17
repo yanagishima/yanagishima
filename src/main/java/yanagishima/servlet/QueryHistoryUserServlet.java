@@ -9,7 +9,7 @@ import yanagishima.row.Query;
 import yanagishima.util.AccessControlUtil;
 import yanagishima.util.HttpRequestUtil;
 import yanagishima.util.JsonUtil;
-import yanagishima.util.PathUtil;
+import yanagishima.util.Status;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
@@ -18,13 +18,6 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
-import java.time.ZonedDateTime;
-import java.time.format.DateTimeFormatter;
-import java.time.temporal.ChronoUnit;
 import java.util.*;
 
 import static javax.servlet.http.HttpServletResponse.SC_FORBIDDEN;
@@ -74,37 +67,19 @@ public class QueryHistoryUserServlet extends HttpServlet {
             List<Query> queryList = db.search(Query.class).where("datasource = ? and engine = ? and user = ? and query_string LIKE '%" + Optional.ofNullable(search).orElse("") + "%'", datasource, engine, userName).orderBy("query_id desc").execute();
             List<List<Object>> queryHistoryList = new ArrayList<List<Object>>();
             for (Query query : queryList) {
-                List<Object> row = new ArrayList<>();
-                String queryid = query.getQueryId();
-
-                Path errorFilePath = PathUtil.getResultFilePath(datasource, queryid, true);
-                if(errorFilePath.toFile().exists()) {
+                if(query.getStatus().equals(Status.FAILED.name())) {
                     continue;
                 }
-
-                Path resultFilePath = PathUtil.getResultFilePath(datasource, queryid, false);
-
-                row.add(queryid);
+                List<Object> row = new ArrayList<>();
+                row.add(query.getQueryId());
                 row.add(query.getQueryString());
-
-                LocalDateTime submitTimeLdt = LocalDateTime.parse(queryid.substring(0, "yyyyMMdd_HHmmss".length()), DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss"));
-                ZonedDateTime submitTimeZdt = submitTimeLdt.atZone(ZoneId.of("GMT", ZoneId.SHORT_IDS));
-                String fetchResultTimeString = query.getFetchResultTimeString();
-                ZonedDateTime fetchResultTime = ZonedDateTime.parse(fetchResultTimeString);
-                long elapsedTimeMillis = ChronoUnit.MILLIS.between(submitTimeZdt, fetchResultTime);
-                row.add(elapsedTimeMillis);
-
-                long size = 0;
-                if(resultFilePath.toFile().exists()) {
-                    size = Files.size(resultFilePath);
-                }
-                DataSize rawDataSize = new DataSize(size, DataSize.Unit.BYTE);
+                row.add(query.getElapsedTimeMillis());
+                DataSize rawDataSize = new DataSize(query.getResultFileSize(), DataSize.Unit.BYTE);
                 row.add(rawDataSize.convertToMostSuccinctDataSize().toString());
                 row.add(query.getEngine());
-                row.add(fetchResultTimeString);
-
+                row.add(query.getFetchResultTimeString());
+                row.add(query.getLinenumber());
                 queryHistoryList.add(row);
-
             }
             retVal.put("hit", queryHistoryList.size());
 
@@ -130,15 +105,8 @@ public class QueryHistoryUserServlet extends HttpServlet {
             }
             retVal.put("results", subQueryHistoryList);
 
-            List<Query> totalQueryList = db.searchBySQL(Query.class, String.format("select query_id from query where datasource='%s' and engine='%s' and user='%s'", datasource, engine, userName));
-            int total = 0;
-            for (Query query : totalQueryList) {
-                Path resultFilePath = PathUtil.getResultFilePath(datasource, query.getQueryId(), false);
-                if (resultFilePath.toFile().exists()) {
-                    total++;
-                }
-            }
-            retVal.put("total", total);
+            List<Query> totalQueryList = db.searchBySQL(Query.class, String.format("select query_id from query where datasource='%s' and engine='%s' and user='%s' and status='%s'", datasource, engine, userName, Status.SUCCEED.name()));
+            retVal.put("total", totalQueryList.size());
 
         } catch (Throwable e) {
             LOGGER.error(e.getMessage(), e);

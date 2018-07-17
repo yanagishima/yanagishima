@@ -174,7 +174,7 @@ public class PrestoServiceImpl implements PrestoService {
                 processData(client, datasource, queryId, query, prestoQueryResult, columns, rowDataList, start, limit, userName);
                 prestoQueryResult.setRecords(rowDataList);
                 if(storeFlag) {
-                    insertQueryHistory(db, datasource, "presto", query, userName, queryId);
+                    insertQueryHistory(db, datasource, "presto", query, userName, queryId, prestoQueryResult.getLineNumber());
                 }
                 if(yanagishimaConfig.getFluentdExecutedTag().isPresent()) {
                     try {

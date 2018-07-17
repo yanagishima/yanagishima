@@ -167,7 +167,7 @@ public class HiveServiceImpl implements HiveService {
             hiveQueryResult.setQueryId(queryId);
             processData(datasource, query, limit, userName, connection, queryId, start, hiveQueryResult, async);
             if (storeFlag) {
-                insertQueryHistory(db, datasource, "hive", query, userName, queryId);
+                insertQueryHistory(db, datasource, "hive", query, userName, queryId, hiveQueryResult.getLineNumber());
             }
             if (yanagishimaConfig.getFluentdExecutedTag().isPresent()) {
                 try {
