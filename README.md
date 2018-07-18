@@ -41,6 +41,24 @@ yanagishima is a Web UI for presto/hive.
 * support graphviz to visualize presto explain result
 
 # Versions
+* 14.0(not released)
+  * metadata of 14.0 is NOT compatible with 13.0, so migration is required
+  * migrateV14.sh is the script to migrate db file.
+  * migration process is as follows
+  ```
+  cp data/yanagishima.db data/yanagishima.db.bak
+  bin/migrateV14.sh data/yanagishima.db result
+  sqlite3 data/yanagishima.db
+  sqlite> alter table query rename to query_old;
+  sqlite> alter table query_v14 rename to query;
+  If you confirmed, drop table query_old
+  It take about 10 hours if db file is more than 500MB and result file is about 1TB
+  ```
+  * ```vacuum``` and ```create index deq_index on query(datasource, engine, query_id)``` and ```create index deu_index on query(datasource, engine, user)``` may be necessary if yanagishima.db is huge
+  * fix infinite loop bug when /queryStatus returns 500
+  * add kill hive query feature if you use a kerberized hadoop cluster
+  * sort table name when you use ```Treeview```
+  * copy publish url to clipboard but chrome user only due to Async Clipboard API
 * 13.0
   * improve code input performance especially when query result is huge
   * upgrade ace editor
@@ -291,6 +309,17 @@ If you set ```check.datasource=true``` and datasource list which you want to all
 
 For example, if there are three datasources(aaa and bbb and ccc) and ```X-yanagishima-datasources=aaa,bbb``` is set, user can't access to datasource ccc.
 
+If you use a presto with LDAP, you need to specify ```auth.xxx=true``` in your yanagishima.properties
+```
+jetty.port=8080
+presto.datasources=your-presto
+presto.coordinator.server.your-presto=http://presto.coordinator:8080
+catalog.your-presto=hive
+schema.your-presto=default
+sql.query.engines=presto
+auth.your-presto=true
+```
+
 ## How to upgrade
 If you want to ugprade yanagishima from xxx to yyyy, steps are as follows
 ```
@@ -335,7 +364,7 @@ If it is necessary to migrate yanagishima.db or result file, you need to migrate
 	- Google Fonts "[Droid+Sans](https://fonts.google.com/specimen/Droid+Sans)"
 - JavaScript
 	- Vue 2.3.0
-	- Ace Editor 1.2.6
+	- Ace Editor 1.3.3
 	- Sugar 2.0.4
 	- jQuery 3.2.1
 - Build/Serving tool
