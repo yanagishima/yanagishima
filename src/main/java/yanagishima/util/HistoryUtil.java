@@ -71,8 +71,12 @@ public class HistoryUtil {
             retVal.put("lineNumber", query.getLinenumber());
 
             retVal.put("elapsedTimeMillis", query.getElapsedTimeMillis());
-            DataSize rawDataSize = new DataSize(query.getResultFileSize(), DataSize.Unit.BYTE);
-            retVal.put("rawDataSize", rawDataSize.convertToMostSuccinctDataSize().toString());
+            if(query.getResultFileSize() == null) {
+                retVal.put("rawDataSize", null);
+            } else {
+                DataSize rawDataSize = new DataSize(query.getResultFileSize(), DataSize.Unit.BYTE);
+                retVal.put("rawDataSize", rawDataSize.convertToMostSuccinctDataSize().toString());
+            }
 
         }
 

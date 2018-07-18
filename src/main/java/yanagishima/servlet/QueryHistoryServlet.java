@@ -81,8 +81,12 @@ public class QueryHistoryServlet extends HttpServlet {
                 row.add(query.getQueryId());
                 row.add(query.getQueryString());
                 row.add(query.getElapsedTimeMillis());
-                DataSize rawDataSize = new DataSize(query.getResultFileSize(), DataSize.Unit.BYTE);
-                row.add(rawDataSize.convertToMostSuccinctDataSize().toString());
+                if(query.getResultFileSize() == null) {
+                    row.add(null);
+                } else {
+                    DataSize rawDataSize = new DataSize(query.getResultFileSize(), DataSize.Unit.BYTE);
+                    row.add(rawDataSize.convertToMostSuccinctDataSize().toString());
+                }
                 row.add(query.getEngine());
                 row.add(query.getFetchResultTimeString());
                 row.add(query.getLinenumber());
