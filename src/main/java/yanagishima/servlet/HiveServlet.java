@@ -116,12 +116,7 @@ public class HiveServlet extends HttpServlet {
                     });
                     Optional<Query> queryDataOptional = db.single(Query.class).where("query_id=? and datasource=?", queryid, datasource).execute();
                     queryDataOptional.ifPresent(queryData -> {
-                        LocalDateTime submitTimeLdt = LocalDateTime.parse(queryid.substring(0, "yyyyMMdd_HHmmss".length()), DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss"));
-                        ZonedDateTime submitTimeZdt = submitTimeLdt.atZone(ZoneId.of("GMT", ZoneId.SHORT_IDS));
-                        String fetchResultTimeString = queryData.getFetchResultTimeString();
-                        ZonedDateTime fetchResultTime = ZonedDateTime.parse(fetchResultTimeString);
-                        long elapsedTimeMillis = ChronoUnit.MILLIS.between(submitTimeZdt, fetchResultTime);
-                        retVal.put("elapsedTimeMillis", elapsedTimeMillis);
+                        retVal.put("elapsedTimeMillis", queryData.getElapsedTimeMillis());
                     });
                 } catch (HiveQueryErrorException e) {
                     LOGGER.error(e.getMessage(), e);
