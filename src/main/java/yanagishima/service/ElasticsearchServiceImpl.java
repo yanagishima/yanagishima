@@ -112,7 +112,7 @@ public class ElasticsearchServiceImpl implements ElasticsearchService {
             elasticsearchQueryResult.setQueryId(queryId);
             processData(datasource, query, limit, userName, connection, queryId, start, elasticsearchQueryResult);
             if (storeFlag) {
-                insertQueryHistory(db, datasource, "elasticsearch", query, userName, queryId);
+                insertQueryHistory(db, datasource, "elasticsearch", query, userName, queryId, elasticsearchQueryResult.getLineNumber());
             }
             if (yanagishimaConfig.getFluentdExecutedTag().isPresent()) {
                 try {
@@ -147,9 +147,6 @@ public class ElasticsearchServiceImpl implements ElasticsearchService {
     private void processData(String datasource, String query, int limit, String userName, Connection connection, String queryId, long start, ElasticsearchQueryResult elasticsearchQueryResult) throws SQLException {
         Duration queryMaxRunTime = new Duration(this.yanagishimaConfig.getElasticsearchQueryMaxRunTimeSeconds(datasource), TimeUnit.SECONDS);
         try (PreparedStatement statement = connection.prepareStatement(query)) {
-            int timeout = (int) queryMaxRunTime.toMillis() / 1000;
-            //statement.setQueryTimeout(timeout);
-
             try (ResultSet resultSet = statement.executeQuery()) {
                 ResultSetMetaData resultSetMetaData = resultSet.getMetaData();
                 int columnCount = resultSetMetaData.getColumnCount();
