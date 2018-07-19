@@ -109,8 +109,13 @@ public class QueryHistoryUserServlet extends HttpServlet {
             }
             retVal.put("results", subQueryHistoryList);
 
-            List<Query> totalQueryList = db.searchBySQL(Query.class, String.format("select query_id from query where datasource='%s' and engine='%s' and user='%s' and status='%s'", datasource, engine, userName, Status.SUCCEED.name()));
-            retVal.put("total", totalQueryList.size());
+            long totalCount = db.count(Query.class)
+                    .where("datasource=?", datasource)
+                    .where("engine=?", engine)
+                    .where("user=?", userName)
+                    .where("status=?", Status.SUCCEED.name())
+                    .execute();
+            retVal.put("total", totalCount);
 
         } catch (Throwable e) {
             LOGGER.error(e.getMessage(), e);
