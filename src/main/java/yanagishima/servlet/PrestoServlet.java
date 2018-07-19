@@ -125,10 +125,6 @@ public class PrestoServlet extends HttpServlet {
 						warningMessageOptinal.ifPresent(warningMessage -> {
 							retVal.put("warn", warningMessage);
 						});
-						Optional<Query> queryDataOptional = db.single(Query.class).where("query_id=? and datasource=?", queryid, datasource).execute();
-						queryDataOptional.ifPresent(queryData -> {
-							retVal.put("elapsedTimeMillis", queryData.getElapsedTimeMillis());
-						});
 					}
 					long end = System.currentTimeMillis();
 					if(end - start > 1000) {

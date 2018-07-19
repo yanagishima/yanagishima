@@ -114,10 +114,6 @@ public class HiveServlet extends HttpServlet {
                     warningMessageOptinal.ifPresent(warningMessage -> {
                         retVal.put("warn", warningMessage);
                     });
-                    Optional<Query> queryDataOptional = db.single(Query.class).where("query_id=? and datasource=?", queryid, datasource).execute();
-                    queryDataOptional.ifPresent(queryData -> {
-                        retVal.put("elapsedTimeMillis", queryData.getElapsedTimeMillis());
-                    });
                 } catch (HiveQueryErrorException e) {
                     LOGGER.error(e.getMessage(), e);
                     retVal.put("queryid", e.getQueryId());
