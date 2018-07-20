@@ -60,8 +60,13 @@ public class HistoryStatusServlet extends HttpServlet {
                         }
                     }
                 }
-                String engine = HttpRequestUtil.getParam(request, "engine");
-                Optional<Query> queryOptional = db.single(Query.class).where("query_id=? and datasource=? and engine=?", queryidOptional.get(), datasource, engine).execute();
+                String engine = request.getParameter("engine");
+                Optional<Query> queryOptional;
+                if(engine == null) {
+                    queryOptional = db.single(Query.class).where("query_id=? and datasource=?", queryidOptional.get(), datasource).execute();
+                } else {
+                    queryOptional = db.single(Query.class).where("query_id=? and datasource=? and engine=?", queryidOptional.get(), datasource, engine).execute();
+                }
                 queryOptional.ifPresent(query -> {
                     retVal.put("status", "ok");
                 });
