@@ -133,7 +133,7 @@ public class ElasticsearchServiceImpl implements ElasticsearchService {
             return elasticsearchQueryResult;
 
         } catch (SQLException e) {
-            //storeError(db, datasource, "elasticsearch", queryId, query, userName, e.getMessage());
+            storeError(db, datasource, "elasticsearch", queryId, query, userName, e.getMessage());
             throw new ElasticsearchQueryErrorException(queryId, e);
         }
     }
