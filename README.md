@@ -42,6 +42,7 @@ yanagishima is a Web UI for presto/hive.
 
 # Versions
 * 14.0(not released)
+　* fix wrong line number when result file contains a new line
   * metadata of 14.0 is NOT compatible with 13.0, so migration is required
   * migrateV14.sh is the script to migrate db file.
   * migration process is as follows
@@ -59,6 +60,8 @@ yanagishima is a Web UI for presto/hive.
   * add kill hive query feature if you use a kerberized hadoop cluster
   * sort table name when you use ```Treeview```
   * copy publish url to clipboard but chrome user only due to Async Clipboard API
+  * handle presto/hive reserved keywords(e.g. group, order)
+  * use timestamp to index.js due to cache busting
 * 13.0
   * improve code input performance especially when query result is huge
   * upgrade ace editor
