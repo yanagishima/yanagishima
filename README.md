@@ -53,7 +53,7 @@ yanagishima is a Web UI for presto/hive.
   sqlite> alter table query rename to query_old;
   sqlite> alter table query_v14 rename to query;
   If you confirmed, drop table query_old
-  It take about 10 hours if db file is more than 500MB and result file is about 1TB
+  It takes about 10 hours if db file is more than 500MB and result file is about 1TB
   ```
   * ```vacuum``` and ```create index deq_index on query(datasource, engine, query_id)``` and ```create index deu_index on query(datasource, engine, user)``` may be necessary if yanagishima.db is huge
   * fix infinite loop bug when /queryStatus returns 500
