@@ -41,8 +41,8 @@ yanagishima is a Web UI for presto/hive.
 * support graphviz to visualize presto explain result
 
 # Versions
-* 14.0(not released)
-　* fix wrong line number when result file contains a new line
+* 14.0
+  * fix wrong line number when result file contains a new line
   * metadata of 14.0 is NOT compatible with 13.0, so migration is required
   * migrateV14.sh is the script to migrate db file.
   * migration process is as follows
@@ -187,11 +187,11 @@ yanagishima is a Web UI for presto/hive.
 ```
 git clone https://github.com/yanagishima/yanagishima.git
 cd yanagishima
-git checkout -b 13.0 refs/tags/13.0
+git checkout -b 14.0 refs/tags/14.0
 ./gradlew distZip
 cd build/distributions
-unzip yanagishima-13.0.zip
-cd yanagishima-13.0
+unzip yanagishima-14.0.zip
+cd yanagishima-14.0
 vim conf/yanagishima.properties
 nohup bin/yanagishima-start.sh >y.log 2>&1 &
 ```
@@ -279,6 +279,18 @@ hive.jdbc.password.your-hive=yanagishima-hive
 resource.manager.url.your-hive=http://localhost:8088
 sql.query.engines=hive
 hive.datasources=your-hive
+```
+
+If you use a hive kerberized cluster and want to kill query, you need to specify as follows.
+```
+jetty.port=8080
+hive.jdbc.url.your-hive=jdbc:hive2://localhost:10000/default;auth=noSasl
+hive.jdbc.user.your-hive=yanagishima-hive
+hive.jdbc.password.your-hive=yanagishima-hive
+resource.manager.url.your-hive=http://localhost:8088
+sql.query.engines=hive
+hive.datasources=your-hive
+use.jdbc.cancel.your-hive=true
 ```
 
 If you use presto and hive, you need to specify as follows.
@@ -375,6 +387,11 @@ If it is necessary to migrate yanagishima.db or result file, you need to migrate
 	- browser-sync 2.18.8
 
 ### Deep customization
+
+#### Dependence
+
+- [Xcode](https://developer.apple.com/jp/xcode/)
+- [Node.js](https://nodejs.org/ja/)
 
 #### Installation
 

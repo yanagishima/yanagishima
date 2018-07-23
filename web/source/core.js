@@ -701,24 +701,24 @@ jQuery(document).ready(function($) {
 					},
 					{
 						label: "SHOW CREATE TABLE ...",
-						sql: "SHOW CREATE TABLE {catalog}.{schema}.{table}",
+						sql: "SHOW CREATE TABLE {catalog}.{schema}.\"{table}\"",
 						enable: ['BASE TABLE'],
 					},
 					{
 						label: "DESCRIBE ...",
-						sql: "DESCRIBE {catalog}.{schema}.{table}",
+						sql: "DESCRIBE {catalog}.{schema}.\"{table}\"",
 						enable: ['BASE TABLE', 'VIEW'],
 					}
 				];
 				var defaultSnippet = {
 					label: "SELECT * FROM ... LIMIT 100",
-					sql: "SELECT {columns} FROM {catalog}.{schema}.{table} LIMIT 100",
+					sql: "SELECT {columns} FROM {catalog}.{schema}.\"{table}\" LIMIT 100",
 					enable: ['BASE TABLE', 'VIEW'],
 				};
 				if (exist_paritition || config.column_date) {
 					defaultSnippet = {
 						label: "SELECT * FROM ... WHERE {column_date}='{yesterday}' LIMIT 100".format(config),
-						sql: "SELECT {columns} FROM {catalog}.{schema}.{table} WHERE {column_date}='{yesterday}' LIMIT 100",
+						sql: "SELECT {columns} FROM {catalog}.{schema}.\"{table}\" WHERE {column_date}='{yesterday}' LIMIT 100",
 						enable: ['BASE TABLE', 'VIEW'],
 					}					
 				}
@@ -825,6 +825,10 @@ jQuery(document).ready(function($) {
 						var chart = self.chart;
 						var line = self.line;
 						var uri = '/share/?' + publish_id + (chart ? '&' + chart : '') + (line ? '#L' + line : '');
+						var ua = navigator.userAgent.toLowerCase();
+						if (ua.indexOf('chrome') !== -1) {
+							navigator.clipboard.writeText(location.protocol + "//" + location.host + uri);
+						}
 						toastr.success(queryid, 'Published (Click Here)', {
 							onclick: function() {
 								window.open(uri, '_blank');
@@ -1199,6 +1203,7 @@ jQuery(document).ready(function($) {
 						type: 'GET',
 						url: self.domain + self.apis.historyStatus.format({
 							datasource: self.datasource,
+							engine: self.engine,
 							queryid: queryid
 						}),
 					}).done(function(data) {
@@ -1249,6 +1254,7 @@ jQuery(document).ready(function($) {
 					type: 'GET',
 					url: self.domain + self.apis.history.format({
 						datasource: self.datasource,
+						engine: self.engine,
 						queryid: queryid
 					}),
 					timeout: 300000,
@@ -1293,6 +1299,7 @@ jQuery(document).ready(function($) {
 					type: 'GET',
 					url: self.domain + self.apis.history.format({
 						datasource: self.datasource,
+						engine: self.engine,
 						queryid: queryid
 					}),
 					timeout: 300000,
@@ -1314,7 +1321,7 @@ jQuery(document).ready(function($) {
 					yesterday: Date.create().addDays(-1).format('{yyyy}{MM}{dd}')
 				};
 				var snippet = self.snippets[self.snippet].sql;
-				!self.is_presto && (snippet = snippet.remove('{catalog}.'));
+				!self.is_presto && (snippet = snippet.remove('{catalog}.').replace(/"/g, "`"));
 				self.input_query = snippet.format(config);
 			},
 			setWhere: function(index) {
@@ -1332,8 +1339,8 @@ jQuery(document).ready(function($) {
 					table: self.table,
 					condition: conditions.join(' AND '),
 				};
-				var template = "SELECT * FROM {catalog}.{schema}.{table} WHERE {condition} LIMIT 100";
-				var where = self.is_presto ? template : template.remove('{catalog}.');
+				var template = "SELECT * FROM {catalog}.{schema}.\"{table}\" WHERE {condition} LIMIT 100";
+				var where = self.is_presto ? template : template.remove('{catalog}.').replace(/"/g, "`");
 				self.input_query = where.format(config);
 			},
 			runSnippet: function() {
@@ -1905,7 +1912,7 @@ jQuery(document).ready(function($) {
 						var params = Object.merge(
 							{
 								datasource: self.datasource,
-								query: "{0}SELECT table_name, table_type FROM {1}.information_schema.tables WHERE table_schema='{2}'".format(hiddenQuery_prefix, catalog, schema)
+								query: "{0}SELECT table_name, table_type FROM {1}.information_schema.tables WHERE table_schema='{2}' ORDER BY table_name".format(hiddenQuery_prefix, catalog, schema)
 							},
 							self.auth_info,
 						);
@@ -1933,7 +1940,7 @@ jQuery(document).ready(function($) {
 						var params = Object.merge(
 							{
 								datasource: self.datasource,
-								query: "{0}DESCRIBE {1}".format(hiddenQuery_prefix, [catalog, schema, table].join('.'))
+								query: "{0}DESCRIBE {1}.{2}.\"{3}\"".format(hiddenQuery_prefix, catalog, schema, table)
 							},
 							self.auth_info,
 						);

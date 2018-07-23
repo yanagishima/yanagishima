@@ -1223,6 +1223,9 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/push.js/1.0.5/push.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/viz.js/1.8.0/viz.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/lity/2.3.0/lity.min.js"></script>
-<script src="/index.js"></script>
+<script type="text/javascript">
+	var url = "/index.js?" + new Date().getTime();
+	document.writeln('<script src="' + url + '"><\/script>');
+</script>
 </body>
 </html>

@@ -1,5 +1,5 @@
 yanagishima = {
-	version: '13.0',
+	version: '14.0',
 	sitename: 'yanagishima',
 	domain: '',
 	apis: {
@@ -10,8 +10,8 @@ yanagishima = {
 		prestoAsync: '/prestoAsync',
 		queryStatus: '/queryStatus',
 		query: '/query',
-		history: '/history?datasource={datasource}&queryid={queryid}',
-		historyStatus: '/historyStatus?datasource={datasource}&queryid={queryid}',
+		history: '/history?datasource={datasource}&engine={engine}&queryid={queryid}',
+		historyStatus: '/historyStatus?datasource={datasource}&engine={engine}&queryid={queryid}',
 		queryHistory: '/queryHistory?datasource={datasource}',
 		download: '/download?datasource={datasource}&queryid={queryid}&encode=UTF-8',
 		csvdownload: '/csvdownload?datasource={datasource}&queryid={queryid}&encode=UTF-8',
