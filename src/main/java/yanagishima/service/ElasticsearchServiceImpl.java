@@ -31,6 +31,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
+import static com.github.wyukawa.elasticsearch.unofficial.jdbc.driver.ElasticsearchDriver.DRIVER_URL_START;
 import static yanagishima.util.DbUtil.insertQueryHistory;
 import static yanagishima.util.DbUtil.storeError;
 import static yanagishima.util.PathUtil.getResultFilePath;
@@ -71,7 +72,7 @@ public class ElasticsearchServiceImpl implements ElasticsearchService {
     public ElasticsearchQueryResult doTranslate(String datasource, String query, String userName, boolean storeFlag, int limit) throws ElasticsearchQueryErrorException {
         String queryId = generateQueryId(datasource, query, "elasticsearch");
         String jdbcUrl = yanagishimaConfig.getElasticsearchJdbcUrl(datasource);
-        String httpUrl = "http://" + jdbcUrl.substring("jdbc:es:".length());
+        String httpUrl = "http://" + jdbcUrl.substring(DRIVER_URL_START.length());
         ElasticsearchTranslateClient translateClient = new ElasticsearchTranslateClient(httpUrl);
         try {
             long start = System.currentTimeMillis();
