@@ -1,6 +1,5 @@
 package yanagishima.service;
 
-import com.github.wyukawa.elasticsearch.unofficial.jdbc.driver.ElasticsearchDriver;
 import com.github.wyukawa.elasticsearch.unofficial.jdbc.driver.ElasticsearchTranslateClient;
 import io.airlift.units.DataSize;
 import io.airlift.units.Duration;
@@ -63,13 +62,13 @@ public class ElasticsearchServiceImpl implements ElasticsearchService {
     }
 
     @Override
-    public ElasticsearchQueryResult doQuery(String datasource, String query, String userName, boolean storeFlag, int limit) throws ElasticsearchQueryErrorException{
+    public ElasticsearchQueryResult doQuery(String datasource, String query, String userName, boolean storeFlag, int limit) throws ElasticsearchQueryErrorException {
         String queryId = generateQueryId(datasource, query, "elasticsearch");
         return getElasticsearchQueryResult(queryId, datasource, query, storeFlag, limit, userName);
     }
 
     @Override
-    public ElasticsearchQueryResult doTranslate(String datasource, String query, String userName, boolean storeFlag, int limit) throws ElasticsearchQueryErrorException{
+    public ElasticsearchQueryResult doTranslate(String datasource, String query, String userName, boolean storeFlag, int limit) throws ElasticsearchQueryErrorException {
         String queryId = generateQueryId(datasource, query, "elasticsearch");
         String jdbcUrl = yanagishimaConfig.getElasticsearchJdbcUrl(datasource);
         String httpUrl = "http://" + jdbcUrl.substring("jdbc:es:".length());
@@ -142,7 +141,7 @@ public class ElasticsearchServiceImpl implements ElasticsearchService {
         }
     }
 
-    private ElasticsearchQueryResult getElasticsearchQueryResult(String queryId, String datasource, String query, boolean storeFlag, int limit, String userName) throws ElasticsearchQueryErrorException{
+    private ElasticsearchQueryResult getElasticsearchQueryResult(String queryId, String datasource, String query, boolean storeFlag, int limit, String userName) throws ElasticsearchQueryErrorException {
 
         List<String> elasticsearchDisallowedKeywords = yanagishimaConfig.getElasticsearchDisallowedKeywords(datasource);
         for (String elasticsearchDisallowedKeyword : elasticsearchDisallowedKeywords) {

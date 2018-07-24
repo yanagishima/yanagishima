@@ -1,14 +1,10 @@
 package yanagishima.servlet;
 
-import com.facebook.presto.client.ErrorLocation;
-import com.facebook.presto.client.QueryError;
 import me.geso.tinyorm.TinyORM;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import yanagishima.config.YanagishimaConfig;
 import yanagishima.exception.ElasticsearchQueryErrorException;
-import yanagishima.exception.HiveQueryErrorException;
-import yanagishima.exception.QueryErrorException;
 import yanagishima.result.ElasticsearchQueryResult;
 import yanagishima.row.Query;
 import yanagishima.service.ElasticsearchService;
@@ -29,9 +25,7 @@ import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 import static javax.servlet.http.HttpServletResponse.SC_FORBIDDEN;
 import static yanagishima.util.Constants.YANAGISHIMA_COMMENT;
@@ -94,8 +88,8 @@ public class ElasticsearchServlet extends HttpServlet {
                     }
                     int limit = yanagishimaConfig.getSelectLimit();
                     ElasticsearchQueryResult elasticsearchQueryResult = null;
-                    if(request.getParameter("translate") == null) {
-                        if(query.startsWith(YANAGISHIMA_COMMENT)) {
+                    if (request.getParameter("translate") == null) {
+                        if (query.startsWith(YANAGISHIMA_COMMENT)) {
                             elasticsearchQueryResult = elasticsearchService.doQuery(datasource, query, userName, false, limit);
                         } else {
                             elasticsearchQueryResult = elasticsearchService.doQuery(datasource, query, userName, true, limit);

@@ -1,11 +1,7 @@
 package yanagishima.service;
 
 import yanagishima.exception.ElasticsearchQueryErrorException;
-import yanagishima.exception.HiveQueryErrorException;
 import yanagishima.result.ElasticsearchQueryResult;
-import yanagishima.result.HiveQueryResult;
-
-import java.util.Optional;
 
 
 public interface ElasticsearchService {
