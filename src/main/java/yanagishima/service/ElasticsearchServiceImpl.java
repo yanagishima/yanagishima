@@ -1,5 +1,7 @@
 package yanagishima.service;
 
+import com.github.wyukawa.elasticsearch.unofficial.jdbc.driver.ElasticsearchDriver;
+import com.github.wyukawa.elasticsearch.unofficial.jdbc.driver.ElasticsearchTranslateClient;
 import io.airlift.units.DataSize;
 import io.airlift.units.Duration;
 import me.geso.tinyorm.TinyORM;
@@ -64,6 +66,80 @@ public class ElasticsearchServiceImpl implements ElasticsearchService {
     public ElasticsearchQueryResult doQuery(String datasource, String query, String userName, boolean storeFlag, int limit) throws ElasticsearchQueryErrorException{
         String queryId = generateQueryId(datasource, query, "elasticsearch");
         return getElasticsearchQueryResult(queryId, datasource, query, storeFlag, limit, userName);
+    }
+
+    @Override
+    public ElasticsearchQueryResult doTranslate(String datasource, String query, String userName, boolean storeFlag, int limit) throws ElasticsearchQueryErrorException{
+        String queryId = generateQueryId(datasource, query, "elasticsearch");
+        String jdbcUrl = yanagishimaConfig.getElasticsearchJdbcUrl(datasource);
+        String httpUrl = "http://" + jdbcUrl.substring("jdbc:es:".length());
+        ElasticsearchTranslateClient translateClient = new ElasticsearchTranslateClient(httpUrl);
+        try {
+            long start = System.currentTimeMillis();
+            ElasticsearchQueryResult elasticsearchQueryResult = new ElasticsearchQueryResult();
+            elasticsearchQueryResult.setQueryId(queryId);
+            List<String> columnNameList = new ArrayList<>();
+            columnNameList.add("lucene_query");
+            Path dst = getResultFilePath(datasource, queryId, false);
+            int lineNumber = 0;
+            int maxResultFileByteSize = yanagishimaConfig.getElasticsearchMaxResultFileByteSize();
+            int resultBytes = 0;
+            try (BufferedWriter bw = Files.newBufferedWriter(dst, StandardCharsets.UTF_8);
+                 CSVPrinter csvPrinter = new CSVPrinter(bw, CSVFormat.EXCEL.withDelimiter('\t').withNullString("\\N").withRecordSeparator(System.getProperty("line.separator")));) {
+                csvPrinter.printRecord(columnNameList);
+                lineNumber++;
+                elasticsearchQueryResult.setColumns(columnNameList);
+                List<List<String>> rowDataList = new ArrayList<>();
+                List<String> columnDataList = new ArrayList<>();
+                String luceneQuery = translateClient.translate(query);
+                columnDataList.add(luceneQuery);
+                csvPrinter.printRecord(columnDataList);
+                lineNumber++;
+                resultBytes += columnDataList.toString().getBytes(StandardCharsets.UTF_8).length;
+                if (resultBytes > maxResultFileByteSize) {
+                    String message = String.format("Result file size exceeded %s bytes. queryId=%s, datasource=%s", maxResultFileByteSize, queryId, datasource);
+                    storeError(db, datasource, "elasticsearch", queryId, query, userName, message);
+                    throw new RuntimeException(message);
+                }
+                rowDataList.add(columnDataList);
+                elasticsearchQueryResult.setLineNumber(lineNumber);
+                elasticsearchQueryResult.setRecords(rowDataList);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+
+            try {
+                long size = Files.size(dst);
+                DataSize rawDataSize = new DataSize(size, DataSize.Unit.BYTE);
+                elasticsearchQueryResult.setRawDataSize(rawDataSize.convertToMostSuccinctDataSize());
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+
+            if (storeFlag) {
+                insertQueryHistory(db, datasource, "elasticsearch", query, userName, queryId, elasticsearchQueryResult.getLineNumber());
+            }
+            if (yanagishimaConfig.getFluentdExecutedTag().isPresent()) {
+                try {
+                    long end = System.currentTimeMillis();
+                    String tag = yanagishimaConfig.getFluentdExecutedTag().get();
+                    Map<String, Object> event = new HashMap<>();
+                    event.put("elapsed_time_millseconds", end - start);
+                    event.put("user", userName);
+                    event.put("query", query);
+                    event.put("query_id", queryId);
+                    event.put("datasource", datasource);
+                    event.put("engine", "elasticsearch");
+                    fluency.emit(tag, event);
+                } catch (IOException e) {
+                    LOGGER.error(e.getMessage(), e);
+                }
+            }
+            return elasticsearchQueryResult;
+        } catch (SQLException e) {
+            storeError(db, datasource, "elasticsearch", queryId, query, userName, e.getMessage());
+            throw new ElasticsearchQueryErrorException(queryId, e);
+        }
     }
 
     private ElasticsearchQueryResult getElasticsearchQueryResult(String queryId, String datasource, String query, boolean storeFlag, int limit, String userName) throws ElasticsearchQueryErrorException{

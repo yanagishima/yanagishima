@@ -92,9 +92,18 @@ public class ElasticsearchServlet extends HttpServlet {
                     if (userName != null) {
                         LOGGER.info(String.format("%s executed %s in %s", userName, query, datasource));
                     }
-                    boolean storeFlag = Boolean.parseBoolean(Optional.ofNullable(request.getParameter("store")).orElse("false"));
                     int limit = yanagishimaConfig.getSelectLimit();
-                    ElasticsearchQueryResult elasticsearchQueryResult = elasticsearchService.doQuery(datasource, query, userName, storeFlag, limit);
+                    ElasticsearchQueryResult elasticsearchQueryResult = null;
+                    if(request.getParameter("translate") == null) {
+                        if(query.startsWith(YANAGISHIMA_COMMENT)) {
+                            elasticsearchQueryResult = elasticsearchService.doQuery(datasource, query, userName, false, limit);
+                        } else {
+                            elasticsearchQueryResult = elasticsearchService.doQuery(datasource, query, userName, true, limit);
+                        }
+                    } else {
+                        elasticsearchQueryResult = elasticsearchService.doTranslate(datasource, query, userName, false, limit);
+                    }
+
                     String queryid = elasticsearchQueryResult.getQueryId();
                     retVal.put("queryid", queryid);
                     retVal.put("headers", elasticsearchQueryResult.getColumns());
