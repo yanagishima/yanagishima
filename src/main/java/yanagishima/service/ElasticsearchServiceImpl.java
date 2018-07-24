@@ -13,6 +13,7 @@ import org.slf4j.LoggerFactory;
 import yanagishima.config.YanagishimaConfig;
 import yanagishima.exception.ElasticsearchQueryErrorException;
 import yanagishima.result.ElasticsearchQueryResult;
+import yanagishima.util.QueryIdUtil;
 
 import javax.inject.Inject;
 import java.io.BufferedWriter;
@@ -64,13 +65,13 @@ public class ElasticsearchServiceImpl implements ElasticsearchService {
 
     @Override
     public ElasticsearchQueryResult doQuery(String datasource, String query, String userName, boolean storeFlag, int limit) throws ElasticsearchQueryErrorException {
-        String queryId = generateQueryId(datasource, query, "elasticsearch");
+        String queryId = QueryIdUtil.generate(datasource, query, "elasticsearch");
         return getElasticsearchQueryResult(queryId, datasource, query, storeFlag, limit, userName);
     }
 
     @Override
     public ElasticsearchQueryResult doTranslate(String datasource, String query, String userName, boolean storeFlag, int limit) throws ElasticsearchQueryErrorException {
-        String queryId = generateQueryId(datasource, query, "elasticsearch");
+        String queryId = QueryIdUtil.generate(datasource, query, "elasticsearch");
         String jdbcUrl = yanagishimaConfig.getElasticsearchJdbcUrl(datasource);
         String httpUrl = "http://" + jdbcUrl.substring(DRIVER_URL_START.length());
         ElasticsearchTranslateClient translateClient = new ElasticsearchTranslateClient(httpUrl);
@@ -212,12 +213,6 @@ public class ElasticsearchServiceImpl implements ElasticsearchService {
             storeError(db, datasource, "elasticsearch", queryId, query, userName, e.getMessage());
             throw new ElasticsearchQueryErrorException(queryId, e);
         }
-    }
-
-    private String generateQueryId(String datasource, String query, String engine) {
-        String yyyyMMddHHmmss = ZonedDateTime.now(ZoneId.of("GMT")).format(DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss"));
-        double rand = Math.floor(Math.random() * 10000);
-        return yyyyMMddHHmmss + "_" + DigestUtils.md5Hex(datasource + ";" + query + ";" + engine + ";" + ZonedDateTime.now().toString() + ";" + String.valueOf(rand));
     }
 
     private void processData(String datasource, String query, int limit, String userName, Connection connection, String queryId, long start, ElasticsearchQueryResult elasticsearchQueryResult) throws SQLException {

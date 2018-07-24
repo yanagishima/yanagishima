@@ -13,6 +13,7 @@ import yanagishima.config.YanagishimaConfig;
 import yanagishima.exception.HiveQueryErrorException;
 import yanagishima.pool.StatementPool;
 import yanagishima.result.HiveQueryResult;
+import yanagishima.util.QueryIdUtil;
 
 import javax.inject.Inject;
 import java.io.BufferedWriter;
@@ -68,7 +69,7 @@ public class HiveServiceImpl implements HiveService {
 
     @Override
     public String doQueryAsync(String datasource, String query, String userName, Optional<String> hiveUser, Optional<String> hivePassword) {
-        String queryId = generateQueryId(datasource, query);
+        String queryId = QueryIdUtil.generate(datasource, query, "hive");
         executorService.submit(new Task(queryId, datasource, query, userName, hiveUser, hivePassword));
         return queryId;
     }
@@ -104,7 +105,7 @@ public class HiveServiceImpl implements HiveService {
 
     @Override
     public HiveQueryResult doQuery(String datasource, String query, String userName, Optional<String> hiveUser, Optional<String> hivePassword, boolean storeFlag, int limit) throws HiveQueryErrorException {
-        String queryId = generateQueryId(datasource, query);
+        String queryId = QueryIdUtil.generate(datasource, query, "hive");
         return getHiveQueryResult(queryId, datasource, query, storeFlag, limit, userName, hiveUser, hivePassword, false);
     }
 
@@ -191,12 +192,6 @@ public class HiveServiceImpl implements HiveService {
             storeError(db, datasource, "hive", queryId, query, userName, e.getMessage());
             throw new HiveQueryErrorException(queryId, e);
         }
-    }
-
-    private String generateQueryId(String datasource, String query) {
-        String yyyyMMddHHmmss = ZonedDateTime.now(ZoneId.of("GMT")).format(DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss"));
-        double rand = Math.floor(Math.random() * 10000);
-        return yyyyMMddHHmmss + "_" + DigestUtils.md5Hex(datasource + ";" + query + ";" + ZonedDateTime.now().toString() + ";" + String.valueOf(rand));
     }
 
     private void processData(String datasource, String query, int limit, String userName, Connection connection, String queryId, long start, HiveQueryResult hiveQueryResult, boolean async) throws SQLException {
