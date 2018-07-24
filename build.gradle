@@ -17,7 +17,7 @@ version = '14.0'
 repositories {
     // Use 'jcenter' for resolving your dependencies.
     // You can declare any Maven/Ivy/file repository here.
-    jcenter()
+    //jcenter()
     mavenCentral()
     maven {
         url "http://repo.hortonworks.com/content/repositories/releases"
