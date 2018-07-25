@@ -73,6 +73,7 @@ public class ElasticsearchServiceImpl implements ElasticsearchService {
         ElasticsearchTranslateClient translateClient = new ElasticsearchTranslateClient(httpUrl);
         try {
             long start = System.currentTimeMillis();
+            String luceneQuery = translateClient.translate(query);
             ElasticsearchQueryResult elasticsearchQueryResult = new ElasticsearchQueryResult();
             elasticsearchQueryResult.setQueryId(queryId);
             List<String> columnNameList = new ArrayList<>();
@@ -88,7 +89,6 @@ public class ElasticsearchServiceImpl implements ElasticsearchService {
                 elasticsearchQueryResult.setColumns(columnNameList);
                 List<List<String>> rowDataList = new ArrayList<>();
                 List<String> columnDataList = new ArrayList<>();
-                String luceneQuery = translateClient.translate(query);
                 columnDataList.add(luceneQuery);
                 csvPrinter.printRecord(columnDataList);
                 lineNumber++;
