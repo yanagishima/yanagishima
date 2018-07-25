@@ -95,7 +95,7 @@ public class ElasticsearchServlet extends HttpServlet {
                             elasticsearchQueryResult = elasticsearchService.doQuery(datasource, query, userName, true, limit);
                         }
                     } else {
-                        elasticsearchQueryResult = elasticsearchService.doTranslate(datasource, query, userName, false, limit);
+                        elasticsearchQueryResult = elasticsearchService.doTranslate(datasource, query, userName, true, limit);
                     }
 
                     String queryid = elasticsearchQueryResult.getQueryId();
