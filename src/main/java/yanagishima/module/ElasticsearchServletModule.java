@@ -9,5 +9,6 @@ public class ElasticsearchServletModule extends ServletModule {
 		bind(ElasticsearchServlet.class);
 
 		serve("/elasticsearch").with(ElasticsearchServlet.class);
+		serve("/elasticsearchQueryStatus").with(ElasticsearchQueryStatusServlet.class);
 	}
 }
