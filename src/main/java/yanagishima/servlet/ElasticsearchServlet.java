@@ -120,7 +120,7 @@ public class ElasticsearchServlet extends HttpServlet {
                 } catch (ElasticsearchQueryErrorException e) {
                     LOGGER.error(e.getMessage(), e);
                     retVal.put("queryid", e.getQueryId());
-                    retVal.put("error", e.getMessage());
+                    retVal.put("error", e.getCause().getMessage());
                 } catch (Throwable e) {
                     LOGGER.error(e.getMessage(), e);
                     retVal.put("error", e.getMessage());

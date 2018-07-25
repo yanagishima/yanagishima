@@ -117,7 +117,7 @@ public class HiveServlet extends HttpServlet {
                 } catch (HiveQueryErrorException e) {
                     LOGGER.error(e.getMessage(), e);
                     retVal.put("queryid", e.getQueryId());
-                    retVal.put("error", e.getMessage());
+                    retVal.put("error", e.getCause().getMessage());
                 }
 
             } catch (Throwable e) {
