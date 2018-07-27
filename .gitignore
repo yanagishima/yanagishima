@@ -9,5 +9,5 @@ yanagishima.iml
 data/yanagishima.db
 yanagishima.log
 web/node_modules/
-result/
+/result
 out/
