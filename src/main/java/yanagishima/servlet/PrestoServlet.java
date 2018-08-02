@@ -1,5 +1,6 @@
 package yanagishima.servlet;
 
+import com.facebook.presto.client.ClientException;
 import com.facebook.presto.client.ErrorLocation;
 import com.facebook.presto.client.QueryError;
 import me.geso.tinyorm.TinyORM;
@@ -146,6 +147,13 @@ public class PrestoServlet extends HttpServlet {
 					});
 					retVal.put("error", e.getCause().getMessage());
 					retVal.put("queryid", e.getQueryId());
+				} catch (ClientException e) {
+					if(prestoUser.isPresent()) {
+						LOGGER.error(String.format("%s failed to be authenticated. message=%s", prestoUser.get(), e.getMessage()));
+					} else {
+						LOGGER.error(e.getMessage());
+					}
+					retVal.put("error", e.getMessage());
 				} catch (Throwable e) {
 					LOGGER.error(e.getMessage(), e);
 					retVal.put("error", e.getMessage());
