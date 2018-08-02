@@ -101,6 +101,8 @@ public class PrestoServiceImpl implements PrestoService {
             try {
                 int limit = yanagishimaConfig.getSelectLimit();
                 getPrestoQueryResult(this.datasource, this.query, this.client, true, limit, this.userName);
+            } catch (QueryErrorException e) {
+                LOGGER.warn(e.getCause().getMessage());
             } catch (Throwable e) {
                 LOGGER.error(e.getMessage(), e);
             } finally {
