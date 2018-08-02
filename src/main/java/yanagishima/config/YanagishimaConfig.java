@@ -224,8 +224,8 @@ public class YanagishimaConfig {
 		}
 	}
 
-	public Optional<String> getResourceManagerUrl(String datasource) {
-		return Optional.ofNullable(properties.getProperty("resource.manager.url." + datasource));
+	public String getResourceManagerUrl(String datasource) {
+		return PropertiesUtil.getParam(properties, "resource.manager.url." + datasource);
 	}
 
 	public Optional<String> getResourceManagerBegin(String datasource) {

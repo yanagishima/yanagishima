@@ -46,13 +46,13 @@ public class HiveQueryStatusServlet extends HttpServlet {
 				}
 			}
 		}
-		String queryid = Optional.ofNullable(request.getParameter("queryid")).get();
-		String resourceManagerUrl = yanagishimaConfig.getResourceManagerUrl(datasource).get();
+		String queryid = HttpRequestUtil.getParam(request, "queryid");
+		String resourceManagerUrl = yanagishimaConfig.getResourceManagerUrl(datasource);
 		String userName = null;
-		Optional<String> hiveUser = Optional.ofNullable(request.getParameter("user"));
 		if(yanagishimaConfig.isUseAuditHttpHeaderName()) {
 			userName = request.getHeader(yanagishimaConfig.getAuditHttpHeaderName());
 		} else {
+			Optional<String> hiveUser = Optional.ofNullable(request.getParameter("user"));
 			if (hiveUser.isPresent()) {
 				userName = hiveUser.get();
 			}

@@ -60,7 +60,7 @@ public class YarnJobListServlet extends HttpServlet {
 				}
 			}
 		}
-		String resourceManagerUrl = yanagishimaConfig.getResourceManagerUrl(datasource).get();
+		String resourceManagerUrl = yanagishimaConfig.getResourceManagerUrl(datasource);
 		response.setContentType("application/json");
 		PrintWriter writer = response.getWriter();
 		List<Map> yarnJobList = YarnUtil.getJobList(resourceManagerUrl, yanagishimaConfig.getResourceManagerBegin(datasource));

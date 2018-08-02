@@ -44,7 +44,7 @@ public class HiveQueryDetailServlet extends HttpServlet {
                 }
             }
         }
-        String resourceManagerUrl = yanagishimaConfig.getResourceManagerUrl(datasource).get();
+        String resourceManagerUrl = yanagishimaConfig.getResourceManagerUrl(datasource);
         Optional<String> idOptinal = Optional.ofNullable(request.getParameter("id"));
         idOptinal.ifPresent(id -> {
             if (id.startsWith("application_")) {
