@@ -1,5 +1,6 @@
 package yanagishima.servlet;
 
+import com.facebook.presto.client.ClientException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import yanagishima.config.YanagishimaConfig;
@@ -81,6 +82,13 @@ public class PrestoAsyncServlet extends HttpServlet {
 				try {
 					String queryid = prestoService.doQueryAsync(datasource, query, userName, prestoUser, prestoPassword);
 					retVal.put("queryid", queryid);
+				} catch (ClientException e) {
+					if(prestoUser.isPresent()) {
+						LOGGER.error(String.format("%s failed to be authenticated. message=%s", prestoUser.get(), e.getMessage()));
+					} else {
+						LOGGER.error(e.getMessage());
+					}
+					retVal.put("error", e.getMessage());
 				} catch (Throwable e) {
 					LOGGER.error(e.getMessage(), e);
 					retVal.put("error", e.getMessage());

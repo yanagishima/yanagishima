@@ -1,5 +1,6 @@
 package yanagishima.servlet;
 
+import com.facebook.presto.client.ClientException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import yanagishima.config.YanagishimaConfig;
@@ -81,9 +82,20 @@ public class TableListServlet extends HttpServlet {
             List<String> invisibleSchemas = yanagishimaConfig.getInvisibleSchemas(datasource, catalog);
             String notin = "('" + String.join("','", invisibleSchemas) + "')";
             String query = String.format("%sSELECT table_catalog || '.' || table_schema || '.' || table_name FROM %s.information_schema.tables WHERE table_schema NOT IN %s", YANAGISHIMA_COMMENT, catalog, notin);
-            List<String> tables = prestoService.doQuery(datasource, query, userName, prestoUser, prestoPassword, false, Integer.MAX_VALUE).getRecords().stream().map(list -> list.get(0)).collect(Collectors.toList());
-
-            retVal.put("tableList", tables);
+            try {
+                List<String> tables = prestoService.doQuery(datasource, query, userName, prestoUser, prestoPassword, false, Integer.MAX_VALUE).getRecords().stream().map(list -> list.get(0)).collect(Collectors.toList());
+                retVal.put("tableList", tables);
+            } catch (ClientException e) {
+                if(prestoUser.isPresent()) {
+                    LOGGER.error(String.format("%s failed to be authenticated. message=%s", prestoUser.get(), e.getMessage()));
+                } else {
+                    LOGGER.error(e.getMessage());
+                }
+                retVal.put("error", e.getMessage());
+            } catch (Throwable e) {
+                LOGGER.error(e.getMessage(), e);
+                retVal.put("error", e.getMessage());
+            }
 
         } catch (Throwable e) {
             LOGGER.error(e.getMessage(), e);
