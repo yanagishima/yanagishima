@@ -93,6 +93,8 @@ public class HiveServiceImpl implements HiveService {
             try {
                 int limit = yanagishimaConfig.getSelectLimit();
                 getHiveQueryResult(this.queryId, this.datasource, this.query, true, limit, this.userName, this.hiveUser, this.hivePassword, true);
+            } catch (HiveQueryErrorException e) {
+                LOGGER.warn(e.getCause().getMessage());
             } catch (Throwable e) {
                 LOGGER.error(e.getMessage(), e);
             }
