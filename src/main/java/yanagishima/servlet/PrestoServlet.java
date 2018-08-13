@@ -3,7 +3,9 @@ package yanagishima.servlet;
 import com.facebook.presto.client.ClientException;
 import com.facebook.presto.client.ErrorLocation;
 import com.facebook.presto.client.QueryError;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import me.geso.tinyorm.TinyORM;
+import org.apache.http.client.fluent.Request;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import yanagishima.config.YanagishimaConfig;
@@ -14,6 +16,7 @@ import yanagishima.service.PrestoService;
 import yanagishima.util.AccessControlUtil;
 import yanagishima.util.HttpRequestUtil;
 import yanagishima.util.JsonUtil;
+import yanagishima.util.MetadataUtil;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
@@ -27,11 +30,10 @@ import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static javax.servlet.http.HttpServletResponse.SC_FORBIDDEN;
 import static yanagishima.util.Constants.YANAGISHIMA_COMMENT;
 
@@ -126,6 +128,14 @@ public class PrestoServlet extends HttpServlet {
 						warningMessageOptinal.ifPresent(warningMessage -> {
 							retVal.put("warn", warningMessage);
 						});
+						if(query.toLowerCase().startsWith(YANAGISHIMA_COMMENT + "describe")) {
+							if(yanagishimaConfig.getMetadataServiceUrl(datasource).isPresent()) {
+								String[] strings = query.toLowerCase().substring(YANAGISHIMA_COMMENT.length() + "describe ".length()).split("\\.");
+								String schema = strings[1];
+								String table = strings[2].substring(1, strings[2].length() - 1);
+								MetadataUtil.setMetadata(yanagishimaConfig.getMetadataServiceUrl(datasource).get(), retVal, schema, table, prestoQueryResult.getRecords());
+							}
+						}
 					}
 					long end = System.currentTimeMillis();
 					if(end - start > 1000) {

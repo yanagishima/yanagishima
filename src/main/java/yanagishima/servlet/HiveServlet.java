@@ -11,6 +11,7 @@ import yanagishima.service.HiveService;
 import yanagishima.util.AccessControlUtil;
 import yanagishima.util.HttpRequestUtil;
 import yanagishima.util.JsonUtil;
+import yanagishima.util.MetadataUtil;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
@@ -30,6 +31,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 import static javax.servlet.http.HttpServletResponse.SC_FORBIDDEN;
+import static yanagishima.util.Constants.YANAGISHIMA_COMMENT;
 
 @Singleton
 public class HiveServlet extends HttpServlet {
@@ -114,6 +116,14 @@ public class HiveServlet extends HttpServlet {
                     warningMessageOptinal.ifPresent(warningMessage -> {
                         retVal.put("warn", warningMessage);
                     });
+                    if(query.toLowerCase().startsWith("describe")) {
+                        if(yanagishimaConfig.getMetadataServiceUrl(datasource).isPresent()) {
+                            String[] strings = query.toLowerCase().substring("describe ".length()).split("\\.");
+                            String schema = strings[0];
+                            String table = strings[1].substring(1, strings[1].length() - 1);
+                            MetadataUtil.setMetadata(yanagishimaConfig.getMetadataServiceUrl(datasource).get(), retVal, schema, table, hiveQueryResult.getRecords());
+                        }
+                    }
                 } catch (HiveQueryErrorException e) {
                     LOGGER.error(e.getMessage(), e);
                     retVal.put("queryid", e.getQueryId());
