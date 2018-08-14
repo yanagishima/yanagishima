@@ -66,7 +66,6 @@ public class PrestoServlet extends HttpServlet {
 		try {
 			Optional<String> queryOptional = Optional.ofNullable(request.getParameter("query"));
 			queryOptional.ifPresent(query -> {
-				long start = System.currentTimeMillis();
 				String userName = null;
 				Optional<String> prestoUser = Optional.ofNullable(request.getParameter("user"));
 				Optional<String> prestoPassword = Optional.ofNullable(request.getParameter("password"));
@@ -107,9 +106,14 @@ public class PrestoServlet extends HttpServlet {
 					}
 					boolean storeFlag = Boolean.parseBoolean(Optional.ofNullable(request.getParameter("store")).orElse("false"));
 					int limit = yanagishimaConfig.getSelectLimit();
-					long prestoStartTime = System.currentTimeMillis();
+					if (prestoUser.isPresent() && prestoPassword.isPresent()) {
+						if(prestoUser.get().length() == 0) {
+							retVal.put("error", "user is empty");
+							JsonUtil.writeJSON(response, retVal);
+							return;
+						}
+					}
 					PrestoQueryResult prestoQueryResult = prestoService.doQuery(datasource, query, userName, prestoUser, prestoPassword, storeFlag, limit);
-					long prestoEndTime = System.currentTimeMillis();
 					String queryid = prestoQueryResult.getQueryId();
 					retVal.put("queryid", queryid);
 					if (prestoQueryResult.getUpdateType() == null) {
@@ -136,14 +140,6 @@ public class PrestoServlet extends HttpServlet {
 								MetadataUtil.setMetadata(yanagishimaConfig.getMetadataServiceUrl(datasource).get(), retVal, schema, table, prestoQueryResult.getRecords());
 							}
 						}
-					}
-					long end = System.currentTimeMillis();
-					if(end - start > 1000) {
-						LOGGER.info(String.format("queryid=%s", queryid));
-						LOGGER.info(String.format("preparing time=%d", prestoStartTime - start));
-						LOGGER.info(String.format("presto query time=%d", prestoEndTime - prestoStartTime));
-						LOGGER.info(String.format("finishing time=%d", end - prestoEndTime));
-						LOGGER.info(String.format("total time=%d", end - start));
 					}
 				} catch (QueryErrorException e) {
 					LOGGER.error(e.getMessage(), e);

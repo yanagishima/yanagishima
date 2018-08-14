@@ -77,9 +77,13 @@ public class TableListServlet extends HttpServlet {
             } else {
                 if (prestoUser.isPresent() && prestoPassword.isPresent()) {
                     userName = prestoUser.get();
-                    if(userName.length() == 0) {
-                        throw new RuntimeException("user is empty");
-                    }
+                }
+            }
+            if (prestoUser.isPresent() && prestoPassword.isPresent()) {
+                if(prestoUser.get().length() == 0) {
+                    retVal.put("error", "user is empty");
+                    JsonUtil.writeJSON(response, retVal);
+                    return;
                 }
             }
             List<String> invisibleSchemas = yanagishimaConfig.getInvisibleSchemas(datasource, catalog);

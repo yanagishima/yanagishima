@@ -79,6 +79,13 @@ public class PrestoAsyncServlet extends HttpServlet {
 				if(userName != null) {
 					LOGGER.info(String.format("%s executed %s in %s", userName, query, datasource));
 				}
+				if (prestoUser.isPresent() && prestoPassword.isPresent()) {
+					if(prestoUser.get().length() == 0) {
+						retVal.put("error", "user is empty");
+						JsonUtil.writeJSON(response, retVal);
+						return;
+					}
+				}
 				try {
 					String queryid = prestoService.doQueryAsync(datasource, query, userName, prestoUser, prestoPassword);
 					retVal.put("queryid", queryid);
