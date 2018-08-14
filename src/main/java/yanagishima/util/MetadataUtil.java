@@ -1,6 +1,7 @@
 package yanagishima.util;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.apache.http.client.HttpResponseException;
 import org.apache.http.client.fluent.Request;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -43,6 +44,8 @@ public class MetadataUtil {
             if (map.get("note") != null) {
                 retVal.put("note", ((Map) map.get("note")).get("note"));
             }
+        } catch (HttpResponseException e) {
+            LOGGER.warn(String.format("schema=%s, table=%s, status code=%d", schema, table, e.getStatusCode()));
         } catch (IOException e) {
             LOGGER.error(e.getMessage(), e);
         }
