@@ -2,6 +2,8 @@ package yanagishima.util;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.http.client.fluent.Request;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -12,6 +14,8 @@ import java.util.Map;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 public class MetadataUtil {
+
+    private static Logger LOGGER = LoggerFactory.getLogger(MetadataUtil.class);
 
     public static void setMetadata(String metadataServiceUrl, HashMap<String, Object> retVal, String schema, String table, List<List<String>> records) {
         try {
@@ -40,7 +44,7 @@ public class MetadataUtil {
                 retVal.put("note", ((Map) map.get("note")).get("note"));
             }
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            LOGGER.error(e.getMessage(), e);
         }
     }
 }
