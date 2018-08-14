@@ -78,6 +78,14 @@ public class QueryServlet extends HttpServlet {
 		Optional<String> prestoUser = Optional.ofNullable(request.getParameter("user"));
 		Optional<String> prestoPassword = Optional.ofNullable(request.getParameter("password"));
 		if (prestoUser.isPresent() && prestoPassword.isPresent()) {
+			if(prestoUser.get().length() == 0) {
+				HashMap<String, Object> retVal = new HashMap<String, Object>();
+				retVal.put("error", "user is empty");
+				ObjectMapper mapper = new ObjectMapper();
+				String json = mapper.writeValueAsString(retVal);
+				writer.println(json);
+				return;
+			}
 			OkHttpClient.Builder clientBuilder = httpClient.newBuilder();
 			clientBuilder.addInterceptor(basicAuth(prestoUser.get(), prestoPassword.get()));
 			try (Response prestoResponse = clientBuilder.build().newCall(prestoRequest).execute()) {

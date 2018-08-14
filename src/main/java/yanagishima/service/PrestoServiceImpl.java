@@ -326,6 +326,9 @@ public class PrestoServiceImpl implements PrestoService {
         String source = yanagishimaConfig.getSource();
 
         if (prestoUser.isPresent() && prestoPassword.isPresent()) {
+            if(prestoUser.get().length() == 0) {
+                throw new RuntimeException("user is empty");
+            }
             ClientSession clientSession = new ClientSession(
                     URI.create(prestoCoordinatorServer), prestoUser.get(), source, ImmutableSet.of(), null, catalog,
                     schema, TimeZone.getDefault().getID(), Locale.getDefault(),
