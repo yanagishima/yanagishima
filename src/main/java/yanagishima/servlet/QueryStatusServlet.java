@@ -1,5 +1,6 @@
 package yanagishima.servlet;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import okhttp3.OkHttpClient;
 import okhttp3.Response;
@@ -68,11 +69,21 @@ public class QueryStatusServlet extends HttpServlet {
 			OkHttpClient.Builder clientBuilder = httpClient.newBuilder();
 			clientBuilder.addInterceptor(basicAuth(prestoUser.get(), prestoPassword.get()));
 			try (Response prestoResponse = clientBuilder.build().newCall(prestoRequest).execute()) {
-				json = prestoResponse.body().string();
+				if(prestoResponse.isSuccessful()) {
+					json = prestoResponse.body().string();
+				} else {
+					writer.println(getError(prestoResponse.code(), prestoResponse.message()));
+					return;
+				}
 			}
 		} else {
 			try (Response prestoResponse = httpClient.newCall(prestoRequest).execute()) {
-				json = prestoResponse.body().string();
+				if(prestoResponse.isSuccessful()) {
+					json = prestoResponse.body().string();
+				} else {
+					writer.println(getError(prestoResponse.code(), prestoResponse.message()));
+					return;
+				}
 			}
 		}
 
@@ -93,6 +104,19 @@ public class QueryStatusServlet extends HttpServlet {
 			map.put("failureInfo", "");
 		}
 		writer.println(mapper.writeValueAsString(map));
+	}
+
+	private String getError(int code, String message) {
+		try {
+			Map<String, Object> map = new HashMap<String, Object>();
+			map.put("state", "FAILED");
+			map.put("failureInfo", "");
+			map.put("error", String.format("code=%d, message=%s", code, message));
+			ObjectMapper mapper = new ObjectMapper();
+			return mapper.writeValueAsString(map);
+		} catch (JsonProcessingException e) {
+			throw new RuntimeException(e);
+		}
 	}
 
 }
