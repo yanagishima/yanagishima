@@ -105,7 +105,6 @@ public class PrestoServlet extends HttpServlet {
 						LOGGER.info(String.format("%s executed %s in %s", userName, query, datasource));
 					}
 					boolean storeFlag = Boolean.parseBoolean(Optional.ofNullable(request.getParameter("store")).orElse("false"));
-					int limit = yanagishimaConfig.getSelectLimit();
 					if (prestoUser.isPresent() && prestoPassword.isPresent()) {
 						if(prestoUser.get().length() == 0) {
 							retVal.put("error", "user is empty");
@@ -113,7 +112,12 @@ public class PrestoServlet extends HttpServlet {
 							return;
 						}
 					}
-					PrestoQueryResult prestoQueryResult = prestoService.doQuery(datasource, query, userName, prestoUser, prestoPassword, storeFlag, limit);
+					PrestoQueryResult prestoQueryResult;
+					if(query.startsWith(YANAGISHIMA_COMMENT + "SELECT table_name, table_type FROM hive.information_schema.tables")) {
+						prestoQueryResult = prestoService.doQuery(datasource, query, userName, prestoUser, prestoPassword, storeFlag, Integer.MAX_VALUE);
+					} else {
+						prestoQueryResult = prestoService.doQuery(datasource, query, userName, prestoUser, prestoPassword, storeFlag, yanagishimaConfig.getSelectLimit());
+					}
 					String queryid = prestoQueryResult.getQueryId();
 					retVal.put("queryid", queryid);
 					if (prestoQueryResult.getUpdateType() == null) {
