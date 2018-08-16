@@ -113,7 +113,7 @@ public class PrestoServlet extends HttpServlet {
 						}
 					}
 					PrestoQueryResult prestoQueryResult;
-					if(query.startsWith(YANAGISHIMA_COMMENT + "SELECT table_name, table_type FROM hive.information_schema.tables")) {
+					if(query.startsWith(YANAGISHIMA_COMMENT)) {
 						prestoQueryResult = prestoService.doQuery(datasource, query, userName, prestoUser, prestoPassword, storeFlag, Integer.MAX_VALUE);
 					} else {
 						prestoQueryResult = prestoService.doQuery(datasource, query, userName, prestoUser, prestoPassword, storeFlag, yanagishimaConfig.getSelectLimit());
