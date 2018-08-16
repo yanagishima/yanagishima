@@ -123,8 +123,8 @@ public class PrestoServlet extends HttpServlet {
 					if (prestoQueryResult.getUpdateType() == null) {
 						retVal.put("headers", prestoQueryResult.getColumns());
 
-						if(query.toLowerCase().indexOf(YANAGISHIMA_COMMENT + "show schemas from") != -1) {
-							String catalog = query.substring((YANAGISHIMA_COMMENT + "show schemas from").length()).trim();
+						if(query.startsWith(YANAGISHIMA_COMMENT + "SHOW schemas from")) {
+							String catalog = query.substring((YANAGISHIMA_COMMENT + "SHOW schemas from").length()).trim();
 							List<String> invisibleSchemas = yanagishimaConfig.getInvisibleSchemas(datasource, catalog);
 							retVal.put("results", prestoQueryResult.getRecords().stream().filter(list -> !invisibleSchemas.contains(list.get(0))).collect(Collectors.toList()));
 						} else {
@@ -136,9 +136,9 @@ public class PrestoServlet extends HttpServlet {
 						warningMessageOptinal.ifPresent(warningMessage -> {
 							retVal.put("warn", warningMessage);
 						});
-						if(query.toLowerCase().startsWith(YANAGISHIMA_COMMENT + "describe")) {
+						if(query.startsWith(YANAGISHIMA_COMMENT + "DESCRIBE")) {
 							if(yanagishimaConfig.getMetadataServiceUrl(datasource).isPresent()) {
-								String[] strings = query.toLowerCase().substring(YANAGISHIMA_COMMENT.length() + "describe ".length()).split("\\.");
+								String[] strings = query.substring(YANAGISHIMA_COMMENT.length() + "DESCRIBE ".length()).split("\\.");
 								String schema = strings[1];
 								String table = strings[2].substring(1, strings[2].length() - 1);
 								MetadataUtil.setMetadata(yanagishimaConfig.getMetadataServiceUrl(datasource).get(), retVal, schema, table, prestoQueryResult.getRecords());
