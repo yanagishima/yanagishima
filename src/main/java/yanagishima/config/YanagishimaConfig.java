@@ -378,4 +378,13 @@ public class YanagishimaConfig {
 		return Optional.ofNullable(properties.getProperty(String.format("metadata.service.url.%s", datasource)));
 	}
 
+	public boolean isMetadataService(String datasource) {
+		String property = properties.getProperty(String.format("metadata.service.url.%s", datasource));
+		if(property == null) {
+			return false;
+		} else {
+			return true;
+		}
+	}
+
 }
