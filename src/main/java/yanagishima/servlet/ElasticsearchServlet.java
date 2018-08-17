@@ -86,7 +86,12 @@ public class ElasticsearchServlet extends HttpServlet {
                     if (userName != null) {
                         LOGGER.info(String.format("%s executed %s in %s", userName, query, datasource));
                     }
-                    int limit = yanagishimaConfig.getSelectLimit();
+                    int limit;
+                    if (query.startsWith(YANAGISHIMA_COMMENT)) {
+                        limit = Integer.MAX_VALUE;
+                    } else {
+                        limit = yanagishimaConfig.getSelectLimit();
+                    }
                     ElasticsearchQueryResult elasticsearchQueryResult = null;
                     if (request.getParameter("translate") == null) {
                         if (query.startsWith(YANAGISHIMA_COMMENT)) {
