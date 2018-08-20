@@ -44,7 +44,7 @@ public class FormatSqlServlet extends HttpServlet {
 					retVal.put("formattedQuery", formattedQuery);
 				} catch (ParsingException e) {
 					retVal.put("errorLineNumber", e.getLineNumber());
-					LOGGER.error(e.getMessage(), e);
+					LOGGER.error(e.getMessage());
 					retVal.put("error", e.getMessage());
 				}
 			});

@@ -146,7 +146,7 @@ public class PrestoServlet extends HttpServlet {
 						}
 					}
 				} catch (QueryErrorException e) {
-					LOGGER.error(e.getMessage(), e);
+					LOGGER.error(e.getMessage());
 					Optional<QueryError> queryErrorOptional = Optional.ofNullable(e.getQueryError());
 					queryErrorOptional.ifPresent(queryError -> {
 						Optional<ErrorLocation> errorLocationOptional = Optional.ofNullable(queryError.getErrorLocation());
