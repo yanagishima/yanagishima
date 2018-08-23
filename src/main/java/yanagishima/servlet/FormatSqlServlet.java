@@ -18,7 +18,7 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Optional;
 
-import static com.facebook.presto.sql.parser.ParsingOptions.DecimalLiteralTreatment.AS_DOUBLE;
+import static com.facebook.presto.sql.parser.ParsingOptions.DecimalLiteralTreatment.AS_DECIMAL;
 
 @Singleton
 public class FormatSqlServlet extends HttpServlet {
@@ -39,7 +39,7 @@ public class FormatSqlServlet extends HttpServlet {
 			queryOptional.ifPresent(query -> {
 				try {
 					SqlParser sqlParser = new SqlParser();
-					Statement statement = sqlParser.createStatement(query, new ParsingOptions(AS_DOUBLE));
+					Statement statement = sqlParser.createStatement(query, new ParsingOptions(AS_DECIMAL));
 					String formattedQuery = SqlFormatter.formatSql(statement, Optional.empty());
 					retVal.put("formattedQuery", formattedQuery);
 				} catch (ParsingException e) {
