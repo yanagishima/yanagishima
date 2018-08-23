@@ -55,6 +55,7 @@ public class YanagishimaServer {
 				statement.executeUpdate("create table if not exists publish (publish_id text, datasource text, engine text, query_id text, user text, primary key(publish_id))");
 				statement.executeUpdate("create table if not exists bookmark (bookmark_id integer primary key autoincrement, datasource text, engine text, query text, title text, user text)");
 				statement.executeUpdate("create table if not exists comment (datasource text, engine text, query_id text, content text, update_time_string text, user text, like_count integer, primary key(datasource, engine, query_id))");
+				statement.executeUpdate("create table if not exists label (datasource text, engine text, query_id text, label_name text, primary key(datasource, engine, query_id))");
 			}
 		}
 
