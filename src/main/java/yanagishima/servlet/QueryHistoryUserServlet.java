@@ -63,8 +63,19 @@ public class QueryHistoryUserServlet extends HttpServlet {
             String userName = request.getHeader(yanagishimaConfig.getAuditHttpHeaderName());
             String search = request.getParameter("search");
 
-            retVal.put("headers", Arrays.asList("Id", "Query", "Time", "rawDataSize", "engine", "finishedTime"));
-            List<Query> queryList = db.search(Query.class).where("datasource = ? and engine = ? and user = ? and query_string LIKE '%" + Optional.ofNullable(search).orElse("") + "%'", datasource, engine, userName).orderBy("query_id desc").execute();
+            retVal.put("headers", Arrays.asList("Id", "Query", "Time", "rawDataSize", "engine", "finishedTime", "linenumber", "labelName"));
+
+            String label = request.getParameter("label");
+            List<Query> queryList;
+            if(label == null || label.length() == 0) {
+                queryList = db.search(Query.class).where("datasource = ? and engine = ? and user = ? and query_string LIKE '%" + Optional.ofNullable(search).orElse("") + "%'", datasource, engine, userName).orderBy("query_id desc").execute();
+            } else {
+                queryList = db.searchBySQL(Query.class,
+                        "SELECT a.engine, a.query_id, a.fetch_result_time_string, a.query_string, a.status, a.elapsed_time_millis, a.result_file_size, a.linenumber, b.label_name AS label_name " +
+                                "FROM query a LEFT OUTER JOIN label b on a.datasource = b.datasource AND a.engine = b.engine AND a.query_id = b.query_id WHERE b.label_name = \'" + label
+                                + "\' and a.datasource=\'" + datasource + "\' and a.engine=\'" + engine + "\' and a.user=\'" + userName + "\'");
+            }
+
             List<List<Object>> queryHistoryList = new ArrayList<List<Object>>();
             for (Query query : queryList) {
                 if(query.getStatus().equals(Status.FAILED.name())) {
@@ -83,6 +94,7 @@ public class QueryHistoryUserServlet extends HttpServlet {
                 row.add(query.getEngine());
                 row.add(query.getFetchResultTimeString());
                 row.add(query.getLinenumber());
+                row.add(query.getExtraColumn("label_name"));
                 queryHistoryList.add(row);
             }
             retVal.put("hit", queryHistoryList.size());
