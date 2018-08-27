@@ -66,11 +66,21 @@ public class QueryHistoryServlet extends HttpServlet {
                 }
             }
             String[] queryids = Optional.ofNullable(request.getParameter("queryids")).get().split(",");
+            String label = request.getParameter("label");
 
             String placeholder = Arrays.stream(queryids).map(r -> "?").collect(Collectors.joining(", "));
-            List<Query> queryList = db.searchBySQL(Query.class,
-                    "SELECT engine, query_id, fetch_result_time_string, query_string, status, elapsed_time_millis, result_file_size, linenumber FROM query WHERE datasource=\'" + datasource + "\' and query_id IN (" + placeholder + ")",
-                    Arrays.stream(queryids).collect(Collectors.toList()));
+            List<Query> queryList;
+            if(label == null || label.length() == 0) {
+                queryList = db.searchBySQL(Query.class,
+                        "SELECT a.engine, a.query_id, a.fetch_result_time_string, a.query_string, a.status, a.elapsed_time_millis, a.result_file_size, a.linenumber, b.label_name AS label_name " +
+                                "FROM query a LEFT OUTER JOIN label b on a.datasource = b.datasource AND a.engine = b.engine AND a.query_id = b.query_id WHERE a.datasource=\'" + datasource + "\' and a.query_id IN (" + placeholder + ")",
+                        Arrays.stream(queryids).collect(Collectors.toList()));
+            } else {
+                queryList = db.searchBySQL(Query.class,
+                        "SELECT a.engine, a.query_id, a.fetch_result_time_string, a.query_string, a.status, a.elapsed_time_millis, a.result_file_size, a.linenumber, b.label_name AS label_name " +
+                                "FROM query a LEFT OUTER JOIN label b on a.datasource = b.datasource AND a.engine = b.engine AND a.query_id = b.query_id WHERE b.label_name = \'" + label + "\' and a.datasource=\'" + datasource + "\' and a.query_id IN (" + placeholder + ")",
+                        Arrays.stream(queryids).collect(Collectors.toList()));
+            }
 
             List<List<Object>> queryHistoryList = new ArrayList<List<Object>>();
             for (Query query : queryList) {
@@ -90,9 +100,10 @@ public class QueryHistoryServlet extends HttpServlet {
                 row.add(query.getEngine());
                 row.add(query.getFetchResultTimeString());
                 row.add(query.getLinenumber());
+                row.add(query.getExtraColumn("label_name"));
                 queryHistoryList.add(row);
             }
-            retVal.put("headers", Arrays.asList("Id", "Query", "Time", "rawDataSize", "engine", "finishedTime", "linenumber"));
+            retVal.put("headers", Arrays.asList("Id", "Query", "Time", "rawDataSize", "engine", "finishedTime", "linenumber", "labelName"));
             retVal.put("results", queryHistoryList);
 
         } catch (Throwable e) {
