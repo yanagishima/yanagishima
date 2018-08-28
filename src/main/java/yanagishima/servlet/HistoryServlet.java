@@ -69,9 +69,6 @@ public class HistoryServlet extends HttpServlet {
                 }
 
                 String userName = request.getHeader(yanagishimaConfig.getAuditHttpHeaderName());
-                if (userName == null) {
-                    throw new RuntimeException("user is null");
-                }
                 Optional<Query> userQueryOptional = db.single(Query.class).where("query_id=? and datasource=? and user=?", queryidOptional.get(), datasource, userName).execute();
                 if(userQueryOptional.isPresent()) {
                     retVal.put("editLabel", true);
