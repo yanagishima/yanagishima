@@ -76,6 +76,7 @@ public class PrestoPartitionServlet extends HttpServlet {
             String schema = HttpRequestUtil.getParam(request, "schema");
             String table = HttpRequestUtil.getParam(request, "table");
             String partitionColumn = request.getParameter("partitionColumn");
+            String partitionColumnType = request.getParameter("partitionColumnType");
             String partitionValue = request.getParameter("partitionValue");
             if (partitionColumn == null || partitionValue == null) {
                 Optional<String> webhdfsUrlOptional = yanagishimaConfig.getWebhdfsUrl(datasource, catalog, schema, table);
@@ -138,13 +139,18 @@ public class PrestoPartitionServlet extends HttpServlet {
                 }
             } else {
                 String[] partitionColumnArray = partitionColumn.split(",");
+                String[] partitionColumnTypeArray = partitionColumnType.split(",");
                 String[] partitionValuesArray = partitionValue.split(",");
                 if(partitionColumnArray.length != partitionValuesArray.length) {
                     throw new RuntimeException("The number of partitionColumn must be same as partitionValue");
                 }
                 List whereList = new ArrayList<>();
                 for(int i=0; i<partitionColumnArray.length; i++) {
-                    whereList.add(String.format("%s = '%s'", partitionColumnArray[i], partitionValuesArray[i]));
+                    if(partitionColumnTypeArray[i].equals("varchar")) {
+                        whereList.add(String.format("%s = '%s'", partitionColumnArray[i], partitionValuesArray[i]));
+                    } else {
+                        whereList.add(String.format("%s = %s", partitionColumnArray[i], partitionValuesArray[i]));
+                    }
                 }
                 String query = null;
                 if(yanagishimaConfig.isUseNewShowPartitions(datasource)) {

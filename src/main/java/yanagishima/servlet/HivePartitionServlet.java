@@ -71,6 +71,7 @@ public class HivePartitionServlet extends HttpServlet {
             String schema = HttpRequestUtil.getParam(request, "schema");
             String table = HttpRequestUtil.getParam(request, "table");
             String partitionColumn = request.getParameter("partitionColumn");
+            String partitionColumnType = request.getParameter("partitionColumnType");
             String partitionValue = request.getParameter("partitionValue");
             if (partitionColumn == null || partitionValue == null) {
                 String query = String.format("SHOW PARTITIONS %s.`%s`", schema, table);
@@ -85,13 +86,18 @@ public class HivePartitionServlet extends HttpServlet {
                 retVal.put("partitions", partitions);
             } else {
                 String[] partitionColumnArray = partitionColumn.split(",");
+                String[] partitionColumnTypeArray = partitionColumnType.split(",");
                 String[] partitionValuesArray = partitionValue.split(",");
                 if(partitionColumnArray.length != partitionValuesArray.length) {
                     throw new RuntimeException("The number of partitionColumn must be same as partitionValue");
                 }
                 List whereList = new ArrayList<>();
                 for(int i=0; i<partitionColumnArray.length; i++) {
-                    whereList.add(String.format("%s = '%s'", partitionColumnArray[i], partitionValuesArray[i]));
+                    if(partitionColumnTypeArray[i].equals("string")) {
+                        whereList.add(String.format("%s = '%s'", partitionColumnArray[i], partitionValuesArray[i]));
+                    } else {
+                        whereList.add(String.format("%s = %s", partitionColumnArray[i], partitionValuesArray[i]));
+                    }
                 }
                 String query = String.format("SHOW PARTITIONS %s.`%s` PARTITION(%s)", schema, table, String.join(", ", whereList));
                 HiveQueryResult hiveQueryResult = hiveService.doQuery(datasource, query, userName, hiveUser, hivePassword, false, Integer.MAX_VALUE);
