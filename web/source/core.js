@@ -128,9 +128,13 @@ jQuery(document).ready(function($) {
 				],
 				explains: {
 					'presto': {
-						sql: 'EXPLAIN (FORMAT GRAPHVIZ) {0}',
+						sql_graphviz: 'EXPLAIN (FORMAT GRAPHVIZ) {0}',
+						sql_text: 'EXPLAIN {0}',
 					},
 					'hive': {
+						sql: 'EXPLAIN {0}',
+					},
+					'elasticsearch': {
 						sql: 'EXPLAIN {0}',
 					},
 				},
@@ -140,15 +144,22 @@ jQuery(document).ready(function($) {
 				auth_pass: null,
 				auth_done: false,
 
+				// label
+				input_label: null,
+				label: null,
+				editLabel: false,
+
 				// treeview
 				datasources: [],
 				auths: {},
 				engines: {},
+				metadataServices: {},
 				catalogs: [],
 				schemata: [],
 				tables: [],
 				columns: [],
 				partition_keys: [],
+				partition_keys_types: [],
 				partition_vals: [],
 				partition_lists: [],
 				partition_index: 0,
@@ -158,6 +169,8 @@ jQuery(document).ready(function($) {
 				catalog: '',
 				schema: '',
 				table: '',
+				note: '',
+				meta: '',
 				table_type: '',
 				column_date: '',
 				val: '',
@@ -166,6 +179,8 @@ jQuery(document).ready(function($) {
 				snippet: 0,
 				filter_schema: '',
 				filter_table: '',
+				filter_partition_keywords: [''],
+				filter_partitions: [],
 				is_expandColumns: false,
 
 				// query editor
@@ -382,11 +397,13 @@ jQuery(document).ready(function($) {
 					var datasources = [];
 					var auths = {};
 					var engines = {};
+					var metadataServices = {};
 					data.datasources.map(function(n) {
 						Object.map(n, function(val, key) {
 							datasources.push(key);
 							engines[key] = val.engines;
 							auths[key] = val.auth;
+							metadataServices[key] = val.metadataService;
 						});
 					});
 					self.datasources = datasources;
@@ -394,6 +411,8 @@ jQuery(document).ready(function($) {
 					localStorage.setItem('auths', JSON.stringify(self.auths));
 					self.engines = engines;
 					localStorage.setItem('engines', JSON.stringify(self.engines));
+					self.metadataServices = metadataServices;
+					localStorage.setItem('metadataServices', JSON.stringify(self.metadataServices));
 				} else {
 					location.replace('/error/?403');
 				}
@@ -529,6 +548,25 @@ jQuery(document).ready(function($) {
 				}
 				return this.engine == 'presto';
 			},
+			is_hive: function() {
+				if(!this.engine) {
+					self.getEngines();
+				}
+				return this.engine == 'hive';
+			},
+			is_elasticsearch: function() {
+				if(!this.engine) {
+					self.getEngines();
+				}
+				return this.engine == 'elasticsearch';
+			},
+			is_metadataService: function() {
+				var self = this;
+				if(!this.metadataServices) {
+					self.getMetadataServices();
+				}
+				return this.metadataServices[self.datasource];
+			},
 			exist_bookmark: function() {
 				var self = this;
 				var query = self.input_query;
@@ -568,7 +606,7 @@ jQuery(document).ready(function($) {
 						}
 					});
 					return running_qlist.append(finished_qlist);
-				} else {
+				} else if(self.is_hive) {
 					// return self.response.qlist;
 					var qlist = self.response.qlist.filter(function(n) {
 						if (n.name.includes('yanagishima') || self.is_adminMode || self.superadminMode) {
@@ -585,6 +623,8 @@ jQuery(document).ready(function($) {
 						}
 					});
 					return running_qlist.append(finished_qlist);
+				} else {
+					throw "orderedQlist error";
 				}
 			},
 			orderedFailQlist: function() {
@@ -616,6 +656,20 @@ jQuery(document).ready(function($) {
 					}
 				});
 				return tables;
+			},
+			filteredPartitions: function() {
+				var self = this;
+				var filter_partition_keywords = self.filter_partition_keywords;
+				for(i=0; i < filter_partition_keywords.length; i++) {
+					var filtered_partition_list = self.partition_lists[i].filter(function(n) {
+						if (n.includes(filter_partition_keywords[i])) {
+							return n;
+						}
+					});
+					self.filter_partitions[i] = filtered_partition_list;
+				}
+				var filter_partitions = self.filter_partitions;
+				return filter_partitions;
 			},
 			filteredHistory: function() {
 				var self = this;
@@ -746,9 +800,100 @@ jQuery(document).ready(function($) {
 					$('#auth').modal('show');
 				}
 			},
+			getLabel: function() {
+				var self = this;
+				if (!self.queryid) {
+					return false;
+				}
+				var config = {
+					datasource: self.datasource,
+					engine: self.engine,
+					queryid: self.queryid,
+				};
+
+				$.ajax({
+					type: 'GET',
+					url: self.domain + self.apis.label + '?' + $.param(config),
+					timeout: 300000,
+				}).done(function(data) {
+					self.label = data.label;
+				}).fail(function(xhr, status, error) {
+				});
+			},
+			addLabel: function() {
+				var self = this;
+				if (!self.queryid) {
+					return false;
+				}
+				if(!self.input_label) {
+					return false;
+				}
+				if(self.label === self.input_label) {
+					self.input_label = null;
+					return false;
+				}
+				var config = {
+					datasource: self.datasource,
+					engine: self.engine,
+					queryid: self.queryid,
+					labelName: self.input_label,
+				};
+				$.ajax({
+					type: 'POST',
+					url: self.domain + self.apis.label,
+					data: config,
+					timeout: 300000,
+				}).done(function(data) {
+					self.label = data.labelName;
+					self.input_label = null;
+				}).fail(function(xhr, status, error) {
+				});
+			},
+			removeLabel: function() {
+				var self = this;
+				if (!self.queryid) {
+					return false;
+				}
+				var config = {
+					datasource: self.datasource,
+					engine: self.engine,
+					queryid: self.queryid,
+				};
+				$.ajax({
+					type: 'DELETE',
+					url: self.domain + self.apis.label + '?' + $.param(config),
+					data: config,
+					timeout: 300000,
+				}).done(function(data) {
+					self.label = null;
+				}).fail(function(xhr, status, error) {
+				});
+			},
+			clearLabel: function() {
+				var self = this;
+				self.label = null;
+				self.getHistories();
+			},
+			moveHisotryTab: function(label) {
+				var self = this;
+				self.label = label;
+				if(self.tab === "history") {
+					self.getHistories();
+				} else {
+					self.tab = "history";
+				}
+			},
 			testAuth: function() {
 				var self = this;
-				var api = self.is_presto ? self.apis.presto : self.apis.hive;
+				var api;
+				if(self.is_presto) {
+					api = self.apis.presto;
+				} else if(self.is_hive) {
+					api = self.apis.hive;
+				} else {
+					throw "testAuth error";
+				}
+
 				var params = Object.merge(
 					{
 						datasource: self.datasource,
@@ -797,6 +942,14 @@ jQuery(document).ready(function($) {
 
 				if (engines) {
 					self.engines = localStorage.getItem('engines');
+				}
+			},
+			getMetadataServices: function() {
+				var self = this;
+				var metadataServices = self.metadataServices;
+
+				if (metadataServices) {
+					self.metadataServices = localStorage.getItem('metadataServices');
 				}
 			},
 			infoBookmark: function(query) {
@@ -937,6 +1090,8 @@ jQuery(document).ready(function($) {
 				self.catalog = yanagishima.default_catalog || self.catalogs[0];
 				self.schema = '';
 				self.table = '';
+				self.note = '';
+				self.meta = '';
 				self.table_type = '';
 				self.column_date = '';
 				self.catalogs = [];
@@ -949,6 +1104,8 @@ jQuery(document).ready(function($) {
 				self.partition_index = 0;
 				self.filter_schema = '';
 				self.filter_table = '';
+				self.filter_partition_keywords = [''];
+				self.filter_partitions = [];
 				self.sort_order = true;
 				self.filter_user = '';
 				self.filter_history = '';
@@ -986,18 +1143,22 @@ jQuery(document).ready(function($) {
 						} else {
 							self.getQlist();
 						}
+						self.label = null;
 						break;
 					case 'history':
 						self.getHistories();
 						break;
 					case 'result':
 						self.loadResult()
+						self.label = null;
 						break;
 					case 'treeview':
 						self.getTree();
+						self.label = null;
 						break;
 					case 'timeline':
 						self.getTimeline();
+						self.label = null;
 						break;
 				}
 			},
@@ -1063,7 +1224,7 @@ jQuery(document).ready(function($) {
 				}).fail(function(xhr, status, error) {
 				});
 			},
-			runQuery: function(query) {
+			runQuery: function(query, translate_flag) {
 				var self = this;
 				var query = query || self.query;
 				var is_checking = true;
@@ -1101,8 +1262,20 @@ jQuery(document).ready(function($) {
 				self.loading.result = true;
 				self.error.result = false;
 				self.queryid = '';
+				self.input_label = null;
+				self.label = null;
 
-				var api = self.is_presto ? self.apis.prestoAsync : self.apis.hiveAsync;
+				var api;
+				if(self.is_presto) {
+					api = self.apis.prestoAsync;
+				} else if(self.is_hive) {
+					api = self.apis.hiveAsync;
+				} else if(self.is_elasticsearch) {
+					api = translate_flag ? self.apis.translate : self.apis.elasticsearch;
+				} else {
+					throw "runQuery error";
+				}
+
 				var params = Object.merge(
 					{
 						datasource: self.datasource,
@@ -1117,7 +1290,17 @@ jQuery(document).ready(function($) {
 					data: params,
 				}).done(function(data) {
 					var queryid = data.queryid;
-					var period = self.is_presto ? 500 : 5000;
+					var period;
+					if(self.is_presto) {
+						period = 500;
+					} else if(self.is_hive) {
+						period = 5000;
+					} else if(self.is_elasticsearch) {
+						period = 500;
+					} else {
+						throw "period error";
+					}
+
 					if (queryid) {
 						self.running_queryid = queryid;
 						self.running_progress = -1;
@@ -1142,7 +1325,17 @@ jQuery(document).ready(function($) {
 
 				function getResult(queryid) {
 					var def = $.Deferred();
-					var api = self.is_presto ? self.apis.queryStatus : self.apis.hiveQueryStatus;
+					var api;
+					if(self.is_presto) {
+						api = self.apis.queryStatus;
+					} else if(self.is_hive) {
+						api = self.apis.hiveQueryStatus;
+					} else if(self.is_elasticsearch) {
+						api = self.apis.elasticsearchQueryStatus
+					} else {
+						throw "getResult error";
+					}
+
 					var params = Object.merge(
 						{
 							datasource: self.datasource,
@@ -1190,9 +1383,14 @@ jQuery(document).ready(function($) {
 								var stats = status.queryStats;
 								self.running_progress = self.progress(stats, 1);
 								self.running_time = stats.elapsedTime;
-							} else {
+							} else if(self.is_hive) {
 								self.running_progress = status.progress;
 								self.running_time = (status.elapsedTime/1000).ceil(1) + 's';
+							} else if(self.is_elasticsearch) {
+								self.running_progress = 0;
+								self.running_time = 0;
+							} else {
+								throw "RUNNING error";
 							}
 						}
 					});
@@ -1246,10 +1444,12 @@ jQuery(document).ready(function($) {
 					return false;
 				}
 				self.getComment(self.queryid)
+				self.getLabel(self.queryid)
 
 				self.loading.result = true;
 				self.error.result = false;
 				self.bookmark_id = '';
+				self.editLabel = false;
 				$.ajax({
 					type: 'GET',
 					url: self.domain + self.apis.history.format({
@@ -1265,6 +1465,7 @@ jQuery(document).ready(function($) {
 						self.loading.result = false;
 						self.input_query = data.queryString.remove(/^EXPLAIN( \(TYPE DISTRIBUTED\)| \(TYPE VALIDATE\)| \(FORMAT GRAPHVIZ\)| ANALYZE|) /i);
 						self.engine = data.engine;
+						self.editLabel = data.editLabel;
 						if (!data.error) {
 							if (data.results && /^show partitions /i.test(data.queryString)) {
 								data.results.sortBy(function(n) {
@@ -1321,18 +1522,27 @@ jQuery(document).ready(function($) {
 					yesterday: Date.create().addDays(-1).format('{yyyy}{MM}{dd}')
 				};
 				var snippet = self.snippets[self.snippet].sql;
-				!self.is_presto && (snippet = snippet.remove('{catalog}.').replace(/"/g, "`"));
+				if(self.is_hive) {
+					snippet = snippet.remove('{catalog}.').replace(/"/g, "`");
+				}
+				if(self.is_elasticsearch) {
+					snippet = snippet.remove('{catalog}.{schema}.');
+				}
 				self.input_query = snippet.format(config);
 			},
 			setWhere: function(index) {
 				var self = this;
 				var conditions = [];
 				var keys = self.partition_keys.first(index);
+				var keys_types = self.partition_keys_types.first(index);
 				var vals = self.partition_vals.first(index);
-				var keyVals = keys.zip(vals);
-				keyVals.map(function(n) {
-					conditions.push("{0}='{1}'".format(n));
-				});
+				for(i=0; i<keys.length; i++) {
+					if(keys_types[i] === 'varchar' || keys_types[i] === 'string') {
+						conditions.push("{0}='{1}'".format(keys[i], vals[i]));
+					} else {
+						conditions.push("{0}={1}".format(keys[i], vals[i]));
+					}
+				}
 				var config = {
 					catalog: self.catalog,
 					schema: self.schema,
@@ -1340,7 +1550,14 @@ jQuery(document).ready(function($) {
 					condition: conditions.join(' AND '),
 				};
 				var template = "SELECT * FROM {catalog}.{schema}.\"{table}\" WHERE {condition} LIMIT 100";
-				var where = self.is_presto ? template : template.remove('{catalog}.').replace(/"/g, "`");
+				var where;
+				if(self.is_presto) {
+					where = template;
+				} else if(self.is_hive) {
+					where = template.remove('{catalog}.').replace(/"/g, "`");
+				} else {
+					throw "setWhere error";
+				}
 				self.input_query = where.format(config);
 			},
 			runSnippet: function() {
@@ -1359,7 +1576,15 @@ jQuery(document).ready(function($) {
 			},
 			killQuery: function(val) {
 				var self = this;
-				var api = self.is_presto ? self.apis.kill : self.apis.killHive;
+				var api;
+				if(self.is_presto) {
+					api = self.apis.kill;
+				} else if(self.is_hive) {
+					api = self.apis.killHive;
+				} else {
+					throw "killQuery error";
+				}
+
 				var params = Object.merge(
 					{
 						datasource: self.datasource,
@@ -1403,7 +1628,15 @@ jQuery(document).ready(function($) {
 			convertQuery: function(queryid) {
 				var self = this;
 				var query = self.input_query;
-				var api = self.is_presto ? self.apis.convertHive : self.apis.convertPresto;
+				var api;
+				if(self.is_presto) {
+					api = self.apis.convertHive;
+				} else if(self.is_hive) {
+					api = self.apis.convertPresto;
+				} else {
+					throw "convertQuery error";
+				}
+
 				if (query) {
 					$.ajax({
 						type: 'POST',
@@ -1412,7 +1645,15 @@ jQuery(document).ready(function($) {
 							query: query,
 						},
 					}).done(function(data) {
-						var converted_query = self.is_presto ? data.hiveQuery : data.prestoQuery;
+						var converted_query;
+						if(self.is_presto) {
+							converted_query = data.hiveQuery;
+						} else if(self.is_hive) {
+							converted_query = data.prestoQuery;
+						} else {
+							throw "convertQuery error";
+						}
+
 						if (converted_query) {
 							self.input_query = converted_query;
 						} else if (data.error) {
@@ -1674,11 +1915,13 @@ jQuery(document).ready(function($) {
 				var api = {
 					url: is_localstorage ? self.domain + self.apis.queryHistory : self.domain + self.apis.queryHistoryUser,
 					data: is_localstorage ? {
-						queryids: self.histories.join(',')
+						queryids: self.histories.join(','),
+						label: self.label
 					} : {
 						search: self.filter_history,
 						offset: 0,
 						limit: self.history_limit,
+						label: self.label
 					},
 					type: is_localstorage ? 'POST' : 'GET',
 				};
@@ -1711,7 +1954,16 @@ jQuery(document).ready(function($) {
 				var is_autoQlist = is_autoQlist || false;
 				self.now = Date.create().format('{yyyy}/{M}/{d} {24hr}:{mm}:{ss}');
 				self.loading.qlist = !is_autoQlist;
-				var api = self.is_presto ? self.apis.query : self.apis.yarnJobList;
+				var api;
+				if(self.is_presto) {
+					api = self.apis.query;
+				} else if(self.is_hive) {
+					api = self.apis.yarnJobList;
+				} else {
+					return;
+					//throw "getQlist error";
+				}
+
 				var type = self.is_presto ? 'POST' : 'GET';
 				var params = {
 					datasource: self.datasource,
@@ -1736,7 +1988,16 @@ jQuery(document).ready(function($) {
 				var enable = enable || false;
 				var max = self.refresh_period;
 				var time = max;
-				var period = self.is_presto ? 1000 : 1000 * 10;
+				var period;
+				if(self.is_presto) {
+					period = 1000;
+				} else if(self.is_hive) {
+					period = 10000 * 10;
+				} else if(self.is_elasticsearch) {
+					period = 1000;
+				} else {
+					throw "period error";
+				}
 
 				clearInterval(self.timer);
 				self.getQlist();
@@ -1758,54 +2019,46 @@ jQuery(document).ready(function($) {
 				if (!(self.datasource && self.catalog)) {
 					return false;
 				}
-				self.getAuth();
-				var params = Object.merge(
-					{
-						datasource: self.datasource,
-						catalog: self.catalog,
-					},
-					self.auth_info,
-				);
 
-				$.ajax({
-					type: 'POST',
-					url: self.domain + self.apis.tableList,
-					data: params,
-				}).done(function(data) {
-					if (data.tableList) {
-						var complate_words = [];
-						var complate_list = Object.merge(
-							yanagishima.complate_list, {
-								table: data.tableList
-							}, {
-								deep: true
-							}
-						);
-						Object.map(complate_list, function(vals, key) {
-							vals.map(function(val) {
-								if (key === 'snippet') {
-									val = val.format({
-										yesterday: Date.create().addDays(-1).format('{yyyy}{MM}{dd}')
-									});
-								}
-								var caption = val.truncate(70, 'left');
-								var value = val;
-								var meta = key;
-								complate_words.push({
-									caption: caption,
-									value: value,
-									meta: meta
-								});
-							});
-						});
-						self.complate_words = complate_words;
+				var complate_words = [];
+				var complate_list = Object.merge(
+					yanagishima.complate_list, {
+						table: []
+					}, {
+						deep: true
 					}
-				}).fail(function(xhr, status, error) {});
+				);
+				Object.map(complate_list, function(vals, key) {
+					vals.map(function(val) {
+						if (key === 'snippet') {
+							val = val.format({
+								yesterday: Date.create().addDays(-1).format('{yyyy}{MM}{dd}')
+							});
+						}
+						var caption = val.truncate(70, 'left');
+						var value = val;
+						var meta = key;
+						complate_words.push({
+							caption: caption,
+							value: value,
+							meta: meta
+						});
+					});
+				});
+				self.complate_words = complate_words;
 			},
 			getPartition: function(index) {
 				var self = this;
 				self.sort_order = true;
-				var api = self.is_presto ? self.apis.prestoPartition : self.apis.hivePartition;
+				var api;
+				if(self.is_presto) {
+					api = self.apis.prestoPartition;
+				} else if(self.is_hive) {
+					api = self.apis.hivePartition;
+				} else {
+					throw "getPartition error";
+				}
+
 				var params = Object.merge(
 					{
 						datasource: self.datasource,
@@ -1820,8 +2073,10 @@ jQuery(document).ready(function($) {
 				if (index) {
 					self.partition_index = index;
 					var keys = self.partition_keys.first(index);
+					var keys_types = self.partition_keys_types.first(index);
 					var vals = self.partition_vals.first(index);
 					params.partitionColumn = keys.join(',');
+					params.partitionColumnType = keys_types.join(',');
 					params.partitionValue = vals.join(',');
 				}
 				self.loading.partition = true;
@@ -1836,6 +2091,7 @@ jQuery(document).ready(function($) {
 						var index = self.partition_keys.indexOf(data.column);
 						self.partition_lists.splice(index, 1, data.partitions);
 					}
+					self.filter_partitions[index] = self.partition_lists[index]
 					self.loading.partition = false;
 				}).fail(function(xhr, status, error) {
 					self.loading.partition = true;
@@ -1857,6 +2113,7 @@ jQuery(document).ready(function($) {
 				var table = self.table;
 				var table_type = self.table_type;
 				var hiddenQuery_prefix = self.hiddenQuery_prefix;
+				self.filter_partition_keywords = [''];
 
 				if (self.is_presto) {
 					if (!(self.catalogs.length && catalog)) {
@@ -1952,9 +2209,12 @@ jQuery(document).ready(function($) {
 							var col_date = '';
 							var cols = [];
 							var partition_keys = [];
+							var partition_keys_types = [];
 
 							if (data.results && data.results.length) {
 								self.columns = data.results;
+								self.note = data.note;
+								self.meta = data.meta;
 								data.results.map(function(n) {
 									if (self.columnDate_names.includes(n[0])) {
 										col_date = n[0];
@@ -1963,10 +2223,12 @@ jQuery(document).ready(function($) {
 									}
 									if (n[2] == 'partition key') {
 										partition_keys.push(n[0]);
+										partition_keys_types.push(n[1]);
 									}
 								});
 								self.cols = col_date ? cols.add(col_date, 0) : cols;
 								self.partition_keys = partition_keys;
+								self.partition_keys_types = partition_keys_types;
 								self.col_date = col_date;
 							} else {
 								data.error && toastr.error(data.error);
@@ -1974,7 +2236,7 @@ jQuery(document).ready(function($) {
 							}
 						}).fail(function(xhr, status, error) {});
 					}
-				} else {
+				} else if(self.is_hive) {
 					if (!schema) {
 						var params = Object.merge(
 							{
@@ -2029,7 +2291,7 @@ jQuery(document).ready(function($) {
 						var params = Object.merge(
 							{
 								datasource: self.datasource,
-								query: "DESCRIBE {0}".format([schema, table].join('.'))
+								query: "DESCRIBE {0}.`{1}`".format(schema, table)
 							},
 							self.auth_info,
 						);
@@ -2042,6 +2304,7 @@ jQuery(document).ready(function($) {
 							var cols = [];
 							var columns = [];
 							var partition_keys = [];
+							var partition_keys_types = [];
 
 							if (data.results && data.results.length) {
 								data.results.map(function(n) {
@@ -2060,24 +2323,93 @@ jQuery(document).ready(function($) {
 										} else {
 											columns[indexOfColumn][2] = 'partition key';
 											partition_keys.push(n[0]);
+											partition_keys_types.push(n[1]);
 										}
 									}
 								});
 								self.columns = columns;
+								self.note = data.note;
+								self.meta = data.meta;
 								self.cols = col_date ? cols.add(col_date, 0) : cols;
 								self.partition_keys = partition_keys;
+								self.partition_keys_types = partition_keys_types;
 								self.col_date = col_date;
 							}
 						}).fail(function(xhr, status, error) {});
 					}
+				} else if(self.is_elasticsearch) {
+					if (!table) {
+						var params = Object.merge(
+							{
+								datasource: self.datasource,
+								query: "{0}SHOW tables".format(hiddenQuery_prefix, table)
+							}
+						);
+						$.ajax({
+							type: 'POST',
+							url: self.domain + self.apis.elasticsearch,
+							data: params,
+						}).done(function(data) {
+							if (data.results && data.results.length) {
+								self.tables = data.results.map(function(n) {
+									var table_name = n[0];
+									var table_type = n[1];
+									return [table_name, table_type];
+								});
+							} else {
+								data.error && toastr.error(data.error);
+								self.tables = [];
+							}
+						}).fail(function(xhr, status, error) {});
+					} else {
+						if (!table) {
+							return false;
+						}
+
+						var params = Object.merge(
+							{
+								datasource: self.datasource,
+								query: "{0}DESCRIBE \"{1}\"".format(hiddenQuery_prefix, table)
+							}
+						);
+						$.ajax({
+							type: 'POST',
+							url: self.domain + self.apis.elasticsearch,
+							data: params,
+						}).done(function(data) {
+							var col_date = '';
+							var cols = [];
+							var partition_keys = [];
+
+							if (data.results && data.results.length) {
+								self.columns = data.results;
+								data.results.map(function(n) {
+									if (self.columnDate_names.includes(n[0])) {
+										col_date = n[0];
+									} else {
+										cols.push(n[0]);
+									}
+								});
+								self.cols = col_date ? cols.add(col_date, 0) : cols;
+								self.col_date = col_date;
+							} else {
+								data.error && toastr.error(data.error);
+								self.columns = [];
+							}
+						}).fail(function(xhr, status, error) {});
+					}
+				} else {
+					//throw "getTree error";
 				}
 			},
 			isRunning: function(val) {
 				var self = this;
 				if (self.is_presto) {
 					return !['FINISHED', 'FAILED', 'CANCELED'].includes(val);
-				} else {
+				} else if(self.is_hive) {
 					return !['FINISHED', 'FAILED', 'KILLED'].includes(val);
+				} else {
+					throw "isRunning error";
 				}
 			},
 			setItem: function(key, item) {
@@ -2251,11 +2583,13 @@ jQuery(document).ready(function($) {
 						queryid: val,
 						datasource: self.datasource
 					});
-				} else {
+				} else if(self.is_hive) {
 					return self.domain + self.apis.hiveQueryDetail.format({
 						id: val,
 						datasource: self.datasource,
 					});
+				} else {
+					throw "linkDetail error";
 				}
 			},
 			progress: function(stats, digit) {
@@ -2441,6 +2775,7 @@ jQuery(document).ready(function($) {
 				self.getTree();
 				self.partition_lists = [];
 				self.partition_keys = [];
+				self.partition_keys_types = [];
 				self.partition_vals = [];
 				self.partition_index = 0;
 				localStorage.setItem('table', val);

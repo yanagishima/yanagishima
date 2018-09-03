@@ -216,7 +216,17 @@
 							<!-- /btn-group --></div>
 							<div class="btn-group ml-3">
 								<button type="button" class="btn btn-primary px-4" :disabled="loading.result || !input_query.length || !datasource_index" @click="runQuery(input_query)"><i class="fa fa-fw fa-play mr-1"></i><strong>Run</strong></button>
-								<button type="button" class="btn btn-primary" :disabled="loading.result || !input_query.length || !datasource_index" @click="runQuery(explains[engine].sql.format(input_query))">Explain</button>
+								<template v-if="is_presto">
+									<button type="button" class="btn btn-primary" :disabled="loading.result || !input_query.length || !datasource_index" @click="runQuery(explains[engine].sql_text.format(input_query))">Explain(T)</button>
+									<button type="button" class="btn btn-primary" :disabled="loading.result || !input_query.length || !datasource_index" @click="runQuery(explains[engine].sql_graphviz.format(input_query))">Explain(G)</button>
+								</template>
+								<template v-else-if="is_hive">
+									<button type="button" class="btn btn-primary" :disabled="loading.result || !input_query.length || !datasource_index" @click="runQuery(explains[engine].sql.format(input_query))">Explain</button>
+								</template>
+								<template v-else-if="is_elasticsearch">
+									<button type="button" class="btn btn-primary px-4" :disabled="loading.result || !input_query.length || !datasource_index" @click="runQuery(input_query, true)">Translate</button>
+									<button type="button" class="btn btn-primary" :disabled="loading.result || !input_query.length || !datasource_index" @click="runQuery(explains[engine].sql.format(input_query))">Explain</button>
+								</template>
 								<!-- <button type="button" class="btn btn-primary" data-toggle="dropdown" :disabled="loading.result || !input_query.length"><i class="fa fa-ellipsis-v"></i></button>
 								<div class="dropdown-menu dropdown-menu-right">
 									<a class="dropdown-item" href="#" v-for="(val, key) in explains" @click.prevent="runQuery(val.sql.format(input_query))" v-if="val.engines.includes(engine)">{{key | humanize}}</a>
@@ -234,7 +244,7 @@
 	<!-- /header-main --></div>
 	<div id="header-sub">
 		<div :class="is_wide ? 'container-fluid' : 'container'">
-			<template v-if="tab === 'qlist'">
+			<template v-if="tab === 'qlist' && !is_elasticsearch">
 				<div class="row align-items-center pt-3">
 					<div class="col">
 						<span><strong class="mr-2">{{datasource}}</strong>as of<strong class="ml-2">{{now}}</strong></span>
@@ -263,6 +273,10 @@
 									<span class="text-muted ml-1">({{(response.historyHit/response.historyTotal*100).round()}}%)</span>
 								</template>
 							</template>
+						</template>
+						<template v-if="label">
+							<button type="button" class="btn btn-sm btn-secondary" disabled>{{label}}</button>
+							<button type="button" class="btn btn-sm btn-secondary" @click="clearLabel()"><i class="fa fa-fw fa-times mr-1"></i></button>
 						</template>
 					<!-- /col --></div>
 					<div class="col text-right">
@@ -322,6 +336,19 @@
 									<span class="mr-2" v-if="response.result.lineNumber">
 										<strong>{{response.result.results.length | formatNumber}}</strong><template v-if="response.result.results.length != response.result.lineNumber -1"><span class="mx-1">/</span><strong>{{response.result.lineNumber -1 | formatNumber}}</strong></template><span class="text-muted ml-1">results</span>
 									</span>
+									<span class="mr-2" v-if="response.result.headers">
+										<strong>{{response.result.headers.length}}</strong><span class="text-muted ml-1">columns</span>
+									</span>
+									<template v-if="editLabel">
+										<span class="mr-2">
+											<input type="text" v-model.lazy="input_label" :disabled="label">
+											<button type="button" class="btn btn-sm btn-secondary" @click="addLabel()" :disabled="label">add</button>
+											<template v-if="label">
+												<button type="button" class="btn btn-sm btn-secondary" @click="moveHisotryTab(label)">{{label}}</button>
+												<button type="button" class="btn btn-sm btn-secondary" @click="removeLabel()"><i class="fa fa-fw fa-times mr-1"></i></button>
+											</template>
+										</span>
+									</template>
 								</span>
 								<span v-else><strong>Executed Result</strong></span>
 							</template>
@@ -342,7 +369,7 @@
 					</template>
 				<!-- /row --></div>
 			<!-- /result --></template>
-			<template v-else-if="tab === 'treeview'">
+			<template v-else-if="tab === 'treeview' && !is_elasticsearch">
 				<div class="row align-items-center pt-3">
 					<div class="col-7">
 						<div class="row align-items-end pt-3">
@@ -391,7 +418,7 @@
 </header>
 <div id="content" :class="{open: is_panel && history_queryid}">
 	<div :class="is_wide ? 'container-fluid' : 'container'">
-		<template v-if="tab === 'qlist'">
+		<template v-if="tab === 'qlist' && !is_elasticsearch">
 			<template v-if="loading.qlist">
 				<div class="alert alert-info">
 					<i class="fa fa-fw fa-spinner fa-pulse mr-1"></i>Loading
@@ -514,7 +541,8 @@
 					<thead>
 						<tr>
 							<th width="4%" class="text-right">No</th>
-							<th width="17%">query ID</th>
+							<th width="4%">Label</th>
+							<th width="13%">query ID</th>
 							<th width="12%">Finished</th>
 							<th width="6%" class="text-right">Elapsed</th>
 							<th width="48.5%">Query</th>
@@ -526,6 +554,11 @@
 					<tbody>
 						<tr class="vertical-top" v-for="(items, index) in filteredHistory">
 							<td class="text-right text-muted">{{index + 1}}</td>
+							<td>
+								<template v-if="items[7]">
+									<button type="button" class="btn btn-sm btn-secondary" @click="moveHisotryTab(items[7])">{{items[7]}}</button>
+								</template>
+							</td>
 							<td>
 								<a :href="'#datasource={0}&amp;engine={1}&amp;tab=result&amp;queryid={2}'.format(datasource, engine, items[0])" @click="line = 0">{{items[0]}}</a>
 							</td>
@@ -782,6 +815,17 @@
 													<a href="#" class="list-group-item disabled">(N/A)</a>
 												</template>
 											</template>
+											<template v-else-if="is_elasticsearch">
+												<template v-if="filteredTables.length">
+													<a href="#" class="list-group-item" v-for="items in filteredTables" :class="{active: items[0] == table, 'table-base': items[1] !== 'VIEW', 'table-view': items[1] === 'VIEW'}" @click.prevent="table = items[0], table_type = items[1]">
+														<button class="btn btn-sm btn-secondary clip px-2" v-clipboard="items[0]" @click.stop.prevent=""><i class="fa fa-fw fa-clipboard"></i></button>
+														<highlight :sentense="items[0]" :keyword="filter_table"></highlight>
+													<!-- /list-group-item --></a>
+												</template>
+												<template v-else>
+													<a href="#" class="list-group-item disabled">(N/A)</a>
+												</template>
+											</template>
 											<template v-else>
 												<template v-if="schema && filteredTables.length">
 													<a href="#" class="list-group-item" v-for="items in filteredTables" :class="{active: items[0] == table}" @click.prevent="table = items[0], table_type = items[1]">
@@ -844,14 +888,27 @@
 					<!-- /col --></div>
 					<div class="col-5">
 						<template v-if="table && columns.length">
+							<template v-if="note">
+								<div><pre><autolink :content="note.escapeHTML()"></autolink></pre></div>
+							</template>
 							<div id="columns">
 								<table class="table table-striped table-hover table-fixed mb-0">
 									<thead>
 										<tr>
-											<th width="40%">Column<span class="badge badge-default badge-pill ml-1">{{columns.length}}</span></th>
-											<th width="20%">Type</th>
-											<th width="20%">Extra</th>
-											<th width="20%">Comment</th>
+											<template v-if="is_metadataService">
+												<th width="30%">Column<span class="badge badge-default badge-pill ml-1">{{columns.length}}</span>
+												</th>
+												<th width="10%">Type</th>
+												<th width="10%">Extra</th>
+												<th width="10%">Comment</th>
+												<th width="30%">Note</th>
+											</template>
+											<template v-else>
+												<th width="40%">Column<span class="badge badge-default badge-pill ml-1">{{columns.length}}</span></th>
+												<th width="20%">Type</th>
+												<th width="20%">Extra</th>
+												<th width="20%">Comment</th>
+											</template>
 										</tr>
 									</thead>
 									<tbody>
@@ -867,10 +924,14 @@
 											<td class="text-muted">{{items[1]}}</td>
 											<td>{{items[2]}}</td>
 											<td>{{items[3]}}</td>
+											<template v-if="is_metadataService"><td>{{items[4]}}</td></template>
 										</tr>
 									</tbody>
 								</table>
 							<!-- /columns --></div>
+							<template v-if="meta">
+								<div><pre>{{meta}}</pre></div>
+							</template>
 						</template>
 					<!-- /col --></div>
 				<!-- /row --></div>
@@ -1064,7 +1125,10 @@
 								<i class="fa fa-fw mr-1 fa-arrow-down" @click="sortPartitions(partition_list)"></i>
 							</template>
 							{{partition_keys[i]}}
-							<span class="badge badge-default badge-pill" v-if="partition_list.length">{{partition_list.length}}</span>
+							<span class="badge badge-default badge-pill" v-if="filteredPartitions[i] && filteredPartitions[i].length">{{filteredPartitions[i].length}}</span>
+							<div class="pull-right form-filter">
+								<i class="fa fa-filter mt-1 mr-1" :class="{'text-primary': filter_partition_keywords.length, 'text-muted': !filter_partition_keywords.length}"></i><input type="text" class="pull-right form-filter-input" v-model="filter_partition_keywords[i]">
+							</div>
 						</div>
 						<div class="card-block" v-if="loading.partition && i == partition_index">
 							<i class="fa fa-fw fa-spinner fa-pulse mr-1"></i>Loading
@@ -1073,7 +1137,7 @@
 							<spna class="text-muted">No result</spna>
 						</div>
 						<div class="list-group list-group-flush" v-else>
-							<template v-for="partition_val in partition_list">
+							<template v-for="partition_val in filteredPartitions[i]">
 								<div class="list-group-item" v-if="i == partition_keys.length - 1">
 									<button class="btn btn-sm btn-secondary set" data-dismiss="modal" @click="partition_vals[i] = partition_val, setWhere(i + 1)"><i class="fa fa-fw fa-keyboard-o mr-1"></i>Set</button>
 									{{partition_val.truncate(32)}}

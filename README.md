@@ -39,8 +39,18 @@ yanagishima is a Web UI for presto/hive.
 * comment about query
 * convert hive/presto query
 * support graphviz to visualize presto explain result
+* support Elasticsearch SQL
+* label
 
 # Versions
+* 15.0
+  * support Elasticsearch SQL
+  * add label feature like gmail
+  * handle presto/hive reserved keywords(e.g. group, order)
+  * integrate metadata service
+  * add partition filter
+  * show column number
+  * suppresss stacktrace
 * 14.0
   * fix wrong line number when result file contains a new line
   * metadata of 14.0 is NOT compatible with 13.0, so migration is required
@@ -218,6 +228,8 @@ presto.datasources=your-presto
 presto.coordinator.server.your-presto=http://presto.coordinator:8080
 # almost same as presto coordinator url. If you use reverse proxy, specify it
 presto.redirect.server.your-presto=http://presto.coordinator:8080
+# if you use newer presto than 0.202, specify it
+use.new.show.partitions.your-presto=true
 # presto catalog name
 catalog.your-presto=hive
 # presto schema name

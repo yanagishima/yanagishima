@@ -1,5 +1,5 @@
 yanagishima = {
-	version: '14.0',
+	version: '15.0',
 	sitename: 'yanagishima',
 	domain: '',
 	apis: {
@@ -37,6 +37,10 @@ yanagishima = {
 		queryHistoryUser: '/queryHistoryUser?datasource={datasource}&engine={engine}',
 		bookmarkUser: '/bookmarkUser',
 		comment: '/comment',
+		elasticsearch: '/elasticsearch',
+		elasticsearchQueryStatus: '/elasticsearchQueryStatus',
+		translate: '/elasticsearch?translate',
+		label: '/label'
 	},
 	links: {
 		about_this: 'https://github.com/yanagishima/yanagishima/blob/master/README.md',
