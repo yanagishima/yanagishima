@@ -152,7 +152,16 @@ public class PrestoServiceImpl implements PrestoService {
         Duration queryMaxRunTime = new Duration(this.yanagishimaConfig.getQueryMaxRunTimeSeconds(datasource), TimeUnit.SECONDS);
         long start = System.currentTimeMillis();
         while (client.isValid() && (client.currentData().getData() == null)) {
-            client.advance();
+            try {
+                client.advance();
+            } catch (RuntimeException e) {
+                QueryStatusInfo results = client.isValid() ? client.currentStatusInfo() : client.finalStatusInfo();
+                String queryId = results.getId();
+                String message = format("Query failed (#%s) in %s: presto internal error message=%s", queryId, datasource, e.getMessage());
+                storeError(db, datasource, "presto", queryId, query, userName, message);
+                throw e;
+            }
+
             if(System.currentTimeMillis() - start > queryMaxRunTime.toMillis()) {
                 String queryId = client.currentStatusInfo().getId();
                 String message = format("Query failed (#%s) in %s: Query exceeded maximum time limit of %s", queryId, datasource, queryMaxRunTime.toString());
