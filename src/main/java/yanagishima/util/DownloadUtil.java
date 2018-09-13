@@ -7,10 +7,7 @@ import org.apache.commons.csv.CSVPrinter;
 import org.apache.commons.csv.CSVRecord;
 
 import javax.servlet.http.HttpServletResponse;
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.OutputStreamWriter;
-import java.io.PrintWriter;
+import java.io.*;
 import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
@@ -20,6 +17,11 @@ public class DownloadUtil {
     public static void tsvDownload(HttpServletResponse response, String fileName, String datasource, String queryid, String encode) {
         response.setContentType("application/octet-stream");
         response.setHeader("Content-Disposition", "inline; filename=\"" + fileName + "\"");
+        try {
+            writeBOM(response.getOutputStream());
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
         try (PrintWriter printWriter = new PrintWriter(new OutputStreamWriter(response.getOutputStream(), encode))) {
             try(BufferedReader br = Files.newBufferedReader(PathUtil.getResultFilePath(datasource, queryid, false));
                 CSVPrinter csvPrinter = new CSVPrinter(printWriter, CSVFormat.EXCEL.withDelimiter('\t').withRecordSeparator(System.getProperty("line.separator")));) {
@@ -38,8 +40,14 @@ public class DownloadUtil {
     }
 
     public static void csvDownload(HttpServletResponse response, String fileName, String datasource, String queryid, String encode) {
-        response.setContentType("text/csv; charset=Shift_JIS");
+        response.setContentType("text/csv");
         response.setHeader("Content-Disposition", "inline; filename=\"" + fileName + "\"");
+        try {
+            writeBOM(response.getOutputStream());
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+
         try (PrintWriter printWriter = new PrintWriter(new OutputStreamWriter(response.getOutputStream(), encode))) {
             try(BufferedReader br = Files.newBufferedReader(PathUtil.getResultFilePath(datasource, queryid, false));
                 CSVPrinter csvPrinter = new CSVPrinter(printWriter, CSVFormat.EXCEL.withRecordSeparator(System.getProperty("line.separator")));) {
@@ -55,6 +63,10 @@ public class DownloadUtil {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    public static void writeBOM(OutputStream out) throws IOException {
+        out.write(new byte[]{ (byte)0xef,(byte)0xbb, (byte)0xbf });
     }
 
 }
