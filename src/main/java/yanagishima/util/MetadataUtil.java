@@ -45,8 +45,11 @@ public class MetadataUtil {
                 retVal.put("note", ((Map) map.get("note")).get("note"));
             }
             List<Map> metas = (List) map.get("metas");
-            if(metas.size() == 1) {
-                retVal.put("meta", metas.get(0).get("value"));
+            for (Map meta : metas) {
+                if(meta.get("label").equals("ls")) {
+                    retVal.put("meta", meta.get("value"));
+                    break;
+                }
             }
         } catch (HttpResponseException e) {
             LOGGER.warn(String.format("schema=%s, table=%s, status code=%d", schema, table, e.getStatusCode()));
