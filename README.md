@@ -43,6 +43,13 @@ yanagishima is a Web UI for presto/hive.
 * label
 
 # Versions
+* 16.0(not released)
+  * refactoring with Vuex, Vue Router, Single File Components
+  * add BOM in CSV/TSV download files
+  * improve to display hive map data
+  * add pretty print on share view
+  * enable code folding
+  * make underscores available in placeholders
 * 15.0
   * support Elasticsearch SQL
   * add label feature like gmail
@@ -197,11 +204,11 @@ yanagishima is a Web UI for presto/hive.
 ```
 git clone https://github.com/yanagishima/yanagishima.git
 cd yanagishima
-git checkout -b 14.0 refs/tags/14.0
+git checkout -b 15.0 refs/tags/15.0
 ./gradlew distZip
 cd build/distributions
-unzip yanagishima-14.0.zip
-cd yanagishima-14.0
+unzip yanagishima-15.0.zip
+cd yanagishima-15.0
 vim conf/yanagishima.properties
 nohup bin/yanagishima-start.sh >y.log 2>&1 &
 ```
