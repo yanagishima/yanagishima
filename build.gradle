@@ -11,7 +11,7 @@
 apply plugin: 'java'
 apply plugin: 'distribution'
 
-version = '15.0'
+version = '16.0'
 
 // In this section you declare where to find the dependencies of your project
 repositories {
@@ -39,8 +39,17 @@ task createDirs() {
   file('build/package').mkdirs()
 }
 
+task buildWeb(type:Exec) {
+    workingDir './web'
+    commandLine './deploy.sh'
+    standardOutput = new ByteArrayOutputStream()
+    ext.output = {
+        return standardOutput.toString()
+    }
+}
+
 task copyWeb(type: Copy) {
-  from('web/build')
+  from('web/dist')
   into('build/package/web')
 }
 
@@ -71,6 +80,7 @@ task copyResult(type: Copy) {
 
 task copy(dependsOn: [
       'createDirs',
+      'buildWeb',
       'copyWeb',
       'copyDeps',
       'copyLibs',

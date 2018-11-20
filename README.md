@@ -43,13 +43,14 @@ yanagishima is a Web UI for presto/hive.
 * label
 
 # Versions
-* 16.0(not released)
+* 16.0
   * refactoring with Vuex, Vue Router, Single File Components
   * add BOM in CSV/TSV download files
   * improve to display hive map data
   * add pretty print on share view
   * enable code folding
   * make underscores available in placeholders
+  * move treeview to left end tab
 * 15.0
   * support Elasticsearch SQL
   * add label feature like gmail
@@ -196,19 +197,20 @@ yanagishima is a Web UI for presto/hive.
   If you confirmed, drop table bookmark_old;
   ```
 
-# Requirements
+# Requirements to build yanagishima
 
 * Java 8
+* Node.js
 
 ## Quick Start
 ```
 git clone https://github.com/yanagishima/yanagishima.git
 cd yanagishima
-git checkout -b 15.0 refs/tags/15.0
+git checkout -b 16.0 refs/tags/16.0
 ./gradlew distZip
 cd build/distributions
-unzip yanagishima-15.0.zip
-cd yanagishima-15.0
+unzip yanagishima-16.0.zip
+cd yanagishima-16.0
 vim conf/yanagishima.properties
 nohup bin/yanagishima-start.sh >y.log 2>&1 &
 ```
@@ -377,33 +379,35 @@ If it is necessary to migrate yanagishima.db or result file, you need to migrate
 
 |File|Description|Copy to docroot|Build index.js|
 |:--|:--|:-:|:-:|
-|build/index.html|SPA body|Yes||
-|build/index.js|Static assets (JS/CSS/IMG)|Yes||
-|build/favicon.ico|Favorite icon|Yes||
-|build/share/index.html|Published result page (readonly)|Yes||
-|build/error/index.html|Error page template|Yes||
-|source/config.js|Config for yanagishima||Yes|
-|source/core.js|SPA core||Yes|
-|source/plugin.js|Vue plugin for Ace Editor||Yes|
-|source/yanagishima.svg|Logo/Background image||Yes|
-|source/scss/bootstrap.scss|CSS based on Bootstrap||Yes|
-|webpack.config.json|Config for webpack|-|-|
-|browsersync.config.json|Config for Browsersync|-|-|
+|index.html|Mount point for Vue|Yes||
+|static/favicon.ico|Favorite icon|Yes||
+|src|Source files||Yes|
+|src/main.js|Entry point||Yes|
+|src/App.vue|Root component||Yes|
+|src/components|Vue components||Yes|
+|src/router|Vue Router routes||Yes|
+|src/store|Vuex store||Yes|
+|src/views|Views which are switched by Vue Router||Yes|
+|src/assets/yanagishima.svg|Logo/Background image||Yes|
+|src/assets/scss/bootstrap.scss|CSS based on Bootstrap||Yes|
+|build|Build scripts for webpack|-|-|
+|config|Build configs for webpack|-|-|
 
 ### Framework/Plugin
 
 - CSS
-	- Bootstrap 4.0.0 alpha.6
-	- FontAwesome 4.7.0
-	- Google Fonts "[Droid+Sans](https://fonts.google.com/specimen/Droid+Sans)"
+  - Bootstrap 4.1.3
+  - FontAwesome 5.3.1
+  - Google Fonts "[Droid+Sans](https://fonts.google.com/specimen/Droid+Sans)"
 - JavaScript
-	- Vue 2.3.0
-	- Ace Editor 1.3.3
-	- Sugar 2.0.4
-	- jQuery 3.2.1
-- Build/Serving tool
-	- webpack 2.2.1
-	- browser-sync 2.18.8
+  - Vue 2.5.2
+  - Vuex 3.0.1
+  - Vue Router 3.0.1
+  - Ace Editor 1.3.3
+  - Sugar 2.0.4
+  - jQuery 3.3.1
+- Build/Serve tool
+  - webpack 3.6.0
 
 ### Deep customization
 
@@ -412,11 +416,21 @@ If it is necessary to migrate yanagishima.db or result file, you need to migrate
 - [Xcode](https://developer.apple.com/jp/xcode/)
 - [Node.js](https://nodejs.org/ja/)
 
-#### Installation
+#### Install dependencies
 
-	$ cd web
-	$ npm install
+```bash
+$ cd web
+$ npm install
+```
 
-#### Build/Serving and Livereload
+#### Build
 
-	$ npm start
+```bash
+$ npm run build
+```
+
+#### Build/Serve and Livereload (for Front-end Engineer)
+
+```bash
+$ npm start
+```

@@ -1,0 +1,408 @@
+// Bootstrap overrides
+//
+// Copy variables from `_variables.scss` to this file to override default values
+// without modifying source files.
+
+$colors: #444, $brand-primary, #1B5E20, #880E4F, #827717, #212121;
+
+@mixin ellipsis {
+	overflow: hidden;
+	white-space: nowrap;
+	text-overflow: ellipsis;
+}
+@mixin datasource($color: $brand-primary) {
+	#header-main {
+		background: linear-gradient(lighten($color, 2.5%) 0%, lighten($color, 12.5%) 100%);
+		&.engine_hive {
+			background-image: linear-gradient(
+				-45deg,
+				lighten($color, 6%) 25%,
+				lighten($color, 8%) 25%, lighten($color, 8%) 50%,
+				lighten($color, 6%) 50%, lighten($color, 6%) 75%,
+				lighten($color, 8%) 75%, lighten($color, 8%)
+			);
+			background-size: 1rem 1rem;
+		}
+		.btn:not(.btn-secondary) {
+			background-color: darken($color, 5%);
+		}
+	}	
+}
+@each $color in $colors {
+	$key: index($colors, $color) - 1;
+	.datasource_#{$key} {
+		#header {
+			@include datasource($color);
+		}
+	}
+	.datasource_#{$key}-color {
+		color: $color !important;
+	}
+	.datasource_#{$key}-bgcolor {
+		background-color: lighten($color, 10%) !important;
+	}
+}
+#logo {
+	font-size: 1rem;
+	font-weight: bold;
+	margin-bottom: 0;
+	a {
+		color: $white;
+		text-decoration: none;
+	}
+	#logo-figure {
+		display: inline-block;
+		vertical-align: middle;
+		width: 1.2rem;
+		height: 1.6rem;
+		background: url(../yanagishima.svg) 0 no-repeat;
+		background-size: contain;
+	}
+}
+#page {
+	#wrapper {
+		position: relative;
+		#sub {
+			margin-left: -300px;
+			width: 300px;
+			height: 100vh;
+			position: fixed;
+			top: 0;
+			left: 0;
+			overflow-y: scroll;
+		}
+		&.open {
+			#main {
+				transition: margin .3s linear;
+				margin-left: 300px;
+			}
+			#sub {
+				transition: margin .15s linear;
+				margin-left: 0;
+				box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
+				-webki-tbox-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
+			}
+		}
+	}
+}
+#header {
+	#header-setting {
+		padding: 1rem;
+		background: lighten($black, 10%);
+		border-bottom: 1px solid $gray-light;
+		color: $white;
+		.card {
+			background: lighten($black, 20%);
+			border: lighten($black, 10%);
+		}
+		.btn {
+			min-width: 1.6rem;
+			background: rgba($white, 0.5);
+			color: lighten($black, 10%);
+			padding: .2rem .4rem;
+			&:hover {
+				color: $white;
+			}
+			&.selected {
+				color: $black;
+				background: $white;
+			}
+		}
+	}
+	#header-main {
+		color: $white;
+	}
+  #header-sub {
+    background: $gray-lightest;
+    padding-bottom: 1rem;
+  }
+	.nav-tabs {
+		border-bottom: 0;
+	}
+	.nav-link {
+		border-width: 0;
+		color: #eee;
+		&:hover,
+		&:focus {
+			color: $white;
+		}
+		&.active {
+			color: $black;
+		}
+	}
+}
+#content {
+	min-height: 640px;
+	background: url(../yanagishima.svg) 50% 65% no-repeat;
+	background-size: 320px;
+	background-attachment: fixed;
+	position: relative;
+	&.open {
+		padding-bottom: 35vh;
+	}
+  .header {
+    background: $gray-lightest;
+    padding-bottom: 1rem;
+  }
+}
+#footer {
+}
+#btn-panel {
+	position: fixed;
+	top: .5rem;
+	left: -2px;
+}
+#panel {	
+	border-left: 1px solid $gray-lighter;	
+	width: calc(100% - 300px);	
+	position: fixed;	
+	bottom: 0;	
+	z-index: 5;	
+	background: rgba($white, 0.9);	
+	height: 35vh;	
+	overflow-y: scroll;	
+	#panel-header {	
+		height: .3rem;	
+		margin-bottom: 1rem;	
+	}	
+	#panel-body {	
+	}	
+}
+#comment {
+	position: fixed;
+	bottom: -.5rem;
+	right: .5rem;
+	z-index: 2;
+	box-shadow: 0 5px 5px 0 rgba(0, 0, 0, 0.2);
+	width: 600px;
+	#comment-body {
+		min-height: 8rem * $line-height-base;
+		max-height: 32rem * $line-height-base;
+		overflow-y: scroll;
+	}
+	textarea {
+		line-height: $line-height-base;
+	}
+	pre {
+		padding: $input-padding-y $input-padding-x;
+		font-size: .8rem;
+		font-family: $font-family-sans-serif;
+	}
+	&.conpact {
+		box-shadow: none;
+		bottom: -1px;
+		width: auto;
+		.card-block {
+			display: none;
+		}
+	}
+}
+.comment {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	margin-bottom: 0;
+}
+#treeview {
+	.list-group {
+		max-height: 345px;
+		overflow-y: scroll;
+		.list-group-item {
+			flex: none;
+		}
+	}
+	.form-filter {
+		border-bottom: 1px solid $gray-light;
+	}
+
+	.form-filter-input {
+		width: 8em;
+		border: 0;
+		padding: 0;
+		background: transparent;
+		outline: 0;
+		color: $gray;
+		&:focus {
+		}
+	}
+	#columns {
+		border: $card-border-width solid $card-border-color;
+		border-radius: $card-border-radius;
+		th {
+			border: 0;
+		}
+		th,
+		td {
+			padding: $card-spacer-y $card-spacer-x;
+		}
+	}
+}
+#partition {
+	.card {
+		background: $gray-lighter;
+	}
+	.list-group,
+	.card-block {
+		height: 500px;
+		overflow-y: scroll;
+		.list-group-item {
+			flex: none;
+		}
+	}
+}
+
+#explain {
+	background: $black;
+	color: $white;
+	padding: 0.5rem;
+}
+#error {
+	background: $brand-primary;
+	color: #fff;
+	height: 100%;
+	#logo {
+		position: absolute;
+		top: 15px;
+		left: 15px;
+	}
+	#box {
+		position: absolute;
+		top: 50%;
+		left: 50%;
+		-webkit-transform: translateY(-50%) translateX(-50%);
+		transform: translateY(-50%) translateX(-50%);
+		font-size: 128px;
+	}
+}
+.editor {
+	border-radius: $border-radius;
+	border: 1px solid #ccc;
+	background: $white;
+	.auto-complate {
+		font-style: italic;
+	}
+	position: relative;
+}
+.table {
+	&.table-auto {
+		width: auto;
+		max-width: auto;
+	}
+	&.table-fixed {
+		table-layout: fixed;
+		th,
+		td {
+			@include ellipsis;
+			vertical-align: middle;
+			&.overflow-visible {
+				overflow: visible;
+			}
+		}
+		tr.vertical-top {
+			th,
+			td {
+				vertical-align: top;
+			}
+		}
+	}
+	thead {
+		background: darken($gray-lighter, 5%);
+	}
+	tbody {
+		background-color: $white;
+	}
+	tfoot {
+		background: $white;
+	}
+}
+.card-header + .list-group {
+	margin-top: -1px;
+}
+.ellipsis {
+	@include ellipsis;
+}
+.monospace {
+	font-family: $font-family-monospace;
+}
+.modal-body {
+	background: $gray-lightest;
+}
+.btn.clip,
+.btn.panel,
+.btn.set {
+	position: absolute;
+	margin-top: -0.1rem;
+	right: 0.4rem;
+	display: none;
+	z-index: 10;
+}
+.list-group-item:hover .btn.clip,
+.list-group-item:hover .btn.panel,
+.list-group-item:hover .btn.set {
+	display: inline-block;
+}
+.table-base {
+	color: $link-color !important;
+}
+.table-view {
+	color: $brand-success !important;
+}
+.mfp-iframe-holder {
+	padding-top: 0;
+	padding-bottom: 0;
+}
+.mfp-iframe-holder .mfp-content {
+	height: 90%;
+	max-width: 1280px;
+}
+.clone {
+	position: fixed;
+	color: $white;
+	text-shadow: 1px 1px 1px #000;
+	padding: 0.5rem;
+	background: $black;
+	z-index: 15;
+}
+.pointer {
+	cursor: pointer;
+}
+.bg-transparent {
+	background: transparent !important;
+}
+#variables {
+	border-radius: 4px;
+	border:  1px solid $white;
+	padding: .75rem 1rem;
+	padding-top: .4rem;
+	legend {
+		font-size: .8rem;
+		margin: 0;
+		width: auto;
+		padding: 0 .6rem;
+	}
+	label {
+		font-weight: bold;
+	}
+}
+.word-break {
+	word-break: break-all;
+}
+.ace-font {
+	font: 12px/normal 'Monaco', 'Menlo', 'Ubuntu Mono', 'Consolas', 'source-code-pro', monospace;
+}
+.ace_editor.ace_autocomplete {
+	width: 640px;
+}
+.ace_tooltip {
+	font-family: $font-family-sans-serif;
+	padding: .2rem .5rem;
+	background: $alert-danger-bg;
+	border: $alert-danger-border 1px solid;
+	color: $alert-danger-text;
+	font-size: 12px;
+}
+body.konami {
+	transform: scale(-1, 1);
+}
+.mfp-iframe-scaler iframe {
+	background: #fff;
+}
