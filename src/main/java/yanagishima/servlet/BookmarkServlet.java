@@ -99,12 +99,13 @@ public class BookmarkServlet extends HttpServlet {
             String[] bookmarkIds = HttpRequestUtil.getParam(request, "bookmark_id").split(",");
             if(bookmarkIds.length == 0) {
                 retVal.put("bookmarkList", new ArrayList<>());
+                return;
             }
 
             String placeholder = Arrays.stream(bookmarkIds).map(r -> "?").collect(Collectors.joining(", "));
             List<Bookmark> bookmarkList = db.searchBySQL(Bookmark.class,
                     "SELECT bookmark_id, datasource, engine, query, title FROM bookmark WHERE datasource=\'" + datasource + "\' and bookmark_id IN (" + placeholder + ")",
-                    Arrays.stream(bookmarkIds).filter(s -> s.length() > 0).map(s -> Integer.parseInt(s)).collect(Collectors.toList()));
+                    Arrays.stream(bookmarkIds).map(s -> Integer.parseInt(s)).collect(Collectors.toList()));
 
             List<Map> resultMapList = new ArrayList<>();
             for(Bookmark bookmark : bookmarkList) {
