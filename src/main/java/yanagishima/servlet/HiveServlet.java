@@ -104,7 +104,7 @@ public class HiveServlet extends HttpServlet {
                     String queryid = hiveQueryResult.getQueryId();
                     retVal.put("queryid", queryid);
                     retVal.put("headers", hiveQueryResult.getColumns());
-                    if(query.toLowerCase().indexOf("show schemas") != -1) {
+                    if(query.toLowerCase().indexOf("SHOW SCHEMAS") != -1) {
                         List<String> invisibleDatabases = yanagishimaConfig.getInvisibleDatabases(datasource);
                         retVal.put("results", hiveQueryResult.getRecords().stream().filter(list -> !invisibleDatabases.contains(list.get(0))).collect(Collectors.toList()));
                     } else {
@@ -116,9 +116,9 @@ public class HiveServlet extends HttpServlet {
                     warningMessageOptinal.ifPresent(warningMessage -> {
                         retVal.put("warn", warningMessage);
                     });
-                    if(query.toLowerCase().startsWith("describe")) {
+                    if(query.toLowerCase().startsWith("DESCRIBE")) {
                         if(yanagishimaConfig.getMetadataServiceUrl(datasource).isPresent()) {
-                            String[] strings = query.toLowerCase().substring("describe ".length()).split("\\.");
+                            String[] strings = query.toLowerCase().substring("DESCRIBE ".length()).split("\\.");
                             String schema = strings[0];
                             String table = strings[1].substring(1, strings[1].length() - 1);
                             MetadataUtil.setMetadata(yanagishimaConfig.getMetadataServiceUrl(datasource).get(), retVal, schema, table, hiveQueryResult.getRecords());

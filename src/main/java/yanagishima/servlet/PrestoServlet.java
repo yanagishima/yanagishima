@@ -123,8 +123,8 @@ public class PrestoServlet extends HttpServlet {
 					if (prestoQueryResult.getUpdateType() == null) {
 						retVal.put("headers", prestoQueryResult.getColumns());
 
-						if(query.startsWith(YANAGISHIMA_COMMENT + "SHOW schemas from")) {
-							String catalog = query.substring((YANAGISHIMA_COMMENT + "SHOW schemas from").length()).trim();
+						if(query.startsWith(YANAGISHIMA_COMMENT + "SHOW SCHEMAS FROM")) {
+							String catalog = query.substring((YANAGISHIMA_COMMENT + "SHOW SCHEMAS FROM").length()).trim();
 							List<String> invisibleSchemas = yanagishimaConfig.getInvisibleSchemas(datasource, catalog);
 							retVal.put("results", prestoQueryResult.getRecords().stream().filter(list -> !invisibleSchemas.contains(list.get(0))).collect(Collectors.toList()));
 						} else {
