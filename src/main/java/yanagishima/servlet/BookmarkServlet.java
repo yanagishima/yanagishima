@@ -102,6 +102,11 @@ public class BookmarkServlet extends HttpServlet {
                 return;
             }
 
+            if(bookmarkIds.length == 1 && bookmarkIds[0].length() == 0) {
+                retVal.put("bookmarkList", new ArrayList<>());
+                return;
+            }
+
             String placeholder = Arrays.stream(bookmarkIds).map(r -> "?").collect(Collectors.joining(", "));
             List<Bookmark> bookmarkList = db.searchBySQL(Bookmark.class,
                     "SELECT bookmark_id, datasource, engine, query, title FROM bookmark WHERE datasource=\'" + datasource + "\' and bookmark_id IN (" + placeholder + ")",
