@@ -213,6 +213,21 @@ public class HiveServiceImpl implements HiveService {
                 statementPool.putStatement(datasource, queryId, statement);
             }
 
+            if(query.trim().toLowerCase().startsWith("create") || query.trim().toLowerCase().startsWith("drop")) {
+                try {
+                    statement.execute(query);
+                    Path dst = getResultFilePath(datasource, queryId, false);
+                    dst.toFile().createNewFile();
+                    hiveQueryResult.setLineNumber(0);
+                    hiveQueryResult.setRawDataSize(new DataSize(0, DataSize.Unit.BYTE));
+                    hiveQueryResult.setRecords(new ArrayList<>());
+                    hiveQueryResult.setColumns(new ArrayList<>());
+                    return;
+                } catch (SQLException | IOException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+
             try (ResultSet resultSet = statement.executeQuery(query)) {
                 ResultSetMetaData resultSetMetaData = resultSet.getMetaData();
                 int columnCount = resultSetMetaData.getColumnCount();
