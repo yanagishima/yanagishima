@@ -1,10 +1,10 @@
 package yanagishima.servlet;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import me.geso.tinyorm.TinyORM;
 import yanagishima.config.YanagishimaConfig;
-import yanagishima.util.AccessControlUtil;
-import yanagishima.util.HttpRequestUtil;
-import yanagishima.util.YarnUtil;
+import yanagishima.row.Query;
+import yanagishima.util.*;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
@@ -14,6 +14,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
@@ -25,6 +26,9 @@ public class HiveQueryStatusServlet extends HttpServlet {
 	private static final long serialVersionUID = 1L;
 
 	private YanagishimaConfig yanagishimaConfig;
+
+	@Inject
+	private TinyORM db;
 
 	@Inject
 	public HiveQueryStatusServlet(YanagishimaConfig yanagishimaConfig) {
@@ -58,18 +62,26 @@ public class HiveQueryStatusServlet extends HttpServlet {
 			}
 		}
 		Optional<Map> applicationOptional = YarnUtil.getApplication(resourceManagerUrl, queryid, userName, yanagishimaConfig.getResourceManagerBegin(datasource));
-
-		applicationOptional.ifPresent(application -> {
+		if(applicationOptional.isPresent()) {
 			try {
 				response.setContentType("application/json");
 				PrintWriter writer = response.getWriter();
 				ObjectMapper mapper = new ObjectMapper();
-				String json = mapper.writeValueAsString(application);
+				String json = mapper.writeValueAsString(applicationOptional.get());
 				writer.println(json);
 			} catch (IOException e) {
 				throw new RuntimeException(e);
 			}
-		});
+		} else {
+			Optional<Query> queryOptional = db.single(Query.class).where("query_id=? and datasource=? and engine=?", queryid, datasource, "hive").execute();
+			if(!queryOptional.isPresent()) {
+				HashMap<String, Object> retVal = new HashMap<String, Object>();
+				retVal.put("state", "RUNNING");
+				retVal.put("progress", 0);
+				retVal.put("elapsedTime", 0);
+				JsonUtil.writeJSON(response, retVal);
+			}
+		}
 	}
 
 }
