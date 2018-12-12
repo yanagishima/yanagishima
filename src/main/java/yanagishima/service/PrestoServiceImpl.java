@@ -34,6 +34,7 @@ import java.util.stream.Collectors;
 
 import static com.facebook.presto.client.OkHttpUtil.basicAuth;
 import static com.facebook.presto.client.OkHttpUtil.setupTimeouts;
+import static com.facebook.presto.client.StatementClientFactory.newStatementClient;
 import static com.google.common.base.Preconditions.checkArgument;
 import static java.lang.String.format;
 import static java.util.Collections.emptyMap;
@@ -151,11 +152,11 @@ public class PrestoServiceImpl implements PrestoService {
 
         Duration queryMaxRunTime = new Duration(this.yanagishimaConfig.getQueryMaxRunTimeSeconds(datasource), TimeUnit.SECONDS);
         long start = System.currentTimeMillis();
-        while (client.isValid() && (client.currentData().getData() == null)) {
+        while (client.isRunning() && (client.currentData().getData() == null)) {
             try {
                 client.advance();
             } catch (RuntimeException e) {
-                QueryStatusInfo results = client.isValid() ? client.currentStatusInfo() : client.finalStatusInfo();
+                QueryStatusInfo results = client.isRunning() ? client.currentStatusInfo() : client.finalStatusInfo();
                 String queryId = results.getId();
                 String message = format("Query failed (#%s) in %s: presto internal error message=%s", queryId, datasource, e.getMessage());
                 storeError(db, datasource, "presto", queryId, query, userName, message);
@@ -171,8 +172,8 @@ public class PrestoServiceImpl implements PrestoService {
         }
 
         PrestoQueryResult prestoQueryResult = new PrestoQueryResult();
-        if ((!client.isFailed()) && (!client.isGone()) && (!client.isClosed())) {
-            QueryStatusInfo results = client.isValid() ? client.currentStatusInfo() : client.finalStatusInfo();
+        if ((client.finalStatusInfo().getError() == null) && (!client.isClientError()) && (!client.isClientAborted())) {
+            QueryStatusInfo results = client.isRunning() ? client.currentStatusInfo() : client.finalStatusInfo();
             String queryId = results.getId();
             if (results.getColumns() == null) {
                 throw new QueryErrorException(new SQLException(format("Query %s has no columns\n", results.getId())));
@@ -206,11 +207,11 @@ public class PrestoServiceImpl implements PrestoService {
             }
         }
 
-        if (client.isClosed()) {
+        if (client.isClientAborted()) {
             throw new RuntimeException("Query aborted by user");
-        } else if (client.isGone()) {
+        } else if (client.isClientError()) {
             throw new RuntimeException("Query is gone (server restarted?)");
-        } else if (client.isFailed()) {
+        } else if (client.finalStatusInfo().getError() != null) {
             QueryStatusInfo results = client.finalStatusInfo();
             if(prestoQueryResult.getQueryId() == null) {
                 String queryId = results.getId();
@@ -267,7 +268,7 @@ public class PrestoServiceImpl implements PrestoService {
              CSVPrinter csvPrinter = new CSVPrinter(bw, CSVFormat.EXCEL.withDelimiter('\t').withNullString("\\N").withRecordSeparator(System.getProperty("line.separator")));) {
             csvPrinter.printRecord(columns);
             lineNumber++;
-            while (client.isValid()) {
+            while (client.isRunning()) {
                 Iterable<List<Object>> data = client.currentData().getData();
                 if (data != null) {
                     for(List<Object> row : data) {
@@ -336,14 +337,15 @@ public class PrestoServiceImpl implements PrestoService {
 
         if (prestoUser.isPresent() && prestoPassword.isPresent()) {
             ClientSession clientSession = new ClientSession(
-                    URI.create(prestoCoordinatorServer), prestoUser.get(), source, ImmutableSet.of(), null, catalog,
-                    schema, TimeZone.getDefault().getID(), Locale.getDefault(),
-                    new HashMap<String, String>(), emptyMap(), null, false, new Duration(2, MINUTES));
+                    URI.create(prestoCoordinatorServer), prestoUser.get(), source, Optional.empty(), ImmutableSet.of(), null, catalog,
+                    schema, "", TimeZone.getDefault().getID(), Locale.getDefault(), emptyMap(),
+                    new HashMap<String, String>(), emptyMap(), null, new Duration(2, MINUTES));
+
             checkArgument(clientSession.getServer().getScheme().equalsIgnoreCase("https"),
                     "Authentication using username/password requires HTTPS to be enabled");
             OkHttpClient.Builder clientBuilder = httpClient.newBuilder();
             clientBuilder.addInterceptor(basicAuth(prestoUser.get(), prestoPassword.get()));
-            return new StatementClient(clientBuilder.build(), clientSession, query);
+            return newStatementClient(clientBuilder.build(), clientSession, query);
         }
 
         String user = null;
@@ -354,11 +356,11 @@ public class PrestoServiceImpl implements PrestoService {
         }
 
         ClientSession clientSession = new ClientSession(
-                URI.create(prestoCoordinatorServer), user, source, ImmutableSet.of(), null, catalog,
-                schema, TimeZone.getDefault().getID(), Locale.getDefault(),
-                new HashMap<String, String>(), emptyMap(), null, false, new Duration(2, MINUTES));
+                URI.create(prestoCoordinatorServer), user, source, Optional.empty(), ImmutableSet.of(), null, catalog,
+                schema, "", TimeZone.getDefault().getID(), Locale.getDefault(), emptyMap(),
+                new HashMap<String, String>(), emptyMap(), null, new Duration(2, MINUTES));
 
-        return new StatementClient(httpClient, clientSession, query);
+        return newStatementClient(httpClient, clientSession, query);
     }
 
     private QueryErrorException resultsException(QueryStatusInfo results, String datasource) {
