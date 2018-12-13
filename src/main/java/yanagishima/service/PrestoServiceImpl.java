@@ -3,6 +3,7 @@ package yanagishima.service;
 import com.facebook.presto.client.*;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
+import com.sun.org.apache.xpath.internal.operations.Bool;
 import io.airlift.units.DataSize;
 import io.airlift.units.Duration;
 import me.geso.tinyorm.TinyORM;
@@ -152,7 +153,7 @@ public class PrestoServiceImpl implements PrestoService {
 
         Duration queryMaxRunTime = new Duration(this.yanagishimaConfig.getQueryMaxRunTimeSeconds(datasource), TimeUnit.SECONDS);
         long start = System.currentTimeMillis();
-        while (client.isRunning() && (client.currentData().getData() == null)) {
+        while (client.isRunning() && client.currentData().getData() == null) {
             try {
                 client.advance();
             } catch (RuntimeException e) {
@@ -172,7 +173,7 @@ public class PrestoServiceImpl implements PrestoService {
         }
 
         PrestoQueryResult prestoQueryResult = new PrestoQueryResult();
-        if ((client.finalStatusInfo().getError() == null) && (!client.isClientError()) && (!client.isClientAborted())) {
+        if (!client.isClientError() && !client.isClientAborted()) {
             QueryStatusInfo results = client.isRunning() ? client.currentStatusInfo() : client.finalStatusInfo();
             String queryId = results.getId();
             if (results.getColumns() == null) {
