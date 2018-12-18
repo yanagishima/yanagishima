@@ -206,8 +206,7 @@ export default {
 
     // hidden command
     const configs = {
-      konami: [38, 38, 40, 40, 37, 39, 37, 39, 66, 65],
-      traffic: [17, 17, 17, 17, 17]
+      konami: [38, 38, 40, 40, 37, 39, 37, 39, 66, 65]
     }
     const maxCommandLength = Math.max(...Object.values(configs).map(a => a.length))
     let inputs = []
@@ -217,10 +216,6 @@ export default {
       if (inputs.toString().indexOf(configs.konami) >= 0) {
         self.superadminMode = true
         toastr.success('You can watch all queries.', 'Super Admin Mode')
-        inputs = []
-      } else if (inputs.toString().indexOf(configs.traffic) >= 0) {
-        self.$store.dispatch('traffic/getTraffic')
-        self.showModal('traffic')
         inputs = []
       }
     })
@@ -241,7 +236,6 @@ export default {
 
       this.loadLocalStoragePerDatasource()
 
-      this.$store.dispatch('treeview/getRoot')
       this.$store.dispatch('history/getHistories', {isMore: false, filter: ''})
       this.$store.dispatch('bookmark/getBookmarks')
       this.$store.dispatch('qlist/getQlist', {isAutoQlist: false})

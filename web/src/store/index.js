@@ -65,7 +65,9 @@ function initialHash () {
     queryid: '',
     bookmark_id: '',
     chart: 0,
-    line: 0
+    pivot: 0,
+    line: 0,
+    table: ''
   }
 }
 
@@ -143,6 +145,7 @@ export default new Vuex.Store({
         tab: TABS[0].id,
         line: 0,
         chart: 0,
+        pivot: 0,
         bookmark_id: ''
       })
     },

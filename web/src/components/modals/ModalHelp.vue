@@ -65,11 +65,6 @@
           </section>
           <section>
             <h4 class="font-weight-bold mb-3"><i class="far fa-fw fa-chart-bar mr-1"></i>Chart Function</h4>
-            <p class="px-3">You can insert <strong>charts</strong> under the following conditions.</p>
-            <ul>
-              <li>column[0] is the <strong>date</strong> (column_name = {{dateColumnNames.join(', ')}})</li>
-              <li>other columns are <strong>numbers</strong></li>
-            </ul>
             <table class="table table-fixed">
               <tbody>
               <tr>

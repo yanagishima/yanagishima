@@ -33,6 +33,9 @@
                          data-placement="left"></i>
                       <strong>{{publishId}}</strong>
                     </span>
+                    <span class="mr-3" v-if="response.queryid">
+                      <a :href="buildShareUrl(datasource, engine, queryid, chart, pivot, line)">{{queryid}}</a>
+                    </span>
                     <span class="mr-2" v-if="response.finishedTime">
                       <i class="fa fa-calendar" title="Finished time" data-toggle="tooltip" data-animation="false"
                          data-placement="left"></i>
@@ -115,6 +118,17 @@
                 </div>
               </div>
             </div>
+            <div class="mb-3" v-if="enablePivot && pivot">
+              <div class="card">
+                <div class="card-block">
+                  <pivot :data="pivotRows" :fields="[]" :row-fields="rowFields" :col-fields="colFields" :reducer="reducer" :default-show-settings="false">
+                  </pivot>
+                  <div v-if="response.lineNumber > 501" class="text-right text-muted">
+                    This data is only top 500.
+                  </div>
+                </div>
+              </div>
+            </div>
             <ResultTable :result="response" :pretty="isPretty" :line="line" :readonly="true"/>
           </template>
           <template v-else>
@@ -174,20 +188,27 @@
 import ResultTable from '@/components/ResultTable'
 import util from '@/mixins/util'
 import chart from '@/mixins/chart'
+import pivot from '@/mixins/pivot'
 import * as api from '@/api'
 import {SITENAME, VERSION, CHART_TYPES, CHART_OPTIONS} from '@/constants'
+import Pivot from '@marketconnect/vue-pivot-table'
+import $ from 'jquery'
 
 export default {
   name: 'ShowView',
-  components: {ResultTable},
-  mixins: [util, chart],
+  components: {ResultTable, Pivot},
+  mixins: [util, chart, pivot],
   data () {
     return {
       sitename: SITENAME,
       version: VERSION,
       publishId: '',
+      datasource: '',
+      engine: '',
+      queryid: '',
       line: 0,
       chart: 0,
+      pivot: 0,
       loading: true,
       response: null,
       error: null,
@@ -207,11 +228,14 @@ export default {
     const params = location.search.remove('?').split('&')
     let publishId = ''
     let chart = 0
+    let pivot = 0
     for (const param of params) {
       if (/^[a-z0-9]{32}$/.test(param)) {
         publishId = param
       } else if (param.length === 1) {
         chart = Number(param)
+      } else if (param === 'pivot') {
+        pivot = 1
       }
     }
     const line = Number(location.hash.remove('#L')) || 0
@@ -221,9 +245,13 @@ export default {
       document.title = `#${publishId} - ${SITENAME}`
       api.getSharedQueryResult(publishId)
         .then(data => {
+          this.datasource = data.datasource
+          this.engine = data.engine
+          this.queryid = data.queryid
           this.response = data
           this.line = line
           this.chart = chart
+          this.pivot = pivot
           this.loading = false
           this.visibleComment = data.comment != null
           this.$store.commit('loadComplete')
@@ -231,6 +259,9 @@ export default {
         .catch(() => {
         })
     }
+  },
+  mounted () {
+    $('body').tooltip({selector: '[data-toggle="tooltip"]'})
   }
 }
 </script>

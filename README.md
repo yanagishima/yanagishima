@@ -41,8 +41,19 @@ yanagishima is a Web UI for presto/hive.
 * support graphviz to visualize presto explain result
 * support Elasticsearch SQL
 * label
+* pivot
 
 # Versions
+* 17.0
+  * add link which can open a schema/table in Treeview
+  * pivot
+  * fix bug which invisible.schema doesn't work
+  * improve hive job handling when you create/drop table
+  * add query id link to share page
+  * update presto library
+  * fix partition bug
+  * remove kill button in hive
+  * default value of ```use.new.show.partitions.xxx``` is true
 * 16.0
   * refactoring with Vuex, Vue Router, Single File Components
   * add BOM in CSV/TSV download files
@@ -206,11 +217,11 @@ yanagishima is a Web UI for presto/hive.
 ```
 git clone https://github.com/yanagishima/yanagishima.git
 cd yanagishima
-git checkout -b 16.0 refs/tags/16.0
+git checkout -b 17.0 refs/tags/17.0
 ./gradlew distZip
 cd build/distributions
-unzip yanagishima-16.0.zip
-cd yanagishima-16.0
+unzip yanagishima-17.0.zip
+cd yanagishima-17.0
 vim conf/yanagishima.properties
 nohup bin/yanagishima-start.sh >y.log 2>&1 &
 ```
@@ -237,8 +248,6 @@ presto.datasources=your-presto
 presto.coordinator.server.your-presto=http://presto.coordinator:8080
 # almost same as presto coordinator url. If you use reverse proxy, specify it
 presto.redirect.server.your-presto=http://presto.coordinator:8080
-# if you use newer presto than 0.202, specify it
-use.new.show.partitions.your-presto=true
 # presto catalog name
 catalog.your-presto=hive
 # presto schema name

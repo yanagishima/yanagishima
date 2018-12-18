@@ -63,7 +63,7 @@ const actions = {
     const enableDesktopNotification = rootState.settings.desktopNotification && document.visibilityState !== 'visible'
 
     commit('initComment')
-    commit('setHashItem', {queryid: '', chart: 0, line: 0}, {root: true})
+    commit('setHashItem', {queryid: '', chart: 0, pivot: 0, line: 0}, {root: true})
     commit('incrementRunningQueries')
     commit('setLoading', {data: true})
     commit('setError', {data: null})

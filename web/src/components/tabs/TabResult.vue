@@ -205,6 +205,21 @@
                       <i class="fa fa-fw fa-plus-square mr-1"></i>Chart
                     </a>
                   </div>
+                  <div v-if="enablePivot" class="mb-3">
+                    <div v-if="pivot" class="card">
+                      <div class="card-header">
+                        <button type="button" class="close" @click="setPivot(0)"><span>&times;</span></button>
+                        <div class="card-block">
+                          <pivot :data="pivotRows" :fields="[]" :row-fields="rowFields" :col-fields="colFields" :reducer="reducer" :default-show-settings="false">
+                          </pivot>
+                          <div v-if="response.lineNumber > 501" class="text-right text-muted">
+                            This data is only top 500.
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    <a v-else href="#" @click.prevent="setPivot(1)"><i class="fa fa-fw fa-plus-square mr-1"></i>Pivot(Beta)</a>
+                  </div>
                   <ResultTable :result="response" :pretty="isPretty" :line="line" @line-click="toggleLine"/>
                 </template>
               </template>
@@ -229,14 +244,16 @@ import toastr from 'toastr'
 import ResultTable from '@/components/ResultTable'
 import util from '@/mixins/util'
 import chart from '@/mixins/chart'
+import pivot from '@/mixins/pivot'
 import {CHART_TYPES, CHART_OPTIONS} from '@/constants'
+import Pivot from '@marketconnect/vue-pivot-table'
 
 let viz = new Viz({Module, render})
 
 export default {
   name: 'TabResult',
-  components: {ResultTable},
-  mixins: [util, chart],
+  components: {ResultTable, Pivot},
+  mixins: [util, chart, pivot],
   data () {
     return {
       chartTypes: CHART_TYPES,
@@ -250,7 +267,8 @@ export default {
       datasource: state => state.hash.datasource,
       queryid: state => state.hash.queryid,
       line: state => state.hash.line,
-      chart: state => state.hash.chart
+      chart: state => state.hash.chart,
+      pivot: state => state.hash.pivot
     }),
     ...mapGetters([
       'isPresto',
@@ -351,6 +369,9 @@ export default {
     setChart (chart) {
       this.$store.commit('setHashItem', {chart})
     },
+    setPivot (pivot) {
+      this.$store.commit('setHashItem', {pivot})
+    },
     killQuery () {
       this.$store.dispatch('result/killQuery', {queryid: this.runningQueryid})
     },
@@ -363,6 +384,9 @@ export default {
           let path = `/share/?${publishId}`
           if (this.chart) {
             path += `&${this.chart}`
+          }
+          if (this.pivot) {
+            path += '&pivot'
           }
           if (this.line) {
             path += `#L${this.line}`

@@ -95,9 +95,8 @@
               <th width="7%">State</th>
               <th width="20%">application ID</th>
               <th width="5%" class="text-right">Elapsed</th>
-              <th width="47.5%">Name</th>
+              <th width="51.5%">Name</th>
               <th width="12.5%">User</th>
-              <th width="4%" class="text-center">Kill</th>
               <th width="4%" class="text-center">Info</th>
             </tr>
             </thead>
@@ -113,7 +112,7 @@
                   </div>
                 </template>
                 <template v-else>
-                  {{item.state.camelize()}}
+                  {{item.finalStatus === 'UNDEFINED' ? item.state.camelize() : item.finalStatus.camelize()}}
                 </template>
               </td>
               <td>
@@ -129,9 +128,6 @@
                 </template>
               </td>
               <td>{{item.user}}</td>
-              <td class="text-center"><a v-if="isRunning(item.state)" href="#" @click.prevent="killQuery(item.id)"
-                                         class="btn btn-sm btn-secondary p-1"><i
-                class="fa fa-fw fa-times text-danger"></i></a></td>
               <td class="text-center"><a target="_blank" class="btn btn-sm btn-secondary p-1"
                                          :href="buildDetailUrl(isPresto, isHive, datasource, item.id)"><i
                 class="fa fa-fw fa-info"></i></a></td>

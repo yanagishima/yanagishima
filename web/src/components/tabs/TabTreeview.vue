@@ -57,7 +57,7 @@
                 <div class="list-group list-group-flush">
                   <template v-if="(isPresto && catalog || !isPresto) && filteredSchemata.length">
                     <a v-for="s in filteredSchemata" :key="s" href="#" class="list-group-item"
-                       :class="{active: s === schema}" @click.prevent="setSchema(s)">
+                       :class="{active: s === schema}" @click.prevent="setSchema(s)" :id="`schema-${s}`">
                       <BaseHighlight :sentence="s" :keyword="filterSchema"></BaseHighlight>
                     </a>
                   </template>
@@ -84,7 +84,7 @@
                   <template v-if="schema && filteredTables.length || isElasticsearch && filteredTables.length">
                     <a v-for="t in filteredTables" :key="t[0]" href="#" class="list-group-item"
                        :class="{active: t[0] === table, 'table-base': isPresto && t[1] !== 'VIEW', 'table-view': isPresto && t[1] === 'VIEW'}"
-                       @click.prevent="setTable(t)">
+                       @click.prevent="setTable(t)" :id="`table-${t[0]}`">
                       <button class="btn btn-sm btn-secondary clip px-2" v-clipboard="fullName(t[0])" @click.stop.prevent="">
                         <i class="fa fa-fw fa-clipboard"></i>
                       </button>
@@ -243,6 +243,7 @@
 </template>
 
 <script>
+import toastr from 'toastr'
 import {mapState, mapGetters} from 'vuex'
 
 export default {
@@ -250,13 +251,15 @@ export default {
   data () {
     return {
       isExpandColumns: false,
-      snippetIndex: 0
+      snippetIndex: 0,
+      scrollTo: {}
     }
   },
   computed: {
     ...mapState({
       datasources: state => state.datasources,
-      datasource: state => state.hash.datasource
+      datasource: state => state.hash.datasource,
+      initialTable: state => state.hash.table
     }),
     ...mapState('treeview', [
       'catalogs',
@@ -357,8 +360,17 @@ export default {
     }
   },
   watch: {
+    datasourceEngine () {
+      this.$store.commit('setHashItem', {table: ''})
+      this.$store.dispatch('treeview/getRoot')
+    },
     catalog (val) {
       if (val) {
+        if (this.scrollTo.catalog && this.scrollTo.catalog !== val) {
+          this.setCatalog(this.scrollTo.catalog)
+          this.scrollTo.catalog = null
+          return
+        }
         this.$store.dispatch('treeview/getSchemata')
         this.$store.dispatch('editor/getCompleteWords')
       }
@@ -366,7 +378,35 @@ export default {
     },
     schema (val) {
       if (val) {
+        if (this.scrollTo.schema && this.scrollTo.schema !== val) {
+          if (!this.schemata.includes(this.scrollTo.schema)) {
+            toastr.error(`schema not found: ${this.scrollTo.schema}`)
+            this.scrollTo = {}
+            return
+          }
+          this.setSchema(this.scrollTo.schema)
+          return
+        }
         this.$store.dispatch('treeview/getTables')
+          .then(() => {
+            if (this.scrollTo.schema) {
+              document.getElementById(`schema-${this.scrollTo.schema}`).scrollIntoView()
+              window.scrollTo(0, 0)
+              this.scrollTo.schema = null
+            }
+            if (this.scrollTo.table) {
+              const table = this.tables.find(t => t[0] === this.scrollTo.table)
+              if (!table) {
+                toastr.error(`table not found: ${this.scrollTo.table}`)
+                this.scrollTo = {}
+                return
+              }
+              this.setTable(table)
+              document.getElementById(`table-${table[0]}`).scrollIntoView()
+              window.scrollTo(0, 0)
+              this.scrollTo.table = null
+            }
+          })
       }
     },
     table (val) {
@@ -379,7 +419,22 @@ export default {
     }
   },
   created () {
+    if (this.initialTable) {
+      if (this.isPresto || this.isHive) {
+        this.$store.commit('treeview/init')
+        const t = this.initialTable.split('.')
+        if (this.isPresto) {
+          this.scrollTo = {catalog: t[0], schema: t[1], table: t[2]}
+        } else {
+          this.scrollTo = {schema: t[0], table: t[1]}
+        }
+      }
+    }
+
     this.$store.dispatch('treeview/getRoot')
+  },
+  beforeDestroy () {
+    this.$store.commit('setHashItem', {table: ''})
   },
   methods: {
     setDatasource (datasource) {

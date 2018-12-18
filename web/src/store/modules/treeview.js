@@ -78,7 +78,7 @@ const actions = {
 
     if (data.results && data.results.length) {
       commit('setCatalogs', {data: data.results.map(r => r[0])})
-      commit('setCatalog', {data: defaultCatalog || state.catalogs})
+      commit('setCatalog', {data: defaultCatalog || state.catalogs[0]})
     } else {
       commit('setCatalogs', {data: []})
       if (data.error) {
@@ -201,6 +201,10 @@ const actions = {
     const {partitionKeys, columnTypesMap} = getters
 
     const option = {}
+
+    if (Object.keys(selectedPartitions).length === Object.keys(partitionKeys).length) {
+      return
+    }
 
     let remainKey = ''
     if (!Object.isEmpty(selectedPartitions)) {

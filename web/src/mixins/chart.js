@@ -1,4 +1,4 @@
-import {DATE_COLUMN_NAMES, CHART_TYPES} from '@/constants'
+import {CHART_TYPES} from '@/constants'
 
 export default {
   computed: {
@@ -16,7 +16,7 @@ export default {
       }
 
       const columns = r.headers.map(h => ({type: 'number', label: h}))
-      columns[0].type = DATE_COLUMN_NAMES.includes(columns[0].label) ? 'date' : 'string'
+      columns[0].type = 'string'
 
       return columns
     },
@@ -31,14 +31,7 @@ export default {
       const rows = []
       for (const res of r.results) {
         const row = []
-        if (columns[0].type === 'date') {
-          if (!/^[0-9]{8}$/.test(res[0])) {
-            return []
-          }
-          row.push(Date.create(res[0]))
-        } else {
-          row.push(res[0])
-        }
+        row.push(res[0])
 
         for (let i = 1; i < res.length; i++) {
           const val = res[i] === 'null' ? 0 : Number(res[i])
