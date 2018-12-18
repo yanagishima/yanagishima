@@ -309,7 +309,7 @@ public class YanagishimaConfig {
 	}
 
 	public boolean isUseNewShowPartitions(String datasource) {
-		return Boolean.parseBoolean(Optional.ofNullable(properties.getProperty("use.new.show.partitions." + datasource)).orElse("false"));
+		return Boolean.parseBoolean(Optional.ofNullable(properties.getProperty("use.new.show.partitions." + datasource)).orElse("true"));
 	}
 
 	public boolean isUseJdbcCancel(String datasource) {
