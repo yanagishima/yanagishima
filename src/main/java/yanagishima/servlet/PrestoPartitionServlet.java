@@ -1,7 +1,10 @@
 package yanagishima.servlet;
 
+
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.apache.http.client.fluent.Request;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.Response;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import yanagishima.config.YanagishimaConfig;
@@ -20,7 +23,8 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.*;
 
-import static java.nio.charset.StandardCharsets.UTF_8;
+import static com.facebook.presto.client.OkHttpUtil.basicAuth;
+import static com.google.common.base.Preconditions.checkArgument;
 import static javax.servlet.http.HttpServletResponse.SC_FORBIDDEN;
 import static yanagishima.util.Constants.YANAGISHIMA_COMMENT;
 
@@ -82,8 +86,19 @@ public class PrestoPartitionServlet extends HttpServlet {
                 Optional<String> webhdfsUrlOptional = yanagishimaConfig.getWebhdfsUrl(datasource, catalog, schema, table);
                 if(webhdfsUrlOptional.isPresent()) {
                     String webhdfsUrl = webhdfsUrlOptional.get();
-                    String json = Request.Get(webhdfsUrl).execute().returnContent().asString(UTF_8);
-//                    {
+                    OkHttpClient.Builder clientBuilder = new OkHttpClient.Builder();
+                    if (prestoUser.isPresent() && prestoPassword.isPresent()) {
+                        checkArgument(webhdfsUrl.startsWith("https"),
+                                "Authentication using username/password requires HTTPS to be enabled");
+                        clientBuilder.addInterceptor(basicAuth(prestoUser.get(), prestoPassword.get()));
+                    }
+                    OkHttpClient client = clientBuilder.build();
+                    Request okhttpRequest = new Request.Builder().url(webhdfsUrl).build();
+                    try (Response okhttpResponse = client.newCall(okhttpRequest).execute()) {
+                        if (!okhttpResponse.isSuccessful()) {
+                            throw new IOException("Unexpected code " + okhttpResponse);
+                        }
+                        String json = okhttpResponse.body().string();
 //                        "FileStatuses": {
 //                        "FileStatus": [
 //                        {
@@ -101,17 +116,17 @@ public class PrestoPartitionServlet extends HttpServlet {
 //                                "storagePolicy": 0,
 //                                "type": "DIRECTORY"
 //                        },
-                    ObjectMapper mapper = new ObjectMapper();
-                    Map map = mapper.readValue(json, Map.class);
-                    List<Map> topLevelPartitionList = (List) ((Map) map.get("FileStatuses")).get("FileStatus");
-                    if(topLevelPartitionList.size() > 0) {
-                        String firstPartitionData = (String)topLevelPartitionList.get(0).get("pathSuffix");
-                        if(firstPartitionData != null) {
-                            retVal.put("column", firstPartitionData.split("=")[0]);
+                        ObjectMapper mapper = new ObjectMapper();
+                        Map map = mapper.readValue(json, Map.class);
+                        List<Map> topLevelPartitionList = (List) ((Map) map.get("FileStatuses")).get("FileStatus");
+                        if(topLevelPartitionList.size() > 0) {
                             Set<String> partitions = new TreeSet<>();
                             for(Map m : topLevelPartitionList) {
                                 String data = (String)m.get("pathSuffix");
-                                if(data != null) {
+                                if(data != null && data.contains("=")) {
+                                    if(retVal.get("column") == null) {
+                                        retVal.put("column", data.split("=")[0]);
+                                    }
                                     partitions.add(data.split("=")[1]);
                                 }
                             }
