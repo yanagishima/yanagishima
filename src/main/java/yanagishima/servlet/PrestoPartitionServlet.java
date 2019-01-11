@@ -85,54 +85,7 @@ public class PrestoPartitionServlet extends HttpServlet {
             if (partitionColumn == null || partitionValue == null) {
                 Optional<String> webhdfsUrlOptional = yanagishimaConfig.getWebhdfsUrl(datasource, catalog, schema, table);
                 if(webhdfsUrlOptional.isPresent()) {
-                    String webhdfsUrl = webhdfsUrlOptional.get();
-                    OkHttpClient.Builder clientBuilder = new OkHttpClient.Builder();
-                    if (prestoUser.isPresent() && prestoPassword.isPresent()) {
-                        checkArgument(webhdfsUrl.startsWith("https"),
-                                "Authentication using username/password requires HTTPS to be enabled");
-                        clientBuilder.addInterceptor(basicAuth(prestoUser.get(), prestoPassword.get()));
-                    }
-                    OkHttpClient client = clientBuilder.build();
-                    Request okhttpRequest = new Request.Builder().url(webhdfsUrl).build();
-                    try (Response okhttpResponse = client.newCall(okhttpRequest).execute()) {
-                        if (!okhttpResponse.isSuccessful()) {
-                            throw new IOException("Unexpected code " + okhttpResponse);
-                        }
-                        String json = okhttpResponse.body().string();
-//                        "FileStatuses": {
-//                        "FileStatus": [
-//                        {
-//                                "accessTime": 0,
-//                                "blockSize": 0,
-//                                "childrenNum": 271,
-//                                "fileId": 43732679,
-//                                "group": "hdfs",
-//                                "length": 0,
-//                                "modificationTime": 1527567948631,
-//                                "owner": "hive",
-//                                "pathSuffix": "hoge=piyo",
-//                                "permission": "777",
-//                                "replication": 0,
-//                                "storagePolicy": 0,
-//                                "type": "DIRECTORY"
-//                        },
-                        ObjectMapper mapper = new ObjectMapper();
-                        Map map = mapper.readValue(json, Map.class);
-                        List<Map> topLevelPartitionList = (List) ((Map) map.get("FileStatuses")).get("FileStatus");
-                        if(topLevelPartitionList.size() > 0) {
-                            Set<String> partitions = new TreeSet<>();
-                            for(Map m : topLevelPartitionList) {
-                                String data = (String)m.get("pathSuffix");
-                                if(data != null && data.contains("=")) {
-                                    if(retVal.get("column") == null) {
-                                        retVal.put("column", data.split("=")[0]);
-                                    }
-                                    partitions.add(data.split("=")[1]);
-                                }
-                            }
-                            retVal.put("partitions", partitions);
-                        }
-                    }
+                    setFirstPartitionWIthWebhdfs(retVal, prestoUser, prestoPassword, webhdfsUrlOptional.get());
                 } else {
                     String query = null;
                     if(yanagishimaConfig.isUseNewShowPartitions(datasource)) {
@@ -162,42 +115,50 @@ public class PrestoPartitionServlet extends HttpServlet {
                 if(partitionColumnArray.length != partitionValuesArray.length) {
                     throw new RuntimeException("The number of partitionColumn must be same as partitionValue");
                 }
-                List whereList = new ArrayList<>();
-                for(int i=0; i<partitionColumnArray.length; i++) {
-                    if(partitionColumnTypeArray[i].equals("varchar")) {
-                        whereList.add(String.format("%s = '%s'", partitionColumnArray[i], partitionValuesArray[i]));
-                    } else {
-                        whereList.add(String.format("%s = %s", partitionColumnArray[i], partitionValuesArray[i]));
+
+                Optional<String> webhdfsUrlOptional = yanagishimaConfig.getWebhdfsUrl(datasource, catalog, schema, table);
+                if(webhdfsUrlOptional.isPresent()) {
+                    List pathList = new ArrayList<>();
+                    for(int i=0; i<partitionColumnArray.length; i++) {
+                        pathList.add(String.format("%s=%s", partitionColumnArray[i], partitionValuesArray[i]));
                     }
-                }
-                String query = null;
-                if(yanagishimaConfig.isUseNewShowPartitions(datasource)) {
-                    query = String.format("%sSELECT * FROM  %s.%s.\"%s$partitions\" WHERE %s", YANAGISHIMA_COMMENT, catalog, schema, table, String.join(" AND ", whereList));
+                    setFirstPartitionWIthWebhdfs(retVal, prestoUser, prestoPassword, webhdfsUrlOptional.get() + "/" + String.join("/", pathList));
                 } else {
-                    query = String.format("%sSHOW PARTITIONS FROM %s.%s.%s WHERE %s", YANAGISHIMA_COMMENT, catalog, schema, table, String.join(" AND ", whereList));
-                }
-                if(userName != null) {
-                    LOGGER.info(String.format("%s executed %s in %s", userName, query, datasource));
-                }
-                PrestoQueryResult prestoQueryResult = prestoService.doQuery(datasource, query, userName, prestoUser, prestoPassword, false, Integer.MAX_VALUE);
-                List<String> columns = prestoQueryResult.getColumns();
-                int index = 0;
-                for (String column : columns) {
-                    if (column.equals(partitionColumnArray[partitionColumnArray.length-1])) {
-                        break;
+                    List whereList = new ArrayList<>();
+                    for(int i=0; i<partitionColumnArray.length; i++) {
+                        if(partitionColumnTypeArray[i].equals("varchar")) {
+                            whereList.add(String.format("%s = '%s'", partitionColumnArray[i], partitionValuesArray[i]));
+                        } else {
+                            whereList.add(String.format("%s = %s", partitionColumnArray[i], partitionValuesArray[i]));
+                        }
                     }
-                    index++;
+                    String query = null;
+                    if(yanagishimaConfig.isUseNewShowPartitions(datasource)) {
+                        query = String.format("%sSELECT * FROM  %s.%s.\"%s$partitions\" WHERE %s", YANAGISHIMA_COMMENT, catalog, schema, table, String.join(" AND ", whereList));
+                    } else {
+                        query = String.format("%sSHOW PARTITIONS FROM %s.%s.%s WHERE %s", YANAGISHIMA_COMMENT, catalog, schema, table, String.join(" AND ", whereList));
+                    }
+                    if(userName != null) {
+                        LOGGER.info(String.format("%s executed %s in %s", userName, query, datasource));
+                    }
+                    PrestoQueryResult prestoQueryResult = prestoService.doQuery(datasource, query, userName, prestoUser, prestoPassword, false, Integer.MAX_VALUE);
+                    List<String> columns = prestoQueryResult.getColumns();
+                    int index = 0;
+                    for (String column : columns) {
+                        if (column.equals(partitionColumnArray[partitionColumnArray.length-1])) {
+                            break;
+                        }
+                        index++;
+                    }
+                    retVal.put("column", columns.get(index + 1));
+                    Set<String> partitions = new TreeSet<>();
+                    List<List<String>> records = prestoQueryResult.getRecords();
+                    for (List<String> row : records) {
+                        partitions.add(row.get(index + 1));
+                    }
+                    retVal.put("partitions", partitions);
                 }
-                retVal.put("column", columns.get(index + 1));
-                Set<String> partitions = new TreeSet<>();
-                List<List<String>> records = prestoQueryResult.getRecords();
-                for (List<String> row : records) {
-                    partitions.add(row.get(index + 1));
-                }
-                retVal.put("partitions", partitions);
             }
-
-
         } catch (Throwable e) {
             LOGGER.error(e.getMessage(), e);
             retVal.put("error", e.getMessage());
@@ -205,6 +166,56 @@ public class PrestoPartitionServlet extends HttpServlet {
 
         JsonUtil.writeJSON(response, retVal);
 
+    }
+
+    private void setFirstPartitionWIthWebhdfs(HashMap<String, Object> retVal, Optional<String> prestoUser, Optional<String> prestoPassword, String webhdfsUrl) throws IOException {
+        OkHttpClient.Builder clientBuilder = new OkHttpClient.Builder();
+        if (prestoUser.isPresent() && prestoPassword.isPresent()) {
+            checkArgument(webhdfsUrl.startsWith("https"),
+                    "Authentication using username/password requires HTTPS to be enabled");
+            clientBuilder.addInterceptor(basicAuth(prestoUser.get(), prestoPassword.get()));
+        }
+        OkHttpClient client = clientBuilder.build();
+        Request okhttpRequest = new Request.Builder().url(webhdfsUrl + "?op=LISTSTATUS").build();
+        try (Response okhttpResponse = client.newCall(okhttpRequest).execute()) {
+            if (!okhttpResponse.isSuccessful()) {
+                throw new IOException("Unexpected code " + okhttpResponse);
+            }
+            String json = okhttpResponse.body().string();
+//                        "FileStatuses": {
+//                        "FileStatus": [
+//                        {
+//                                "accessTime": 0,
+//                                "blockSize": 0,
+//                                "childrenNum": 271,
+//                                "fileId": 43732679,
+//                                "group": "hdfs",
+//                                "length": 0,
+//                                "modificationTime": 1527567948631,
+//                                "owner": "hive",
+//                                "pathSuffix": "hoge=piyo",
+//                                "permission": "777",
+//                                "replication": 0,
+//                                "storagePolicy": 0,
+//                                "type": "DIRECTORY"
+//                        },
+            ObjectMapper mapper = new ObjectMapper();
+            Map map = mapper.readValue(json, Map.class);
+            List<Map> partitionList = (List) ((Map) map.get("FileStatuses")).get("FileStatus");
+            if(partitionList.size() > 0) {
+                Set<String> partitions = new TreeSet<>();
+                for(Map m : partitionList) {
+                    String data = (String)m.get("pathSuffix");
+                    if(data != null && data.contains("=")) {
+                        if(retVal.get("column") == null) {
+                            retVal.put("column", data.split("=")[0]);
+                        }
+                        partitions.add(data.split("=")[1]);
+                    }
+                }
+                retVal.put("partitions", partitions);
+            }
+        }
     }
 
 }
