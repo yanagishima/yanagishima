@@ -392,7 +392,7 @@ export default {
             path += `#L${this.line}`
           }
           const ua = navigator.userAgent.toLowerCase()
-          if (ua.indexOf('chrome') !== -1) {
+          if (ua.indexOf('chrome') !== -1 && navigator.clipboard) {
             navigator.clipboard.writeText(`${location.protocol}//${location.host}${path}`)
           }
           toastr.success(this.queryid, 'Published (Click Here)', {
