@@ -35,6 +35,7 @@ import java.util.stream.Collectors;
 
 import static com.facebook.presto.client.OkHttpUtil.basicAuth;
 import static com.facebook.presto.client.OkHttpUtil.setupTimeouts;
+import static com.facebook.presto.spi.ErrorType.USER_ERROR;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Verify.verify;
 import static java.lang.String.format;
@@ -104,7 +105,11 @@ public class PrestoServiceImpl implements PrestoService {
                 int limit = yanagishimaConfig.getSelectLimit();
                 getPrestoQueryResult(this.datasource, this.query, this.client, true, limit, this.userName);
             } catch (QueryErrorException e) {
-                LOGGER.warn(e.getCause().getMessage());
+                if(e.getQueryError().getErrorType().equals(USER_ERROR.name())) {
+                    LOGGER.warn(e.getCause().getMessage());
+                } else {
+                    LOGGER.error(e.getMessage(), e);
+                }
             } catch (Throwable e) {
                 LOGGER.error(e.getMessage(), e);
             } finally {
