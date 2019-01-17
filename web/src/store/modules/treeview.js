@@ -78,7 +78,11 @@ const actions = {
 
     if (data.results && data.results.length) {
       commit('setCatalogs', {data: data.results.map(r => r[0])})
-      commit('setCatalog', {data: defaultCatalog || state.catalogs[0]})
+      if (state.catalogs.includes(defaultCatalog)) {
+        commit('setCatalog', {data: defaultCatalog})
+      } else {
+        commit('setCatalog', {data: state.catalogs[0]})
+      }
     } else {
       commit('setCatalogs', {data: []})
       if (data.error) {
