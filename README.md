@@ -33,7 +33,7 @@ yanagishima is a Web UI for presto/hive.
 * validation(Shift+Enter, presto only)
 * export/import history
 * export/import bookmark
-* desktop notification
+* desktop notification(HTTPS only)
 * pretty print for json/map data
 * enable to compare query result
 * comment about query
@@ -44,6 +44,13 @@ yanagishima is a Web UI for presto/hive.
 * pivot
 
 # Versions
+* 18.0
+  * fix the bug that desktop notification doesn't work
+  * improve catalog setting logic if there is no hive catalog
+  * improve error logging
+  * fix bug that java.lang.IllegalArgumentException: float is illegal
+  * fix bug that publish doesn't work in HTTP
+  * improve partition fetching logic with webhdfs
 * 17.0
   * add link which can open a schema/table in Treeview
   * pivot
@@ -217,11 +224,11 @@ yanagishima is a Web UI for presto/hive.
 ```
 git clone https://github.com/yanagishima/yanagishima.git
 cd yanagishima
-git checkout -b 17.0 refs/tags/17.0
+git checkout -b 18.0 refs/tags/18.0
 ./gradlew distZip
 cd build/distributions
-unzip yanagishima-17.0.zip
-cd yanagishima-17.0
+unzip yanagishima-18.0.zip
+cd yanagishima-18.0
 vim conf/yanagishima.properties
 nohup bin/yanagishima-start.sh >y.log 2>&1 &
 ```
@@ -231,6 +238,9 @@ see http://localhost:8080/
 ```
 bin/yanagishima-shutdown.sh
 ```
+
+# Deploy in production
+Highly recommend to deploy in HTTPS due to security, clipboard copy, desktop notification
 
 # Configuration
 
