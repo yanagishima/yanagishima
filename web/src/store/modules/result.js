@@ -19,7 +19,9 @@ function desktopNotification (success, query) {
     }
   }
 
-  Push.create(title, config)
+  if (document.visibilityState !== 'visible') {
+    Push.create(title, config)
+  }
 }
 
 const state = () => {
@@ -60,7 +62,7 @@ const actions = {
     const {authInfo, isPresto, isHive, isElasticsearch} = rootGetters
     const query = option && option.query ? option.query : rootState.editor.inputQuery
     const translateFlag = option && option.translateFlag ? option.translateFlag : false
-    const enableDesktopNotification = rootState.settings.desktopNotification && document.visibilityState !== 'visible'
+    const enableDesktopNotification = rootState.settings.desktopNotification
 
     commit('initComment')
     commit('setHashItem', {queryid: '', chart: 0, pivot: 0, line: 0}, {root: true})
