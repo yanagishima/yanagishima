@@ -9,12 +9,17 @@ import org.apache.commons.csv.CSVRecord;
 import javax.servlet.http.HttpServletResponse;
 import java.io.*;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 
 public class DownloadUtil {
 
     public static void tsvDownload(HttpServletResponse response, String fileName, String datasource, String queryid, String encode) {
+        Path resultFilePath = PathUtil.getResultFilePath(datasource, queryid, false);
+        if(!resultFilePath.toFile().exists()) {
+            throw new RuntimeException(resultFilePath.toFile().getName());
+        }
         response.setContentType("application/octet-stream");
         response.setHeader("Content-Disposition", "inline; filename=\"" + fileName + "\"");
         try {
@@ -23,7 +28,7 @@ public class DownloadUtil {
             throw new RuntimeException(e);
         }
         try (PrintWriter printWriter = new PrintWriter(new OutputStreamWriter(response.getOutputStream(), encode))) {
-            try(BufferedReader br = Files.newBufferedReader(PathUtil.getResultFilePath(datasource, queryid, false));
+            try(BufferedReader br = Files.newBufferedReader(resultFilePath);
                 CSVPrinter csvPrinter = new CSVPrinter(printWriter, CSVFormat.EXCEL.withDelimiter('\t').withRecordSeparator(System.getProperty("line.separator")));) {
                 CSVParser parse = CSVFormat.EXCEL.withDelimiter('\t').withNullString("\\N").parse(br);
                 for (CSVRecord csvRecord : parse) {
@@ -40,6 +45,10 @@ public class DownloadUtil {
     }
 
     public static void csvDownload(HttpServletResponse response, String fileName, String datasource, String queryid, String encode) {
+        Path resultFilePath = PathUtil.getResultFilePath(datasource, queryid, false);
+        if(!resultFilePath.toFile().exists()) {
+            throw new RuntimeException(resultFilePath.toFile().getName());
+        }
         response.setContentType("text/csv");
         response.setHeader("Content-Disposition", "inline; filename=\"" + fileName + "\"");
         try {
@@ -49,7 +58,7 @@ public class DownloadUtil {
         }
 
         try (PrintWriter printWriter = new PrintWriter(new OutputStreamWriter(response.getOutputStream(), encode))) {
-            try(BufferedReader br = Files.newBufferedReader(PathUtil.getResultFilePath(datasource, queryid, false));
+            try(BufferedReader br = Files.newBufferedReader(resultFilePath);
                 CSVPrinter csvPrinter = new CSVPrinter(printWriter, CSVFormat.EXCEL.withRecordSeparator(System.getProperty("line.separator")));) {
                 CSVParser parse = CSVFormat.EXCEL.withDelimiter('\t').withNullString("\\N").parse(br);
                 for (CSVRecord csvRecord : parse) {
