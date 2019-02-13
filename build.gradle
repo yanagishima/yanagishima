@@ -112,7 +112,7 @@ dependencies {
     compile 'org.eclipse.jetty.aggregate:jetty-all:9.3.7.v20160115'
     compile 'javax.servlet:javax.servlet-api:3.1.0'
     compile 'com.facebook.presto:presto-client:0.215'
-    compile 'com.facebook.presto:presto-parser:0.215'
+    compile 'io.prestosql:presto-parser:302'
     compile 'com.facebook.presto:presto-spi:0.215'
     compile 'com.google.inject:guice:4.0'
     compile 'com.google.inject.extensions:guice-servlet:4.0'
