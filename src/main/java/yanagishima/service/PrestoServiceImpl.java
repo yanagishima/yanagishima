@@ -1,6 +1,6 @@
 package yanagishima.service;
 
-import io.prestosql.client.*;
+import com.facebook.presto.client.*;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
@@ -27,16 +27,15 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.sql.SQLException;
-import java.time.ZoneId;
 import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
-import static io.prestosql.client.OkHttpUtil.basicAuth;
-import static io.prestosql.client.OkHttpUtil.setupTimeouts;
-import static io.prestosql.spi.ErrorType.USER_ERROR;
+import static com.facebook.presto.client.OkHttpUtil.basicAuth;
+import static com.facebook.presto.client.OkHttpUtil.setupTimeouts;
+import static com.facebook.presto.spi.ErrorType.USER_ERROR;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Verify.verify;
 import static java.lang.String.format;
@@ -350,8 +349,8 @@ public class PrestoServiceImpl implements PrestoService {
         if (prestoUser.isPresent() && prestoPassword.isPresent()) {
             ClientSession clientSession = new ClientSession(
                     URI.create(prestoCoordinatorServer), prestoUser.get(), source, Optional.empty(), ImmutableSet.of(), null, catalog,
-                    schema, null, ZoneId.systemDefault(), Locale.getDefault(),
-                    ImmutableMap.of(), ImmutableMap.of(), emptyMap(), emptyMap(), ImmutableMap.of(), null, new Duration(2, MINUTES));
+                    schema, null, TimeZone.getDefault().getID(), Locale.getDefault(),
+                    ImmutableMap.of(), ImmutableMap.of(), emptyMap(), null, new Duration(2, MINUTES));
             checkArgument(clientSession.getServer().getScheme().equalsIgnoreCase("https"),
                     "Authentication using username/password requires HTTPS to be enabled");
             OkHttpClient.Builder clientBuilder = httpClient.newBuilder();
@@ -368,8 +367,8 @@ public class PrestoServiceImpl implements PrestoService {
 
         ClientSession clientSession = new ClientSession(
                 URI.create(prestoCoordinatorServer), user, source, Optional.empty(), ImmutableSet.of(), null, catalog,
-                schema, null, ZoneId.systemDefault(), Locale.getDefault(),
-                ImmutableMap.of(), ImmutableMap.of(), emptyMap(), emptyMap(), ImmutableMap.of(), null, new Duration(2, MINUTES));
+                schema, null, TimeZone.getDefault().getID(), Locale.getDefault(),
+                ImmutableMap.of(), ImmutableMap.of(), emptyMap(), null, new Duration(2, MINUTES));
 
         return StatementClientFactory.newStatementClient(httpClient, clientSession, query);
     }

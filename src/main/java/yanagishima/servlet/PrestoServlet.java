@@ -1,8 +1,8 @@
 package yanagishima.servlet;
 
-import io.prestosql.client.ClientException;
-import io.prestosql.client.ErrorLocation;
-import io.prestosql.client.QueryError;
+import com.facebook.presto.client.ClientException;
+import com.facebook.presto.client.ErrorLocation;
+import com.facebook.presto.client.QueryError;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import me.geso.tinyorm.TinyORM;
 import org.apache.http.client.fluent.Request;
@@ -33,7 +33,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static io.prestosql.spi.ErrorType.USER_ERROR;
+import static com.facebook.presto.spi.ErrorType.USER_ERROR;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static javax.servlet.http.HttpServletResponse.SC_FORBIDDEN;
 import static yanagishima.util.Constants.YANAGISHIMA_COMMENT;

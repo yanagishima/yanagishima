@@ -1,6 +1,6 @@
 package yanagishima.servlet;
 
-import io.prestosql.client.ClientException;
+import com.facebook.presto.client.ClientException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import yanagishima.config.YanagishimaConfig;
