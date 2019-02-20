@@ -16,12 +16,16 @@ public class HiveServletModule extends ServletModule {
 		bind(ConvertHiveServlet.class);
 
 		serve("/hive").with(HiveServlet.class);
+		serve("/spark").with(HiveServlet.class);
 		serve("/hiveAsync").with(HiveAsyncServlet.class);
+		serve("/sparkAsync").with(HiveAsyncServlet.class);
 		serve("/yarnJobList").with(YarnJobListServlet.class);
 		serve("/killHive").with(KillHiveServlet.class);
 		serve("/hiveQueryStatus").with(HiveQueryStatusServlet.class);
+		serve("/sparkQueryStatus").with(HiveQueryStatusServlet.class);
 		serve("/hiveQueryDetail").with(HiveQueryDetailServlet.class);
 		serve("/hivePartition").with(HivePartitionServlet.class);
+		serve("/sparkPartition").with(HivePartitionServlet.class);
 		serve("/convertHive").with(ConvertHiveServlet.class);
 
 	}

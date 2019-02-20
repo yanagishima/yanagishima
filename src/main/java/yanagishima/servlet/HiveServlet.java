@@ -99,8 +99,9 @@ public class HiveServlet extends HttpServlet {
 
                 boolean storeFlag = Boolean.parseBoolean(Optional.ofNullable(request.getParameter("store")).orElse("false"));
                 int limit = yanagishimaConfig.getSelectLimit();
+                String engine = HttpRequestUtil.getParam(request, "engine");
                 try {
-                    HiveQueryResult hiveQueryResult = hiveService.doQuery(datasource, query, userName, hiveUser, hivePassword, storeFlag, limit);
+                    HiveQueryResult hiveQueryResult = hiveService.doQuery(engine, datasource, query, userName, hiveUser, hivePassword, storeFlag, limit);
                     String queryid = hiveQueryResult.getQueryId();
                     retVal.put("queryid", queryid);
                     retVal.put("headers", hiveQueryResult.getColumns());

@@ -203,6 +203,10 @@ public class YanagishimaConfig {
 		return PropertiesUtil.getParam(properties, "hive.jdbc.url." + datasource);
 	}
 
+	public String getSparkJdbcUrl(String datasource) {
+		return PropertiesUtil.getParam(properties, "spark.jdbc.url." + datasource);
+	}
+
 	public String getHiveJdbcUser(String datasource) {
 		return properties.getProperty("hive.jdbc.user." + datasource);
 	}
