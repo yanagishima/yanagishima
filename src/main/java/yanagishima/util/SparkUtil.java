@@ -18,6 +18,15 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 
 public class SparkUtil {
 
+    public static long getElapsedTimeMillis(String submissionTime, String queryId) {
+        DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSzzz");
+        ZonedDateTime submissionTimeZdt =  ZonedDateTime.parse(submissionTime, dtf);
+        LocalDateTime submitTimeLdt = LocalDateTime.parse(queryId.substring(0, "yyyyMMdd_HHmmss".length()), DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss"));
+        ZonedDateTime submitTimeZdt = submitTimeLdt.atZone(ZoneId.of("GMT", ZoneId.SHORT_IDS));
+        long elapsedTimeMillis = ChronoUnit.MILLIS.between(submitTimeZdt, submissionTimeZdt);
+        return elapsedTimeMillis;
+    }
+
     public static Optional<Map> getRunningJob(String resourceManagerUrl, String sparkJdbcApplicationId, String queryId) {
         List<Map> jobList = getJobList(resourceManagerUrl, sparkJdbcApplicationId);
         for(Map m : jobList) {
@@ -25,11 +34,7 @@ public class SparkUtil {
                 continue;
             }
             String submissionTime = (String)m.get("submissionTime");
-            DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSzzz");
-            ZonedDateTime submissionTimeZdt =  ZonedDateTime.parse(submissionTime, dtf);
-            LocalDateTime submitTimeLdt = LocalDateTime.parse(queryId.substring(0, "yyyyMMdd_HHmmss".length()), DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss"));
-            ZonedDateTime submitTimeZdt = submitTimeLdt.atZone(ZoneId.of("GMT", ZoneId.SHORT_IDS));
-            long elapsedTimeMillis = ChronoUnit.MILLIS.between(submitTimeZdt, submissionTimeZdt);
+            long elapsedTimeMillis = getElapsedTimeMillis(submissionTime, queryId);
             if(elapsedTimeMillis/1000 < 3) {
                 return Optional.of(m);
             }
