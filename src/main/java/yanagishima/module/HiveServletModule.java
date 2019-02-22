@@ -24,6 +24,7 @@ public class HiveServletModule extends ServletModule {
 		serve("/hiveQueryStatus").with(HiveQueryStatusServlet.class);
 		serve("/sparkQueryStatus").with(HiveQueryStatusServlet.class);
 		serve("/hiveQueryDetail").with(HiveQueryDetailServlet.class);
+		serve("/sparkQueryDetail").with(HiveQueryDetailServlet.class);
 		serve("/hivePartition").with(HivePartitionServlet.class);
 		serve("/sparkPartition").with(HivePartitionServlet.class);
 		serve("/convertHive").with(ConvertHiveServlet.class);

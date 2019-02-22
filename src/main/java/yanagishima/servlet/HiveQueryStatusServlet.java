@@ -2,6 +2,10 @@ package yanagishima.servlet;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import me.geso.tinyorm.TinyORM;
+import okhttp3.HttpUrl;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.Response;
 import yanagishima.config.YanagishimaConfig;
 import yanagishima.row.Query;
 import yanagishima.util.*;
@@ -96,7 +100,38 @@ public class HiveQueryStatusServlet extends HttpServlet {
 					throw new IllegalArgumentException(String.format("unknown status=%s", queryOptional.get().getStatus()));
 				}
 			} else {
+                String sparkWebUrl = yanagishimaConfig.getSparkWebUrl(datasource);
+                OkHttpClient client = new OkHttpClient();
+                Request okhttpRequest = new Request.Builder().url(sparkWebUrl).build();
+                try (Response okhttpResponse = client.newCall(okhttpRequest).execute()) {
+                    HttpUrl url = okhttpResponse.request().url();
+                    String sparkJdbcApplicationId = url.pathSegments().get(url.pathSize() - 2);
+                    if (!sparkJdbcApplicationId.startsWith("application_")) {
+                        throw new IllegalArgumentException(sparkJdbcApplicationId + " is illegal");
+                    }
+                    Optional<Map> runningJob = SparkUtil.getRunningJob(resourceManagerUrl, sparkJdbcApplicationId, queryid);
+                    if(runningJob.isPresent()) {
+                        response.setContentType("application/json");
+                        PrintWriter writer = response.getWriter();
+                        ObjectMapper mapper = new ObjectMapper();
+                        Map map = runningJob.get();
+                        String status = (String)map.get("status");
+                        map.remove("status");
+                        map.put("state", status);
+                        int numTasks = (int)map.get("numTasks");
+                        int numCompletedTasks = (int)map.get("numCompletedTasks");
+                        double progress = ((double)numCompletedTasks/numTasks)*100;
+                        map.put("progress", progress);
+                        String json = mapper.writeValueAsString(map);
+                        writer.println(json);
+                        return;
+                    }
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
 				retVal.put("state", "RUNNING");
+				retVal.put("progress", 0);
+				retVal.put("elapsedTime", 0);
 			}
 			JsonUtil.writeJSON(response, retVal);
 		} else {

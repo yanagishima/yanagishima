@@ -31,9 +31,8 @@ public class HistoryUtil {
 
         Path errorFilePath = PathUtil.getResultFilePath(datasource, queryid, true);
         if (errorFilePath.toFile().exists()) {
-            try (BufferedReader br = Files.newBufferedReader(errorFilePath, StandardCharsets.UTF_8)) {
-                String line = br.readLine();
-                retVal.put("error", line);
+            try {
+                retVal.put("error", String.join(System.getProperty("line.separator"), Files.readAllLines(errorFilePath)));
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }

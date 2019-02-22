@@ -44,36 +44,46 @@ public class HiveQueryDetailServlet extends HttpServlet {
                 }
             }
         }
+        String engine = HttpRequestUtil.getParam(request, "engine");
         String resourceManagerUrl = yanagishimaConfig.getResourceManagerUrl(datasource);
-        Optional<String> idOptinal = Optional.ofNullable(request.getParameter("id"));
-        idOptinal.ifPresent(id -> {
-            if (id.startsWith("application_")) {
-                try {
-                    response.sendRedirect(resourceManagerUrl + "/cluster/app/" + id);
-                } catch (IOException e) {
-                    throw new RuntimeException(e);
-                }
-            } else {
-                String userName = null;
-                Optional<String> hiveUser = Optional.ofNullable(request.getParameter("user"));
-                if(yanagishimaConfig.isUseAuditHttpHeaderName()) {
-                    userName = request.getHeader(yanagishimaConfig.getAuditHttpHeaderName());
-                } else {
-                    if (hiveUser.isPresent()) {
-                        userName = hiveUser.get();
-                    }
-                }
-                Optional<Map> applicationOptional = YarnUtil.getApplication(resourceManagerUrl, id, userName, yanagishimaConfig.getResourceManagerBegin(datasource));
-                applicationOptional.ifPresent(application -> {
-                    String applicationId = (String) application.get("id");
+        if(engine.equals("hive")) {
+            Optional<String> idOptinal = Optional.ofNullable(request.getParameter("id"));
+            idOptinal.ifPresent(id -> {
+                if (id.startsWith("application_")) {
                     try {
-                        response.sendRedirect(resourceManagerUrl + "/cluster/app/" + applicationId);
+                        response.sendRedirect(resourceManagerUrl + "/cluster/app/" + id);
                     } catch (IOException e) {
                         throw new RuntimeException(e);
                     }
-                });
-            }
-        });
+                } else {
+                    String userName = null;
+                    Optional<String> hiveUser = Optional.ofNullable(request.getParameter("user"));
+                    if(yanagishimaConfig.isUseAuditHttpHeaderName()) {
+                        userName = request.getHeader(yanagishimaConfig.getAuditHttpHeaderName());
+                    } else {
+                        if (hiveUser.isPresent()) {
+                            userName = hiveUser.get();
+                        }
+                    }
+                    Optional<Map> applicationOptional = YarnUtil.getApplication(resourceManagerUrl, id, userName, yanagishimaConfig.getResourceManagerBegin(datasource));
+                    applicationOptional.ifPresent(application -> {
+                        String applicationId = (String) application.get("id");
+                        try {
+                            response.sendRedirect(resourceManagerUrl + "/cluster/app/" + applicationId);
+                        } catch (IOException e) {
+                            throw new RuntimeException(e);
+                        }
+                    });
+                }
+            });
+        } else if(engine.equals("spark")) {
+            String sparkWebUrl = yanagishimaConfig.getSparkWebUrl(datasource);
+            response.sendRedirect(sparkWebUrl);
+
+        } else {
+            throw new IllegalArgumentException(engine + " is illegal");
+        }
+
     }
 
 }

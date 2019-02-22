@@ -65,7 +65,7 @@ public class HiveServiceImpl implements HiveService {
 
     @Override
     public String doQueryAsync(String engine, String datasource, String query, String userName, Optional<String> hiveUser, Optional<String> hivePassword) {
-        String queryId = QueryIdUtil.generate(datasource, query, "hive");
+        String queryId = QueryIdUtil.generate(datasource, query, engine);
         executorService.submit(new Task(queryId, engine, datasource, query, userName, hiveUser, hivePassword));
         return queryId;
     }
@@ -294,7 +294,7 @@ public class HiveServiceImpl implements HiveService {
                             hiveQueryResult.setWarningMessage(String.format("now fetch size is %d. This is more than %d. So, fetch operation stopped.", rowDataList.size(), limit));
                         }
 
-                        checkTimeout(db, queryMaxRunTime, start, datasource, "hive", queryId, query, userName);
+                        checkTimeout(db, queryMaxRunTime, start, datasource, engine, queryId, query, userName);
                     }
                     hiveQueryResult.setLineNumber(lineNumber);
                     hiveQueryResult.setRecords(rowDataList);
