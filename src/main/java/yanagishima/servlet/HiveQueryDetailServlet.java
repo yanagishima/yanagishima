@@ -3,6 +3,7 @@ package yanagishima.servlet;
 import yanagishima.config.YanagishimaConfig;
 import yanagishima.util.AccessControlUtil;
 import yanagishima.util.HttpRequestUtil;
+import yanagishima.util.SparkUtil;
 import yanagishima.util.YarnUtil;
 
 import javax.inject.Inject;
@@ -46,8 +47,8 @@ public class HiveQueryDetailServlet extends HttpServlet {
         }
         String engine = HttpRequestUtil.getParam(request, "engine");
         String resourceManagerUrl = yanagishimaConfig.getResourceManagerUrl(datasource);
+        Optional<String> idOptinal = Optional.ofNullable(request.getParameter("id"));
         if(engine.equals("hive")) {
-            Optional<String> idOptinal = Optional.ofNullable(request.getParameter("id"));
             idOptinal.ifPresent(id -> {
                 if (id.startsWith("application_")) {
                     try {
@@ -78,8 +79,13 @@ public class HiveQueryDetailServlet extends HttpServlet {
             });
         } else if(engine.equals("spark")) {
             String sparkWebUrl = yanagishimaConfig.getSparkWebUrl(datasource);
-            response.sendRedirect(sparkWebUrl);
-
+            if(idOptinal.isPresent()) {
+                String jobId = idOptinal.get();
+                String sparkJdbcApplicationId = SparkUtil.getSparkJdbcApplicationId(sparkWebUrl);
+                response.sendRedirect(resourceManagerUrl + "/proxy/" + sparkJdbcApplicationId + "/jobs/job?id=" + jobId);
+            } else {
+                response.sendRedirect(sparkWebUrl);
+            }
         } else {
             throw new IllegalArgumentException(engine + " is illegal");
         }

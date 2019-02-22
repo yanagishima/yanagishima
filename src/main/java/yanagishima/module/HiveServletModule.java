@@ -9,6 +9,7 @@ public class HiveServletModule extends ServletModule {
 		bind(HiveServlet.class);
 		bind(HiveAsyncServlet.class);
 		bind(YarnJobListServlet.class);
+		bind(SparkJobListServlet.class);
 		bind(KillHiveServlet.class);
 		bind(HiveQueryStatusServlet.class);
 		bind(HiveQueryDetailServlet.class);
@@ -20,6 +21,7 @@ public class HiveServletModule extends ServletModule {
 		serve("/hiveAsync").with(HiveAsyncServlet.class);
 		serve("/sparkAsync").with(HiveAsyncServlet.class);
 		serve("/yarnJobList").with(YarnJobListServlet.class);
+		serve("/sparkJobList").with(SparkJobListServlet.class);
 		serve("/killHive").with(KillHiveServlet.class);
 		serve("/hiveQueryStatus").with(HiveQueryStatusServlet.class);
 		serve("/sparkQueryStatus").with(HiveQueryStatusServlet.class);

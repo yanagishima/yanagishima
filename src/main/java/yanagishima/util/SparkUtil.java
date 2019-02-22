@@ -1,7 +1,10 @@
 package yanagishima.util;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.apache.http.client.fluent.Request;
+import okhttp3.HttpUrl;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.Response;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
@@ -17,6 +20,22 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 
 
 public class SparkUtil {
+
+    public static String getSparkJdbcApplicationId(String sparkWebUrl) {
+        OkHttpClient client = new OkHttpClient();
+        Request okhttpRequest = new Request.Builder().url(sparkWebUrl).build();
+        try (Response okhttpResponse = client.newCall(okhttpRequest).execute()) {
+            HttpUrl url = okhttpResponse.request().url();
+            // http://spark.thrift.server:4040 -> http://resourcemanager:8088/proxy/redirect/application_xxxxxxx/
+            String sparkJdbcApplicationId = url.pathSegments().get(url.pathSize() - 2);
+            if (!sparkJdbcApplicationId.startsWith("application_")) {
+                throw new IllegalArgumentException(sparkJdbcApplicationId + " is illegal");
+            }
+            return sparkJdbcApplicationId;
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
 
     public static long getElapsedTimeMillis(String submissionTime, String queryId) {
         DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSzzz");
@@ -45,7 +64,7 @@ public class SparkUtil {
     public static List<Map> getJobList(String resourceManagerUrl, String sparkJdbcApplicationId) {
 
         try {
-            String originalJson = Request.Get(resourceManagerUrl + "/proxy/" + sparkJdbcApplicationId + "/api/v1/applications/" + sparkJdbcApplicationId + "/jobs")
+            String originalJson = org.apache.http.client.fluent.Request.Get(resourceManagerUrl + "/proxy/" + sparkJdbcApplicationId + "/api/v1/applications/" + sparkJdbcApplicationId + "/jobs")
                     .execute().returnContent().asString(UTF_8);
 /*
 [ {
@@ -89,6 +108,22 @@ public class SparkUtil {
 */
             ObjectMapper mapper = new ObjectMapper();
             List<Map> jobList = mapper.readValue(originalJson, List.class);
+            for(Map m : jobList) {
+                if(m.get("status").equals("RUNNING")) {
+                    int numTasks = (int)m.get("numTasks");
+                    int numCompletedTasks = (int)m.get("numCompletedTasks");
+                    double progress = ((double)numCompletedTasks/numTasks)*100;
+                    m.put("progress", progress);
+                } else {
+                    String submissionTime = (String)m.get("submissionTime");
+                    String completionTime = (String)m.get("completionTime");
+                    DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSzzz");
+                    ZonedDateTime submissionTimeZdt =  ZonedDateTime.parse(submissionTime, dtf);
+                    ZonedDateTime completionTimeZdt =  ZonedDateTime.parse(completionTime, dtf);
+                    long elapsedTimeMillis = ChronoUnit.MILLIS.between(submissionTimeZdt, completionTimeZdt);
+                    m.put("elapsedTime", elapsedTimeMillis);
+                }
+            }
             return jobList;
         } catch (IOException e) {
             throw new RuntimeException(e);
