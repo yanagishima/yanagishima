@@ -81,8 +81,15 @@ public class HiveQueryDetailServlet extends HttpServlet {
             String sparkWebUrl = yanagishimaConfig.getSparkWebUrl(datasource);
             if(idOptinal.isPresent()) {
                 String jobId = idOptinal.get();
-                String sparkJdbcApplicationId = SparkUtil.getSparkJdbcApplicationId(sparkWebUrl);
-                response.sendRedirect(resourceManagerUrl + "/proxy/" + sparkJdbcApplicationId + "/jobs/job?id=" + jobId);
+                try {
+                    Integer.parseInt(jobId);
+                    String sparkJdbcApplicationId = SparkUtil.getSparkJdbcApplicationId(sparkWebUrl);
+                    response.sendRedirect(resourceManagerUrl + "/proxy/" + sparkJdbcApplicationId + "/jobs/job?id=" + jobId);
+                } catch (NumberFormatException e) {
+                    // we can't specify spark jobId when user pushes info button in Query List tab
+                    response.sendRedirect(sparkWebUrl);
+                }
+
             } else {
                 response.sendRedirect(sparkWebUrl);
             }
