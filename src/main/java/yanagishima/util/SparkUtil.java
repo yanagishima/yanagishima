@@ -46,21 +46,6 @@ public class SparkUtil {
         return elapsedTimeMillis;
     }
 
-    public static Optional<Map> getRunningJob(String resourceManagerUrl, String sparkJdbcApplicationId, String queryId) {
-        List<Map> jobList = getJobList(resourceManagerUrl, sparkJdbcApplicationId);
-        for(Map m : jobList) {
-            if(!m.get("status").equals("RUNNING")) {
-                continue;
-            }
-            String submissionTime = (String)m.get("submissionTime");
-            long elapsedTimeMillis = getElapsedTimeMillis(submissionTime, queryId);
-            if(elapsedTimeMillis/1000 < 3) {
-                return Optional.of(m);
-            }
-        }
-        return Optional.empty();
-    }
-
     public static List<Map> getJobList(String resourceManagerUrl, String sparkJdbcApplicationId) {
 
         try {
