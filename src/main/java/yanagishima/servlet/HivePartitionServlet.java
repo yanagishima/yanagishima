@@ -68,6 +68,7 @@ public class HivePartitionServlet extends HttpServlet {
                     userName = hiveUser.get();
                 }
             }
+            String engine = HttpRequestUtil.getParam(request, "engine");
             String schema = HttpRequestUtil.getParam(request, "schema");
             String table = HttpRequestUtil.getParam(request, "table");
             String partitionColumn = request.getParameter("partitionColumn");
@@ -75,7 +76,7 @@ public class HivePartitionServlet extends HttpServlet {
             String partitionValue = request.getParameter("partitionValue");
             if (partitionColumn == null || partitionValue == null) {
                 String query = String.format("SHOW PARTITIONS %s.`%s`", schema, table);
-                HiveQueryResult hiveQueryResult = hiveService.doQuery(datasource, query, userName, hiveUser, hivePassword, false, Integer.MAX_VALUE);
+                HiveQueryResult hiveQueryResult = hiveService.doQuery(engine, datasource, query, userName, hiveUser, hivePassword, false, Integer.MAX_VALUE);
                 Set<String> partitions = new TreeSet<>();
                 List<List<String>> records = hiveQueryResult.getRecords();
                 String cell = records.get(0).get(0);// part1=val1/part2=val2/part3=val3'...
@@ -100,7 +101,7 @@ public class HivePartitionServlet extends HttpServlet {
                     }
                 }
                 String query = String.format("SHOW PARTITIONS %s.`%s` PARTITION(%s)", schema, table, String.join(", ", whereList));
-                HiveQueryResult hiveQueryResult = hiveService.doQuery(datasource, query, userName, hiveUser, hivePassword, false, Integer.MAX_VALUE);
+                HiveQueryResult hiveQueryResult = hiveService.doQuery(engine, datasource, query, userName, hiveUser, hivePassword, false, Integer.MAX_VALUE);
                 List<List<String>> records = hiveQueryResult.getRecords();
                 String cell = records.get(0).get(0);// part1=val1/part2=val2/part3=val3'...
                 String[] keyValues = cell.split("/");
