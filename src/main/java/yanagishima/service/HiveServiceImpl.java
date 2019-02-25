@@ -206,16 +206,18 @@ public class HiveServiceImpl implements HiveService {
         try (Statement statement = connection.createStatement()) {
             int timeout = (int) queryMaxRunTime.toMillis() / 1000;
             statement.setQueryTimeout(timeout);
-            String jobName = null;
-            if (userName == null) {
-                jobName = YANAGISHIAM_HIVE_JOB_PREFIX + queryId;
-            } else {
-                jobName = YANAGISHIAM_HIVE_JOB_PREFIX + userName + "-" + queryId;
-            }
-            statement.execute("set mapreduce.job.name=" + jobName);
-            List<String> hiveSetupQueryList = this.yanagishimaConfig.getHiveSetupQueryList(datasource);
-            for (String hiveSetupQuery : hiveSetupQueryList) {
-                statement.execute(hiveSetupQuery);
+            if(engine.equals("hive")) {
+                String jobName = null;
+                if (userName == null) {
+                    jobName = YANAGISHIAM_HIVE_JOB_PREFIX + queryId;
+                } else {
+                    jobName = YANAGISHIAM_HIVE_JOB_PREFIX + userName + "-" + queryId;
+                }
+                statement.execute("set mapreduce.job.name=" + jobName);
+                List<String> hiveSetupQueryList = this.yanagishimaConfig.getHiveSetupQueryList(datasource);
+                for (String hiveSetupQuery : hiveSetupQueryList) {
+                    statement.execute(hiveSetupQuery);
+                }
             }
 
             if (async && yanagishimaConfig.isUseJdbcCancel(datasource)) {
