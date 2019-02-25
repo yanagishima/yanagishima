@@ -105,7 +105,7 @@ public class HiveServlet extends HttpServlet {
                     String queryid = hiveQueryResult.getQueryId();
                     retVal.put("queryid", queryid);
                     retVal.put("headers", hiveQueryResult.getColumns());
-                    if(query.toLowerCase().indexOf("SHOW SCHEMAS") != -1) {
+                    if(query.startsWith("SHOW SCHEMAS")) {
                         List<String> invisibleDatabases = yanagishimaConfig.getInvisibleDatabases(datasource);
                         retVal.put("results", hiveQueryResult.getRecords().stream().filter(list -> !invisibleDatabases.contains(list.get(0))).collect(Collectors.toList()));
                     } else {
@@ -117,11 +117,18 @@ public class HiveServlet extends HttpServlet {
                     warningMessageOptinal.ifPresent(warningMessage -> {
                         retVal.put("warn", warningMessage);
                     });
-                    if(query.toLowerCase().startsWith("DESCRIBE")) {
+                    if(query.startsWith("DESCRIBE")) {
                         if(yanagishimaConfig.getMetadataServiceUrl(datasource).isPresent()) {
-                            String[] strings = query.toLowerCase().substring("DESCRIBE ".length()).split("\\.");
+                            String[] strings = query.substring("DESCRIBE ".length()).split("\\.");
                             String schema = strings[0];
-                            String table = strings[1].substring(1, strings[1].length() - 1);
+                            String table = null;
+                            if(engine.equals("hive")) {
+                                table = strings[1].substring(1, strings[1].length() - 1);
+                            } else if(engine.equals("spark")) {
+                                table = strings[1];
+                            } else {
+                                throw new IllegalArgumentException(engine + " is illegal");
+                            }
                             MetadataUtil.setMetadata(yanagishimaConfig.getMetadataServiceUrl(datasource).get(), retVal, schema, table, hiveQueryResult.getRecords());
                         }
                     }
