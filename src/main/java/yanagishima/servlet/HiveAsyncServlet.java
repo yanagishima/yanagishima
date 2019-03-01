@@ -81,11 +81,10 @@ public class HiveAsyncServlet extends HttpServlet {
                         }
                     }
                 }
-                if (userName != null) {
-                    LOGGER.info(String.format("%s executed %s in %s", userName, query, datasource));
-                }
-
                 String engine = HttpRequestUtil.getParam(request, "engine");
+                if (userName != null) {
+                    LOGGER.info(String.format("%s executed %s in datasource=%s, engine=%s", userName, query, datasource, engine));
+                }
                 String queryid = hiveService.doQueryAsync(engine, datasource, query, userName, hiveUser, hivePassword);
                 retVal.put("queryid", queryid);
 

@@ -6,7 +6,6 @@ import org.slf4j.LoggerFactory;
 import yanagishima.config.YanagishimaConfig;
 import yanagishima.exception.HiveQueryErrorException;
 import yanagishima.result.HiveQueryResult;
-import yanagishima.row.Query;
 import yanagishima.service.HiveService;
 import yanagishima.util.AccessControlUtil;
 import yanagishima.util.HttpRequestUtil;
@@ -20,18 +19,12 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
-import java.time.ZonedDateTime;
-import java.time.format.DateTimeFormatter;
-import java.time.temporal.ChronoUnit;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
 import static javax.servlet.http.HttpServletResponse.SC_FORBIDDEN;
-import static yanagishima.util.Constants.YANAGISHIMA_COMMENT;
 
 @Singleton
 public class HiveServlet extends HttpServlet {
@@ -93,13 +86,13 @@ public class HiveServlet extends HttpServlet {
                         }
                     }
                 }
+                String engine = HttpRequestUtil.getParam(request, "engine");
                 if (userName != null) {
-                    LOGGER.info(String.format("%s executed %s in %s", userName, query, datasource));
+                    LOGGER.info(String.format("%s executed %s in datasource=%s, engine=%s", userName, query, datasource, engine));
                 }
 
                 boolean storeFlag = Boolean.parseBoolean(Optional.ofNullable(request.getParameter("store")).orElse("false"));
                 int limit = yanagishimaConfig.getSelectLimit();
-                String engine = HttpRequestUtil.getParam(request, "engine");
                 try {
                     HiveQueryResult hiveQueryResult = hiveService.doQuery(engine, datasource, query, userName, hiveUser, hivePassword, storeFlag, limit);
                     String queryid = hiveQueryResult.getQueryId();
