@@ -7,14 +7,11 @@ import okhttp3.Request;
 import okhttp3.Response;
 
 import java.io.IOException;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 
@@ -35,15 +32,6 @@ public class SparkUtil {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-    }
-
-    public static long getElapsedTimeMillis(String submissionTime, String queryId) {
-        DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSzzz");
-        ZonedDateTime submissionTimeZdt =  ZonedDateTime.parse(submissionTime, dtf);
-        LocalDateTime submitTimeLdt = LocalDateTime.parse(queryId.substring(0, "yyyyMMdd_HHmmss".length()), DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss"));
-        ZonedDateTime submitTimeZdt = submitTimeLdt.atZone(ZoneId.of("GMT", ZoneId.SHORT_IDS));
-        long elapsedTimeMillis = ChronoUnit.MILLIS.between(submitTimeZdt, submissionTimeZdt);
-        return elapsedTimeMillis;
     }
 
     public static List<Map> getJobList(String resourceManagerUrl, String sparkJdbcApplicationId) {
