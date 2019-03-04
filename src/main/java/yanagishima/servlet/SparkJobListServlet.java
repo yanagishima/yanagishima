@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import me.geso.tinyorm.TinyORM;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import yanagishima.bean.SparkSqlJob;
 import yanagishima.config.YanagishimaConfig;
 import yanagishima.util.AccessControlUtil;
 import yanagishima.util.HttpRequestUtil;
@@ -18,6 +19,7 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -61,24 +63,37 @@ public class SparkJobListServlet extends HttpServlet {
 		String resourceManagerUrl = yanagishimaConfig.getResourceManagerUrl(datasource);
 		response.setContentType("application/json");
 		PrintWriter writer = response.getWriter();
-		List<Map> jobList = SparkUtil.getJobList(resourceManagerUrl, SparkUtil.getSparkJdbcApplicationId(yanagishimaConfig.getSparkWebUrl(datasource)));
-		List<Map> runningList = jobList.stream().filter(m -> m.get("status").equals("RUNNING")).collect(Collectors.toList());;
-		List<Map> notRunningList = jobList.stream().filter(m -> !m.get("status").equals("RUNNING")).collect(Collectors.toList());;
-		runningList.sort((a,b)-> Integer.class.cast(b.get("jobId")) - Integer.class.cast(a.get("jobId")));
-		notRunningList.sort((a,b)-> Integer.class.cast(b.get("jobId")) - Integer.class.cast(a.get("jobId")));
+		String sparkJdbcApplicationId = SparkUtil.getSparkJdbcApplicationId(yanagishimaConfig.getSparkWebUrl(datasource));
+		List<Map> runningList = SparkUtil.getSparkRunningJobListWithProgress(resourceManagerUrl, sparkJdbcApplicationId);
+		List<SparkSqlJob> sparkSqlJobList = SparkUtil.getSparkSqlJobFromSqlserver(resourceManagerUrl, sparkJdbcApplicationId);
+		for(Map m : runningList) {
+			String groupId = (String)m.get("jobGroup");
+			for(SparkSqlJob ssj : sparkSqlJobList) {
+				if(ssj.getGroupId().equals(groupId)) {
+					m.put("jobIds", ssj.getJobIds());
+					m.put("user", ssj.getUser());
+					m.put("query", ssj.getStatement());
+					m.put("duration", ssj.getDuration());
+					break;
+				}
+			}
+		}
+		List<SparkSqlJob> notRunningList = sparkSqlJobList.stream().filter(j -> j.getJobIds().size() > 0).filter(j -> j.getState().equals("FINISHED") || j.getState().equals("FAILED")).sorted((a,b)-> b.getStartTime().compareTo(a.getStartTime())).limit(LIMIT).collect(Collectors.toList());;
 
-		List<Map> limitedList;
-		if(jobList.size() > LIMIT) {
-			limitedList = new ArrayList<>();
-			limitedList.addAll(runningList);
-			limitedList.addAll(notRunningList.subList(0, LIMIT - runningList.size()));
-		} else {
-			limitedList = jobList;
+		List<Map> limitedList = new ArrayList<>();;
+		limitedList.addAll(runningList);
+		for(SparkSqlJob ssj : notRunningList) {
+			Map<String, Object> m = new HashMap<>();
+			m.put("jobGroup", ssj.getGroupId());
+			m.put("jobIds", ssj.getJobIds());
+			m.put("user", ssj.getUser());
+			m.put("query", ssj.getStatement());
+			m.put("status", ssj.getState());
+			m.put("submissionTime", ssj.getStartTime());
+			m.put("duration", ssj.getDuration());
+			limitedList.add(m);
 		}
 
-		for(Map m : limitedList) {
-			m.put("existdb", false);
-		}
 		ObjectMapper mapper = new ObjectMapper();
 		String json = mapper.writeValueAsString(limitedList);
 		writer.println(json);

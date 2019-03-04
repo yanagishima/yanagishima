@@ -5,13 +5,17 @@ import okhttp3.HttpUrl;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
+import org.jsoup.select.Elements;
+import yanagishima.bean.SparkSqlJob;
 
 import java.io.IOException;
-import java.time.ZonedDateTime;
-import java.time.format.DateTimeFormatter;
-import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 
@@ -34,8 +38,42 @@ public class SparkUtil {
         }
     }
 
-    public static List<Map> getJobList(String resourceManagerUrl, String sparkJdbcApplicationId) {
+    public static List<SparkSqlJob> getSparkSqlJobFromSqlserver(String resourceManagerUrl, String sparkJdbcApplicationId) {
+        try {
+            List<SparkSqlJob> sparkSqlJobs = new ArrayList<>();
+            Document doc = Jsoup.connect(resourceManagerUrl + "/proxy/" + sparkJdbcApplicationId + "/sqlserver").get();
+            // SQL Statistics
+            // User	JobID	GroupID	Start Time	Finish Time	Duration	Statement	State	Detail
+            Element table = doc.getElementsByTag("tbody").last();
+            for (Element row : table.getElementsByTag("tr")) {
+                SparkSqlJob sparkSqlJob = new SparkSqlJob();
+                Elements td = row.getElementsByTag("td");
+                sparkSqlJob.setUser(td.get(0).text());
+                Element jobIds = td.get(1);
+                List<Integer> jobIdList = new ArrayList<>();
+                if (jobIds.childNodeSize() > 1) {
+                    for (Element a : jobIds.getElementsByTag("a")) {
+                        String str = a.text();
+                        jobIdList.add(Integer.parseInt(str.substring(1, str.length() - 1)));
+                    }
+                }
+                sparkSqlJob.setJobIds(jobIdList);
+                sparkSqlJob.setGroupId(td.get(2).text());
+                sparkSqlJob.setStartTime(td.get(3).text());
+                sparkSqlJob.setFinishTime(td.get(4).text());
+                sparkSqlJob.setDuration(td.get(5).text());
+                sparkSqlJob.setStatement(td.get(6).text());
+                sparkSqlJob.setState(td.get(7).text());
+                sparkSqlJob.setDetail(td.get(8).text());
+                sparkSqlJobs.add(sparkSqlJob);
+            }
+            return sparkSqlJobs;
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
 
+    public static List<Map> getSparkJobList(String resourceManagerUrl, String sparkJdbcApplicationId) {
         try {
             String originalJson = org.apache.http.client.fluent.Request.Get(resourceManagerUrl + "/proxy/" + sparkJdbcApplicationId + "/api/v1/applications/" + sparkJdbcApplicationId + "/jobs")
                     .execute().returnContent().asString(UTF_8);
@@ -81,26 +119,20 @@ public class SparkUtil {
 */
             ObjectMapper mapper = new ObjectMapper();
             List<Map> jobList = mapper.readValue(originalJson, List.class);
-            for(Map m : jobList) {
-                if(m.get("status").equals("RUNNING")) {
-                    int numTasks = (int)m.get("numTasks");
-                    int numCompletedTasks = (int)m.get("numCompletedTasks");
-                    double progress = ((double)numCompletedTasks/numTasks)*100;
-                    m.put("progress", progress);
-                } else {
-                    String submissionTime = (String)m.get("submissionTime");
-                    String completionTime = (String)m.get("completionTime");
-                    DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSzzz");
-                    ZonedDateTime submissionTimeZdt =  ZonedDateTime.parse(submissionTime, dtf);
-                    ZonedDateTime completionTimeZdt =  ZonedDateTime.parse(completionTime, dtf);
-                    long elapsedTimeMillis = ChronoUnit.MILLIS.between(submissionTimeZdt, completionTimeZdt);
-                    m.put("elapsedTime", elapsedTimeMillis);
-                }
-            }
             return jobList;
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
     }
 
+    public static List<Map> getSparkRunningJobListWithProgress(String resourceManagerUrl, String sparkJdbcApplicationId) {
+        List<Map> jobList = getSparkJobList(resourceManagerUrl, sparkJdbcApplicationId).stream().filter(m -> m.get("status").equals("RUNNING")).collect(Collectors.toList());
+        for (Map m : jobList) {
+            int numTasks = (int) m.get("numTasks");
+            int numCompletedTasks = (int) m.get("numCompletedTasks");
+            double progress = ((double) numCompletedTasks / numTasks) * 100;
+            m.put("progress", progress);
+        }
+        return jobList;
+    }
 }
