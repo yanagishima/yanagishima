@@ -92,7 +92,7 @@ const actions = {
   },
   async getSchemata ({commit, state, rootState, rootGetters}) {
     const {datasource} = rootState.hash
-    const {authInfo, isPresto, isHive} = rootGetters
+    const {authInfo, isPresto, isHive, isSpark} = rootGetters
     const {catalog} = state
 
     let data
@@ -100,6 +100,8 @@ const actions = {
       data = await api.getSchemataPresto(datasource, catalog, authInfo)
     } else if (isHive) {
       data = await api.getSchemataHive(datasource, authInfo)
+    } else if (isSpark) {
+      data = await api.getSchemataSpark(datasource, authInfo)
     } else {
       throw new Error('not supported')
     }
@@ -116,7 +118,7 @@ const actions = {
   },
   async getTables ({commit, state, rootState, rootGetters}) {
     const {datasource} = rootState.hash
-    const {authInfo, isPresto, isHive, isElasticsearch} = rootGetters
+    const {authInfo, isPresto, isHive, isSpark, isElasticsearch} = rootGetters
     const {catalog, schema} = state
 
     let data
@@ -124,6 +126,8 @@ const actions = {
       data = await api.getTablesPresto(datasource, catalog, schema, authInfo)
     } else if (isHive) {
       data = await api.getTablesHive(datasource, schema, authInfo)
+    } else if (isSpark) {
+      data = await api.getTablesSpark(datasource, schema, authInfo)
     } else if (isElasticsearch) {
       data = await api.getTablesElasticsearch(datasource, authInfo)
     } else {
@@ -133,7 +137,7 @@ const actions = {
     if (data.results && data.results.length) {
       commit('setTables', {
         data: data.results.map(r => {
-          const tableName = r[0]
+          const tableName = isSpark ? r[1] : r[0]
           const tableType = isPresto ? r[1] : 'BASE TABLE'
           return [tableName, tableType]
         })
@@ -147,7 +151,7 @@ const actions = {
   },
   async getColumns ({commit, state, rootState, rootGetters}) {
     const {datasource} = rootState.hash
-    const {authInfo, isPresto, isHive, isElasticsearch} = rootGetters
+    const {authInfo, isPresto, isHive, isSpark, isElasticsearch} = rootGetters
     const {catalog, schema, table} = state
 
     if (isPresto && !catalog) {
@@ -167,6 +171,8 @@ const actions = {
       data = await api.getColumnsPresto(datasource, catalog, schema, table, authInfo)
     } else if (isHive) {
       data = await api.getColumnsHive(datasource, schema, table, authInfo)
+    } else if (isSpark) {
+      data = await api.getColumnsSpark(datasource, schema, table, authInfo)
     } else if (isElasticsearch) {
       data = await api.getColumnsElasticsearch(datasource, table, authInfo)
     } else {
@@ -200,7 +206,7 @@ const actions = {
   },
   async getPartitions ({commit, state, getters, rootState, rootGetters}) {
     const {datasource} = rootState.hash
-    const {authInfo, isPresto, isHive} = rootGetters
+    const {authInfo, isPresto, isHive, isSpark} = rootGetters
     const {catalog, schema, table, selectedPartitions} = state
     const {partitionKeys, columnTypesMap} = getters
 
@@ -244,6 +250,8 @@ const actions = {
       data = await api.getPartitionsPresto(datasource, catalog, schema, table, option, authInfo)
     } else if (isHive) {
       data = await api.getPartitionsHive(datasource, schema, table, option, authInfo)
+    } else if (isSpark) {
+      data = await api.getPartitionsSpark(datasource, schema, table, option, authInfo)
     } else {
       throw new Error('not supported')
     }

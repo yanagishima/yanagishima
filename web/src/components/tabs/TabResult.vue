@@ -102,7 +102,7 @@
               <div class="btn-group">
                 <a href="#" class="btn btn-sm btn-secondary" @click.prevent="killQuery"><i
                   class="fa fa-fw fa-times mr-1 text-danger"></i>Kill</a>
-                <a class="btn btn-sm btn-secondary" :href="buildDetailUrl(isPresto, isHive, datasource, runningQueryid)"
+                <a class="btn btn-sm btn-secondary" :href="buildDetailUrl(isPresto, isHive, isSpark, datasource, runningQueryid)"
                    :target="'_blank'"><i class="fa fa-fw fa-info"></i>Info</a>
               </div>
             </div>
@@ -122,7 +122,7 @@
       <template v-if="queryString">
         <template v-if="error">
           <div class="alert alert-danger">
-            {{error}}
+            <pre>{{error}}</pre>
           </div>
         </template>
         <template v-else>
@@ -273,6 +273,7 @@ export default {
     ...mapGetters([
       'isPresto',
       'isHive',
+      'isSpark',
       'datasourceEngine'
     ]),
     ...mapState('result', [

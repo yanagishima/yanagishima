@@ -19,7 +19,7 @@ const getters = {}
 const actions = {
   async getQlist ({commit, rootState, rootGetters}, {isAutoQlist}) {
     const {datasource} = rootState.hash
-    const {isPresto, isHive, isElasticsearch, authInfo} = rootGetters
+    const {isPresto, isHive, isSpark, isElasticsearch, authInfo} = rootGetters
 
     isAutoQlist = isAutoQlist || false
 
@@ -35,6 +35,8 @@ const actions = {
         data = await api.getQlistPresto(datasource, authInfo)
       } else if (isHive) {
         data = await api.getQlistHive(datasource)
+      } else if (isSpark) {
+        data = await api.getQlistSpark(datasource)
       } else if (isElasticsearch) {
         commit('setLoading', {data: false})
         return

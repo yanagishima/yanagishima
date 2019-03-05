@@ -281,6 +281,7 @@ export default {
     ...mapGetters([
       'isPresto',
       'isHive',
+      'isSpark',
       'isElasticsearch',
       'datasourceEngine',
       'isMetadataService'
@@ -321,42 +322,133 @@ export default {
       }
     },
     snippets () {
-      const snippets = [
-        {
-          label: 'SHOW PRESTO VIEW DDL',
-          sql: "SELECT VIEW_DEFINITION FROM {catalog}.INFORMATION_SCHEMA.VIEWS WHERE table_catalog='{catalog}' AND table_schema='{schema}' AND table_name='{table}'",
-          enable: ['VIEW']
-        },
-        {
-          label: 'SHOW CREATE TABLE ...',
-          sql: 'SHOW CREATE TABLE {catalog}.{schema}."{table}"',
-          enable: ['BASE TABLE']
-        },
-        {
-          label: 'DESCRIBE ...',
-          sql: 'DESCRIBE {catalog}.{schema}."{table}"',
+      if (this.isPresto) {
+        const snippets = [
+          {
+            label: 'SHOW PRESTO VIEW DDL',
+            sql: "SELECT VIEW_DEFINITION FROM {catalog}.INFORMATION_SCHEMA.VIEWS WHERE table_catalog='{catalog}' AND table_schema='{schema}' AND table_name='{table}'",
+            enable: ['VIEW']
+          },
+          {
+            label: 'SHOW CREATE TABLE ...',
+            sql: 'SHOW CREATE TABLE {catalog}.{schema}."{table}"',
+            enable: ['BASE TABLE']
+          },
+          {
+            label: 'DESCRIBE ...',
+            sql: 'DESCRIBE {catalog}.{schema}."{table}"',
+            enable: ['BASE TABLE', 'VIEW']
+          },
+          {
+            label: 'SHOW STATS ...',
+            sql: 'SHOW STATS FOR {catalog}.{schema}."{table}"',
+            enable: ['BASE TABLE']
+          }
+        ]
+
+        let defaultSnippet = {
+          label: 'SELECT * FROM ... LIMIT 100',
+          sql: 'SELECT {columns} FROM {catalog}.{schema}."{table}" LIMIT 100',
           enable: ['BASE TABLE', 'VIEW']
         }
-      ]
 
-      let defaultSnippet = {
-        label: 'SELECT * FROM ... LIMIT 100',
-        sql: 'SELECT {columns} FROM {catalog}.{schema}."{table}" LIMIT 100',
-        enable: ['BASE TABLE', 'VIEW']
+        if (this.dateColumn) {
+          const yesterday = Date.create().addDays(-1).format('{yyyy}{MM}{dd}')
+          defaultSnippet = {
+            label: `SELECT * FROM ... WHERE ${this.dateColumn}='${yesterday}' LIMIT 100`,
+            sql: `SELECT {columns} FROM {catalog}.{schema}."{table}" WHERE {column_date}='{yesterday}' LIMIT 100`,
+            enable: ['BASE TABLE', 'VIEW']
+          }
+        }
+        snippets.unshift(defaultSnippet)
+        return snippets
       }
 
-      if (this.partitionKeys.length > 0 || this.dateColumn) {
-        const yesterday = Date.create().addDays(-1).format('{yyyy}{MM}{dd}')
-        defaultSnippet = {
-          label: `SELECT * FROM ... WHERE ${this.dateColumn}='${yesterday}' LIMIT 100`,
-          sql: `SELECT {columns} FROM {catalog}.{schema}."{table}" WHERE {column_date}='{yesterday}' LIMIT 100`,
+      if (this.isHive) {
+        const snippets = [
+          {
+            label: 'SHOW CREATE TABLE ...',
+            sql: 'SHOW CREATE TABLE {schema}.`{table}`',
+            enable: ['BASE TABLE']
+          },
+          {
+            label: 'DESCRIBE ...',
+            sql: 'DESCRIBE {schema}.`{table}`',
+            enable: ['BASE TABLE', 'VIEW']
+          }
+        ]
+
+        let defaultSnippet = {
+          label: 'SELECT * FROM ... LIMIT 100',
+          sql: 'SELECT {columns} FROM {schema}.`{table}` LIMIT 100',
           enable: ['BASE TABLE', 'VIEW']
         }
+
+        if (this.dateColumn) {
+          const yesterday = Date.create().addDays(-1).format('{yyyy}{MM}{dd}')
+          defaultSnippet = {
+            label: `SELECT * FROM ... WHERE ${this.dateColumn}='${yesterday}' LIMIT 100`,
+            sql: 'SELECT {columns} FROM {schema}.`{table}` WHERE {column_date}=\'{yesterday}\' LIMIT 100',
+            enable: ['BASE TABLE', 'VIEW']
+          }
+        }
+        snippets.unshift(defaultSnippet)
+        return snippets
       }
 
-      snippets.unshift(defaultSnippet)
+      if (this.isSpark) {
+        const snippets = [
+          {
+            label: 'SHOW CREATE TABLE ...',
+            sql: 'SHOW CREATE TABLE {schema}.{table}',
+            enable: ['BASE TABLE']
+          },
+          {
+            label: 'DESCRIBE ...',
+            sql: 'DESCRIBE {schema}.{table}',
+            enable: ['BASE TABLE', 'VIEW']
+          }
+        ]
 
-      return snippets
+        let defaultSnippet = {
+          label: 'SELECT * FROM ... LIMIT 100',
+          sql: 'SELECT {columns} FROM {schema}.{table} LIMIT 100',
+          enable: ['BASE TABLE', 'VIEW']
+        }
+
+        if (this.dateColumn) {
+          const yesterday = Date.create().addDays(-1).format('{yyyy}{MM}{dd}')
+          defaultSnippet = {
+            label: `SELECT * FROM ... WHERE ${this.dateColumn}='${yesterday}' LIMIT 100`,
+            sql: 'SELECT {columns} FROM {schema}.{table} WHERE {column_date}=\'{yesterday}\' LIMIT 100',
+            enable: ['BASE TABLE', 'VIEW']
+          }
+        }
+        snippets.unshift(defaultSnippet)
+        return snippets
+      }
+
+      if (this.isElasticsearch) {
+        const snippets = [
+          {
+            label: 'SHOW CREATE TABLE ...',
+            sql: 'SHOW CREATE TABLE "{table}"',
+            enable: ['BASE TABLE']
+          },
+          {
+            label: 'DESCRIBE ...',
+            sql: 'DESCRIBE "{table}"',
+            enable: ['BASE TABLE', 'VIEW']
+          }
+        ]
+        const defaultSnippet = {
+          label: 'SELECT * FROM ... LIMIT 100',
+          sql: 'SELECT {columns} FROM "{table}" LIMIT 100',
+          enable: ['BASE TABLE', 'VIEW']
+        }
+        snippets.unshift(defaultSnippet)
+        return snippets
+      }
     }
   },
   watch: {
@@ -420,7 +512,7 @@ export default {
   },
   created () {
     if (this.initialTable) {
-      if (this.isPresto || this.isHive) {
+      if (this.isPresto || this.isHive || this.isSpark) {
         this.$store.commit('treeview/init')
         const t = this.initialTable.split('.')
         if (this.isPresto) {
@@ -458,7 +550,7 @@ export default {
     fullName (table) {
       if (this.isPresto) {
         return [this.catalog, this.schema, table].join('.')
-      } else if (this.isHive) {
+      } else if (this.isHive || this.isSpark) {
         return [this.schema, table].join('.')
       } else if (this.isElasticsearch) {
         return table
@@ -468,12 +560,6 @@ export default {
     },
     setSnippet () {
       let snippet = this.snippets[this.snippetIndex].sql
-      if (this.isHive) {
-        snippet = snippet.remove('{catalog}.').replace(/"/g, '`')
-      }
-      if (this.isElasticsearch) {
-        snippet = snippet.remove('{catalog}.{schema}.')
-      }
       this.$store.commit('editor/setInputQuery', {
         data: snippet.format({
           catalog: this.catalog,

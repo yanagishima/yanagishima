@@ -59,7 +59,7 @@
                     :disabled="!inputQuery.length || loading || !datasourceIndex" @click="explainGraphvizQuery">Explain(G)
               </button>
             </template>
-            <template v-else-if="isHive">
+            <template v-else-if="isHive || isSpark">
               <button type="button" class="btn btn-primary"
                     :disabled="!inputQuery.length || loading || !datasourceIndex" @click="explainQuery">Explain
               </button>
@@ -113,6 +113,7 @@ export default {
     ...mapGetters([
       'isPresto',
       'isHive',
+      'isSpark',
       'isElasticsearch',
       'datasourceIndex',
       'datasourceEngine'

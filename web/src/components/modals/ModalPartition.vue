@@ -79,6 +79,7 @@ export default {
     ...mapGetters([
       'isPresto',
       'isHive',
+      'isSpark',
       'datasourceEngine'
     ]),
     ...mapState('editor', [
@@ -162,6 +163,8 @@ export default {
         from = [this.catalog, this.schema, `"${this.table}"`]
       } else if (this.isHive) {
         from = [this.schema, `\`${this.table}\``]
+      } else if (this.isSpark) {
+        from = [this.schema, this.table]
       } else {
         throw new Error('not supported')
       }

@@ -1,6 +1,6 @@
 export const SITENAME = 'yanagishima'
 
-export const VERSION = '18.0'
+export const VERSION = '19.0'
 
 export const LINKS = {
   aboutThis: 'https://github.com/yanagishima/yanagishima/blob/master/README.md',

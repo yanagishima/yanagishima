@@ -79,7 +79,7 @@
                 class="fa fa-fw fa-times text-danger"></i></a></td>
               <td class="text-center">
                 <a target="_blank" class="btn btn-sm btn-secondary p-1"
-                   :href="buildDetailUrl(isPresto, isHive, datasource, item.queryId)"><i class="fa fa-fw fa-info"></i></a>
+                   :href="buildDetailUrl(isPresto, isHive, isSpark, datasource, item.queryId)"><i class="fa fa-fw fa-info"></i></a>
               </td>
             </tr>
             </tbody>
@@ -129,7 +129,52 @@
               </td>
               <td>{{item.user}}</td>
               <td class="text-center"><a target="_blank" class="btn btn-sm btn-secondary p-1"
-                                         :href="buildDetailUrl(isPresto, isHive, datasource, item.id)"><i
+                                         :href="buildDetailUrl(isPresto, isHive, isSpark, datasource, item.id)"><i
+                class="fa fa-fw fa-info"></i></a></td>
+            </tr>
+            </tbody>
+          </table>
+          <div class="alert alert-warning" v-else>
+            <i class="fa fa-fw fa-frown-o mr-1"></i>No result
+          </div>
+        </template>
+        <template v-else-if="isSpark">
+          <table v-if="orderedQlist.length" class="table table-bordered table-fixed table-hover">
+            <thead>
+            <tr>
+              <th width="5%">status</th>
+              <th width="10%">jobIds</th>
+              <th width="7%">submissionTime</th>
+              <th width="5%" class="text-right">Elapsed</th>
+              <th width="64%">query</th>
+              <th width="5%">user</th>
+              <th width="4%" class="text-center">Info</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr v-for="(item, i) in orderedQlist" :key="i"
+                :class="{'table-danger': item.status === 'FAILED', 'table-info': isRunning(item.status)}">
+              <td>
+                <template v-if="item.status === 'RUNNING'">
+                  <div class="progress">
+                    <div class="progress-bar bg-info" :style="`width: ${item.progress}%`">
+                      <small>{{item.progress.ceil()}}%</small>
+                    </div>
+                  </div>
+                </template>
+                <template v-else>
+                  {{item.status.camelize()}}
+                </template>
+              </td>
+              <td>{{item.jobIds}}</td>
+              <td>{{item.submissionTime}}</td>
+              <td class="text-right">{{item.duration}}</td>
+              <td class="ace-font">
+                <span :title="item.query" v-if="item.query">{{item.query.compact()}}</span>
+              </td>
+              <td><a href="#" @click.prevent="filterUser = item.user">{{item.user}}</a></td>
+              <td class="text-center"><a target="_blank" class="btn btn-sm btn-secondary p-1"
+                                         :href="buildDetailUrl(isPresto, isHive, isSpark, datasource)"><i
                 class="fa fa-fw fa-info"></i></a></td>
             </tr>
             </tbody>
@@ -176,6 +221,7 @@ export default {
     ...mapGetters([
       'isPresto',
       'isHive',
+      'isSpark',
       'isElasticsearch'
     ]),
     isOpenQueryModel: {
@@ -219,6 +265,8 @@ export default {
         })
       } else if (this.isHive) {
         qlist = this.response.filter(q => q.name.includes('yanagishima') || this.isAdminMode || this.isSuperAdminMode)
+      } else if (this.isSpark) {
+        qlist = this.response.filter(q => this.filterUser === '' || this.filterUser === q.user)
       } else {
         throw new Error('not supported')
       }
@@ -236,7 +284,7 @@ export default {
       return running.concat(finished)
     },
     orderedFailQlist () {
-      return this.response.filter(q => this.filterUser === '' || (this.filterUser === q.session.user && q.state === 'FAILED'))
+      return this.response.filter(q => this.filterUser === '' || (this.isPresto && this.filterUser === q.session.user && q.state === 'FAILED'))
     }
   },
   watch: {
@@ -260,6 +308,8 @@ export default {
         return !['FINISHED', 'FAILED', 'CANCELED'].includes(state)
       } else if (this.isHive) {
         return !['FINISHED', 'FAILED', 'KILLED'].includes(state)
+      } else if (this.isSpark) {
+        return !['FINISHED', 'FAILED'].includes(state)
       } else {
         throw new Error('not supported')
       }

@@ -42,8 +42,13 @@ yanagishima is a Web UI for presto/hive.
 * support Elasticsearch SQL
 * label
 * pivot
+* support Spark SQL
+* show stats for presto
 
 # Versions
+* 19.0
+  * support Spark SQL
+  * show stats for presto
 * 18.0
   * fix the bug that desktop notification doesn't work
   * improve catalog setting logic if there is no hive catalog
@@ -224,11 +229,11 @@ yanagishima is a Web UI for presto/hive.
 ```
 git clone https://github.com/yanagishima/yanagishima.git
 cd yanagishima
-git checkout -b 18.0 refs/tags/18.0
+git checkout -b 19.0 refs/tags/19.0
 ./gradlew distZip
 cd build/distributions
-unzip yanagishima-18.0.zip
-cd yanagishima-18.0
+unzip yanagishima-19.0.zip
+cd yanagishima-19.0
 vim conf/yanagishima.properties
 nohup bin/yanagishima-start.sh >y.log 2>&1 &
 ```
@@ -346,6 +351,24 @@ hive.jdbc.password.your-cluster=yanagishima-hive
 resource.manager.url.your-cluster=http://localhost:8088
 sql.query.engines=presto,hive
 hive.datasources=your-cluster
+```
+
+If you use an elasticsearch, you need to specify as follows.
+```
+jetty.port=8080
+elasticsearch.jdbc.url.your-elasticsearch=jdbc:es:localhost:9200
+elasticsearch.datasources=your-elasticsearch
+sql.query.engines=elasticsearch
+```
+
+If you use a spark, you need to start a spark thrift server and specify as follows.
+```
+jetty.port=8080
+spark.jdbc.url.your-spark=jdbc:hive2://sparkthriftserver:10000
+spark.web.url.your-spark=http://sparkthriftserver:4040
+resource.manager.url.your-hive=http://localhost:8088
+sql.query.engines=spark
+spark.datasources=your-spark
 ```
 
 # Authentication and authorization

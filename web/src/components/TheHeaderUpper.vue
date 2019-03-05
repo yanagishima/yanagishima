@@ -46,12 +46,16 @@
       </div>
       <div class="col-4 text-right">
         <template v-if="isPresto">
-          <a href="https://prestodb.io/docs/current/" class="text-white mr-2" target="_blank"><i
+          <a href="https://prestosql.io/docs/current/" class="text-white mr-2" target="_blank"><i
             class="fa fa-fw fa-external-link mr-1"></i>Presto Doc</a>
         </template>
         <template v-else-if="isHive">
           <a href="https://cwiki.apache.org/confluence/display/Hive/LanguageManual" class="text-white mr-2"
              target="_blank"><i class="fa fa-fw fa-external-link mr-1"></i>Hive Doc</a>
+        </template>
+        <template v-else-if="isSpark">
+          <a href="https://spark.apache.org/" class="text-white mr-2"
+             target="_blank"><i class="fa fa-fw fa-external-link mr-1"></i>Spark Doc</a>
         </template>
         <a href="#help" class="text-white mr-2" data-toggle="modal" data-target="#help"><i
           class="fa fa-fw fa-question mr-1"></i>Help</a>
@@ -91,7 +95,8 @@ export default {
     }),
     ...mapGetters([
       'isPresto',
-      'isHive'
+      'isHive',
+      'isSpark'
     ])
   },
   methods: {

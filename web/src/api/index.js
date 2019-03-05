@@ -75,7 +75,7 @@ const apis = {
   hiveQueryStatus: '/hiveQueryStatus',
   yarnJobList: '/yarnJobList',
   killHive: '/killHive',
-  hiveQueryDetail: '/hiveQueryDetail?datasource={datasource}&id={id}',
+  hiveQueryDetail: '/hiveQueryDetail?engine=hive&datasource={datasource}&id={id}',
   prestoPartition: '/prestoPartition',
   hivePartition: '/hivePartition',
   queryHistoryUser: '/queryHistoryUser?datasource={datasource}&engine={engine}',
@@ -84,7 +84,13 @@ const apis = {
   elasticsearch: '/elasticsearch',
   elasticsearchQueryStatus: '/elasticsearchQueryStatus',
   translate: '/elasticsearch?translate',
-  label: '/label'
+  label: '/label',
+  spark: '/spark',
+  sparkPartition: '/sparkPartition',
+  sparkAsync: '/sparkAsync',
+  sparkQueryStatus: '/sparkQueryStatus',
+  sparkQueryDetail: '/sparkQueryDetail?engine=spark&datasource={datasource}',
+  sparkJobList: '/sparkJobList'
 }
 
 function addHiddenQueryPrefix (query) {
@@ -103,11 +109,23 @@ export async function testAuthPresto (datasource, authInfo) {
 
 export async function testAuthHive (datasource, authInfo) {
   const params = {
+    engine: 'hive',
     datasource,
     query: 'SELECT -1',
     ...authInfo
   }
   const response = await client.post(apis.hive, makeFormParams(params))
+  return response.data
+}
+
+export async function testAuthSpark (datasource, authInfo) {
+  const params = {
+    engine: 'spark',
+    datasource,
+    query: 'SELECT -1',
+    ...authInfo
+  }
+  const response = await client.post(apis.spark, makeFormParams(params))
   return response.data
 }
 
@@ -138,11 +156,23 @@ export async function getSchemataPresto (datasource, catalog, authInfo) {
 
 export async function getSchemataHive (datasource, authInfo) {
   const params = {
+    engine: 'hive',
     datasource,
     query: 'SHOW SCHEMAS',
     ...authInfo
   }
   const response = await client.post(apis.hive, makeFormParams(params))
+  return response.data
+}
+
+export async function getSchemataSpark (datasource, authInfo) {
+  const params = {
+    engine: 'spark',
+    datasource,
+    query: 'SHOW SCHEMAS',
+    ...authInfo
+  }
+  const response = await client.post(apis.spark, makeFormParams(params))
   return response.data
 }
 
@@ -160,11 +190,23 @@ export async function getTablesPresto (datasource, catalog, schema, authInfo) {
 
 export async function getTablesHive (datasource, schema, authInfo) {
   const params = {
+    engine: 'hive',
     datasource,
     query: `SHOW TABLES IN ${schema}`,
     ...authInfo
   }
   const response = await client.post(apis.hive, makeFormParams(params))
+  return response.data
+}
+
+export async function getTablesSpark (datasource, schema, authInfo) {
+  const params = {
+    engine: 'spark',
+    datasource,
+    query: `SHOW TABLES IN ${schema}`,
+    ...authInfo
+  }
+  const response = await client.post(apis.spark, makeFormParams(params))
   return response.data
 }
 
@@ -190,11 +232,23 @@ export async function getColumnsPresto (datasource, catalog, schema, table, auth
 
 export async function getColumnsHive (datasource, schema, table, authInfo) {
   const params = {
+    engine: 'hive',
     datasource,
     query: `DESCRIBE ${schema}.\`${table}\``,
     ...authInfo
   }
   const response = await client.post(apis.hive, makeFormParams(params))
+  return response.data
+}
+
+export async function getColumnsSpark (datasource, schema, table, authInfo) {
+  const params = {
+    engine: 'spark',
+    datasource,
+    query: `DESCRIBE ${schema}.${table}`,
+    ...authInfo
+  }
+  const response = await client.post(apis.spark, makeFormParams(params))
   return response.data
 }
 
@@ -223,6 +277,7 @@ export async function getPartitionsPresto (datasource, catalog, schema, table, o
 
 export async function getPartitionsHive (datasource, schema, table, option, authInfo) {
   const params = {
+    engine: 'hive',
     datasource,
     schema,
     table,
@@ -230,6 +285,19 @@ export async function getPartitionsHive (datasource, schema, table, option, auth
     ...authInfo
   }
   const response = await client.post(apis.hivePartition, makeFormParams(params))
+  return response.data
+}
+
+export async function getPartitionsSpark (datasource, schema, table, option, authInfo) {
+  const params = {
+    engine: 'spark',
+    datasource,
+    schema,
+    table,
+    ...option,
+    ...authInfo
+  }
+  const response = await client.post(apis.sparkPartition, makeFormParams(params))
   return response.data
 }
 
@@ -266,11 +334,23 @@ export async function runQueryPresto (datasource, query, authInfo) {
 
 export async function runQueryHive (datasource, query, authInfo) {
   const params = {
+    engine: 'hive',
     datasource,
     query,
     ...authInfo
   }
   const response = await client.post(apis.hiveAsync, makeFormParams(params))
+  return response.data
+}
+
+export async function runQuerySpark (datasource, query, authInfo) {
+  const params = {
+    engine: 'spark',
+    datasource,
+    query,
+    ...authInfo
+  }
+  const response = await client.post(apis.sparkAsync, makeFormParams(params))
   return response.data
 }
 
@@ -306,11 +386,23 @@ export async function getQueryStatusPresto (datasource, queryid, authInfo) {
 
 export async function getQueryStatusHive (datasource, queryid, authUserInfo) {
   const params = {
+    engine: 'hive',
     datasource,
     queryid,
     ...authUserInfo
   }
   const response = await client.post(apis.hiveQueryStatus, makeFormParams(params))
+  return response.data
+}
+
+export async function getQueryStatusSpark (datasource, queryid, authUserInfo) {
+  const params = {
+    engine: 'spark',
+    datasource,
+    queryid,
+    ...authUserInfo
+  }
+  const response = await client.post(apis.sparkQueryStatus, makeFormParams(params))
   return response.data
 }
 
@@ -569,6 +661,14 @@ export async function getQlistHive (datasource) {
   return response.data
 }
 
+export async function getQlistSpark (datasource) {
+  const params = {
+    datasource
+  }
+  const response = await client.get(apis.sparkJobList, {params})
+  return response.data
+}
+
 export async function getSharedQueryResult (publishId) {
   const params = {
     publish_id: publishId
@@ -587,11 +687,13 @@ export function buildShareDownloadUrl (publishId, isCsv) {
   return BASE_URL + api.format({publishId})
 }
 
-export function buildDetailUrl (isPresto, isHive, datasource, queryid) {
+export function buildDetailUrl (isPresto, isHive, isSpark, datasource, queryid) {
   if (isPresto) {
     return BASE_URL + apis.detail.format({datasource, queryid})
   } else if (isHive) {
     return BASE_URL + apis.hiveQueryDetail.format({datasource, id: queryid})
+  } else if (isSpark) {
+    return BASE_URL + apis.sparkQueryDetail.format({datasource})
   } else {
     throw new Error('not supported')
   }

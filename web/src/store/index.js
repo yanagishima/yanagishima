@@ -110,6 +110,9 @@ export default new Vuex.Store({
     isHive (state) {
       return state.hash.engine === 'hive'
     },
+    isSpark (state) {
+      return state.hash.engine === 'spark'
+    },
     isElasticsearch (state) {
       return state.hash.engine === 'elasticsearch'
     },
@@ -297,15 +300,19 @@ export default new Vuex.Store({
     },
     async testAuth ({state, getters}, {user, password}) {
       const {datasource} = state.hash
-      const {isPresto} = getters
+      const {isPresto, isHive, isSpark} = getters
 
       const auth = {user, password}
 
       let data
       if (isPresto) {
         data = await api.testAuthPresto(datasource, auth)
-      } else {
+      } else if (isHive) {
         data = await api.testAuthHive(datasource, auth)
+      } else if (isSpark) {
+        data = await api.testAuthSpark(datasource, auth)
+      } else {
+        throw new Error('not supported')
       }
 
       if (data.results && data.results.length) {
