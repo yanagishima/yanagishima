@@ -2,6 +2,7 @@ package yanagishima.servlet;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import me.geso.tinyorm.TinyORM;
+import yanagishima.bean.SparkSqlJob;
 import yanagishima.config.YanagishimaConfig;
 import yanagishima.row.Query;
 import yanagishima.util.*;
@@ -20,6 +21,7 @@ import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -58,10 +60,10 @@ public class HiveQueryStatusServlet extends HttpServlet {
 		String queryid = HttpRequestUtil.getParam(request, "queryid");
 		String resourceManagerUrl = yanagishimaConfig.getResourceManagerUrl(datasource);
 		String userName = null;
+		Optional<String> hiveUser = Optional.ofNullable(request.getParameter("user"));
 		if(yanagishimaConfig.isUseAuditHttpHeaderName()) {
 			userName = request.getHeader(yanagishimaConfig.getAuditHttpHeaderName());
 		} else {
-			Optional<String> hiveUser = Optional.ofNullable(request.getParameter("user"));
 			if (hiveUser.isPresent()) {
 				userName = hiveUser.get();
 			}
@@ -102,7 +104,27 @@ public class HiveQueryStatusServlet extends HttpServlet {
 				}
 			} else {
 				retVal.put("state", "RUNNING");
-				retVal.put("progress", 0);
+
+                String sparkJdbcApplicationId = SparkUtil.getSparkJdbcApplicationId(yanagishimaConfig.getSparkWebUrl(datasource));
+                List<Map> runningList = SparkUtil.getSparkRunningJobListWithProgress(resourceManagerUrl, sparkJdbcApplicationId);
+                if(runningList.isEmpty()) {
+                    retVal.put("progress", 0);
+                } else {
+                    List<SparkSqlJob> sparkSqlJobList = SparkUtil.getSparkSqlJobFromSqlserver(resourceManagerUrl, sparkJdbcApplicationId);
+                    for(Map m : runningList) {
+                        String groupId = (String)m.get("jobGroup");
+                        for(SparkSqlJob ssj : sparkSqlJobList) {
+                            if(ssj.getGroupId().equals(groupId) && ssj.getUser().equals(hiveUser.orElse(null)) && !ssj.getJobIds().isEmpty()) {
+                                int numTasks = (int) m.get("numTasks");
+                                int numCompletedTasks = (int) m.get("numCompletedTasks");
+                                double progress = ((double) numCompletedTasks / numTasks) * 100;
+                                retVal.put("progress", progress);
+                                break;
+                            }
+                        }
+                    }
+                }
+
 				LocalDateTime submitTimeLdt = LocalDateTime.parse(queryid.substring(0, "yyyyMMdd_HHmmss".length()), DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss"));
 				ZonedDateTime submitTimeZdt = submitTimeLdt.atZone(ZoneId.of("GMT", ZoneId.SHORT_IDS));
 				long elapsedTimeMillis = ChronoUnit.MILLIS.between(submitTimeZdt, ZonedDateTime.now(ZoneId.of("GMT")));
