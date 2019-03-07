@@ -37,10 +37,14 @@ public class ShareCsvDownloadServlet extends HttpServlet {
                 String datasource = publishOptional.get().getDatasource();
                 String queryid = publishOptional.get().getQueryId();
                 Optional<String> encodeOptional = Optional.ofNullable(request.getParameter("encode"));
-                DownloadUtil.csvDownload(response, fileName, datasource, queryid, encodeOptional.orElse("UTF-8"));
+                String header = request.getParameter("header");
+                if(header != null && header.equals("false")) {
+                    DownloadUtil.csvDownload(response, fileName, datasource, queryid, encodeOptional.orElse("UTF-8"), false);
+                } else {
+                    DownloadUtil.csvDownload(response, fileName, datasource, queryid, encodeOptional.orElse("UTF-8"), true);
+                }
             });
         });
-
     }
 
 }

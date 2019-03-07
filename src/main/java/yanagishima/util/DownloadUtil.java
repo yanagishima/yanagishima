@@ -15,7 +15,7 @@ import java.util.List;
 
 public class DownloadUtil {
 
-    public static void tsvDownload(HttpServletResponse response, String fileName, String datasource, String queryid, String encode) {
+    public static void tsvDownload(HttpServletResponse response, String fileName, String datasource, String queryid, String encode, boolean header) {
         Path resultFilePath = PathUtil.getResultFilePath(datasource, queryid, false);
         if(!resultFilePath.toFile().exists()) {
             throw new RuntimeException(resultFilePath.toFile().getName());
@@ -31,12 +31,16 @@ public class DownloadUtil {
             try(BufferedReader br = Files.newBufferedReader(resultFilePath);
                 CSVPrinter csvPrinter = new CSVPrinter(printWriter, CSVFormat.EXCEL.withDelimiter('\t').withRecordSeparator(System.getProperty("line.separator")));) {
                 CSVParser parse = CSVFormat.EXCEL.withDelimiter('\t').withNullString("\\N").parse(br);
+                int lineNumber = 0;
                 for (CSVRecord csvRecord : parse) {
                     List<String> columnList = new ArrayList<>();
                     for (String column : csvRecord) {
                         columnList.add(column);
                     }
-                    csvPrinter.printRecord(columnList);
+                    if(header || lineNumber > 0) {
+                        csvPrinter.printRecord(columnList);
+                    }
+                    lineNumber++;
                 }
             }
         } catch (IOException e) {
@@ -44,7 +48,7 @@ public class DownloadUtil {
         }
     }
 
-    public static void csvDownload(HttpServletResponse response, String fileName, String datasource, String queryid, String encode) {
+    public static void csvDownload(HttpServletResponse response, String fileName, String datasource, String queryid, String encode, boolean header) {
         Path resultFilePath = PathUtil.getResultFilePath(datasource, queryid, false);
         if(!resultFilePath.toFile().exists()) {
             throw new RuntimeException(resultFilePath.toFile().getName());
@@ -61,12 +65,16 @@ public class DownloadUtil {
             try(BufferedReader br = Files.newBufferedReader(resultFilePath);
                 CSVPrinter csvPrinter = new CSVPrinter(printWriter, CSVFormat.EXCEL.withRecordSeparator(System.getProperty("line.separator")));) {
                 CSVParser parse = CSVFormat.EXCEL.withDelimiter('\t').withNullString("\\N").parse(br);
+                int lineNumber = 0;
                 for (CSVRecord csvRecord : parse) {
                     List<String> columnList = new ArrayList<>();
                     for (String column : csvRecord) {
                         columnList.add(column);
                     }
-                    csvPrinter.printRecord(columnList);
+                    if(header || lineNumber > 0) {
+                        csvPrinter.printRecord(columnList);
+                    }
+                    lineNumber++;
                 }
             }
         } catch (IOException e) {

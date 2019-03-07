@@ -56,8 +56,13 @@ public class DownloadServlet extends HttpServlet {
                 }
             }
             Optional<String> encodeOptional = Optional.ofNullable(request.getParameter("encode"));
+            String header = request.getParameter("header");
+            boolean headerFlag = true;
+            if(header != null && header.equals("false")) {
+                headerFlag = false;
+            }
             if(yanagishimaConfig.isAllowOtherReadResult(datasource)) {
-                DownloadUtil.tsvDownload(response, fileName, datasource, queryid, encodeOptional.orElse("UTF-8"));
+                DownloadUtil.tsvDownload(response, fileName, datasource, queryid, encodeOptional.orElse("UTF-8"), headerFlag);
             } else {
                 String userName = request.getHeader(yanagishimaConfig.getAuditHttpHeaderName());
                 if (userName == null) {
@@ -65,7 +70,7 @@ public class DownloadServlet extends HttpServlet {
                 }
                 Optional<Query> userQueryOptional = db.single(Query.class).where("query_id=? and datasource=? and user=?", queryidOptional.get(), datasource, userName).execute();
                 if(userQueryOptional.isPresent()) {
-                    DownloadUtil.tsvDownload(response, fileName, datasource, queryid, encodeOptional.orElse("UTF-8"));
+                    DownloadUtil.tsvDownload(response, fileName, datasource, queryid, encodeOptional.orElse("UTF-8"), headerFlag);
                 }
             }
         });
