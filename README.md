@@ -130,7 +130,7 @@ yanagishima is a Web UI for presto/hive.
   * pretty print for map data
   * add left panel to compare query result
   * support presto/hive authentication with user/password
-  * if you want to use presto TLS, you need to execute ```keytool -import``` https://prestodb.io/docs/current/security/tls.html
+  * if you want to use presto TLS, you need to execute ```keytool -import``` https://prestosql.io/docs/current/security/tls.html
   * search query history
   * paging query history 
   * improve performance to write/read result file
