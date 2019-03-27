@@ -45,6 +45,9 @@ public class SparkUtil {
             // SQL Statistics
             // User	JobID	GroupID	Start Time	Finish Time	Duration	Statement	State	Detail
             Element table = doc.getElementsByTag("tbody").last();
+            if (table == null) {
+                return sparkSqlJobs;
+            }
             for (Element row : table.getElementsByTag("tr")) {
                 SparkSqlJob sparkSqlJob = new SparkSqlJob();
                 Elements td = row.getElementsByTag("td");
