@@ -68,12 +68,20 @@
             Pretty print
           </label>
           <div class="btn-group ml-2">
-            <a :href="buildDownloadUrl(datasource, queryid, false)" class="btn btn-sm btn-secondary"
+            <a :href="buildDownloadUrl(datasource, queryid, isCsv, includeHeader)" class="btn btn-sm btn-secondary"
                :class="{disabled: actionDisabled}" data-toggle="tooltip"
-               data-animation="false" title="Download TSV"><i class="fa fa-fw fa-download mr-1"></i>TSV</a>
-            <a :href="buildDownloadUrl(datasource, queryid, true)" class="btn btn-sm btn-secondary"
-               :class="{disabled: actionDisabled}" data-toggle="tooltip"
-               data-animation="false" title="Download CSV"><i class="fa fa-fw fa-download mr-1"></i>CSV</a>
+               data-animation="false" title="Download">Download</a>
+          </div>
+          <div class="btn-group">
+            <a href="#" data-toggle="dropdown"><i class="fa fa-fw fa-download ml-1"></i></a>
+            <div class="dropdown-menu dropdown-menu-right">
+              <div class="dropdown-header">header</div>
+              <a :href="buildDownloadUrl(datasource, queryid, false, true)" class="dropdown-item">TSV</a>
+              <a :href="buildDownloadUrl(datasource, queryid, true, true)" class="dropdown-item">CSV</a>
+              <div class="dropdown-header">no header</div>
+              <a :href="buildDownloadUrl(datasource, queryid, false, false)" class="dropdown-item">TSV</a>
+              <a :href="buildDownloadUrl(datasource, queryid, true, false)" class="dropdown-item">CSV</a>
+            </div>
           </div>
           <button class="btn btn-sm btn-secondary ml-2" :disabled="actionDisabled" @click="publish"
                   data-toggle="tooltip" data-animation="false" title="Publish Readonly Result">
@@ -268,7 +276,9 @@ export default {
       queryid: state => state.hash.queryid,
       line: state => state.hash.line,
       chart: state => state.hash.chart,
-      pivot: state => state.hash.pivot
+      pivot: state => state.hash.pivot,
+      isCsv: state => state.settings.isCsv,
+      includeHeader: state => state.settings.includeHeader
     }),
     ...mapGetters([
       'isPresto',

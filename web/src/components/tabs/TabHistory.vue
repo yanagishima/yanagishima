@@ -43,18 +43,26 @@
         <table v-if="filteredHistory.length" class="table table-bordered table-fixed table-hover">
           <thead>
           <tr>
+            <th width="7%">
+              <button type="button" class="btn btn-sm btn-secondary" @click="compare">
+                <i class="fa fa-thumbs-o-up mr-1"></i>Compare
+              </button>
+            </th>
             <th width="4%" class="text-right">No</th>
             <th width="4%">Label</th>
             <th width="13%">query ID</th>
             <th width="12%">Finished</th>
             <th width="6%" class="text-right">Elapsed</th>
-            <th width="48.5%">Query</th>
+            <th width="41.5%">Query</th>
             <th width="5%" class="text-center">Set</th>
             <th width="7.5%" class="text-center">DL Result</th>
           </tr>
           </thead>
           <tbody>
             <tr v-for="(h, i) in filteredHistory" :key="i" class="vertical-top">
+              <td class="text-center">
+                <input type="checkbox" class="mr-1" :value="h[0]" v-model="checkedQueries" :disabled="checkedQueries.length >= 2 && !checkedQueries.includes(h[0])"/>
+              </td>
               <td class="text-right text-muted">{{i + 1}}</td>
               <td>
                 <template v-if="h[7]">
@@ -79,12 +87,8 @@
               </td>
               <td class="text-right overflow-visible">
                 <div class="btn-group">
-                  <a v-if="h[3] !== '0B'" href="#" data-toggle="dropdown">{{h[3]}}<i
+                  <a v-if="h[3] !== '0B'" :href="buildDownloadUrl(datasource, h[0], isCsv, includeHeader)" >{{h[3]}}<i
                     class="fa fa-fw fa-download ml-1"></i></a>
-                  <div class="dropdown-menu dropdown-menu-right">
-                    <a :href="buildDownloadUrl(datasource, h[0], false)" class="dropdown-item">TSV<small>format</small></a>
-                    <a :href="buildDownloadUrl(datasource, h[0], true)" class="dropdown-item">CSV<small>format</small></a>
-                  </div>
                 </div>
               </td>
             </tr>
@@ -109,13 +113,17 @@ export default {
   name: 'TabHistory',
   mixins: [util],
   data () {
-    return {}
+    return {
+      checkedQueries: []
+    }
   },
   computed: {
     ...mapState({
       isLocalStorage: state => state.settings.isLocalStorage,
       datasource: state => state.hash.datasource,
-      engine: state => state.hash.engine
+      engine: state => state.hash.engine,
+      isCsv: state => state.settings.isCsv,
+      includeHeader: state => state.settings.includeHeader
     }),
     ...mapState('history', [
       'filter',
@@ -168,6 +176,10 @@ export default {
     moveHisotryTab (label) {
       this.$store.commit('history/setLabel', {data: label})
       this.$store.dispatch('history/getHistories', {isMore: false})
+    },
+    compare () {
+      const path = `/diff/?datasource=${this.datasource}&engine=${this.engine}&queryid1=${this.checkedQueries[0]}&queryid2=${this.checkedQueries[1]}`
+      window.open(path, '_blank')
     }
   }
 }

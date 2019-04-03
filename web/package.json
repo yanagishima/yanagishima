@@ -1,6 +1,6 @@
 {
   "name": "yanagishima",
-  "version": "19.0.0",
+  "version": "20.0.0",
   "description": "Web UI for Presto/Hive",
   "private": true,
   "scripts": {
@@ -25,7 +25,8 @@
     "vue-router": "^3.0.1",
     "vue-scrollto": "^2.11.0",
     "vuex": "^3.0.1",
-    "@marketconnect/vue-pivot-table": "^0.0.1"
+    "@marketconnect/vue-pivot-table": "^0.0.1",
+    "vue-code-diff": "^0.0.4"
   },
   "devDependencies": {
     "autoprefixer": "^7.1.2",

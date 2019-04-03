@@ -50,6 +50,16 @@ const settings = {
     lsKey: 'theme',
     type: 'string'
   },
+  isCsv: {
+    default: false,
+    lsKey: 'isCsv',
+    type: 'boolean'
+  },
+  includeHeader: {
+    default: true,
+    lsKey: 'includeHeader',
+    type: 'boolean'
+  },
   isLocalStorage: {
     default: true,
     lsKey: 'localstorage',

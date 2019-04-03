@@ -57,8 +57,8 @@ const apis = {
   history: '/history',
   historyStatus: '/historyStatus',
   queryHistory: '/queryHistory?datasource={datasource}',
-  download: '/download?datasource={datasource}&queryid={queryid}&encode=UTF-8',
-  csvdownload: '/csvdownload?datasource={datasource}&queryid={queryid}&encode=UTF-8',
+  download: '/download?datasource={datasource}&queryid={queryid}&encode=UTF-8&header={includeHeader}',
+  csvdownload: '/csvdownload?datasource={datasource}&queryid={queryid}&encode=UTF-8&header={includeHeader}',
   publish: '/publish',
   bookmark: '/bookmark',
   format: '/format',
@@ -67,8 +67,8 @@ const apis = {
   kill: '/kill',
   detail: '/queryDetail?datasource={datasource}&queryid={queryid}',
   shareHistory: '/share/shareHistory',
-  shareDownload: '/share/download?publish_id={publishId}&encode=UTF-8',
-  shareCsvDownload: '/share/csvdownload?publish_id={publishId}&encode=UTF-8',
+  shareDownload: '/share/download?publish_id={publishId}&encode=UTF-8&header={includeHeader}',
+  shareCsvDownload: '/share/csvdownload?publish_id={publishId}&encode=UTF-8&header={includeHeader}',
   toValuesQuery: '/toValuesQuery',
   hive: '/hive',
   hiveAsync: '/hiveAsync',
@@ -677,14 +677,14 @@ export async function getSharedQueryResult (publishId) {
   return response.data
 }
 
-export function buildDownloadUrl (datasource, queryid, isCsv) {
+export function buildDownloadUrl (datasource, queryid, isCsv, includeHeader) {
   const api = isCsv ? apis.csvdownload : apis.download
-  return BASE_URL + api.format({datasource, queryid})
+  return BASE_URL + api.format({datasource, queryid, includeHeader})
 }
 
-export function buildShareDownloadUrl (publishId, isCsv) {
+export function buildShareDownloadUrl (publishId, isCsv, includeHeader) {
   const api = isCsv ? apis.shareCsvDownload : apis.shareDownload
-  return BASE_URL + api.format({publishId})
+  return BASE_URL + api.format({publishId, includeHeader})
 }
 
 export function buildDetailUrl (isPresto, isHive, isSpark, datasource, queryid) {

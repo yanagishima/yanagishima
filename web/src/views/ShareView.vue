@@ -68,11 +68,16 @@
                 <input type="checkbox" v-model="isPretty">
                 Pretty print
               </label>
-              <div class="btn-group ml-2">
-                <a :href="buildShareDownloadUrl(publishId, false)" class="btn btn-sm btn-secondary"
-                   :class="{disabledDownload}"><i class="fa fa-fw fa-download mr-1"></i>TSV</a>
-                <a :href="buildShareDownloadUrl(publishId, true)" class="btn btn-sm btn-secondary"
-                   :class="{disabledDownload}"><i class="fa fa-fw fa-download mr-1"></i>CSV</a>
+              <div class="btn-group ml-2" v-if="response.rawDataSize">
+                <a href="#" data-toggle="dropdown">Download<i class="fa fa-fw fa-download ml-1"></i></a>
+                <div class="dropdown-menu dropdown-menu-right">
+                  <div class="dropdown-header">header</div>
+                  <a :href="buildShareDownloadUrl(publishId, false, true)" class="dropdown-item">TSV</a>
+                  <a :href="buildShareDownloadUrl(publishId, true, true)" class="dropdown-item">CSV</a>
+                  <div class="dropdown-header">no header</div>
+                  <a :href="buildShareDownloadUrl(publishId, false, false)" class="dropdown-item">TSV</a>
+                  <a :href="buildShareDownloadUrl(publishId, true, false)" class="dropdown-item">CSV</a>
+                </div>
               </div>
             </div>
           </div>

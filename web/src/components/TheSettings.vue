@@ -17,11 +17,6 @@
                 Automatically Refresh Query List
               </label>
             </div>
-          </div>
-        </div>
-        <div class="card card-inverse">
-          <div class="card-header">Useful</div>
-          <div class="card-block pb-1">
             <div v-if="isHttps()">
               <label :class="{'text-white': desktopNotification}">
                 <input type="checkbox" class="mr-1" v-model="desktopNotification">
@@ -62,6 +57,33 @@
                 <button class="btn btn-sm btn-secondary selected dropdown-toggle" @click="showModal('theme')">
                   {{theme | humanize}}
                 </button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="card card-inverse">
+          <div class="card-header">Download</div>
+          <div class="card-block pb-1">
+            <div class="row mb-2">
+              <div class="col-6">Format</div>
+              <div class="col-6 text-right">
+                <div class="btn-group">
+                  <a class="btn btn-sm btn-secondary" href="#" @click.prevent="isCsv = false"
+                      :class="{'selected': !isCsv}">TSV</a>
+                  <a class="btn btn-sm btn-secondary" href="#" @click.prevent="isCsv = true"
+                      :class="{'selected': isCsv}">CSV</a>
+                </div>
+              </div>
+            </div>
+            <div class="row mb-2">
+              <div class="col-6">Include header</div>
+              <div class="col-6 text-right">
+                <div class="btn-group">
+                  <a class="btn btn-sm btn-secondary" href="#" @click.prevent="includeHeader = true"
+                      :class="{'selected': includeHeader}">Yes</a>
+                  <a class="btn btn-sm btn-secondary" href="#" @click.prevent="includeHeader = false"
+                      :class="{'selected': !includeHeader}">No</a>
+                </div>
               </div>
             </div>
           </div>
@@ -178,6 +200,8 @@ export default {
     rememberEngine: makeSettingComputed('rememberEngine'),
     minline: makeSettingComputed('minline'),
     theme: makeSettingComputed('theme'),
+    isCsv: makeSettingComputed('isCsv'),
+    includeHeader: makeSettingComputed('includeHeader'),
     isLocalStorage: makeSettingComputed('isLocalStorage')
   },
   methods: {

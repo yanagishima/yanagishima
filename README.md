@@ -46,6 +46,9 @@ yanagishima is a Web UI for presto/hive.
 * show stats for presto
 
 # Versions
+* 20.0
+  * show query diff
+  * enable user to download without column header
 * 19.0
   * support Spark SQL
   * show stats for presto
@@ -229,11 +232,11 @@ yanagishima is a Web UI for presto/hive.
 ```
 git clone https://github.com/yanagishima/yanagishima.git
 cd yanagishima
-git checkout -b 19.0 refs/tags/19.0
+git checkout -b 20.0 refs/tags/20.0
 ./gradlew distZip
 cd build/distributions
-unzip yanagishima-19.0.zip
-cd yanagishima-19.0
+unzip yanagishima-20.0.zip
+cd yanagishima-20.0
 vim conf/yanagishima.properties
 nohup bin/yanagishima-start.sh >y.log 2>&1 &
 ```

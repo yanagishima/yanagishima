@@ -14,14 +14,14 @@ export default {
     buildShareUrl (datasource, engine, queryid, chart, pivot, line) {
       return this.buildTopUrl() + '/' + this.buildUrl({datasource, engine, tab: 'result', queryid, chart, pivot, line})
     },
-    buildDownloadUrl (datasource, queryid, isCsv) {
-      return api.buildDownloadUrl(datasource, queryid, isCsv)
+    buildDownloadUrl (datasource, queryid, isCsv, includeHeader) {
+      return api.buildDownloadUrl(datasource, queryid, isCsv, includeHeader)
     },
     buildDetailUrl (isPresto, isHive, isSpark, datasource, queryid) {
       return api.buildDetailUrl(isPresto, isHive, isSpark, datasource, queryid)
     },
-    buildShareDownloadUrl (publishId, isCsv) {
-      return api.buildShareDownloadUrl(publishId, isCsv)
+    buildShareDownloadUrl (publishId, isCsv, includeHeader) {
+      return api.buildShareDownloadUrl(publishId, isCsv, includeHeader)
     },
     calcPrestoQueryProgress: utils.calcPrestoQueryProgress,
     showModal (id) {
