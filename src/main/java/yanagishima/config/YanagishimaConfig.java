@@ -41,13 +41,13 @@ public class YanagishimaConfig {
 	public String getSchema(String datasource) {
 		return PropertiesUtil.getParam(properties, "schema." + datasource);
 	}
-	
-	public String getUser() {
-		return "yanagishima";
+
+	public String getUser(String datasource) {
+		return PropertiesUtil.getParam(properties, "user." + datasource);
 	}
 	
-	public String getSource() {
-		return "yanagishima";
+	public String getSource(String datasource) {
+		return PropertiesUtil.getParam(properties, "source." + datasource);
 	}
 
 	public int getSelectLimit() {
