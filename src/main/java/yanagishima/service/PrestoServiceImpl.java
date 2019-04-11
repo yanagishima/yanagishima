@@ -343,8 +343,7 @@ public class PrestoServiceImpl implements PrestoService {
                 .getPrestoCoordinatorServer(datasource);
         String catalog = yanagishimaConfig.getCatalog(datasource);
         String schema = yanagishimaConfig.getSchema(datasource);
-
-        String source = yanagishimaConfig.getSource();
+        String source = yanagishimaConfig.getSource(datasource);
 
         if (prestoUser.isPresent() && prestoPassword.isPresent()) {
             ClientSession clientSession = new ClientSession(
@@ -359,8 +358,8 @@ public class PrestoServiceImpl implements PrestoService {
         }
 
         String user = null;
-        if(userName == null ) {
-            user = yanagishimaConfig.getUser();
+        if (userName == null) {
+            user = yanagishimaConfig.getUser(datasource);
         } else {
             user = userName;
         }

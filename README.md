@@ -270,6 +270,12 @@ presto.redirect.server.your-presto=http://presto.coordinator:8080
 catalog.your-presto=hive
 # presto schema name
 schema.your-presto=default
+
+# presto user
+user.your-presto=yanagishima
+# presto source
+source.your-presto=yanagishima
+
 # if query result exceeds this limit, to show rest of result is skipped
 select.limit=500
 # http header name for audit log
