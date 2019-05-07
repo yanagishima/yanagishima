@@ -1,22 +1,8 @@
 #!/bin/bash
 
-yanagishima_dir=$(dirname $0)/..
+bin=$(cd "$(dirname $0)"; pwd)
+. "${bin}/yanagishima-config.sh"
 
-for file in $yanagishima_dir/lib/*.jar;
-do
-  CLASSPATH=$CLASSPATH:$file
-done
+java "$YANAGISHIMA_OPTS" -cp "$CLASSPATH" yanagishima.server.YanagishimaServer -conf "$YANAGISHIMA_CONF_DIR" "$@" &
 
-echo $yanagishima_dir;
-echo $CLASSPATH;
-
-executorport=`cat $yanagishima_dir/conf/yanagishima.properties | grep executor.port | cut -d = -f 2`
-serverpath=`pwd`
-
-if [ -z $YANAGISHIMA_OPTS ]; then
-  YANAGISHIMA_OPTS=-Xmx3G
-fi
-
-java $YANAGISHIMA_OPTS -cp $CLASSPATH yanagishima.server.YanagishimaServer -conf $yanagishima_dir/conf $@ &
-
-echo $! > $yanagishima_dir/currentpid
+echo $! > "$YANAGISHIMA_HOME"/currentpid
