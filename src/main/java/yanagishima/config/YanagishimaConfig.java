@@ -403,4 +403,8 @@ public class YanagishimaConfig {
 		}
 	}
 
+	public boolean isHiveImpersonation(String datasource) {
+		return Boolean.parseBoolean(Optional.ofNullable(properties.getProperty("hive.jdbc.impersonation." + datasource)).orElse("false"));
+	}
+
 }
