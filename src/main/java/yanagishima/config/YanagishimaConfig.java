@@ -403,4 +403,12 @@ public class YanagishimaConfig {
 		}
 	}
 
+	public Optional<String> getWebhdfsProxyUser(String datasource) {
+		return Optional.ofNullable(properties.getProperty(String.format("webhdfs.proxy.user.%s", datasource)));
+	}
+
+	public Optional<String> getWebhdfsProxyPassword(String datasource) {
+		return Optional.ofNullable(properties.getProperty(String.format("webhdfs.proxy.password.%s", datasource)));
+	}
+
 }
