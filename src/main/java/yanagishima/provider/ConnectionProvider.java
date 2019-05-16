@@ -26,7 +26,7 @@ public class ConnectionProvider implements Provider<Connection> {
 			if (connection == null) {
 				if(yanagishimaConfig.getDatabaseType().isPresent()) {
 					if(yanagishimaConfig.getDatabaseType().get().equals("mysql")) {
-						String url = String.format("jdbc:mysql://%s:%s/%s", yanagishimaConfig.getMysqlHost(), yanagishimaConfig.getMysqlPort(), yanagishimaConfig.getMysqlDatabase());
+						String url = String.format("jdbc:mysql://%s:%s/%s?useSSL=false", yanagishimaConfig.getMysqlHost(), yanagishimaConfig.getMysqlPort(), yanagishimaConfig.getMysqlDatabase());
 						String user = yanagishimaConfig.getMysqlUser();
 						String password = yanagishimaConfig.getMysqlPassword();
 						connection = DriverManager.getConnection(url, user, password);
