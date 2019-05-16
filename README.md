@@ -54,7 +54,7 @@ yanagishima is a Web UI for presto/hive.
   vim dump.sql # delete create table, sqlite_sequence statement
   wget http://www.redmine.org/attachments/download/6239/sqlite3-to-mysql.py
   cat dump.sql | python sqlite3-to-mysql.py > target.sql
-  mysql -h ... -P ... -u ... --p... ... < target.sql
+  mysql -h ... -P ... -u ... -p... ... < target.sql
   ALTER TABLE query ADD INDEX idx_user(user);
   ```
 * 20.0
