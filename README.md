@@ -57,6 +57,15 @@ yanagishima is a Web UI for presto/hive.
   mysql -h ... -P ... -u ... -p... ... < target.sql
   ALTER TABLE query ADD INDEX idx_user(user);
   ```
+  setting is the following
+  ```
+  database.type=mysql
+  mysql.port=3306
+  mysql.host=localhost
+  mysql.database=yanagishima
+  mysql.user=...
+  mysql.password=...
+  ```
 * 20.0
   * show query diff
   * enable user to download without column header
