@@ -54,6 +54,7 @@ yanagishima is a Web UI for presto/hive.
   * Add a script to launch yanagishima in foreground process (#58)
   * support mysql as yanagishima backend RDBMS
   * if you want to switch from sqlite to mysql, the procedure is the following
+  
   create mysql table
   ```
   create table if not exists query (datasource varchar(256), engine varchar(256), query_id varchar(256), fetch_result_time_string varchar(256), query_string text, user varchar(256), status varchar(256), elapsed_time_millis integer, result_file_size integer, linenumber integer, primary key(datasource, engine, query_id));
