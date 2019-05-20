@@ -47,8 +47,22 @@ yanagishima is a Web UI for presto/hive.
 
 # Versions
 * 21.0(not released)
+  * update config add user and source (#56)
+  * Avoid scroll bar from hiding note
+  * improve partition column fetch logic in treeview
+  * Add webhdfs.proxy.user and webhdfs.proxy.password option
+  * Add a script to launch yanagishima in foreground process (#58)
   * support mysql as yanagishima backend RDBMS
   * if you want to switch from sqlite to mysql, the procedure is the following
+  create mysql table
+  ```
+  create table if not exists query (datasource varchar(256), engine varchar(256), query_id varchar(256), fetch_result_time_string varchar(256), query_string text, user varchar(256), status varchar(256), elapsed_time_millis integer, result_file_size integer, linenumber integer, primary key(datasource, engine, query_id));
+  create table if not exists publish (publish_id varchar(256), datasource varchar(256), engine varchar(256), query_id varchar(256), user varchar(256), primary key(publish_id));
+  create table if not exists bookmark (bookmark_id integer primary key auto_increment, datasource varchar(256), engine varchar(256), query text, title varchar(256), user varchar(256));
+  create table if not exists comment (datasource varchar(256), engine varchar(256), query_id varchar(256), content text, update_time_string varchar(256), user varchar(256), like_count integer, primary key(datasource, engine, query_id));
+  create table if not exists label (datasource varchar(256), engine varchar(256), query_id varchar(256), label_name varchar(256), primary key(datasource, engine, query_id));
+  ```
+  migrate data from sqlite to mysql
   ```
   sqlite3 yanagishima.db .dump > dump.sql
   vim dump.sql # delete create table, sqlite_sequence statement
@@ -57,7 +71,7 @@ yanagishima is a Web UI for presto/hive.
   mysql -h ... -P ... -u ... -p... ... < target.sql
   ALTER TABLE query ADD INDEX idx_user(user);
   ```
-  setting is the following
+  yanagishima setting is the following
   ```
   database.type=mysql
   mysql.port=3306
