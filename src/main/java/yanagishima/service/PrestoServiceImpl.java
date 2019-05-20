@@ -259,10 +259,7 @@ public class PrestoServiceImpl implements PrestoService {
                     event.put("datasource", datasource);
                     event.put("errorName", errorName);
                     event.put("errorType", errorType);
-                    FailureInfo failureInfo = results.getError().getFailureInfo();
-                    if(failureInfo != null) {
-                        event.put("message", failureInfo.getMessage());
-                    }
+                    event.put("message", results.getError().getMessage());
                     fluency.emit(tag, event);
                 } catch (IOException e) {
                     LOGGER.error(e.getMessage(), e);
