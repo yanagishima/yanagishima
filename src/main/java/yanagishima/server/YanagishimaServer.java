@@ -51,11 +51,22 @@ public class YanagishimaServer {
 		TinyORM tinyORM = injector.getInstance(TinyORM.class);
 		try(Connection connection = tinyORM.getConnection()) {
 			try(Statement statement = connection.createStatement()) {
-				statement.executeUpdate("create table if not exists query (datasource text, engine text, query_id text, fetch_result_time_string text, query_string text, user text, status text, elapsed_time_millis integer, result_file_size integer, linenumber integer, primary key(datasource, engine, query_id))");
-				statement.executeUpdate("create table if not exists publish (publish_id text, datasource text, engine text, query_id text, user text, primary key(publish_id))");
-				statement.executeUpdate("create table if not exists bookmark (bookmark_id integer primary key autoincrement, datasource text, engine text, query text, title text, user text)");
-				statement.executeUpdate("create table if not exists comment (datasource text, engine text, query_id text, content text, update_time_string text, user text, like_count integer, primary key(datasource, engine, query_id))");
-				statement.executeUpdate("create table if not exists label (datasource text, engine text, query_id text, label_name text, primary key(datasource, engine, query_id))");
+                String databaseType = properties.getProperty("database.type");
+                if(databaseType == null) {
+                    statement.executeUpdate("create table if not exists query (datasource text, engine text, query_id text, fetch_result_time_string text, query_string text, user text, status text, elapsed_time_millis integer, result_file_size integer, linenumber integer, primary key(datasource, engine, query_id))");
+                    statement.executeUpdate("create table if not exists publish (publish_id text, datasource text, engine text, query_id text, user text, primary key(publish_id))");
+                    statement.executeUpdate("create table if not exists bookmark (bookmark_id integer primary key autoincrement, datasource text, engine text, query text, title text, user text)");
+                    statement.executeUpdate("create table if not exists comment (datasource text, engine text, query_id text, content text, update_time_string text, user text, like_count integer, primary key(datasource, engine, query_id))");
+                    statement.executeUpdate("create table if not exists label (datasource text, engine text, query_id text, label_name text, primary key(datasource, engine, query_id))");
+                } else if(databaseType.equals("mysql")) {
+                    statement.executeUpdate("create table if not exists query (datasource varchar(256), engine varchar(256), query_id varchar(256), fetch_result_time_string varchar(256), query_string text, user varchar(256), status varchar(256), elapsed_time_millis integer, result_file_size integer, linenumber integer, primary key(datasource, engine, query_id))");
+                    statement.executeUpdate("create table if not exists publish (publish_id varchar(256), datasource varchar(256), engine varchar(256), query_id varchar(256), user varchar(256), primary key(publish_id))");
+                    statement.executeUpdate("create table if not exists bookmark (bookmark_id integer primary key auto_increment, datasource varchar(256), engine varchar(256), query text, title varchar(256), user varchar(256))");
+                    statement.executeUpdate("create table if not exists comment (datasource varchar(256), engine varchar(256), query_id varchar(256), content text, update_time_string varchar(256), user varchar(256), like_count integer, primary key(datasource, engine, query_id))");
+                    statement.executeUpdate("create table if not exists label (datasource varchar(256), engine varchar(256), query_id varchar(256), label_name varchar(256), primary key(datasource, engine, query_id))");
+                } else {
+                    throw new IllegalArgumentException("illegal database.type=" + databaseType);
+                }
 			}
 		}
 

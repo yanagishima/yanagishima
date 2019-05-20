@@ -76,6 +76,8 @@ public class PrestoPartitionServlet extends HttpServlet {
                     userName = prestoUser.get();
                 }
             }
+            Optional<String> webhdfsProxyUser = yanagishimaConfig.getWebhdfsProxyUser(datasource);
+            Optional<String> webhdfsProxyPassword = yanagishimaConfig.getWebhdfsProxyPassword(datasource);
             String catalog = HttpRequestUtil.getParam(request, "catalog");
             String schema = HttpRequestUtil.getParam(request, "schema");
             String table = HttpRequestUtil.getParam(request, "table");
@@ -85,7 +87,11 @@ public class PrestoPartitionServlet extends HttpServlet {
             if (partitionColumn == null || partitionValue == null) {
                 Optional<String> webhdfsUrlOptional = yanagishimaConfig.getWebhdfsUrl(datasource, catalog, schema, table);
                 if(webhdfsUrlOptional.isPresent()) {
-                    setFirstPartitionWIthWebhdfs(retVal, prestoUser, prestoPassword, webhdfsUrlOptional.get());
+                    if(webhdfsProxyUser.isPresent() && webhdfsProxyPassword.isPresent()) {
+                        setFirstPartitionWIthWebhdfs(retVal, webhdfsProxyUser, webhdfsProxyPassword, webhdfsUrlOptional.get());
+                    } else {
+                        setFirstPartitionWIthWebhdfs(retVal, prestoUser, prestoPassword, webhdfsUrlOptional.get());
+                    }
                 } else {
                     String query = null;
                     if(yanagishimaConfig.isUseNewShowPartitions(datasource)) {
@@ -122,7 +128,11 @@ public class PrestoPartitionServlet extends HttpServlet {
                     for(int i=0; i<partitionColumnArray.length; i++) {
                         pathList.add(String.format("%s=%s", partitionColumnArray[i], partitionValuesArray[i]));
                     }
-                    setFirstPartitionWIthWebhdfs(retVal, prestoUser, prestoPassword, webhdfsUrlOptional.get() + "/" + String.join("/", pathList));
+                    if(webhdfsProxyUser.isPresent() && webhdfsProxyPassword.isPresent()) {
+                        setFirstPartitionWIthWebhdfs(retVal, webhdfsProxyUser, webhdfsProxyPassword, webhdfsUrlOptional.get() + "/" + String.join("/", pathList));
+                    } else {
+                        setFirstPartitionWIthWebhdfs(retVal, prestoUser, prestoPassword, webhdfsUrlOptional.get() + "/" + String.join("/", pathList));
+                    }
                 } else {
                     List whereList = new ArrayList<>();
                     for(int i=0; i<partitionColumnArray.length; i++) {

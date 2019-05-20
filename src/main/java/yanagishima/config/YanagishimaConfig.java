@@ -403,8 +403,40 @@ public class YanagishimaConfig {
 		}
 	}
 
-	public boolean isHiveImpersonation(String datasource) {
+  public boolean isHiveImpersonation(String datasource) {
 		return Boolean.parseBoolean(Optional.ofNullable(properties.getProperty("hive.jdbc.impersonation." + datasource)).orElse("false"));
+	}
+
+	public Optional<String> getWebhdfsProxyUser(String datasource) {
+		return Optional.ofNullable(properties.getProperty(String.format("webhdfs.proxy.user.%s", datasource)));
+	}
+
+	public Optional<String> getWebhdfsProxyPassword(String datasource) {
+		return Optional.ofNullable(properties.getProperty(String.format("webhdfs.proxy.password.%s", datasource)));
+	}
+
+	public Optional<String> getDatabaseType() {
+		return Optional.ofNullable(properties.getProperty("database.type"));
+	}
+
+	public String getMysqlHost() {
+		return PropertiesUtil.getParam(properties, "mysql.host");
+	}
+
+	public String getMysqlPort() {
+		return PropertiesUtil.getParam(properties, "mysql.port");
+	}
+
+	public String getMysqlDatabase() {
+		return PropertiesUtil.getParam(properties, "mysql.database");
+	}
+
+	public String getMysqlUser() {
+		return PropertiesUtil.getParam(properties, "mysql.user");
+	}
+
+	public String getMysqlPassword() {
+		return PropertiesUtil.getParam(properties, "mysql.password");
 	}
 
 }
