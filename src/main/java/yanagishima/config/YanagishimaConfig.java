@@ -438,5 +438,4 @@ public class YanagishimaConfig {
 	public String getMysqlPassword() {
 		return PropertiesUtil.getParam(properties, "mysql.password");
 	}
-
 }
