@@ -46,6 +46,17 @@ yanagishima is a Web UI for presto/hive.
 * show stats for presto
 
 # Versions
+* 21.0(not released)
+  * support mysql as yanagishima backend RDBMS
+  * if you want to switch from sqlite to mysql, the procedure is the following
+  ```
+  sqlite3 yanagishima.db .dump > dump.sql
+  vim dump.sql # delete create table, sqlite_sequence statement
+  wget http://www.redmine.org/attachments/download/6239/sqlite3-to-mysql.py
+  cat dump.sql | python sqlite3-to-mysql.py > target.sql
+  mysql -h ... -P ... -u ... -p... ... < target.sql
+  ALTER TABLE query ADD INDEX idx_user(user);
+  ```
 * 20.0
   * show query diff
   * enable user to download without column header
