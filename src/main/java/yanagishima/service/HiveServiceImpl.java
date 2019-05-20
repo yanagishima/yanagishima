@@ -156,6 +156,9 @@ public class HiveServiceImpl implements HiveService {
         String url = null;
         if(engine.equals("hive")) {
             url = yanagishimaConfig.getHiveJdbcUrl(datasource);
+            if(yanagishimaConfig.isHiveImpersonation(datasource)) {
+                url += ";hive.server2.proxy.user=" + userName;
+            }
         } else if(engine.equals("spark")) {
             url = yanagishimaConfig.getSparkJdbcUrl(datasource);
         } else {
