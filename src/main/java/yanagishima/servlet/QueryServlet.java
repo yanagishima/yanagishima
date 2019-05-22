@@ -23,7 +23,7 @@ import java.io.PrintWriter;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static com.facebook.presto.client.OkHttpUtil.basicAuth;
+import static io.prestosql.client.OkHttpUtil.basicAuth;
 import static javax.servlet.http.HttpServletResponse.SC_FORBIDDEN;
 import static javax.servlet.http.HttpServletResponse.SC_HTTP_VERSION_NOT_SUPPORTED;
 import static javax.servlet.http.HttpServletResponse.SC_OK;

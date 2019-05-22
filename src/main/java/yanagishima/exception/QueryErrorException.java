@@ -1,6 +1,6 @@
 package yanagishima.exception;
 
-import com.facebook.presto.client.QueryError;
+import io.prestosql.client.QueryError;
 
 import java.sql.SQLException;
 
