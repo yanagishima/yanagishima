@@ -31,12 +31,8 @@ repositories {
 }
 
 compileJava.options.encoding = 'UTF-8' // source encoding
-sourceCompatibility = 1.8
-targetCompatibility = 1.8
-
-task wrapper(type: Wrapper) {
-    gradleVersion = '4.1'
-}
+sourceCompatibility = JavaVersion.VERSION_11
+targetCompatibility = JavaVersion.VERSION_11
 
 task createDirs() {
   file('build/package').mkdirs()
@@ -123,7 +119,8 @@ dependencies {
     compile 'org.apache.httpcomponents:fluent-hc:4.4.1'
     compile 'org.xerial:sqlite-jdbc:3.20.1'
     compile 'me.geso:tinyorm:1.13.0'
-    compile 'org.projectlombok:lombok:1.16.16'
+    compileOnly 'org.projectlombok:lombok:1.18.8'
+    annotationProcessor 'org.projectlombok:lombok:1.18.8'
     compile 'org.komamitsu:fluency:1.7.0'
     compile 'org.apache.hive:hive-jdbc:1.2.1000.2.5.3.0-37'
     compile 'org.apache.hadoop:hadoop-common:2.7.3.2.5.3.0-37'
