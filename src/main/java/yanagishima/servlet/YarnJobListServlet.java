@@ -95,14 +95,16 @@ public class YarnJobListServlet extends HttpServlet {
 			}
 		}
 
-		String placeholder = queryidList.stream().map(r -> "?").collect(Collectors.joining(", "));
-		List<Query> queryList = db.searchBySQL(Query.class,
-				"SELECT engine, query_id, fetch_result_time_string, query_string FROM query WHERE engine='hive' and datasource=\'" + datasource + "\' and query_id IN (" + placeholder + ")",
-				queryidList.stream().collect(Collectors.toList()));
-
 		List<String> existdbQueryidList = new ArrayList<>();
-		for(Query query : queryList) {
-			existdbQueryidList.add(query.getQueryId());
+		if(!queryidList.isEmpty()) {
+			String placeholder = queryidList.stream().map(r -> "?").collect(Collectors.joining(", "));
+			List<Query> queryList = db.searchBySQL(Query.class,
+					"SELECT engine, query_id, fetch_result_time_string, query_string FROM query WHERE engine='hive' and datasource=\'" + datasource + "\' and query_id IN (" + placeholder + ")",
+					queryidList.stream().collect(Collectors.toList()));
+
+			for(Query query : queryList) {
+				existdbQueryidList.add(query.getQueryId());
+			}
 		}
 
 		for(Map m : limitedList) {
