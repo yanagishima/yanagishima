@@ -264,6 +264,7 @@ public class PrestoServiceImpl implements PrestoService {
                     event.put("errorName", errorName);
                     event.put("errorType", errorType);
                     event.put("message", results.getError().getMessage());
+                    event.put("semanticErrorName", results.getError().getSemanticErrorName().orElse(null));
                     fluency.emit(tag, event);
                 } catch (IOException e) {
                     LOGGER.error(e.getMessage(), e);
