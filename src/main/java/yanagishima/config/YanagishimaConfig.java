@@ -438,4 +438,13 @@ public class YanagishimaConfig {
 	public String getMysqlPassword() {
 		return PropertiesUtil.getParam(properties, "mysql.password");
 	}
+
+	public boolean IsDatatimePartitionHasHyphen(String datasource) {
+		String property = properties.getProperty("datetime.partition.has.hyphen." + datasource);
+		if(property == null) {
+			return false;
+		} else {
+			return true;
+		}
+	}
 }

@@ -61,7 +61,12 @@ public class DatasourceAuthServlet extends HttpServlet {
                     engines.add(engine);
                 }
             }
-            datasourceMap.put(datasource, new ImmutableMap.Builder<String, Object>().put("engines", engines).put("auth", yanagishimaConfig.isAuth(datasource)).put("metadataService", yanagishimaConfig.isMetadataService(datasource)).build());
+            datasourceMap.put(datasource, new ImmutableMap.Builder<String, Object>()
+                    .put("engines", engines)
+                    .put("auth", yanagishimaConfig.isAuth(datasource))
+                    .put("metadataService", yanagishimaConfig.isMetadataService(datasource))
+                    .put("datetimePartitionHasHyphen", yanagishimaConfig.IsDatatimePartitionHasHyphen(datasource))
+                    .build());
             datasourceEngineList.add(datasourceMap);
         }
         return datasourceEngineList;
