@@ -447,4 +447,8 @@ public class YanagishimaConfig {
 			return true;
 		}
 	}
+
+	public boolean isUseOldPresto(String datasource) {
+		return Boolean.parseBoolean(Optional.ofNullable(properties.getProperty("use.old.presto." + datasource)).orElse("false"));
+	}
 }

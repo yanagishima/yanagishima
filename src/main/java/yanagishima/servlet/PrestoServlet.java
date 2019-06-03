@@ -33,7 +33,6 @@ import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static io.prestosql.spi.ErrorType.USER_ERROR;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static javax.servlet.http.HttpServletResponse.SC_FORBIDDEN;
 import static yanagishima.util.Constants.YANAGISHIMA_COMMENT;
@@ -147,19 +146,7 @@ public class PrestoServlet extends HttpServlet {
 						}
 					}
 				} catch (QueryErrorException e) {
-					if(e.getQueryError().getErrorType().equals(USER_ERROR.name())) {
-						LOGGER.warn(e.getCause().getMessage());
-					} else {
-						LOGGER.error(e.getMessage(), e);
-					}
-					Optional<QueryError> queryErrorOptional = Optional.ofNullable(e.getQueryError());
-					queryErrorOptional.ifPresent(queryError -> {
-						Optional<ErrorLocation> errorLocationOptional = Optional.ofNullable(queryError.getErrorLocation());
-						errorLocationOptional.ifPresent(errorLocation -> {
-							int errorLineNumber = errorLocation.getLineNumber();
-							retVal.put("errorLineNumber", errorLineNumber);
-						});
-					});
+					LOGGER.warn(e.getCause().getMessage());
 					retVal.put("error", e.getCause().getMessage());
 					retVal.put("queryid", e.getQueryId());
 				} catch (ClientException e) {

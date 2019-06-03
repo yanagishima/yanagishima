@@ -4,6 +4,7 @@ import io.prestosql.client.ClientException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import yanagishima.config.YanagishimaConfig;
+import yanagishima.service.OldPrestoService;
 import yanagishima.service.PrestoService;
 import yanagishima.util.AccessControlUtil;
 import yanagishima.util.HttpRequestUtil;
@@ -28,12 +29,15 @@ public class PrestoAsyncServlet extends HttpServlet {
 
 	private static final long serialVersionUID = 1L;
 
+	private final OldPrestoService oldPrestoService;
+
 	private final PrestoService prestoService;
 
 	private final YanagishimaConfig yanagishimaConfig;
 
 	@Inject
-	public PrestoAsyncServlet(PrestoService prestoService, YanagishimaConfig yanagishimaConfig) {
+	public PrestoAsyncServlet(OldPrestoService oldPrestoService, PrestoService prestoService, YanagishimaConfig yanagishimaConfig) {
+		this.oldPrestoService = oldPrestoService;
 		this.prestoService = prestoService;
 		this.yanagishimaConfig = yanagishimaConfig;
 	}
@@ -87,7 +91,12 @@ public class PrestoAsyncServlet extends HttpServlet {
 					}
 				}
 				try {
-					String queryid = prestoService.doQueryAsync(datasource, query, userName, prestoUser, prestoPassword);
+					String queryid;
+					if(yanagishimaConfig.isUseOldPresto(datasource)) {
+						queryid = oldPrestoService.doQueryAsync(datasource, query, userName, prestoUser, prestoPassword);
+					} else {
+						queryid = prestoService.doQueryAsync(datasource, query, userName, prestoUser, prestoPassword);
+					}
 					retVal.put("queryid", queryid);
 				} catch (ClientException e) {
 					if(prestoUser.isPresent()) {

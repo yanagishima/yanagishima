@@ -10,22 +10,15 @@ public class QueryErrorException extends Exception {
 
 	private String queryId;
 	
-	private QueryError queryError;
-	
 	public QueryErrorException(SQLException cause) {
 		super(cause);
 	}
 	
-	public QueryErrorException(String queryId, QueryError queryError, SQLException cause) {
+	public QueryErrorException(String queryId, SQLException cause) {
 		super(cause);
 		this.queryId = queryId;
-		this.queryError = queryError;
 	}
 
 	public String getQueryId() { return queryId; }
-
-	public QueryError getQueryError() {
-		return queryError;
-	}
 
 }

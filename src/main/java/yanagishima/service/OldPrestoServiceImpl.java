@@ -1,11 +1,11 @@
 package yanagishima.service;
 
-import io.prestosql.client.*;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import io.airlift.units.DataSize;
 import io.airlift.units.Duration;
+import com.facebook.presto.client.*;
 import me.geso.tinyorm.TinyORM;
 import okhttp3.OkHttpClient;
 import org.apache.commons.csv.CSVFormat;
@@ -34,11 +34,11 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
-import static com.google.common.base.Preconditions.checkState;
-import static io.prestosql.client.OkHttpUtil.basicAuth;
-import static io.prestosql.client.OkHttpUtil.setupTimeouts;
 import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.base.Verify.verify;
+import static com.facebook.presto.client.OkHttpUtil.basicAuth;
+import static com.facebook.presto.client.OkHttpUtil.setupTimeouts;
 import static java.lang.String.format;
 import static java.util.Collections.emptyMap;
 import static java.util.concurrent.TimeUnit.MINUTES;
@@ -48,9 +48,9 @@ import static yanagishima.util.DbUtil.storeError;
 import static yanagishima.util.PathUtil.getResultFilePath;
 import static yanagishima.util.TimeoutUtil.checkTimeout;
 
-public class PrestoServiceImpl implements PrestoService {
+public class OldPrestoServiceImpl implements OldPrestoService {
 
-    private static Logger LOGGER = LoggerFactory.getLogger(PrestoServiceImpl.class);
+    private static Logger LOGGER = LoggerFactory.getLogger(OldPrestoServiceImpl.class);
 
     private YanagishimaConfig yanagishimaConfig;
 
@@ -64,7 +64,7 @@ public class PrestoServiceImpl implements PrestoService {
     private TinyORM db;
 
     @Inject
-    public PrestoServiceImpl(YanagishimaConfig yanagishimaConfig) {
+    public OldPrestoServiceImpl(YanagishimaConfig yanagishimaConfig) {
         this.yanagishimaConfig = yanagishimaConfig;
         OkHttpClient.Builder builder = new OkHttpClient.Builder();
         setupTimeouts(builder, 5, SECONDS);
@@ -259,7 +259,6 @@ public class PrestoServiceImpl implements PrestoService {
                     event.put("errorName", errorName);
                     event.put("errorType", errorType);
                     event.put("message", results.getError().getMessage());
-                    event.put("semanticErrorName", results.getError().getSemanticErrorName().orElse(null));
                     fluency.emit(tag, event);
                 } catch (IOException e) {
                     LOGGER.error(e.getMessage(), e);
@@ -349,8 +348,8 @@ public class PrestoServiceImpl implements PrestoService {
         if (prestoUser.isPresent() && prestoPassword.isPresent()) {
             ClientSession clientSession = new ClientSession(
                     URI.create(prestoCoordinatorServer), prestoUser.get(), source, Optional.empty(), ImmutableSet.of(), null, catalog,
-                    schema, null, ZoneId.systemDefault(), Locale.getDefault(),
-                    ImmutableMap.of(), ImmutableMap.of(), emptyMap(), emptyMap(), ImmutableMap.of(), null, new Duration(2, MINUTES));
+                    schema, null, TimeZone.getDefault().getID(), Locale.getDefault(),
+                    ImmutableMap.of(), ImmutableMap.of(), emptyMap(), null, new Duration(2, MINUTES));
             checkArgument(clientSession.getServer().getScheme().equalsIgnoreCase("https"),
                     "Authentication using username/password requires HTTPS to be enabled");
             OkHttpClient.Builder clientBuilder = httpClient.newBuilder();
@@ -367,8 +366,8 @@ public class PrestoServiceImpl implements PrestoService {
 
         ClientSession clientSession = new ClientSession(
                 URI.create(prestoCoordinatorServer), user, source, Optional.empty(), ImmutableSet.of(), null, catalog,
-                schema, null, ZoneId.systemDefault(), Locale.getDefault(),
-                ImmutableMap.of(), ImmutableMap.of(), emptyMap(), emptyMap(), ImmutableMap.of(),null, new Duration(2, MINUTES));
+                schema, null, TimeZone.getDefault().getID(), Locale.getDefault(),
+                ImmutableMap.of(), ImmutableMap.of(), emptyMap(),null, new Duration(2, MINUTES));
 
         return StatementClientFactory.newStatementClient(httpClient, clientSession, query);
     }
