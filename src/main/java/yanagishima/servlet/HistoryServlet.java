@@ -79,12 +79,12 @@ public class HistoryServlet extends HttpServlet {
                 queryOptional.ifPresent(query -> {
                     retVal.put("engine", query.getEngine());
                     if(yanagishimaConfig.isAllowOtherReadResult(datasource)) {
-                        HistoryUtil.createHistoryResult(retVal, yanagishimaConfig.getSelectLimit(), datasource, query);
+                        HistoryUtil.createHistoryResult(retVal, yanagishimaConfig.getSelectLimit(), datasource, query, true);
                     } else {
                         if(userQueryOptional.isPresent()) {
-                            HistoryUtil.createHistoryResult(retVal, yanagishimaConfig.getSelectLimit(), datasource, query);
+                            HistoryUtil.createHistoryResult(retVal, yanagishimaConfig.getSelectLimit(), datasource, query, true);
                         } else {
-                            retVal.put("queryString", query.getQueryString());
+                            HistoryUtil.createHistoryResult(retVal, yanagishimaConfig.getSelectLimit(), datasource, query, false);
                         }
                     }
                 });

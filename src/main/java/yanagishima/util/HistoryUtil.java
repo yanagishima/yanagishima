@@ -23,11 +23,19 @@ import java.util.List;
 
 public class HistoryUtil {
 
-    public static void createHistoryResult(HashMap<String, Object> retVal, int limit, String datasource, Query query) {
+    public static void createHistoryResult(HashMap<String, Object> retVal, int limit, String datasource, Query query, boolean resultVisible) {
         String queryid = query.getQueryId();
         String queryString = query.getQueryString();
         retVal.put("queryString", queryString);
         retVal.put("finishedTime", query.getFetchResultTimeString());
+        retVal.put("lineNumber", query.getLinenumber());
+        retVal.put("elapsedTimeMillis", query.getElapsedTimeMillis());
+        if(query.getResultFileSize() == null) {
+            retVal.put("rawDataSize", null);
+        } else {
+            DataSize rawDataSize = new DataSize(query.getResultFileSize(), DataSize.Unit.BYTE);
+            retVal.put("rawDataSize", rawDataSize.convertToMostSuccinctDataSize().toString());
+        }
 
         Path errorFilePath = PathUtil.getResultFilePath(datasource, queryid, true);
         if (errorFilePath.toFile().exists()) {
@@ -37,46 +45,40 @@ public class HistoryUtil {
                 throw new RuntimeException(e);
             }
         } else {
-            List<List<String>> rowDataList = new ArrayList<List<String>>();
-            int lineNumber = 0;
-            Path resultFilePath = PathUtil.getResultFilePath(datasource, queryid, false);
-            if(!resultFilePath.toFile().exists()) {
-                retVal.put("error", String.format("%s is not found", resultFilePath.getFileName()));
-                return;
-            }
-            try (BufferedReader br = Files.newBufferedReader(resultFilePath, StandardCharsets.UTF_8)) {
-                CSVParser parse = CSVFormat.EXCEL.withDelimiter('\t').withNullString("\\N").parse(br);
-                for (CSVRecord csvRecord : parse) {
-                    List<String> columnList = new ArrayList<>();
-                    for(String column : csvRecord) {
-                        columnList.add(column);
-                    }
-                    if (lineNumber == 0) {
-                        retVal.put("headers", columnList);
-                    } else {
-                        if (queryString.toLowerCase().startsWith("show") || lineNumber <= limit) {
-                            rowDataList.add(columnList);
-                        } else {
-                            break;
-                        }
-                    }
-                    lineNumber++;
-
+            if (resultVisible) {
+                List<List<String>> rowDataList = new ArrayList<List<String>>();
+                int lineNumber = 0;
+                Path resultFilePath = PathUtil.getResultFilePath(datasource, queryid, false);
+                if(!resultFilePath.toFile().exists()) {
+                    retVal.put("error", String.format("%s is not found", resultFilePath.getFileName()));
+                    return;
                 }
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
-            retVal.put("results", rowDataList);
-            retVal.put("lineNumber", query.getLinenumber());
+                try (BufferedReader br = Files.newBufferedReader(resultFilePath, StandardCharsets.UTF_8)) {
+                    CSVParser parse = CSVFormat.EXCEL.withDelimiter('\t').withNullString("\\N").parse(br);
+                    for (CSVRecord csvRecord : parse) {
+                        List<String> columnList = new ArrayList<>();
+                        for(String column : csvRecord) {
+                            columnList.add(column);
+                        }
+                        if (lineNumber == 0) {
+                            retVal.put("headers", columnList);
+                        } else {
+                            if (queryString.toLowerCase().startsWith("show") || lineNumber <= limit) {
+                                rowDataList.add(columnList);
+                            } else {
+                                break;
+                            }
+                        }
+                        lineNumber++;
 
-            retVal.put("elapsedTimeMillis", query.getElapsedTimeMillis());
-            if(query.getResultFileSize() == null) {
-                retVal.put("rawDataSize", null);
+                    }
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+                retVal.put("results", rowDataList);
             } else {
-                DataSize rawDataSize = new DataSize(query.getResultFileSize(), DataSize.Unit.BYTE);
-                retVal.put("rawDataSize", rawDataSize.convertToMostSuccinctDataSize().toString());
+                retVal.put("error", "you can't see query result which other submitted");
             }
-
         }
 
     }
