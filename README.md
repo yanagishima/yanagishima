@@ -47,6 +47,14 @@ yanagishima is a Web UI for presto/hive.
 
 # Versions
 * 21.0(not released)
+  * add detail query error message and semanticErrorName https://github.com/prestosql/presto/pull/790
+  * handle old presto due to https://github.com/prestosql/presto/issues/224
+  * improve message when result file is not found, allow.other.read.result.xxx=false
+  * use JDK11, Gradle5
+  * upgrade presto client library
+  * enable to set datetime format pattern per datasource in treeview
+  * show more information like execution time, file size, etc when query result file is removed
+  * fix header layout
   * update config add user and source (#56)
   * Avoid scroll bar from hiding note
   * improve partition column fetch logic in treeview
@@ -62,15 +70,6 @@ yanagishima is a Web UI for presto/hive.
   create table if not exists bookmark (bookmark_id integer primary key auto_increment, datasource varchar(256), engine varchar(256), query text, title varchar(256), user varchar(256));
   create table if not exists comment (datasource varchar(256), engine varchar(256), query_id varchar(256), content text, update_time_string varchar(256), user varchar(256), like_count integer, primary key(datasource, engine, query_id));
   create table if not exists label (datasource varchar(256), engine varchar(256), query_id varchar(256), label_name varchar(256), primary key(datasource, engine, query_id));
-  ```
-  migrate data from sqlite to mysql
-  ```
-  sqlite3 yanagishima.db .dump > dump.sql
-  vim dump.sql # delete create table, sqlite_sequence statement
-  wget http://www.redmine.org/attachments/download/6239/sqlite3-to-mysql.py
-  cat dump.sql | python sqlite3-to-mysql.py > target.sql
-  mysql -h ... -P ... -u ... -p... ... < target.sql
-  ALTER TABLE query ADD INDEX idx_user(user);
   ```
   yanagishima setting is the following
   ```
@@ -260,18 +259,18 @@ yanagishima is a Web UI for presto/hive.
 
 # Requirements to build yanagishima
 
-* Java 8
+* Java 11
 * Node.js
 
 ## Quick Start
 ```
 git clone https://github.com/yanagishima/yanagishima.git
 cd yanagishima
-git checkout -b 20.0 refs/tags/20.0
+git checkout -b [version] refs/tags/[version]
 ./gradlew distZip
 cd build/distributions
-unzip yanagishima-20.0.zip
-cd yanagishima-20.0
+unzip yanagishima-[version].zip
+cd yanagishima-[version]
 vim conf/yanagishima.properties
 nohup bin/yanagishima-start.sh >y.log 2>&1 &
 ```
