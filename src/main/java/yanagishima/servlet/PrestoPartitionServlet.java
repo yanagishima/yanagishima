@@ -164,7 +164,10 @@ public class PrestoPartitionServlet extends HttpServlet {
                     Set<String> partitions = new TreeSet<>();
                     List<List<String>> records = prestoQueryResult.getRecords();
                     for (List<String> row : records) {
-                        partitions.add(row.get(index + 1));
+                        String partition = row.get(index + 1);
+                        if(partition != null) {
+                            partitions.add(partition);
+                        }
                     }
                     retVal.put("partitions", partitions);
                 }
