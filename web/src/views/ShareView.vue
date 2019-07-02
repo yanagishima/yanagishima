@@ -23,44 +23,42 @@
                 <strong>Loading</strong>
               </template>
               <template v-else>
-                <template v-if="response.error || error">
+                <span class="mr-3" v-if="response && response.error || error">
                   <strong><i class="fa fa-exclamation-triangle text-danger mr-1"></i>Error</strong>
-                </template>
-                <template v-else>
-                  <span v-if="response.results">
-                    <span class="mr-3" v-if="response.lineNumber">
-                      <i class="fas fa-file-alt" title="Publish ID" data-toggle="tooltip"
-                         data-placement="left"></i>
-                      <strong>{{publishId}}</strong>
-                    </span>
-                    <span class="mr-3" v-if="response.queryid">
-                      <a :href="buildShareUrl(datasource, engine, queryid, chart, pivot, line)">{{queryid}}</a>
-                    </span>
-                    <span class="mr-2" v-if="response.finishedTime">
-                      <i class="fa fa-calendar" title="Finished time" data-toggle="tooltip" data-animation="false"
-                         data-placement="left"></i>
-                      {{response.finishedTime | extractDate}}
-                    </span>
-                    <span class="mr-2" v-if="response.elapsedTimeMillis">
-                      <strong>{{(response.elapsedTimeMillis / 1000).ceil(2)}}</strong><span
-                      class="text-muted ml-1">sec</span>
-                    </span>
-                    <span class="mr-2" v-if="response.rawDataSize">
-                      <strong>{{response.rawDataSize.remove('B')}}</strong><span class="text-muted ml-1">byte</span>
-                    </span>
-                    <span class="mr-2" v-if="response.lineNumber">
-                      <strong>{{response.results.length | formatNumber}}</strong>
-                      <template v-if="response.results.length !== response.lineNumber - 1">
-                        <span class="mx-1">/</span><strong>{{response.lineNumber - 1 | formatNumber}}</strong>
-                      </template>
-                      <span class="text-muted ml-1">results</span>
-                    </span>
-                  </span>
-                  <span class="mr-2" v-if="response.headers">
-                    <strong>{{response.headers.length}}</strong><span class="text-muted ml-1">columns</span>
-                  </span>
-                  <span v-else><strong>No result</strong></span>
-                </template>
+                </span>
+                <span v-else-if="response && response.results"></span>
+                <span v-else><strong>No result</strong></span>
+                <span class="mr-3" v-if="response && response.lineNumber">
+                  <i class="fas fa-file-alt" title="Publish ID" data-toggle="tooltip"
+                      data-placement="left"></i>
+                  <strong>{{publishId}}</strong>
+                </span>
+                <span class="mr-3" v-if="response && response.queryid">
+                  <a :href="buildShareUrl(datasource, engine, queryid, chart, pivot, line)">{{queryid}}</a>
+                </span>
+                <span class="mr-2" v-if="response && response.finishedTime">
+                  <i class="fa fa-calendar" title="Finished time" data-toggle="tooltip" data-animation="false"
+                      data-placement="left"></i>
+                  {{response.finishedTime | extractDate}}
+                </span>
+                <span class="mr-2" v-if="response && response.elapsedTimeMillis">
+                  <strong>{{(response.elapsedTimeMillis / 1000).ceil(2)}}</strong><span
+                  class="text-muted ml-1">sec</span>
+                </span>
+                <span class="mr-2" v-if="response && response.rawDataSize">
+                  <strong>{{response.rawDataSize.remove('B')}}</strong><span class="text-muted ml-1">byte</span>
+                </span>
+                <span class="mr-2" v-if="response && response.results && response.lineNumber">
+                  <strong>{{response.results.length | formatNumber}}</strong>
+                  <template v-if="response.results.length !== response.lineNumber - 1">
+                    <span class="mx-1">/</span>
+                    <strong>{{response.lineNumber - 1 | formatNumber}}</strong>
+                  </template>
+                  <span class="text-muted ml-1">results</span>
+                </span>
+                <span class="mr-2" v-if="response && response.headers">
+                  <strong>{{response.headers.length}}</strong><span class="text-muted ml-1">columns</span>
+                </span>
               </template>
             </div>
             <div class="col-3 text-right">
@@ -68,7 +66,7 @@
                 <input type="checkbox" v-model="isPretty">
                 Pretty print
               </label>
-              <div class="btn-group ml-2" v-if="response.rawDataSize">
+              <div class="btn-group ml-2" v-if="response && response.rawDataSize">
                 <a href="#" data-toggle="dropdown">Download<i class="fa fa-fw fa-download ml-1"></i></a>
                 <div class="dropdown-menu dropdown-menu-right">
                   <div class="dropdown-header">header</div>
@@ -135,15 +133,6 @@
               </div>
             </div>
             <ResultTable :result="response" :pretty="isPretty" :line="line" :readonly="true"/>
-          </template>
-          <template v-else>
-            <div class="alert alert-warning" role="alert">
-              <div class="row align-items-center">
-                <div class="col">
-                  <i class="fa fa-fw fa-frown-o mr-1"></i>I'm sorry.
-                </div>
-              </div>
-            </div>
           </template>
         </template>
       </div>
@@ -261,7 +250,8 @@ export default {
           this.visibleComment = data.comment != null
           this.$store.commit('loadComplete')
         })
-        .catch(() => {
+        .catch(error => {
+          this.error = error
         })
     }
   },

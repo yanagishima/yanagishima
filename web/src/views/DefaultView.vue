@@ -10,6 +10,7 @@
       <TheBottomPanel/>
 
       <!-- modals -->
+      <ModalNotification/>
       <ModalHelp/>
       <ModalTheme/>
       <ModalPartition/>
@@ -33,6 +34,7 @@ import Favico from 'favico.js'
 import TheHeader from '@/components/TheHeader'
 import TheContent from '@/components/TheContent'
 import TheFooter from '@/components/TheFooter'
+import ModalNotification from '@/components/modals/ModalNotification'
 import ModalHelp from '@/components/modals/ModalHelp'
 import ModalTheme from '@/components/modals/ModalTheme'
 import ModalPartition from '@/components/modals/ModalPartition'
@@ -51,6 +53,7 @@ export default {
     TheHeader,
     TheContent,
     TheFooter,
+    ModalNotification,
     ModalHelp,
     ModalTheme,
     ModalPartition,
@@ -245,6 +248,8 @@ export default {
     loadLocalStorageGlobal () {
       this.$store.commit('loadLocalStorage')
       this.$store.commit('qlist/loadLocalStorage')
+      this.$store.commit('notification/loadLocalStorage')
+      this.$store.commit('announce/loadLocalStorage')
     },
     loadLocalStoragePerDatasource () {
       this.$store.commit('bookmark/loadLocalStorage', {datasource: this.datasource})

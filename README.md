@@ -46,7 +46,10 @@ yanagishima is a Web UI for presto/hive.
 * show stats for presto
 
 # Versions
-* 21.0(not released)
+* 21.0
+  * add datasource color
+  * add announce/notification feature
+  * refactor UI
   * add detail query error message and semanticErrorName https://github.com/prestosql/presto/pull/790
   * handle old presto due to https://github.com/prestosql/presto/issues/224
   * improve message when result file is not found, allow.other.read.result.xxx=false
@@ -62,7 +65,6 @@ yanagishima is a Web UI for presto/hive.
   * Add a script to launch yanagishima in foreground process (#58)
   * support mysql as yanagishima backend RDBMS
   * if you want to switch from sqlite to mysql, the procedure is the following
-  
   create mysql table
   ```
   create table if not exists query (datasource varchar(256), engine varchar(256), query_id varchar(256), fetch_result_time_string varchar(256), query_string text, user varchar(256), status varchar(256), elapsed_time_millis integer, result_file_size integer, linenumber integer, primary key(datasource, engine, query_id));

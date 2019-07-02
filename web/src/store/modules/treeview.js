@@ -32,10 +32,10 @@ const state = () => {
 
 const getters = {
   dateColumn (state) {
-    return state.columns.map(c => c[0]).find(c => DATE_COLUMN_NAMES.includes(c)) || ''
+    return state.columns.slice().reverse().map(c => c[0]).find(c => DATE_COLUMN_NAMES.includes(c)) || ''
   },
-  otherColumns (state) {
-    return state.columns.map(c => c[0]).filter(c => !DATE_COLUMN_NAMES.includes(c))
+  allColumns (state) {
+    return state.columns.map(c => c[0])
   },
   partitionKeys (state) {
     return state.columns.filter(c => c[2] === 'partition key').map(c => c[0])

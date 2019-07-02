@@ -146,8 +146,8 @@
             <input class="form-check-input mr-1" type="checkbox" v-model="isExpandColumns">Expand Columns
           </label>
           <select id="snippet" class="custom-select ace-font" style="width:60%;" v-model="snippetIndex">
-            <template v-for="(item, i) in snippets" v-if="item.enable.includes(tableType)">
-              <option :value="i" :key="i">{{item.label}}</option>
+            <template v-for="(item, i) in snippets">
+              <option v-if="item.enable.includes(tableType)" :value="i" :key="i">{{item.label}}</option>
             </template>
           </select>
           <div class="btn-group">
@@ -166,7 +166,7 @@
         <template v-if="table && columns.length">
           <template v-if="isMetadataService">
             <template v-if="note">
-              <div><pre><BaseAutoLink :text="note.escapeHTML()"></BaseAutoLink></pre></div>
+              <div><pre class="pb-3"><BaseAutoLink :text="note.escapeHTML()"></BaseAutoLink></pre></div>
             </template>
             <div id="columns">
               <table class="table table-striped table-hover table-fixed mb-0">
@@ -259,7 +259,8 @@ export default {
     ...mapState({
       datasources: state => state.datasources,
       datasource: state => state.hash.datasource,
-      initialTable: state => state.hash.table
+      initialTable: state => state.hash.table,
+      where: state => state.hash.where
     }),
     ...mapState('treeview', [
       'catalogs',
@@ -284,11 +285,12 @@ export default {
       'isSpark',
       'isElasticsearch',
       'datasourceEngine',
-      'isMetadataService'
+      'isMetadataService',
+      'datetimePartitionFormat'
     ]),
     ...mapGetters('treeview', [
       'dateColumn',
-      'otherColumns',
+      'allColumns',
       'partitionKeys'
     ]),
     filteredSchemata () {
@@ -353,7 +355,7 @@ export default {
         }
 
         if (this.dateColumn) {
-          const yesterday = Date.create().addDays(-1).format('{yyyy}{MM}{dd}')
+          const yesterday = Date.create().addDays(-1).format(this.datetimePartitionFormat)
           defaultSnippet = {
             label: `SELECT * FROM ... WHERE ${this.dateColumn}='${yesterday}' LIMIT 100`,
             sql: `SELECT {columns} FROM {catalog}.{schema}."{table}" WHERE {column_date}='{yesterday}' LIMIT 100`,
@@ -385,7 +387,7 @@ export default {
         }
 
         if (this.dateColumn) {
-          const yesterday = Date.create().addDays(-1).format('{yyyy}{MM}{dd}')
+          const yesterday = Date.create().addDays(-1).format(this.datetimePartitionFormat)
           defaultSnippet = {
             label: `SELECT * FROM ... WHERE ${this.dateColumn}='${yesterday}' LIMIT 100`,
             sql: 'SELECT {columns} FROM {schema}.`{table}` WHERE {column_date}=\'{yesterday}\' LIMIT 100',
@@ -417,7 +419,7 @@ export default {
         }
 
         if (this.dateColumn) {
-          const yesterday = Date.create().addDays(-1).format('{yyyy}{MM}{dd}')
+          const yesterday = Date.create().addDays(-1).format(this.datetimePartitionFormat)
           defaultSnippet = {
             label: `SELECT * FROM ... WHERE ${this.dateColumn}='${yesterday}' LIMIT 100`,
             sql: 'SELECT {columns} FROM {schema}.{table} WHERE {column_date}=\'{yesterday}\' LIMIT 100',
@@ -453,7 +455,7 @@ export default {
   },
   watch: {
     datasourceEngine () {
-      this.$store.commit('setHashItem', {table: ''})
+      this.$store.commit('setHashItem', {table: '', where: ''})
       this.$store.dispatch('treeview/getRoot')
     },
     catalog (val) {
@@ -497,6 +499,7 @@ export default {
               document.getElementById(`table-${table[0]}`).scrollIntoView()
               window.scrollTo(0, 0)
               this.scrollTo.table = null
+              this.setUrlSnippet()
             }
           })
       }
@@ -526,7 +529,7 @@ export default {
     this.$store.dispatch('treeview/getRoot')
   },
   beforeDestroy () {
-    this.$store.commit('setHashItem', {table: ''})
+    this.$store.commit('setHashItem', {table: '', where: ''})
   },
   methods: {
     setDatasource (datasource) {
@@ -566,8 +569,8 @@ export default {
           schema: this.schema,
           table: this.table,
           column_date: this.dateColumn,
-          columns: this.isExpandColumns ? this.otherColumns : '*',
-          yesterday: Date.create().addDays(-1).format('{yyyy}{MM}{dd}')
+          columns: this.isExpandColumns ? this.allColumns : '*',
+          yesterday: Date.create().addDays(-1).format(this.datetimePartitionFormat)
         })
       })
     },
@@ -589,6 +592,29 @@ export default {
       this.tableQueryModel = ''
       this.$store.commit('treeview/setTableSearchResponse', {data: []})
       this.$store.commit('treeview/setTable', {data: ['', '']})
+    },
+    setUrlSnippet () {
+      if (this.table && this.where) {
+        if (this.isPresto && this.catalog && this.schema) {
+          const snippet = `SELECT * FROM ${this.catalog}.${this.schema}."${this.table}" WHERE ${this.where} LIMIT 100`
+          this.$store.commit('editor/setInputQuery', {data: snippet})
+          return
+        }
+        if (this.isHive && this.schema) {
+          const snippet = `SELECT * FROM ${this.schema}.\`${this.table}\` WHERE ${this.where} LIMIT 100`
+          this.$store.commit('editor/setInputQuery', {data: snippet})
+          return
+        }
+        if (this.isSpark && this.schema) {
+          const snippet = `SELECT * FROM ${this.schema}.${this.table} WHERE ${this.where} LIMIT 100`
+          this.$store.commit('editor/setInputQuery', {data: snippet})
+          return
+        }
+        if (this.isElasticsearch) {
+          const snippet = `SELECT * FROM "${this.table}" WHERE ${this.where} LIMIT 100`
+          this.$store.commit('editor/setInputQuery', {data: snippet})
+        }
+      }
     }
   }
 }

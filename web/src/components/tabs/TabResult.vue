@@ -10,54 +10,50 @@
           <strong v-else>Loading</strong>
         </template>
         <template v-else>
-          <template v-if="response && response.error || error">
+          <span class="mr-3" v-if="response && response.error || error">
             <strong class="text-danger mr-2">
               <i class="fa fa-exclamation-triangle text-danger mr-1"></i>Error
             </strong>
             <span class="text-muted">{{queryid}}</span>
-          </template>
-          <template v-else>
-            <span v-if="response && response.results">
-              <span class="mr-3" v-if="response.lineNumber">
-                <i class="fa fa-file-text-o" title="query ID" data-toggle="tooltip" data-animation="false"
-                   data-placement="left"></i>
-                <strong>{{queryid}}</strong>
-              </span>
-              <span class="mr-2" v-if="response.finishedTime">
-                <i class="fa fa-calendar" title="Finished time" data-toggle="tooltip" data-animation="false"
-                   data-placement="left"></i>
-                {{response.finishedTime | extractDate}}
-              </span>
-              <span class="mr-2" v-if="response.elapsedTimeMillis">
-                <strong>{{(response.elapsedTimeMillis / 1000).ceil(2)}}</strong><span
-                class="text-muted ml-1">sec</span>
-              </span>
-              <span class="mr-2" v-if="response.rawDataSize">
-                <strong>{{response.rawDataSize.remove('B')}}</strong><span class="text-muted ml-1">byte</span>
-              </span>
-              <span class="mr-2" v-if="response.lineNumber">
-                <strong>{{response.results.length | formatNumber}}</strong>
-                <template v-if="response.results.length !== response.lineNumber - 1">
-                  <span class="mx-1">/</span>
-                  <strong>{{response.lineNumber - 1 | formatNumber}}</strong>
-                </template>
-                <span class="text-muted ml-1">results</span>
-              </span>
-              <span class="mr-2" v-if="response.headers">
-                <strong>{{response.headers.length}}</strong><span class="text-muted ml-1">columns</span>
-              </span>
-              <template v-if="editLabel">
-                <span class="mr-2">
-                  <input type="text" v-model.lazy="inputLabel" :disabled="label">
-                  <button type="button" class="btn btn-sm btn-secondary" @click="addLabel" :disabled="label">add</button>
-                  <template v-if="label">
-                    <button type="button" class="btn btn-sm btn-secondary" @click="moveHisotryTab(label)">{{label}}</button>
-                    <button type="button" class="btn btn-sm btn-secondary" @click="removeLabel()"><i class="fa fa-fw fa-times mr-1"></i></button>
-                  </template>
-                </span>
+          </span>
+          <span class="mr-3" v-else-if="response && response.results">
+            <i class="fa fa-file-text-o" title="query ID" data-toggle="tooltip" data-animation="false"
+                data-placement="left"></i>
+            <strong>{{queryid}}</strong>
+          </span>
+          <span class="mr-3" v-else><strong>No result</strong></span>
+          <span class="mr-2" v-if="response && response.finishedTime">
+            <i class="fa fa-calendar" title="Finished time" data-toggle="tooltip" data-animation="false"
+                data-placement="left"></i>
+            {{response.finishedTime | extractDate}}
+          </span>
+          <span class="mr-2" v-if="response && response.elapsedTimeMillis">
+            <strong>{{(response.elapsedTimeMillis / 1000).ceil(2)}}</strong><span
+            class="text-muted ml-1">sec</span>
+          </span>
+          <span class="mr-2" v-if="response && response.rawDataSize">
+            <strong>{{response.rawDataSize.remove('B')}}</strong><span class="text-muted ml-1">byte</span>
+          </span>
+          <span class="mr-2" v-if="response && response.results && response.lineNumber">
+            <strong>{{response.results.length | formatNumber}}</strong>
+            <template v-if="response.results.length !== response.lineNumber - 1">
+              <span class="mx-1">/</span>
+              <strong>{{response.lineNumber - 1 | formatNumber}}</strong>
+            </template>
+            <span class="text-muted ml-1">results</span>
+          </span>
+          <span class="mr-2" v-if="response && response.headers">
+            <strong>{{response.headers.length}}</strong><span class="text-muted ml-1">columns</span>
+          </span>
+          <template v-if="editLabel">
+            <span class="mr-2">
+              <input type="text" v-model.lazy="inputLabel" :disabled="label">
+              <button type="button" class="btn btn-sm btn-secondary" @click="addLabel" :disabled="label">add</button>
+              <template v-if="label">
+                <button type="button" class="btn btn-sm btn-secondary" @click="moveHisotryTab(label)">{{label}}</button>
+                <button type="button" class="btn btn-sm btn-secondary" @click="removeLabel()"><i class="fa fa-fw fa-times mr-1"></i></button>
               </template>
             </span>
-            <span v-else><strong>Executed Result</strong></span>
           </template>
         </template>
       </div>
@@ -234,11 +230,6 @@
             </template>
           </template>
         </template>
-      </template>
-      <template v-else>
-        <div class="alert alert-warning">
-          <i class="fa fa-fw fa-frown-o mr-1"></i>No result
-        </div>
       </template>
     </template>
   </div>
