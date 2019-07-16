@@ -64,6 +64,7 @@ public class YanagishimaServer {
                     statement.executeUpdate("create table if not exists bookmark (bookmark_id integer primary key auto_increment, datasource varchar(256), engine varchar(256), query text, title varchar(256), user varchar(256))");
                     statement.executeUpdate("create table if not exists comment (datasource varchar(256), engine varchar(256), query_id varchar(256), content text, update_time_string varchar(256), user varchar(256), like_count integer, primary key(datasource, engine, query_id))");
                     statement.executeUpdate("create table if not exists label (datasource varchar(256), engine varchar(256), query_id varchar(256), label_name varchar(256), primary key(datasource, engine, query_id))");
+					statement.executeUpdate("create table if not exists starred_schema (starred_schema_id integer primary key auto_increment, datasource varchar(256) not null, engine varchar(256) not null, catalog varchar(256) not null, `schema` varchar(256) not null, user varchar(256))");
                 } else {
                     throw new IllegalArgumentException("illegal database.type=" + databaseType);
                 }
