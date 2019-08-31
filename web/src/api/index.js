@@ -223,7 +223,7 @@ export async function getTablesElasticsearch (datasource, authInfo) {
 export async function getColumnsPresto (datasource, catalog, schema, table, authInfo) {
   const params = {
     datasource,
-    query: addHiddenQueryPrefix(`DESCRIBE ${catalog}.${schema}."${table}"`),
+    query: addHiddenQueryPrefix(`DESCRIBE "${catalog}"."${schema}"."${table}"`),
     ...authInfo
   }
   const response = await client.post(apis.presto, makeFormParams(params))

@@ -333,24 +333,24 @@ export default {
           },
           {
             label: 'SHOW CREATE TABLE ...',
-            sql: 'SHOW CREATE TABLE {catalog}.{schema}."{table}"',
+            sql: 'SHOW CREATE TABLE "{catalog}"."{schema}"."{table}"',
             enable: ['BASE TABLE']
           },
           {
             label: 'DESCRIBE ...',
-            sql: 'DESCRIBE {catalog}.{schema}."{table}"',
+            sql: 'DESCRIBE "{catalog}"."{schema}"."{table}"',
             enable: ['BASE TABLE', 'VIEW']
           },
           {
             label: 'SHOW STATS ...',
-            sql: 'SHOW STATS FOR {catalog}.{schema}."{table}"',
+            sql: 'SHOW STATS FOR "{catalog}"."{schema}"."{table}"',
             enable: ['BASE TABLE']
           }
         ]
 
         let defaultSnippet = {
           label: 'SELECT * FROM ... LIMIT 100',
-          sql: 'SELECT {columns} FROM {catalog}.{schema}."{table}" LIMIT 100',
+          sql: 'SELECT {columns} FROM "{catalog}"."{schema}"."{table}" LIMIT 100',
           enable: ['BASE TABLE', 'VIEW']
         }
 
@@ -358,7 +358,7 @@ export default {
           const yesterday = Date.create().addDays(-1).format(this.datetimePartitionFormat)
           defaultSnippet = {
             label: `SELECT * FROM ... WHERE ${this.dateColumn}='${yesterday}' LIMIT 100`,
-            sql: `SELECT {columns} FROM {catalog}.{schema}."{table}" WHERE {column_date}='{yesterday}' LIMIT 100`,
+            sql: `SELECT {columns} FROM "{catalog}"."{schema}"."{table}" WHERE {column_date}='{yesterday}' LIMIT 100`,
             enable: ['BASE TABLE', 'VIEW']
           }
         }
