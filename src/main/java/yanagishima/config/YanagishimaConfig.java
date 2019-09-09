@@ -1,5 +1,6 @@
 package yanagishima.config;
 
+import com.google.common.base.Splitter;
 import yanagishima.util.PropertiesUtil;
 
 import java.io.BufferedReader;
@@ -10,6 +11,7 @@ import java.nio.file.Paths;
 import java.util.*;
 
 public class YanagishimaConfig {
+	private static final Splitter SPLITTER = Splitter.on(',').trimResults().omitEmptyStrings();
 
 	private Properties properties;
 
@@ -77,11 +79,10 @@ public class YanagishimaConfig {
 
 	public List<String> getDatasources(String engine) {
 		String datasourceProperties = properties.getProperty(engine + ".datasources");
-		if(datasourceProperties == null) {
-			return new ArrayList<>();
-		} else {
-			return Arrays.asList(datasourceProperties.split(","));
+		if (datasourceProperties == null) {
+			return Collections.emptyList();
 		}
+		return SPLITTER.splitToList(datasourceProperties);
 	}
 
 	public List<String> getDatasources() {
@@ -173,18 +174,16 @@ public class YanagishimaConfig {
 		String invisibleSchemas = properties.getProperty("invisible.schema." + datasource + "." + catalog);
 		if(invisibleSchemas == null) {
 			return Collections.emptyList();
-		} else {
-			return Arrays.asList(invisibleSchemas.split(","));
 		}
+		return SPLITTER.splitToList(invisibleSchemas);
 	}
 
 	public List<String> getInvisibleDatabases(String datasource) {
 		String invisibleDatabases = properties.getProperty("invisible.database." + datasource);
 		if(invisibleDatabases == null) {
 			return Collections.emptyList();
-		} else {
-			return Arrays.asList(invisibleDatabases.split(","));
 		}
+		return SPLITTER.splitToList(invisibleDatabases);
 	}
 
 	public Optional<String> getFluentdExecutedTag() {
@@ -251,10 +250,9 @@ public class YanagishimaConfig {
 	public List<String> getHiveDisallowedKeywords(String datasource) {
 		String property = properties.getProperty("hive.disallowed.keywords." + datasource);
 		if(property == null) {
-			return Collections.emptyList();
-		} else {
-			return Arrays.asList(property.split(","));
+				return Collections.emptyList();
 		}
+		return SPLITTER.splitToList(property);
 	}
 
 	public List<String> getHiveSetupQueryList(String datasource) {
@@ -284,36 +282,32 @@ public class YanagishimaConfig {
 		String property = properties.getProperty("hive.secret.keywords." + datasource);
 		if(property == null) {
 			return Collections.emptyList();
-		} else {
-			return Arrays.asList(property.split(","));
 		}
+		return SPLITTER.splitToList(property);
 	}
 
 	public List<String> getPrestoSecretKeywords(String datasource) {
 		String property = properties.getProperty("presto.secret.keywords." + datasource);
 		if(property == null) {
 			return Collections.emptyList();
-		} else {
-			return Arrays.asList(property.split(","));
 		}
+		return SPLITTER.splitToList(property);
 	}
 
 	public List<String> getPrestoMustSpectifyConditions(String datasource) {
 		String property = properties.getProperty("presto.must.specify.conditions." + datasource);
 		if(property == null) {
 			return Collections.emptyList();
-		} else {
-			return Arrays.asList(property.split(","));
 		}
+		return SPLITTER.splitToList(property);
 	}
 
 	public List<String> getHiveMustSpectifyConditions(String datasource) {
 		String property = properties.getProperty("hive.must.specify.conditions." + datasource);
 		if(property == null) {
 			return Collections.emptyList();
-		} else {
-			return Arrays.asList(property.split(","));
 		}
+		return SPLITTER.splitToList(property);
 	}
 
 	public boolean isAllowOtherReadResult(String datasource) {
@@ -336,18 +330,16 @@ public class YanagishimaConfig {
 		String property = properties.getProperty("elasticsearch.secret.keywords." + datasource);
 		if(property == null) {
 			return Collections.emptyList();
-		} else {
-			return Arrays.asList(property.split(","));
 		}
+		return SPLITTER.splitToList(property);
 	}
 
 	public List<String> getElasticsearchMustSpectifyConditions(String datasource) {
 		String property = properties.getProperty("elasticsearch.must.specify.conditions." + datasource);
 		if(property == null) {
 			return Collections.emptyList();
-		} else {
-			return Arrays.asList(property.split(","));
 		}
+		return SPLITTER.splitToList(property);
 	}
 
 	public String getElasticsearchJdbcUrl(String datasource) {
@@ -358,9 +350,8 @@ public class YanagishimaConfig {
 		String property = properties.getProperty("elasticsearch.disallowed.keywords." + datasource);
 		if(property == null) {
 			return Collections.emptyList();
-		} else {
-			return Arrays.asList(property.split(","));
 		}
+		return SPLITTER.splitToList(property);
 	}
 
 	public int getElasticsearchMaxResultFileByteSize() {
