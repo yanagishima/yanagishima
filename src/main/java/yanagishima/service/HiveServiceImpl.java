@@ -129,9 +129,9 @@ public class HiveServiceImpl implements HiveService {
             }
         }
 
-        List<String> hiveMustSpectifyConditions = yanagishimaConfig.getHiveMustSpectifyConditions(datasource);
-        for (String hiveMustSpectifyCondition : hiveMustSpectifyConditions) {
-            String[] conditions = hiveMustSpectifyCondition.split(",");
+        List<String> hiveMustSpecifyConditions = yanagishimaConfig.getHiveMustSpecifyConditions(datasource);
+        for (String hiveMustSpecifyCondition : hiveMustSpecifyConditions) {
+            String[] conditions = hiveMustSpecifyCondition.split(",");
             for (String condition : conditions) {
                 String table = condition.split(":")[0];
                 if (!query.startsWith("SHOW") && !query.startsWith("DESCRIBE") && query.indexOf(table) != -1) {

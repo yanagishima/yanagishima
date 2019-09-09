@@ -294,7 +294,7 @@ public class YanagishimaConfig {
 		return SPLITTER.splitToList(property);
 	}
 
-	public List<String> getPrestoMustSpectifyConditions(String datasource) {
+	public List<String> getPrestoMustSpecifyConditions(String datasource) {
 		String property = properties.getProperty("presto.must.specify.conditions." + datasource);
 		if(property == null) {
 			return Collections.emptyList();
@@ -302,7 +302,7 @@ public class YanagishimaConfig {
 		return SPLITTER.splitToList(property);
 	}
 
-	public List<String> getHiveMustSpectifyConditions(String datasource) {
+	public List<String> getHiveMustSpecifyConditions(String datasource) {
 		String property = properties.getProperty("hive.must.specify.conditions." + datasource);
 		if(property == null) {
 			return Collections.emptyList();
@@ -334,7 +334,7 @@ public class YanagishimaConfig {
 		return SPLITTER.splitToList(property);
 	}
 
-	public List<String> getElasticsearchMustSpectifyConditions(String datasource) {
+	public List<String> getElasticsearchMustSpecifyConditions(String datasource) {
 		String property = properties.getProperty("elasticsearch.must.specify.conditions." + datasource);
 		if(property == null) {
 			return Collections.emptyList();

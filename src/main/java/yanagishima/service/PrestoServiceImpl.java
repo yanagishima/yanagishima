@@ -135,9 +135,9 @@ public class PrestoServiceImpl implements PrestoService {
             }
         }
 
-        List<String> prestoMustSpectifyConditions = yanagishimaConfig.getPrestoMustSpectifyConditions(datasource);
-        for(String prestoMustSpectifyCondition : prestoMustSpectifyConditions) {
-            String[] conditions = prestoMustSpectifyCondition.split(",");
+        List<String> prestoMustSpecifyConditions = yanagishimaConfig.getPrestoMustSpecifyConditions(datasource);
+        for(String prestoMustSpecifyCondition : prestoMustSpecifyConditions) {
+            String[] conditions = prestoMustSpecifyCondition.split(",");
             for(String condition : conditions) {
                 String table = condition.split(":")[0];
                 if(!query.startsWith(Constants.YANAGISHIMA_COMMENT) && query.indexOf(table) != -1) {

@@ -27,7 +27,6 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.sql.SQLException;
-import java.time.ZoneId;
 import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -135,9 +134,9 @@ public class OldPrestoServiceImpl implements OldPrestoService {
             }
         }
 
-        List<String> prestoMustSpectifyConditions = yanagishimaConfig.getPrestoMustSpectifyConditions(datasource);
-        for(String prestoMustSpectifyCondition : prestoMustSpectifyConditions) {
-            String[] conditions = prestoMustSpectifyCondition.split(",");
+        List<String> prestoMustSpecifyConditions = yanagishimaConfig.getPrestoMustSpecifyConditions(datasource);
+        for(String prestoMustSpecifyCondition : prestoMustSpecifyConditions) {
+            String[] conditions = prestoMustSpecifyCondition.split(",");
             for(String condition : conditions) {
                 String table = condition.split(":")[0];
                 if(!query.startsWith(Constants.YANAGISHIMA_COMMENT) && query.indexOf(table) != -1) {

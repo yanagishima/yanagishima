@@ -16,10 +16,10 @@ public class YanagishimaConfigTest {
         assertEquals(List.of(), config.getHiveDisallowedKeywords("datasource"));
         assertEquals(List.of(), config.getHiveSecretKeywords("datasource"));
         assertEquals(List.of(), config.getPrestoSecretKeywords("datasource"));
-        assertEquals(List.of(), config.getPrestoMustSpectifyConditions("datasource"));
-        assertEquals(List.of(), config.getHiveMustSpectifyConditions("datasource"));
+        assertEquals(List.of(), config.getPrestoMustSpecifyConditions("datasource"));
+        assertEquals(List.of(), config.getHiveMustSpecifyConditions("datasource"));
         assertEquals(List.of(), config.getElasticsearchSecretKeywords("datasource"));
-        assertEquals(List.of(), config.getElasticsearchMustSpectifyConditions("datasource"));
+        assertEquals(List.of(), config.getElasticsearchMustSpecifyConditions("datasource"));
         assertEquals(List.of(), config.getElasticsearchDisallowedKeywords("datasource"));
     }
 
@@ -43,10 +43,10 @@ public class YanagishimaConfigTest {
         assertEquals(List.of("insert", "drop"), config.getHiveDisallowedKeywords("datasource"));
         assertEquals(List.of("_secret1", "_secret2"), config.getHiveSecretKeywords("datasource"));
         assertEquals(List.of("_secret1", "_secret2"), config.getPrestoSecretKeywords("datasource"));
-        assertEquals(List.of("part_col1", "part_col2"), config.getPrestoMustSpectifyConditions("datasource"));
-        assertEquals(List.of("part_col1", "part_col2"), config.getHiveMustSpectifyConditions("datasource"));
+        assertEquals(List.of("part_col1", "part_col2"), config.getPrestoMustSpecifyConditions("datasource"));
+        assertEquals(List.of("part_col1", "part_col2"), config.getHiveMustSpecifyConditions("datasource"));
         assertEquals(List.of("_secret1", "_secret2"), config.getElasticsearchSecretKeywords("datasource"));
-        assertEquals(List.of("part_col1", "part_col2"), config.getElasticsearchMustSpectifyConditions("datasource"));
+        assertEquals(List.of("part_col1", "part_col2"), config.getElasticsearchMustSpecifyConditions("datasource"));
         assertEquals(List.of("disallowed1", "disallowed2"), config.getElasticsearchDisallowedKeywords("datasource"));
     }
 }
