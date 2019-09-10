@@ -6,6 +6,8 @@ import java.util.List;
 import java.util.Properties;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 public class YanagishimaConfigTest {
     @Test
@@ -21,6 +23,8 @@ public class YanagishimaConfigTest {
         assertEquals(List.of(), config.getElasticsearchSecretKeywords("datasource"));
         assertEquals(List.of(), config.getElasticsearchMustSpecifyConditions("datasource"));
         assertEquals(List.of(), config.getElasticsearchDisallowedKeywords("datasource"));
+        assertTrue(config.isAllowOtherReadResult("datasource"));
+        assertTrue(config.isUseNewShowPartitions("datasource"));
     }
 
     @Test
@@ -36,6 +40,8 @@ public class YanagishimaConfigTest {
         properties.setProperty("elasticsearch.secret.keywords.datasource", "_secret1, _secret2");
         properties.setProperty("elasticsearch.must.specify.conditions.datasource", "part_col1, part_col2");
         properties.setProperty("elasticsearch.disallowed.keywords.datasource", "disallowed1, disallowed2");
+        properties.setProperty("allow.other.read.result.datasource", "false");
+        properties.setProperty("use.new.show.partitions.datasource", "false");
 
         YanagishimaConfig config = new YanagishimaConfig(properties);
         assertEquals(List.of("_hidden_schema1", "_hidden_schema2"), config.getInvisibleSchemas("datasource", "catalog"));
@@ -48,5 +54,7 @@ public class YanagishimaConfigTest {
         assertEquals(List.of("_secret1", "_secret2"), config.getElasticsearchSecretKeywords("datasource"));
         assertEquals(List.of("part_col1", "part_col2"), config.getElasticsearchMustSpecifyConditions("datasource"));
         assertEquals(List.of("disallowed1", "disallowed2"), config.getElasticsearchDisallowedKeywords("datasource"));
+        assertFalse(config.isAllowOtherReadResult("datasource"));
+        assertFalse(config.isUseNewShowPartitions("datasource"));
     }
 }
