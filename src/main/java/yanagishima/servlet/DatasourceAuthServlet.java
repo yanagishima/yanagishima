@@ -3,7 +3,6 @@ package yanagishima.servlet;
 import com.google.common.collect.ImmutableMap;
 import yanagishima.config.YanagishimaConfig;
 import yanagishima.util.Constants;
-import yanagishima.util.HttpRequestUtil;
 import yanagishima.util.JsonUtil;
 
 import javax.inject.Inject;

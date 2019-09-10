@@ -24,7 +24,6 @@ import java.util.stream.Collectors;
 
 import static io.prestosql.client.OkHttpUtil.basicAuth;
 import static javax.servlet.http.HttpServletResponse.SC_FORBIDDEN;
-import static javax.servlet.http.HttpServletResponse.SC_HTTP_VERSION_NOT_SUPPORTED;
 import static javax.servlet.http.HttpServletResponse.SC_OK;
 import static yanagishima.util.HttpRequestUtil.getRequiredParameter;
 

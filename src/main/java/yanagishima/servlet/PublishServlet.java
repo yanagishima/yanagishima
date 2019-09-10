@@ -8,7 +8,6 @@ import yanagishima.config.YanagishimaConfig;
 import yanagishima.row.Publish;
 import yanagishima.row.Query;
 import yanagishima.util.AccessControlUtil;
-import yanagishima.util.DownloadUtil;
 import yanagishima.util.JsonUtil;
 
 import javax.inject.Inject;

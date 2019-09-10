@@ -1,7 +1,5 @@
 package yanagishima.exception;
 
-import io.prestosql.client.QueryError;
-
 import java.sql.SQLException;
 
 public class QueryErrorException extends Exception {
