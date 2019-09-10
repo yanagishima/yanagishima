@@ -10,7 +10,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.util.Optional;
 
-import static yanagishima.util.DownloadUtil.tsvDownload;
+import static yanagishima.util.DownloadUtil.downloadTsv;
 import static yanagishima.util.HttpRequestUtil.getOrDefaultParameter;
 
 @Singleton
@@ -36,7 +36,7 @@ public class ShareDownloadServlet extends HttpServlet {
             Optional<String> encode = Optional.ofNullable(request.getParameter("encode"));
             boolean showHeader = getOrDefaultParameter(request, "header", true);
             String fileName = publishId.get() + ".tsv";
-            tsvDownload(response, fileName, publish.getDatasource(), publish.getQueryId(), encode.orElse(DEFAULT_ENCODE), showHeader);
+            downloadTsv(response, fileName, publish.getDatasource(), publish.getQueryId(), encode.orElse(DEFAULT_ENCODE), showHeader);
         });
     }
 }

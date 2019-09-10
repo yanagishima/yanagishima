@@ -62,7 +62,7 @@ public class CsvDownloadServlet extends HttpServlet {
                 headerFlag = false;
             }
             if(yanagishimaConfig.isAllowOtherReadResult(datasource)) {
-                DownloadUtil.csvDownload(response, fileName, datasource, queryid, encodeOptional.orElse("UTF-8"), headerFlag);
+                DownloadUtil.downloadCsv(response, fileName, datasource, queryid, encodeOptional.orElse("UTF-8"), headerFlag);
             } else {
                 String userName = request.getHeader(yanagishimaConfig.getAuditHttpHeaderName());
                 if (userName == null) {
@@ -70,7 +70,7 @@ public class CsvDownloadServlet extends HttpServlet {
                 }
                 Optional<Query> userQueryOptional = db.single(Query.class).where("query_id=? and datasource=? and user=?", queryidOptional.get(), datasource, userName).execute();
                 if(userQueryOptional.isPresent()) {
-                    DownloadUtil.csvDownload(response, fileName, datasource, queryid, encodeOptional.orElse("UTF-8"), headerFlag);
+                    DownloadUtil.downloadCsv(response, fileName, datasource, queryid, encodeOptional.orElse("UTF-8"), headerFlag);
                 }
             }
         });

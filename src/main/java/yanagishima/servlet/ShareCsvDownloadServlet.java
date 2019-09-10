@@ -10,7 +10,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.util.Optional;
 
-import static yanagishima.util.DownloadUtil.csvDownload;
+import static yanagishima.util.DownloadUtil.downloadCsv;
 import static yanagishima.util.HttpRequestUtil.getOrDefaultParameter;
 
 @Singleton
@@ -37,7 +37,7 @@ public class ShareCsvDownloadServlet extends HttpServlet {
             Optional<String> encode = Optional.ofNullable(request.getParameter("encode"));
             String fileName = publishId + ".csv";
             boolean showHeader = getOrDefaultParameter(request, "header", true);
-            csvDownload(response, fileName, publish.getDatasource(), publish.getQueryId(), encode.orElse(DEFAULT_ENCODE), showHeader);
+            downloadCsv(response, fileName, publish.getDatasource(), publish.getQueryId(), encode.orElse(DEFAULT_ENCODE), showHeader);
         });
     }
 }
