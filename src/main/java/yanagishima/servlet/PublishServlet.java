@@ -9,7 +9,6 @@ import yanagishima.row.Publish;
 import yanagishima.row.Query;
 import yanagishima.util.AccessControlUtil;
 import yanagishima.util.DownloadUtil;
-import yanagishima.util.HttpRequestUtil;
 import yanagishima.util.JsonUtil;
 
 import javax.inject.Inject;
@@ -23,6 +22,7 @@ import java.util.HashMap;
 import java.util.Optional;
 
 import static javax.servlet.http.HttpServletResponse.SC_FORBIDDEN;
+import static yanagishima.util.HttpRequestUtil.getRequiredParameter;
 
 @Singleton
 public class PublishServlet extends HttpServlet {
@@ -49,7 +49,7 @@ public class PublishServlet extends HttpServlet {
         HashMap<String, Object> retVal = new HashMap<String, Object>();
 
         try {
-            String datasource = HttpRequestUtil.getParam(request, "datasource");
+            String datasource = getRequiredParameter(request, "datasource");
             if(yanagishimaConfig.isCheckDatasource()) {
                 if(!AccessControlUtil.validateDatasource(request, datasource)) {
                     try {
@@ -61,7 +61,7 @@ public class PublishServlet extends HttpServlet {
                 }
             }
             String userName = request.getHeader(yanagishimaConfig.getAuditHttpHeaderName());
-            String engine = HttpRequestUtil.getParam(request, "engine");
+            String engine = getRequiredParameter(request, "engine");
             String queryid = Optional.ofNullable(request.getParameter("queryid")).get();
             if(yanagishimaConfig.isAllowOtherReadResult(datasource)) {
                 publish(retVal, datasource, userName, engine, queryid);

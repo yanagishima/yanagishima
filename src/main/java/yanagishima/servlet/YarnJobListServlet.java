@@ -7,7 +7,6 @@ import org.slf4j.LoggerFactory;
 import yanagishima.config.YanagishimaConfig;
 import yanagishima.row.Query;
 import yanagishima.util.AccessControlUtil;
-import yanagishima.util.HttpRequestUtil;
 import yanagishima.util.YarnUtil;
 
 import javax.inject.Inject;
@@ -25,6 +24,7 @@ import java.util.stream.Collectors;
 
 import static javax.servlet.http.HttpServletResponse.SC_FORBIDDEN;
 import static yanagishima.util.Constants.YANAGISHIAM_HIVE_JOB_PREFIX;
+import static yanagishima.util.HttpRequestUtil.getRequiredParameter;
 
 @Singleton
 public class YarnJobListServlet extends HttpServlet {
@@ -49,7 +49,7 @@ public class YarnJobListServlet extends HttpServlet {
 	protected void doGet(HttpServletRequest request,
 			HttpServletResponse response) throws ServletException, IOException {
 
-		String datasource = HttpRequestUtil.getParam(request, "datasource");
+		String datasource = getRequiredParameter(request, "datasource");
 		if(yanagishimaConfig.isCheckDatasource()) {
 			if(!AccessControlUtil.validateDatasource(request, datasource)) {
 				try {

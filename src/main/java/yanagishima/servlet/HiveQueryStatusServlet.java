@@ -26,6 +26,7 @@ import java.util.Map;
 import java.util.Optional;
 
 import static javax.servlet.http.HttpServletResponse.SC_FORBIDDEN;
+import static yanagishima.util.HttpRequestUtil.getRequiredParameter;
 
 @Singleton
 public class HiveQueryStatusServlet extends HttpServlet {
@@ -46,7 +47,7 @@ public class HiveQueryStatusServlet extends HttpServlet {
 	protected void doPost(HttpServletRequest request,
 			HttpServletResponse response) throws ServletException, IOException {
 
-		String datasource = HttpRequestUtil.getParam(request, "datasource");
+		String datasource = getRequiredParameter(request, "datasource");
 		if(yanagishimaConfig.isCheckDatasource()) {
 			if(!AccessControlUtil.validateDatasource(request, datasource)) {
 				try {
@@ -57,7 +58,7 @@ public class HiveQueryStatusServlet extends HttpServlet {
 				}
 			}
 		}
-		String queryid = HttpRequestUtil.getParam(request, "queryid");
+		String queryid = getRequiredParameter(request, "queryid");
 		String resourceManagerUrl = yanagishimaConfig.getResourceManagerUrl(datasource);
 		String userName = null;
 		Optional<String> hiveUser = Optional.ofNullable(request.getParameter("user"));
@@ -69,7 +70,7 @@ public class HiveQueryStatusServlet extends HttpServlet {
 			}
 		}
 
-		String engine = HttpRequestUtil.getParam(request, "engine");
+		String engine = getRequiredParameter(request, "engine");
 		Optional<Query> queryOptional = db.single(Query.class).where("query_id=? and datasource=? and engine=?", queryid, datasource, engine).execute();
 		if(engine.equals("hive")) {
 			Optional<Map> applicationOptional = YarnUtil.getApplication(resourceManagerUrl, queryid, userName, yanagishimaConfig.getResourceManagerBegin(datasource));

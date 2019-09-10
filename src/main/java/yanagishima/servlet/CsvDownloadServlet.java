@@ -19,6 +19,7 @@ import java.io.IOException;
 import java.util.Optional;
 
 import static javax.servlet.http.HttpServletResponse.SC_FORBIDDEN;
+import static yanagishima.util.HttpRequestUtil.getRequiredParameter;
 
 @Singleton
 public class CsvDownloadServlet extends HttpServlet {
@@ -44,7 +45,7 @@ public class CsvDownloadServlet extends HttpServlet {
         Optional<String> queryidOptional = Optional.ofNullable(request.getParameter("queryid"));
         queryidOptional.ifPresent(queryid -> {
             String fileName = queryid + ".csv";
-            String datasource = HttpRequestUtil.getParam(request, "datasource");
+            String datasource = getRequiredParameter(request, "datasource");
             if(yanagishimaConfig.isCheckDatasource()) {
                 if(!AccessControlUtil.validateDatasource(request, datasource)) {
                     try {

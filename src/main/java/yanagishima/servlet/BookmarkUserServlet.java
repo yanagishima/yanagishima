@@ -6,7 +6,6 @@ import org.slf4j.LoggerFactory;
 import yanagishima.config.YanagishimaConfig;
 import yanagishima.row.Bookmark;
 import yanagishima.util.AccessControlUtil;
-import yanagishima.util.HttpRequestUtil;
 import yanagishima.util.JsonUtil;
 
 import javax.inject.Inject;
@@ -22,6 +21,7 @@ import java.util.List;
 import java.util.Map;
 
 import static javax.servlet.http.HttpServletResponse.SC_FORBIDDEN;
+import static yanagishima.util.HttpRequestUtil.getRequiredParameter;
 
 @Singleton
 public class BookmarkUserServlet extends HttpServlet {
@@ -48,7 +48,7 @@ public class BookmarkUserServlet extends HttpServlet {
         HashMap<String, Object> retVal = new HashMap<String, Object>();
 
         try {
-            String datasource = HttpRequestUtil.getParam(request, "datasource");
+            String datasource = getRequiredParameter(request, "datasource");
             if(yanagishimaConfig.isCheckDatasource()) {
                 if(!AccessControlUtil.validateDatasource(request, datasource)) {
                     try {
@@ -60,7 +60,7 @@ public class BookmarkUserServlet extends HttpServlet {
                 }
             }
 
-            String engine = HttpRequestUtil.getParam(request, "engine");
+            String engine = getRequiredParameter(request, "engine");
             String userName = request.getHeader(yanagishimaConfig.getAuditHttpHeaderName());
             List<Bookmark> bookmarkList = db.search(Bookmark.class).where("datasource = ? and engine = ? and user = ?", datasource, engine, userName).execute();
 

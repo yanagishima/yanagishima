@@ -36,6 +36,7 @@ import java.util.stream.Collectors;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static javax.servlet.http.HttpServletResponse.SC_FORBIDDEN;
 import static yanagishima.util.Constants.YANAGISHIMA_COMMENT;
+import static yanagishima.util.HttpRequestUtil.getRequiredParameter;
 
 @Singleton
 public class PrestoServlet extends HttpServlet {
@@ -85,7 +86,7 @@ public class PrestoServlet extends HttpServlet {
 					}
 				}
 				try {
-					String datasource = HttpRequestUtil.getParam(request, "datasource");
+					String datasource = getRequiredParameter(request, "datasource");
 					String prestoCoordinatorServer = yanagishimaConfig.getPrestoCoordinatorServerOrNull(datasource);
 					if(prestoCoordinatorServer == null) {
 						JsonUtil.writeJSON(response, retVal);

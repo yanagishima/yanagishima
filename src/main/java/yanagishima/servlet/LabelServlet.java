@@ -6,7 +6,6 @@ import org.slf4j.LoggerFactory;
 import yanagishima.config.YanagishimaConfig;
 import yanagishima.row.Label;
 import yanagishima.util.AccessControlUtil;
-import yanagishima.util.HttpRequestUtil;
 import yanagishima.util.JsonUtil;
 
 import javax.inject.Inject;
@@ -22,6 +21,7 @@ import java.util.List;
 import java.util.Optional;
 
 import static javax.servlet.http.HttpServletResponse.SC_FORBIDDEN;
+import static yanagishima.util.HttpRequestUtil.getRequiredParameter;
 
 @Singleton
 public class LabelServlet extends HttpServlet {
@@ -45,7 +45,7 @@ public class LabelServlet extends HttpServlet {
         HashMap<String, Object> retVal = new HashMap<>();
 
         try {
-            String datasource = HttpRequestUtil.getParam(request, "datasource");
+            String datasource = getRequiredParameter(request, "datasource");
             if (yanagishimaConfig.isCheckDatasource()) {
                 if (!AccessControlUtil.validateDatasource(request, datasource)) {
                     try {
@@ -57,9 +57,9 @@ public class LabelServlet extends HttpServlet {
                 }
             }
 
-            String engine = HttpRequestUtil.getParam(request, "engine");
-            String queryid = HttpRequestUtil.getParam(request, "queryid");
-            String labelName = HttpRequestUtil.getParam(request, "labelName");
+            String engine = getRequiredParameter(request, "engine");
+            String queryid = getRequiredParameter(request, "queryid");
+            String labelName = getRequiredParameter(request, "labelName");
 
             int count = db.insert(Label.class).value("datasource", datasource)
                     .value("engine", engine)
@@ -89,7 +89,7 @@ public class LabelServlet extends HttpServlet {
         HashMap<String, Object> retVal = new HashMap<>();
 
         try {
-            String datasource = HttpRequestUtil.getParam(request, "datasource");
+            String datasource = getRequiredParameter(request, "datasource");
             if (yanagishimaConfig.isCheckDatasource()) {
                 if (!AccessControlUtil.validateDatasource(request, datasource)) {
                     try {
@@ -101,8 +101,8 @@ public class LabelServlet extends HttpServlet {
                 }
             }
 
-            String engine = HttpRequestUtil.getParam(request, "engine");
-            String queryid = HttpRequestUtil.getParam(request, "queryid");
+            String engine = getRequiredParameter(request, "engine");
+            String queryid = getRequiredParameter(request, "queryid");
             Optional<Label> optionalLabel = db.single(Label.class).where("datasource = ? and engine = ? and query_id = ?", datasource, engine, queryid).execute();
             if(optionalLabel.isPresent()) {
                 retVal.put("label", optionalLabel.get().getLabelName());
@@ -124,7 +124,7 @@ public class LabelServlet extends HttpServlet {
         HashMap<String, Object> retVal = new HashMap<>();
 
         try {
-            String datasource = HttpRequestUtil.getParam(request, "datasource");
+            String datasource = getRequiredParameter(request, "datasource");
             if (yanagishimaConfig.isCheckDatasource()) {
                 if (!AccessControlUtil.validateDatasource(request, datasource)) {
                     try {
@@ -136,8 +136,8 @@ public class LabelServlet extends HttpServlet {
                 }
             }
 
-            String engine = HttpRequestUtil.getParam(request, "engine");
-            String queryid = HttpRequestUtil.getParam(request, "queryid");
+            String engine = getRequiredParameter(request, "engine");
+            String queryid = getRequiredParameter(request, "queryid");
             Optional<Label> optionaldeletedLabel = db.single(Label.class).where("datasource = ? and engine = ? and query_id = ?", datasource, engine, queryid).execute();
             if(optionaldeletedLabel.isPresent()) {
                 optionaldeletedLabel.get().delete();;

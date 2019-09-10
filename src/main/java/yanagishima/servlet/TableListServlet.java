@@ -6,7 +6,6 @@ import org.slf4j.LoggerFactory;
 import yanagishima.config.YanagishimaConfig;
 import yanagishima.service.PrestoService;
 import yanagishima.util.AccessControlUtil;
-import yanagishima.util.HttpRequestUtil;
 import yanagishima.util.JsonUtil;
 
 import javax.inject.Inject;
@@ -23,6 +22,7 @@ import java.util.stream.Collectors;
 
 import static javax.servlet.http.HttpServletResponse.SC_FORBIDDEN;
 import static yanagishima.util.Constants.YANAGISHIMA_COMMENT;
+import static yanagishima.util.HttpRequestUtil.getRequiredParameter;
 
 @Singleton
 public class TableListServlet extends HttpServlet {
@@ -50,7 +50,7 @@ public class TableListServlet extends HttpServlet {
 
         try {
 
-            String datasource = HttpRequestUtil.getParam(request, "datasource");
+            String datasource = getRequiredParameter(request, "datasource");
             if (yanagishimaConfig.isCheckDatasource()) {
                 if (!AccessControlUtil.validateDatasource(request, datasource)) {
                     try {
@@ -68,7 +68,7 @@ public class TableListServlet extends HttpServlet {
                 return;
             }
 
-            String catalog = HttpRequestUtil.getParam(request, "catalog");
+            String catalog = getRequiredParameter(request, "catalog");
             String userName = null;
             Optional<String> prestoUser = Optional.ofNullable(request.getParameter("user"));
             Optional<String> prestoPassword = Optional.ofNullable(request.getParameter("password"));

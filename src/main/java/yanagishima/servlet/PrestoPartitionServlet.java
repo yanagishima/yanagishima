@@ -11,7 +11,6 @@ import yanagishima.config.YanagishimaConfig;
 import yanagishima.result.PrestoQueryResult;
 import yanagishima.service.PrestoService;
 import yanagishima.util.AccessControlUtil;
-import yanagishima.util.HttpRequestUtil;
 import yanagishima.util.JsonUtil;
 
 import javax.inject.Inject;
@@ -27,6 +26,7 @@ import static io.prestosql.client.OkHttpUtil.basicAuth;
 import static com.google.common.base.Preconditions.checkArgument;
 import static javax.servlet.http.HttpServletResponse.SC_FORBIDDEN;
 import static yanagishima.util.Constants.YANAGISHIMA_COMMENT;
+import static yanagishima.util.HttpRequestUtil.getRequiredParameter;
 
 @Singleton
 public class PrestoPartitionServlet extends HttpServlet {
@@ -54,7 +54,7 @@ public class PrestoPartitionServlet extends HttpServlet {
 
         try {
 
-            String datasource = HttpRequestUtil.getParam(request, "datasource");
+            String datasource = getRequiredParameter(request, "datasource");
             if (yanagishimaConfig.isCheckDatasource()) {
                 if (!AccessControlUtil.validateDatasource(request, datasource)) {
                     try {
@@ -78,9 +78,9 @@ public class PrestoPartitionServlet extends HttpServlet {
             }
             Optional<String> webhdfsProxyUser = yanagishimaConfig.getWebhdfsProxyUser(datasource);
             Optional<String> webhdfsProxyPassword = yanagishimaConfig.getWebhdfsProxyPassword(datasource);
-            String catalog = HttpRequestUtil.getParam(request, "catalog");
-            String schema = HttpRequestUtil.getParam(request, "schema");
-            String table = HttpRequestUtil.getParam(request, "table");
+            String catalog = getRequiredParameter(request, "catalog");
+            String schema = getRequiredParameter(request, "schema");
+            String table = getRequiredParameter(request, "table");
             String partitionColumn = request.getParameter("partitionColumn");
             String partitionColumnType = request.getParameter("partitionColumnType");
             String partitionValue = request.getParameter("partitionValue");

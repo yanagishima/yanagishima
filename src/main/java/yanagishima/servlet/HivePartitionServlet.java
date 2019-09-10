@@ -6,7 +6,6 @@ import yanagishima.config.YanagishimaConfig;
 import yanagishima.result.HiveQueryResult;
 import yanagishima.service.HiveService;
 import yanagishima.util.AccessControlUtil;
-import yanagishima.util.HttpRequestUtil;
 import yanagishima.util.JsonUtil;
 
 import javax.inject.Inject;
@@ -19,6 +18,7 @@ import java.io.IOException;
 import java.util.*;
 
 import static javax.servlet.http.HttpServletResponse.SC_FORBIDDEN;
+import static yanagishima.util.HttpRequestUtil.getRequiredParameter;
 
 @Singleton
 public class HivePartitionServlet extends HttpServlet {
@@ -46,7 +46,7 @@ public class HivePartitionServlet extends HttpServlet {
 
         try {
 
-            String datasource = HttpRequestUtil.getParam(request, "datasource");
+            String datasource = getRequiredParameter(request, "datasource");
             if (yanagishimaConfig.isCheckDatasource()) {
                 if (!AccessControlUtil.validateDatasource(request, datasource)) {
                     try {
@@ -68,9 +68,9 @@ public class HivePartitionServlet extends HttpServlet {
                     userName = hiveUser.get();
                 }
             }
-            String engine = HttpRequestUtil.getParam(request, "engine");
-            String schema = HttpRequestUtil.getParam(request, "schema");
-            String table = HttpRequestUtil.getParam(request, "table");
+            String engine = getRequiredParameter(request, "engine");
+            String schema = getRequiredParameter(request, "schema");
+            String table = getRequiredParameter(request, "table");
             String partitionColumn = request.getParameter("partitionColumn");
             String partitionColumnType = request.getParameter("partitionColumnType");
             String partitionValue = request.getParameter("partitionValue");

@@ -10,7 +10,6 @@ import org.slf4j.LoggerFactory;
 import yanagishima.config.YanagishimaConfig;
 import yanagishima.row.Query;
 import yanagishima.util.AccessControlUtil;
-import yanagishima.util.HttpRequestUtil;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
@@ -27,6 +26,7 @@ import static io.prestosql.client.OkHttpUtil.basicAuth;
 import static javax.servlet.http.HttpServletResponse.SC_FORBIDDEN;
 import static javax.servlet.http.HttpServletResponse.SC_HTTP_VERSION_NOT_SUPPORTED;
 import static javax.servlet.http.HttpServletResponse.SC_OK;
+import static yanagishima.util.HttpRequestUtil.getRequiredParameter;
 
 @Singleton
 public class QueryServlet extends HttpServlet {
@@ -55,7 +55,7 @@ public class QueryServlet extends HttpServlet {
 
 		response.setContentType("application/json");
 		PrintWriter writer = response.getWriter();
-		String datasource = HttpRequestUtil.getParam(request, "datasource");
+		String datasource = getRequiredParameter(request, "datasource");
 		if(yanagishimaConfig.isCheckDatasource()) {
 			if(!AccessControlUtil.validateDatasource(request, datasource)) {
 				try {

@@ -7,7 +7,6 @@ import org.slf4j.LoggerFactory;
 import yanagishima.config.YanagishimaConfig;
 import yanagishima.row.Query;
 import yanagishima.util.AccessControlUtil;
-import yanagishima.util.HttpRequestUtil;
 import yanagishima.util.Status;
 
 import javax.inject.Inject;
@@ -23,6 +22,7 @@ import java.util.Map;
 import java.util.Optional;
 
 import static javax.servlet.http.HttpServletResponse.SC_FORBIDDEN;
+import static yanagishima.util.HttpRequestUtil.getRequiredParameter;
 
 @Singleton
 public class ElasticsearchQueryStatusServlet extends HttpServlet {
@@ -45,7 +45,7 @@ public class ElasticsearchQueryStatusServlet extends HttpServlet {
     protected void doPost(HttpServletRequest request,
                           HttpServletResponse response) throws ServletException, IOException {
 
-        String datasource = HttpRequestUtil.getParam(request, "datasource");
+        String datasource = getRequiredParameter(request, "datasource");
         if (yanagishimaConfig.isCheckDatasource()) {
             if (!AccessControlUtil.validateDatasource(request, datasource)) {
                 try {
@@ -57,7 +57,7 @@ public class ElasticsearchQueryStatusServlet extends HttpServlet {
             }
         }
 
-        String queryid = HttpRequestUtil.getParam(request, "queryid");
+        String queryid = getRequiredParameter(request, "queryid");
         response.setContentType("application/json");
         PrintWriter writer = response.getWriter();
         Map map = new HashMap<String, String>();

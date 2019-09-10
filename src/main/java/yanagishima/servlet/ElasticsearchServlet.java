@@ -9,7 +9,6 @@ import yanagishima.result.ElasticsearchQueryResult;
 import yanagishima.row.Query;
 import yanagishima.service.ElasticsearchService;
 import yanagishima.util.AccessControlUtil;
-import yanagishima.util.HttpRequestUtil;
 import yanagishima.util.JsonUtil;
 
 import javax.inject.Inject;
@@ -29,6 +28,7 @@ import java.util.Optional;
 
 import static javax.servlet.http.HttpServletResponse.SC_FORBIDDEN;
 import static yanagishima.util.Constants.YANAGISHIMA_COMMENT;
+import static yanagishima.util.HttpRequestUtil.getRequiredParameter;
 
 @Singleton
 public class ElasticsearchServlet extends HttpServlet {
@@ -72,7 +72,7 @@ public class ElasticsearchServlet extends HttpServlet {
                     }
                 }
                 try {
-                    String datasource = HttpRequestUtil.getParam(request, "datasource");
+                    String datasource = getRequiredParameter(request, "datasource");
                     if (yanagishimaConfig.isCheckDatasource()) {
                         if (!AccessControlUtil.validateDatasource(request, datasource)) {
                             try {

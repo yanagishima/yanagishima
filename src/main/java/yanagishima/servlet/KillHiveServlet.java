@@ -22,6 +22,7 @@ import java.util.Map;
 import java.util.Optional;
 
 import static javax.servlet.http.HttpServletResponse.SC_FORBIDDEN;
+import static yanagishima.util.HttpRequestUtil.getRequiredParameter;
 
 @Singleton
 public class KillHiveServlet extends HttpServlet {
@@ -46,7 +47,7 @@ public class KillHiveServlet extends HttpServlet {
 
         Optional<String> idOptinal = Optional.ofNullable(request.getParameter("id"));
         idOptinal.ifPresent(id -> {
-            String datasource = HttpRequestUtil.getParam(request, "datasource");
+            String datasource = getRequiredParameter(request, "datasource");
             if (yanagishimaConfig.isCheckDatasource()) {
                 if (!AccessControlUtil.validateDatasource(request, datasource)) {
                     try {

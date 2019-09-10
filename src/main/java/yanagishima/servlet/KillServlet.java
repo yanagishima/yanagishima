@@ -21,6 +21,7 @@ import java.util.Optional;
 
 import static io.prestosql.client.OkHttpUtil.basicAuth;
 import static javax.servlet.http.HttpServletResponse.SC_FORBIDDEN;
+import static yanagishima.util.HttpRequestUtil.getRequiredParameter;
 
 @Singleton
 public class KillServlet extends HttpServlet {
@@ -46,7 +47,7 @@ public class KillServlet extends HttpServlet {
 
 		Optional<String> queryIdOptinal = Optional.ofNullable(request.getParameter("queryid"));
 		queryIdOptinal.ifPresent(queryId -> {
-			String datasource = HttpRequestUtil.getParam(request, "datasource");
+			String datasource = getRequiredParameter(request, "datasource");
 			if(yanagishimaConfig.isCheckDatasource()) {
 				if(!AccessControlUtil.validateDatasource(request, datasource)) {
 					try {

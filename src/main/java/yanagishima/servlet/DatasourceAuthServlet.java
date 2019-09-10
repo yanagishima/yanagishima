@@ -16,6 +16,8 @@ import java.io.IOException;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static yanagishima.util.HttpRequestUtil.getRequiredHeader;
+
 @Singleton
 public class DatasourceAuthServlet extends HttpServlet {
 
@@ -35,7 +37,7 @@ public class DatasourceAuthServlet extends HttpServlet {
         HashMap<String, Object> retVal = new HashMap<String, Object>();
 
         if (yanagishimaConfig.isCheckDatasource()) {
-            String header = HttpRequestUtil.getHeader(request, Constants.DATASOURCE_HEADER);
+            String header = getRequiredHeader(request, Constants.DATASOURCE_HEADER);
             if (header.equals("*")) {
                 retVal.put("datasources", getDatasourceEngineList(yanagishimaConfig.getDatasources()));
             } else {

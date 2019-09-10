@@ -6,7 +6,6 @@ import org.slf4j.LoggerFactory;
 import yanagishima.config.YanagishimaConfig;
 import yanagishima.row.StarredSchema;
 import yanagishima.util.AccessControlUtil;
-import yanagishima.util.HttpRequestUtil;
 import yanagishima.util.JsonUtil;
 
 import javax.inject.Inject;
@@ -22,6 +21,7 @@ import java.util.List;
 import java.util.Map;
 
 import static javax.servlet.http.HttpServletResponse.SC_FORBIDDEN;
+import static yanagishima.util.HttpRequestUtil.getRequiredParameter;
 
 @Singleton
 public class StarredSchemaServlet extends HttpServlet {
@@ -48,7 +48,7 @@ public class StarredSchemaServlet extends HttpServlet {
         HashMap<String, Object> retVal = new HashMap<String, Object>();
 
         try {
-            String datasource = HttpRequestUtil.getParam(request, "datasource");
+            String datasource = getRequiredParameter(request, "datasource");
             if (yanagishimaConfig.isCheckDatasource()) {
                 if (!AccessControlUtil.validateDatasource(request, datasource)) {
                     try {
@@ -61,9 +61,9 @@ public class StarredSchemaServlet extends HttpServlet {
             }
 
             String userName = request.getHeader(yanagishimaConfig.getAuditHttpHeaderName());
-            String catalog = HttpRequestUtil.getParam(request, "catalog");
-            String engine = HttpRequestUtil.getParam(request, "engine");
-            String schema = HttpRequestUtil.getParam(request, "schema");
+            String catalog = getRequiredParameter(request, "catalog");
+            String engine = getRequiredParameter(request, "engine");
+            String schema = getRequiredParameter(request, "schema");
             int count = db.insert(StarredSchema.class).value("datasource", datasource).value("engine", engine).value("catalog", catalog).value("schema", schema).value("user", userName).execute();
             List<StarredSchema> starredSchemaList = db.searchBySQL(StarredSchema.class, "select starred_schema_id, datasource, engine, catalog, `schema` from starred_schema where starred_schema_id = last_insert_id()");
             if (starredSchemaList.size() == 1) {
@@ -87,7 +87,7 @@ public class StarredSchemaServlet extends HttpServlet {
         HashMap<String, Object> retVal = new HashMap<String, Object>();
 
         try {
-            String datasource = HttpRequestUtil.getParam(request, "datasource");
+            String datasource = getRequiredParameter(request, "datasource");
             if (yanagishimaConfig.isCheckDatasource()) {
                 if (!AccessControlUtil.validateDatasource(request, datasource)) {
                     try {
@@ -99,12 +99,12 @@ public class StarredSchemaServlet extends HttpServlet {
                 }
             }
 
-            String starredSchemaId = HttpRequestUtil.getParam(request, "starred_schema_id");
+            String starredSchemaId = getRequiredParameter(request, "starred_schema_id");
             StarredSchema deletedStarredSchema = db.single(StarredSchema.class).where("starred_schema_id=?", starredSchemaId).execute().get();
             deletedStarredSchema.delete();
 
-            String engine = HttpRequestUtil.getParam(request, "engine");
-            String catalog = HttpRequestUtil.getParam(request, "catalog");
+            String engine = getRequiredParameter(request, "engine");
+            String catalog = getRequiredParameter(request, "catalog");
             String userName = request.getHeader(yanagishimaConfig.getAuditHttpHeaderName());
             List<StarredSchema> starredSchemaList = db.search(StarredSchema.class).where("datasource = ? and engine = ? and catalog = ? and user = ?", datasource, engine, catalog, userName).execute();
 
@@ -136,7 +136,7 @@ public class StarredSchemaServlet extends HttpServlet {
         HashMap<String, Object> retVal = new HashMap<String, Object>();
 
         try {
-            String datasource = HttpRequestUtil.getParam(request, "datasource");
+            String datasource = getRequiredParameter(request, "datasource");
             if (yanagishimaConfig.isCheckDatasource()) {
                 if (!AccessControlUtil.validateDatasource(request, datasource)) {
                     try {
@@ -148,8 +148,8 @@ public class StarredSchemaServlet extends HttpServlet {
                 }
             }
 
-            String engine = HttpRequestUtil.getParam(request, "engine");
-            String catalog = HttpRequestUtil.getParam(request, "catalog");
+            String engine = getRequiredParameter(request, "engine");
+            String catalog = getRequiredParameter(request, "catalog");
             String userName = request.getHeader(yanagishimaConfig.getAuditHttpHeaderName());
             List<StarredSchema> starredSchemaList = db.search(StarredSchema.class).where("datasource = ? and engine = ? and catalog = ? and user = ?", datasource, engine, catalog, userName).execute();
 
