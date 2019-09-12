@@ -1,5 +1,6 @@
 package yanagishima.config;
 
+import com.google.common.base.Splitter;
 import yanagishima.util.PropertiesUtil;
 
 import java.io.BufferedReader;
@@ -10,6 +11,7 @@ import java.nio.file.Paths;
 import java.util.*;
 
 public class YanagishimaConfig {
+	private static final Splitter SPLITTER = Splitter.on(',').trimResults().omitEmptyStrings();
 
 	private Properties properties;
 
@@ -29,9 +31,8 @@ public class YanagishimaConfig {
 		String redirectStr = properties.getProperty("presto.redirect.server." + datasource);
 		if(redirectStr == null) {
 			return getPrestoCoordinatorServer(datasource);
-		} else {
-			return redirectStr;
 		}
+		return redirectStr;
 	}
 
 	public String getCatalog(String datasource) {
@@ -45,7 +46,7 @@ public class YanagishimaConfig {
 	public String getUser(String datasource) {
 		String user = properties.getProperty("user." + datasource);
 		if (user == null) {
-			user = "yanagishima";
+			return "yanagishima";
 		}
 		return user;
 	}
@@ -53,7 +54,7 @@ public class YanagishimaConfig {
 	public String getSource(String datasource) {
 		String source = properties.getProperty("source." + datasource);
 		if (source == null) {
-		 	source = "yanagishima";
+		 	return "yanagishima";
 		}
 		return source;
 	}
@@ -62,9 +63,8 @@ public class YanagishimaConfig {
 		String limitStr = properties.getProperty("select.limit");
 		if(limitStr == null) {
 			return 500;
-		} else {
-			return Integer.parseInt(limitStr);
 		}
+		return Integer.parseInt(limitStr);
 	}
 
 	public String getAuditHttpHeaderName() {
@@ -72,16 +72,15 @@ public class YanagishimaConfig {
 	}
 
 	public boolean isUseAuditHttpHeaderName() {
-		return Boolean.parseBoolean(Optional.ofNullable(properties.getProperty("use.audit.http.header.name")).orElse("false"));
+		return Boolean.parseBoolean(properties.getProperty("use.audit.http.header.name"));
 	}
 
 	public List<String> getDatasources(String engine) {
 		String datasourceProperties = properties.getProperty(engine + ".datasources");
-		if(datasourceProperties == null) {
-			return new ArrayList<>();
-		} else {
-			return Arrays.asList(datasourceProperties.split(","));
+		if (datasourceProperties == null) {
+			return Collections.emptyList();
 		}
+		return SPLITTER.splitToList(datasourceProperties);
 	}
 
 	public List<String> getDatasources() {
@@ -124,67 +123,60 @@ public class YanagishimaConfig {
 		String secondsStr = properties.getProperty("presto.query.max-run-time-seconds");
 		if(secondsStr == null) {
 			return 3600;
-		} else {
-			return Double.parseDouble(secondsStr);
 		}
+		return Double.parseDouble(secondsStr);
 	}
 
 	public double getQueryMaxRunTimeSeconds(String datasource) {
 		String property = properties.getProperty("presto.query.max-run-time-seconds" + "." + datasource);
 		if(property == null) {
 			return getQueryMaxRunTimeSeconds();
-		} else {
-			return Double.parseDouble(property);
 		}
+		return Double.parseDouble(property);
 	}
 
 	public int getMaxResultFileByteSize() {
 		String sizeStr = properties.getProperty("presto.max-result-file-byte-size");
 		if(sizeStr == null) {
 			return 1073741824;
-		} else {
-			return Integer.parseInt(sizeStr);
 		}
+		return Integer.parseInt(sizeStr);
 	}
 
 	public int getHiveMaxResultFileByteSize() {
 		String sizeStr = properties.getProperty("hive.max-result-file-byte-size");
 		if(sizeStr == null) {
 			return 1073741824;
-		} else {
-			return Integer.parseInt(sizeStr);
 		}
+		return Integer.parseInt(sizeStr);
 	}
 
 	public int getToValuesQueryLimit() {
 		String limitStr = properties.getProperty("to.values.query.limit");
 		if(limitStr == null) {
 			return 500;
-		} else {
-			return Integer.parseInt(limitStr);
 		}
+		return Integer.parseInt(limitStr);
 	}
 
 	public boolean isCheckDatasource() {
-		return Boolean.parseBoolean(Optional.ofNullable(properties.getProperty("check.datasource")).orElse("false"));
+		return Boolean.parseBoolean(properties.getProperty("check.datasource"));
 	}
 
 	public List<String> getInvisibleSchemas(String datasource, String catalog) {
 		String invisibleSchemas = properties.getProperty("invisible.schema." + datasource + "." + catalog);
 		if(invisibleSchemas == null) {
 			return Collections.emptyList();
-		} else {
-			return Arrays.asList(invisibleSchemas.split(","));
 		}
+		return SPLITTER.splitToList(invisibleSchemas);
 	}
 
 	public List<String> getInvisibleDatabases(String datasource) {
 		String invisibleDatabases = properties.getProperty("invisible.database." + datasource);
 		if(invisibleDatabases == null) {
 			return Collections.emptyList();
-		} else {
-			return Arrays.asList(invisibleDatabases.split(","));
 		}
+		return SPLITTER.splitToList(invisibleDatabases);
 	}
 
 	public Optional<String> getFluentdExecutedTag() {
@@ -204,7 +196,7 @@ public class YanagishimaConfig {
 	}
 
 	public boolean isUserRequired() {
-		return Boolean.parseBoolean(Optional.ofNullable(properties.getProperty("user.require")).orElse("false"));
+		return Boolean.parseBoolean(properties.getProperty("user.require"));
 	}
 
 	public String getHiveJdbcUrl(String datasource) {
@@ -235,9 +227,8 @@ public class YanagishimaConfig {
 		String property = properties.getProperty("hive.query.max-run-time-seconds" + "." + datasource);
 		if(property == null) {
 			return getHiveQueryMaxRunTimeSeconds();
-		} else {
-			return Double.parseDouble(property);
 		}
+		return Double.parseDouble(property);
 	}
 
 	public String getResourceManagerUrl(String datasource) {
@@ -251,10 +242,9 @@ public class YanagishimaConfig {
 	public List<String> getHiveDisallowedKeywords(String datasource) {
 		String property = properties.getProperty("hive.disallowed.keywords." + datasource);
 		if(property == null) {
-			return Collections.emptyList();
-		} else {
-			return Arrays.asList(property.split(","));
+				return Collections.emptyList();
 		}
+		return SPLITTER.splitToList(property);
 	}
 
 	public List<String> getHiveSetupQueryList(String datasource) {
@@ -277,47 +267,47 @@ public class YanagishimaConfig {
 	}
 
 	public boolean isAuth(String datasource) {
-		return Boolean.parseBoolean(Optional.ofNullable(properties.getProperty("auth." + datasource)).orElse("false"));
+		return Boolean.parseBoolean(properties.getProperty("auth." + datasource));
 	}
 
 	public List<String> getHiveSecretKeywords(String datasource) {
 		String property = properties.getProperty("hive.secret.keywords." + datasource);
 		if(property == null) {
 			return Collections.emptyList();
-		} else {
-			return Arrays.asList(property.split(","));
 		}
+		return SPLITTER.splitToList(property);
 	}
 
 	public List<String> getPrestoSecretKeywords(String datasource) {
 		String property = properties.getProperty("presto.secret.keywords." + datasource);
 		if(property == null) {
 			return Collections.emptyList();
-		} else {
-			return Arrays.asList(property.split(","));
 		}
+		return SPLITTER.splitToList(property);
 	}
 
-	public List<String> getPrestoMustSpectifyConditions(String datasource) {
+	public List<String> getPrestoMustSpecifyConditions(String datasource) {
 		String property = properties.getProperty("presto.must.specify.conditions." + datasource);
 		if(property == null) {
 			return Collections.emptyList();
-		} else {
-			return Arrays.asList(property.split(","));
 		}
+		return SPLITTER.splitToList(property);
 	}
 
-	public List<String> getHiveMustSpectifyConditions(String datasource) {
+	public List<String> getHiveMustSpecifyConditions(String datasource) {
 		String property = properties.getProperty("hive.must.specify.conditions." + datasource);
 		if(property == null) {
 			return Collections.emptyList();
-		} else {
-			return Arrays.asList(property.split(","));
 		}
+		return SPLITTER.splitToList(property);
 	}
 
 	public boolean isAllowOtherReadResult(String datasource) {
-		return Boolean.parseBoolean(Optional.ofNullable(properties.getProperty("allow.other.read.result." + datasource)).orElse("true"));
+		String property = properties.getProperty("allow.other.read.result." + datasource);
+		if (property == null) {
+			return true;
+		}
+		return Boolean.parseBoolean(property);
 	}
 
 	public Optional<String> getWebhdfsUrl(String datasource, String catalog, String schema, String table) {
@@ -325,29 +315,31 @@ public class YanagishimaConfig {
 	}
 
 	public boolean isUseNewShowPartitions(String datasource) {
-		return Boolean.parseBoolean(Optional.ofNullable(properties.getProperty("use.new.show.partitions." + datasource)).orElse("true"));
+		String property = properties.getProperty("use.new.show.partitions." + datasource);
+		if (property == null) {
+			return true;
+		}
+		return Boolean.parseBoolean(property);
 	}
 
 	public boolean isUseJdbcCancel(String datasource) {
-		return Boolean.parseBoolean(Optional.ofNullable(properties.getProperty("use.jdbc.cancel." + datasource)).orElse("false"));
+		return Boolean.parseBoolean(properties.getProperty("use.jdbc.cancel." + datasource));
 	}
 
 	public List<String> getElasticsearchSecretKeywords(String datasource) {
 		String property = properties.getProperty("elasticsearch.secret.keywords." + datasource);
 		if(property == null) {
 			return Collections.emptyList();
-		} else {
-			return Arrays.asList(property.split(","));
 		}
+		return SPLITTER.splitToList(property);
 	}
 
-	public List<String> getElasticsearchMustSpectifyConditions(String datasource) {
+	public List<String> getElasticsearchMustSpecifyConditions(String datasource) {
 		String property = properties.getProperty("elasticsearch.must.specify.conditions." + datasource);
 		if(property == null) {
 			return Collections.emptyList();
-		} else {
-			return Arrays.asList(property.split(","));
 		}
+		return SPLITTER.splitToList(property);
 	}
 
 	public String getElasticsearchJdbcUrl(String datasource) {
@@ -358,36 +350,32 @@ public class YanagishimaConfig {
 		String property = properties.getProperty("elasticsearch.disallowed.keywords." + datasource);
 		if(property == null) {
 			return Collections.emptyList();
-		} else {
-			return Arrays.asList(property.split(","));
 		}
+		return SPLITTER.splitToList(property);
 	}
 
 	public int getElasticsearchMaxResultFileByteSize() {
 		String sizeStr = properties.getProperty("elasticsearch.max-result-file-byte-size");
 		if(sizeStr == null) {
 			return 1073741824;
-		} else {
-			return Integer.parseInt(sizeStr);
 		}
+		return Integer.parseInt(sizeStr);
 	}
 
 	public double getElasticsearchQueryMaxRunTimeSeconds() {
 		String secondsStr = properties.getProperty("elasticsearch.query.max-run-time-seconds");
 		if(secondsStr == null) {
 			return 3600;
-		} else {
-			return Double.parseDouble(secondsStr);
 		}
+		return Double.parseDouble(secondsStr);
 	}
 
 	public double getElasticsearchQueryMaxRunTimeSeconds(String datasource) {
 		String property = properties.getProperty("elasticsearch.query.max-run-time-seconds" + "." + datasource);
 		if(property == null) {
 			return getElasticsearchQueryMaxRunTimeSeconds();
-		} else {
-			return Double.parseDouble(property);
 		}
+		return Double.parseDouble(property);
 	}
 
 	public Optional<String> getMetadataServiceUrl(String datasource) {
@@ -398,13 +386,12 @@ public class YanagishimaConfig {
 		String property = properties.getProperty(String.format("metadata.service.url.%s", datasource));
 		if(property == null) {
 			return false;
-		} else {
-			return true;
 		}
+		return true;
 	}
 
 	public boolean isHiveImpersonation(String datasource) {
-		return Boolean.parseBoolean(Optional.ofNullable(properties.getProperty("hive.jdbc.impersonation." + datasource)).orElse("false"));
+		return Boolean.parseBoolean(properties.getProperty("hive.jdbc.impersonation." + datasource));
 	}
 
 	public Optional<String> getWebhdfsProxyUser(String datasource) {
@@ -443,12 +430,11 @@ public class YanagishimaConfig {
 		String property = properties.getProperty("datetime.partition.has.hyphen." + datasource);
 		if(property == null) {
 			return false;
-		} else {
-			return true;
 		}
+		return true;
 	}
 
 	public boolean isUseOldPresto(String datasource) {
-		return Boolean.parseBoolean(Optional.ofNullable(properties.getProperty("use.old.presto." + datasource)).orElse("false"));
+		return Boolean.parseBoolean(properties.getProperty("use.old.presto." + datasource));
 	}
 }

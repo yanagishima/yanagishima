@@ -159,9 +159,9 @@ public class ElasticsearchServiceImpl implements ElasticsearchService {
             }
         }
 
-        List<String> elasticsearchMustSpectifyConditions = yanagishimaConfig.getElasticsearchMustSpectifyConditions(datasource);
-        for (String elasticsearchMustSpectifyCondition : elasticsearchMustSpectifyConditions) {
-            String[] conditions = elasticsearchMustSpectifyCondition.split(",");
+        List<String> elasticsearchMustSpecifyConditions = yanagishimaConfig.getElasticsearchMustSpecifyConditions(datasource);
+        for (String elasticsearchMustSpecifyCondition : elasticsearchMustSpecifyConditions) {
+            String[] conditions = elasticsearchMustSpecifyCondition.split(",");
             for (String condition : conditions) {
                 String table = condition.split(":")[0];
                 if (!query.startsWith("SHOW") && !query.startsWith("DESCRIBE") && query.indexOf(table) != -1) {
