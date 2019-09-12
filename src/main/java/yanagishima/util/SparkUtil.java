@@ -20,7 +20,8 @@ import java.util.stream.Collectors;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 
-public class SparkUtil {
+public final class SparkUtil {
+    private SparkUtil() {}
 
     public static String getSparkJdbcApplicationId(String sparkWebUrl) {
         OkHttpClient client = new OkHttpClient();

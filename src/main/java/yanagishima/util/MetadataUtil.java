@@ -14,15 +14,16 @@ import java.util.Map;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 
-public class MetadataUtil {
+public final class MetadataUtil {
+    private static final Logger LOGGER = LoggerFactory.getLogger(MetadataUtil.class);
+    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
-    private static Logger LOGGER = LoggerFactory.getLogger(MetadataUtil.class);
+    private MetadataUtil() {}
 
     public static void setMetadata(String metadataServiceUrl, HashMap<String, Object> retVal, String schema, String table, List<List<String>> records) {
         try {
             String json = Request.Get(String.format("%s/%s/%s", metadataServiceUrl, schema, table)).execute().returnContent().asString(UTF_8);
-            ObjectMapper mapper = new ObjectMapper();
-            Map map = mapper.readValue(json, Map.class);
+            Map map = OBJECT_MAPPER.readValue(json, Map.class);
             List<Map> columns = (List) map.get("columns");
             List<List<String>> newRecordList = new ArrayList<List<String>>();
             for (int i = 0; i < records.size(); i++) {

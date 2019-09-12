@@ -30,37 +30,27 @@ import java.util.concurrent.TimeUnit;
 import static yanagishima.util.Constants.YANAGISHIAM_HIVE_JOB_PREFIX;
 import static yanagishima.util.DbUtil.insertQueryHistory;
 import static yanagishima.util.DbUtil.storeError;
+import static yanagishima.util.FluentdUtil.buildStaticFluency;
 import static yanagishima.util.PathUtil.getResultFilePath;
+import static yanagishima.util.QueryEngine.hive;
+import static yanagishima.util.QueryEngine.spark;
 import static yanagishima.util.TimeoutUtil.checkTimeout;
 
 public class HiveServiceImpl implements HiveService {
+    private static final Logger LOGGER = LoggerFactory.getLogger(HiveServiceImpl.class);
 
-    private static Logger LOGGER = LoggerFactory.getLogger(HiveServiceImpl.class);
-
-    private YanagishimaConfig yanagishimaConfig;
-
-    private ExecutorService executorService = Executors.newFixedThreadPool(10);
-
-    private Fluency fluency;
-
-    @Inject
-    private TinyORM db;
+    private final YanagishimaConfig yanagishimaConfig;
+    private final ExecutorService executorService = Executors.newFixedThreadPool(10);
+    private final TinyORM db;
+    private final Fluency fluency;
+    private final StatementPool statementPool;
 
     @Inject
-    private StatementPool statementPool;
-
-    @Inject
-    public HiveServiceImpl(YanagishimaConfig yanagishimaConfig) {
+    public HiveServiceImpl(YanagishimaConfig yanagishimaConfig, TinyORM db, StatementPool statementPool) {
         this.yanagishimaConfig = yanagishimaConfig;
-        if (yanagishimaConfig.getFluentdExecutedTag().isPresent()) {
-            String fluentdHost = yanagishimaConfig.getFluentdHost().orElse("localhost");
-            int fluentdPort = Integer.parseInt(yanagishimaConfig.getFluentdPort().orElse("24224"));
-            try {
-                fluency = Fluency.defaultFluency(fluentdHost, fluentdPort);
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
-        }
+        this.db = db;
+        this.fluency = buildStaticFluency(yanagishimaConfig);
+        this.statementPool = statementPool;
     }
 
     @Override
@@ -71,14 +61,13 @@ public class HiveServiceImpl implements HiveService {
     }
 
     public class Task implements Runnable {
-        private String queryId;
-
-        private String engine;
-        private String datasource;
-        private String query;
-        private String userName;
-        private Optional<String> hiveUser;
-        private Optional<String> hivePassword;
+        private final String queryId;
+        private final String engine;
+        private final String datasource;
+        private final String query;
+        private final String userName;
+        private final Optional<String> hiveUser;
+        private final Optional<String> hivePassword;
 
         public Task(String queryId, String engine, String datasource, String query, String userName, Optional<String> hiveUser, Optional<String> hivePassword) {
             this.queryId = queryId;
@@ -94,7 +83,7 @@ public class HiveServiceImpl implements HiveService {
         public void run() {
             try {
                 int limit = yanagishimaConfig.getSelectLimit();
-                getHiveQueryResult(this.queryId, this.engine, this.datasource, this.query, true, limit, this.userName, this.hiveUser, this.hivePassword, true);
+                getHiveQueryResult(queryId, engine, datasource, query, true, limit, userName, hiveUser, hivePassword, true);
             } catch (HiveQueryErrorException e) {
                 LOGGER.warn(e.getCause().getMessage());
             } catch (Throwable e) {
@@ -154,12 +143,12 @@ public class HiveServiceImpl implements HiveService {
         }
 
         String url = null;
-        if(engine.equals("hive")) {
+        if(engine.equals(hive.name())) {
             url = yanagishimaConfig.getHiveJdbcUrl(datasource);
             if(yanagishimaConfig.isHiveImpersonation(datasource)) {
                 url += ";hive.server2.proxy.user=" + userName;
             }
-        } else if(engine.equals("spark")) {
+        } else if(engine.equals(spark.name())) {
             url = yanagishimaConfig.getSparkJdbcUrl(datasource);
         } else {
             throw new IllegalArgumentException(engine + " is illegal");
@@ -205,11 +194,11 @@ public class HiveServiceImpl implements HiveService {
     }
 
     private void processData(String engine, String datasource, String query, int limit, String userName, Connection connection, String queryId, long start, HiveQueryResult hiveQueryResult, boolean async) throws SQLException {
-        Duration queryMaxRunTime = new Duration(this.yanagishimaConfig.getHiveQueryMaxRunTimeSeconds(datasource), TimeUnit.SECONDS);
+        Duration queryMaxRunTime = new Duration(yanagishimaConfig.getHiveQueryMaxRunTimeSeconds(datasource), TimeUnit.SECONDS);
         try (Statement statement = connection.createStatement()) {
             int timeout = (int) queryMaxRunTime.toMillis() / 1000;
             statement.setQueryTimeout(timeout);
-            if(engine.equals("hive")) {
+            if(engine.equals(hive.name())) {
                 String jobName = null;
                 if (userName == null) {
                     jobName = YANAGISHIAM_HIVE_JOB_PREFIX + queryId;
@@ -217,7 +206,7 @@ public class HiveServiceImpl implements HiveService {
                     jobName = YANAGISHIAM_HIVE_JOB_PREFIX + userName + "-" + queryId;
                 }
                 statement.execute("set mapreduce.job.name=" + jobName);
-                List<String> hiveSetupQueryList = this.yanagishimaConfig.getHiveSetupQueryList(datasource);
+                List<String> hiveSetupQueryList = yanagishimaConfig.getHiveSetupQueryList(datasource);
                 for (String hiveSetupQuery : hiveSetupQueryList) {
                     statement.execute(hiveSetupQuery);
                 }
@@ -318,8 +307,6 @@ public class HiveServiceImpl implements HiveService {
                     throw new RuntimeException(e);
                 }
             }
-
         }
     }
-
 }

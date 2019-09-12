@@ -15,7 +15,8 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 import static yanagishima.util.Constants.YANAGISHIAM_HIVE_JOB_PREFIX;
 
 
-public class YarnUtil {
+public final class YarnUtil {
+    private YarnUtil() {}
 
     public static String kill(String resourceManagerUrl, String applicationId) {
         try {

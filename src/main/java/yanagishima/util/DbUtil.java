@@ -16,7 +16,8 @@ import java.time.temporal.ChronoUnit;
 
 import static yanagishima.util.PathUtil.getResultFilePath;
 
-public class DbUtil {
+public final class DbUtil {
+    private DbUtil() {}
 
     public static void storeError(TinyORM db, String datasource, String engine, String queryId, String query, String user, String errorMessage) {
         try {
