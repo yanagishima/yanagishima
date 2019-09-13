@@ -1,20 +1,14 @@
 package yanagishima.servlet;
 
 import io.prestosql.client.ClientException;
-import io.prestosql.client.ErrorLocation;
-import io.prestosql.client.QueryError;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import me.geso.tinyorm.TinyORM;
-import org.apache.http.client.fluent.Request;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import yanagishima.config.YanagishimaConfig;
 import yanagishima.exception.QueryErrorException;
 import yanagishima.result.PrestoQueryResult;
-import yanagishima.row.Query;
 import yanagishima.service.PrestoService;
 import yanagishima.util.AccessControlUtil;
-import yanagishima.util.HttpRequestUtil;
 import yanagishima.util.JsonUtil;
 import yanagishima.util.MetadataUtil;
 
@@ -25,17 +19,12 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
-import java.time.ZonedDateTime;
-import java.time.format.DateTimeFormatter;
-import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static java.nio.charset.StandardCharsets.UTF_8;
 import static javax.servlet.http.HttpServletResponse.SC_FORBIDDEN;
 import static yanagishima.util.Constants.YANAGISHIMA_COMMENT;
+import static yanagishima.util.HttpRequestUtil.getRequiredParameter;
 
 @Singleton
 public class PrestoServlet extends HttpServlet {
@@ -85,7 +74,7 @@ public class PrestoServlet extends HttpServlet {
 					}
 				}
 				try {
-					String datasource = HttpRequestUtil.getParam(request, "datasource");
+					String datasource = getRequiredParameter(request, "datasource");
 					String prestoCoordinatorServer = yanagishimaConfig.getPrestoCoordinatorServerOrNull(datasource);
 					if(prestoCoordinatorServer == null) {
 						JsonUtil.writeJSON(response, retVal);

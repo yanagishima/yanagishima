@@ -6,7 +6,6 @@ import org.slf4j.LoggerFactory;
 import yanagishima.config.YanagishimaConfig;
 import yanagishima.row.Comment;
 import yanagishima.util.AccessControlUtil;
-import yanagishima.util.HttpRequestUtil;
 import yanagishima.util.JsonUtil;
 
 import javax.inject.Inject;
@@ -23,6 +22,7 @@ import java.util.List;
 import java.util.Optional;
 
 import static javax.servlet.http.HttpServletResponse.SC_FORBIDDEN;
+import static yanagishima.util.HttpRequestUtil.getRequiredParameter;
 
 @Singleton
 public class CommentServlet extends HttpServlet {
@@ -46,7 +46,7 @@ public class CommentServlet extends HttpServlet {
         HashMap<String, Object> retVal = new HashMap<>();
 
         try {
-            String datasource = HttpRequestUtil.getParam(request, "datasource");
+            String datasource = getRequiredParameter(request, "datasource");
             if (yanagishimaConfig.isCheckDatasource()) {
                 if (!AccessControlUtil.validateDatasource(request, datasource)) {
                     try {
@@ -59,8 +59,8 @@ public class CommentServlet extends HttpServlet {
             }
 
             String userName = request.getHeader(yanagishimaConfig.getAuditHttpHeaderName());
-            String engine = HttpRequestUtil.getParam(request, "engine");
-            String queryid = HttpRequestUtil.getParam(request, "queryid");
+            String engine = getRequiredParameter(request, "engine");
+            String queryid = getRequiredParameter(request, "queryid");
 
             retVal.put("datasource", datasource);
             retVal.put("engine", engine);
@@ -71,7 +71,7 @@ public class CommentServlet extends HttpServlet {
 
             String like = request.getParameter("like");
             if (like == null) {
-                String content = HttpRequestUtil.getParam(request, "content");
+                String content = getRequiredParameter(request, "content");
                 Optional<Comment> commentOptional = db.single(Comment.class).where("datasource = ? and engine = ? and query_id = ?", datasource, engine, queryid).execute();
                 if(commentOptional.isPresent()) {
                     String updateSql = String.format("UPDATE comment SET user = '%s', content = '%s', update_time_string = '%s' WHERE datasource = '%s' and engine = '%s' and query_id = '%s'", userName, content, updateTimeString, datasource, engine, queryid);
@@ -118,7 +118,7 @@ public class CommentServlet extends HttpServlet {
         HashMap<String, Object> retVal = new HashMap<>();
 
         try {
-            String datasource = HttpRequestUtil.getParam(request, "datasource");
+            String datasource = getRequiredParameter(request, "datasource");
             if (yanagishimaConfig.isCheckDatasource()) {
                 if (!AccessControlUtil.validateDatasource(request, datasource)) {
                     try {
@@ -130,7 +130,7 @@ public class CommentServlet extends HttpServlet {
                 }
             }
 
-            String engine = HttpRequestUtil.getParam(request, "engine");
+            String engine = getRequiredParameter(request, "engine");
             String queryid = request.getParameter("queryid");
             List<Comment> comments = new ArrayList<>();
             if(queryid != null) {
@@ -161,7 +161,7 @@ public class CommentServlet extends HttpServlet {
         HashMap<String, Object> retVal = new HashMap<>();
 
         try {
-            String datasource = HttpRequestUtil.getParam(request, "datasource");
+            String datasource = getRequiredParameter(request, "datasource");
             if (yanagishimaConfig.isCheckDatasource()) {
                 if (!AccessControlUtil.validateDatasource(request, datasource)) {
                     try {
@@ -173,8 +173,8 @@ public class CommentServlet extends HttpServlet {
                 }
             }
 
-            String engine = HttpRequestUtil.getParam(request, "engine");
-            String queryid = HttpRequestUtil.getParam(request, "queryid");
+            String engine = getRequiredParameter(request, "engine");
+            String queryid = getRequiredParameter(request, "queryid");
             Comment deletedComment = db.single(Comment.class).where("datasource = ? and engine = ? and query_id = ?", datasource, engine, queryid).execute().get();
             deletedComment.delete();
             retVal.put("datasource", datasource);

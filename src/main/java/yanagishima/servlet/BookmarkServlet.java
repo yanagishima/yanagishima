@@ -6,7 +6,6 @@ import org.slf4j.LoggerFactory;
 import yanagishima.config.YanagishimaConfig;
 import yanagishima.row.Bookmark;
 import yanagishima.util.AccessControlUtil;
-import yanagishima.util.HttpRequestUtil;
 import yanagishima.util.JsonUtil;
 
 import javax.inject.Inject;
@@ -20,6 +19,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import static javax.servlet.http.HttpServletResponse.SC_FORBIDDEN;
+import static yanagishima.util.HttpRequestUtil.getRequiredParameter;
 
 @Singleton
 public class BookmarkServlet extends HttpServlet {
@@ -46,7 +46,7 @@ public class BookmarkServlet extends HttpServlet {
         HashMap<String, Object> retVal = new HashMap<String, Object>();
 
         try {
-            String datasource = HttpRequestUtil.getParam(request, "datasource");
+            String datasource = getRequiredParameter(request, "datasource");
             if(yanagishimaConfig.isCheckDatasource()) {
                 if(!AccessControlUtil.validateDatasource(request, datasource)) {
                     try {
@@ -59,9 +59,9 @@ public class BookmarkServlet extends HttpServlet {
             }
 
             String userName = request.getHeader(yanagishimaConfig.getAuditHttpHeaderName());
-            String query = HttpRequestUtil.getParam(request, "query");
+            String query = getRequiredParameter(request, "query");
             String title = request.getParameter("title");
-            String engine = HttpRequestUtil.getParam(request, "engine");
+            String engine = getRequiredParameter(request, "engine");
             db.insert(Bookmark.class).value("datasource", datasource).value("query", query).value("title", title).value("engine", engine).value("user", userName).execute();
             List<Bookmark> bookmarkList = null;
             if(yanagishimaConfig.getDatabaseType().isPresent()) {
@@ -94,7 +94,7 @@ public class BookmarkServlet extends HttpServlet {
         HashMap<String, Object> retVal = new HashMap<String, Object>();
 
         try {
-            String datasource = HttpRequestUtil.getParam(request, "datasource");
+            String datasource = getRequiredParameter(request, "datasource");
             if(yanagishimaConfig.isCheckDatasource()) {
                 if(!AccessControlUtil.validateDatasource(request, datasource)) {
                     try {
@@ -105,7 +105,7 @@ public class BookmarkServlet extends HttpServlet {
                     }
                 }
             }
-            String[] bookmarkIds = HttpRequestUtil.getParam(request, "bookmark_id").split(",");
+            String[] bookmarkIds = getRequiredParameter(request, "bookmark_id").split(",");
             if(bookmarkIds.length == 0) {
                 retVal.put("bookmarkList", new ArrayList<>());
                 return;
@@ -150,7 +150,7 @@ public class BookmarkServlet extends HttpServlet {
         HashMap<String, Object> retVal = new HashMap<String, Object>();
 
         try {
-            String datasource = HttpRequestUtil.getParam(request, "datasource");
+            String datasource = getRequiredParameter(request, "datasource");
             if(yanagishimaConfig.isCheckDatasource()) {
                 if(!AccessControlUtil.validateDatasource(request, datasource)) {
                     try {
@@ -162,11 +162,11 @@ public class BookmarkServlet extends HttpServlet {
                 }
             }
 
-            String bookmarkId = HttpRequestUtil.getParam(request, "bookmark_id");
+            String bookmarkId = getRequiredParameter(request, "bookmark_id");
             Bookmark deletedBookmark = db.single(Bookmark.class).where("bookmark_id=?", bookmarkId).execute().get();
             deletedBookmark.delete();
 
-            String engine = HttpRequestUtil.getParam(request, "engine");
+            String engine = getRequiredParameter(request, "engine");
             String userName = request.getHeader(yanagishimaConfig.getAuditHttpHeaderName());
             List<Bookmark> bookmarkList = db.search(Bookmark.class).where("datasource = ? and engine = ? and user = ?", datasource, engine, userName).execute();
 

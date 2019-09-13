@@ -8,7 +8,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import yanagishima.config.YanagishimaConfig;
 import yanagishima.util.AccessControlUtil;
-import yanagishima.util.HttpRequestUtil;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
@@ -24,6 +23,7 @@ import java.util.Optional;
 
 import static io.prestosql.client.OkHttpUtil.basicAuth;
 import static javax.servlet.http.HttpServletResponse.SC_FORBIDDEN;
+import static yanagishima.util.HttpRequestUtil.getRequiredParameter;
 
 @Singleton
 public class QueryStatusServlet extends HttpServlet {
@@ -45,7 +45,7 @@ public class QueryStatusServlet extends HttpServlet {
 	protected void doPost(HttpServletRequest request,
 			HttpServletResponse response) throws ServletException, IOException {
 
-		String datasource = HttpRequestUtil.getParam(request, "datasource");
+		String datasource = getRequiredParameter(request, "datasource");
 		if(yanagishimaConfig.isCheckDatasource()) {
 			if(!AccessControlUtil.validateDatasource(request, datasource)) {
 				try {

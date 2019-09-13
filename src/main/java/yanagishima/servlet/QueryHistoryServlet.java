@@ -7,7 +7,6 @@ import org.slf4j.LoggerFactory;
 import yanagishima.config.YanagishimaConfig;
 import yanagishima.row.Query;
 import yanagishima.util.AccessControlUtil;
-import yanagishima.util.HttpRequestUtil;
 import yanagishima.util.JsonUtil;
 import yanagishima.util.Status;
 
@@ -22,6 +21,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import static javax.servlet.http.HttpServletResponse.SC_FORBIDDEN;
+import static yanagishima.util.HttpRequestUtil.getRequiredParameter;
 
 @Singleton
 public class QueryHistoryServlet extends HttpServlet {
@@ -54,7 +54,7 @@ public class QueryHistoryServlet extends HttpServlet {
         HashMap<String, Object> retVal = new HashMap<String, Object>();
 
         try {
-            String datasource = HttpRequestUtil.getParam(request, "datasource");
+            String datasource = getRequiredParameter(request, "datasource");
             if(yanagishimaConfig.isCheckDatasource()) {
                 if(!AccessControlUtil.validateDatasource(request, datasource)) {
                     try {

@@ -8,7 +8,6 @@ import yanagishima.exception.HiveQueryErrorException;
 import yanagishima.result.HiveQueryResult;
 import yanagishima.service.HiveService;
 import yanagishima.util.AccessControlUtil;
-import yanagishima.util.HttpRequestUtil;
 import yanagishima.util.JsonUtil;
 import yanagishima.util.MetadataUtil;
 
@@ -25,6 +24,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 import static javax.servlet.http.HttpServletResponse.SC_FORBIDDEN;
+import static yanagishima.util.HttpRequestUtil.getRequiredParameter;
 
 @Singleton
 public class HiveServlet extends HttpServlet {
@@ -75,7 +75,7 @@ public class HiveServlet extends HttpServlet {
                     }
                 }
 
-                String datasource = HttpRequestUtil.getParam(request, "datasource");
+                String datasource = getRequiredParameter(request, "datasource");
                 if (yanagishimaConfig.isCheckDatasource()) {
                     if (!AccessControlUtil.validateDatasource(request, datasource)) {
                         try {
@@ -86,7 +86,7 @@ public class HiveServlet extends HttpServlet {
                         }
                     }
                 }
-                String engine = HttpRequestUtil.getParam(request, "engine");
+                String engine = getRequiredParameter(request, "engine");
                 if (userName != null) {
                     LOGGER.info(String.format("%s executed %s in datasource=%s, engine=%s", userName, query, datasource, engine));
                 }

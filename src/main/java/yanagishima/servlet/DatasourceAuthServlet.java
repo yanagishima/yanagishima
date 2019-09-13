@@ -3,7 +3,6 @@ package yanagishima.servlet;
 import com.google.common.collect.ImmutableMap;
 import yanagishima.config.YanagishimaConfig;
 import yanagishima.util.Constants;
-import yanagishima.util.HttpRequestUtil;
 import yanagishima.util.JsonUtil;
 
 import javax.inject.Inject;
@@ -15,6 +14,8 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.*;
 import java.util.stream.Collectors;
+
+import static yanagishima.util.HttpRequestUtil.getRequiredHeader;
 
 @Singleton
 public class DatasourceAuthServlet extends HttpServlet {
@@ -35,7 +36,7 @@ public class DatasourceAuthServlet extends HttpServlet {
         HashMap<String, Object> retVal = new HashMap<String, Object>();
 
         if (yanagishimaConfig.isCheckDatasource()) {
-            String header = HttpRequestUtil.getHeader(request, Constants.DATASOURCE_HEADER);
+            String header = getRequiredHeader(request, Constants.DATASOURCE_HEADER);
             if (header.equals("*")) {
                 retVal.put("datasources", getDatasourceEngineList(yanagishimaConfig.getDatasources()));
             } else {
