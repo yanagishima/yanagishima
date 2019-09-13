@@ -1,5 +1,6 @@
 package yanagishima.servlet;
 
+import yanagishima.bean.HttpRequestContext;
 import yanagishima.config.YanagishimaConfig;
 import yanagishima.util.AccessControlUtil;
 import yanagishima.util.SparkUtil;
@@ -15,28 +16,28 @@ import java.io.IOException;
 import java.util.Map;
 import java.util.Optional;
 
+import static java.util.Objects.requireNonNull;
 import static javax.servlet.http.HttpServletResponse.SC_FORBIDDEN;
-import static yanagishima.util.HttpRequestUtil.getRequiredParameter;
 
 @Singleton
 public class HiveQueryDetailServlet extends HttpServlet {
-
     private static final long serialVersionUID = 1L;
 
-    private YanagishimaConfig yanagishimaConfig;
+    private YanagishimaConfig config;
 
     @Inject
-    public HiveQueryDetailServlet(YanagishimaConfig yanagishimaConfig) {
-        this.yanagishimaConfig = yanagishimaConfig;
+    public HiveQueryDetailServlet(YanagishimaConfig config) {
+        this.config = config;
     }
 
     @Override
-    protected void doGet(HttpServletRequest request,
-                         HttpServletResponse response) throws ServletException, IOException {
+    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        HttpRequestContext context = new HttpRequestContext(request);
+        requireNonNull(context.getDatasource(), "datasource is null");
+        requireNonNull(context.getEngine(), "engine is null");
 
-        String datasource = getRequiredParameter(request, "datasource");
-        if (yanagishimaConfig.isCheckDatasource()) {
-            if (!AccessControlUtil.validateDatasource(request, datasource)) {
+        if (config.isCheckDatasource()) {
+            if (!AccessControlUtil.validateDatasource(request, context.getDatasource())) {
                 try {
                     response.sendError(SC_FORBIDDEN);
                     return;
@@ -45,10 +46,9 @@ public class HiveQueryDetailServlet extends HttpServlet {
                 }
             }
         }
-        String engine = getRequiredParameter(request, "engine");
-        String resourceManagerUrl = yanagishimaConfig.getResourceManagerUrl(datasource);
-        Optional<String> idOptinal = Optional.ofNullable(request.getParameter("id"));
-        if(engine.equals("hive")) {
+        String resourceManagerUrl = config.getResourceManagerUrl(context.getDatasource());
+        Optional<String> idOptinal = Optional.ofNullable(context.getId());
+        if("hive".equals(context.getEngine())) {
             idOptinal.ifPresent(id -> {
                 if (id.startsWith("application_")) {
                     try {
@@ -58,15 +58,15 @@ public class HiveQueryDetailServlet extends HttpServlet {
                     }
                 } else {
                     String userName = null;
-                    Optional<String> hiveUser = Optional.ofNullable(request.getParameter("user"));
-                    if(yanagishimaConfig.isUseAuditHttpHeaderName()) {
-                        userName = request.getHeader(yanagishimaConfig.getAuditHttpHeaderName());
+                    Optional<String> hiveUser = Optional.ofNullable(context.getUser());
+                    if(config.isUseAuditHttpHeaderName()) {
+                        userName = request.getHeader(config.getAuditHttpHeaderName());
                     } else {
                         if (hiveUser.isPresent()) {
                             userName = hiveUser.get();
                         }
                     }
-                    Optional<Map> applicationOptional = YarnUtil.getApplication(resourceManagerUrl, id, userName, yanagishimaConfig.getResourceManagerBegin(datasource));
+                    Optional<Map> applicationOptional = YarnUtil.getApplication(resourceManagerUrl, id, userName, config.getResourceManagerBegin(context.getDatasource()));
                     applicationOptional.ifPresent(application -> {
                         String applicationId = (String) application.get("id");
                         try {
@@ -77,8 +77,8 @@ public class HiveQueryDetailServlet extends HttpServlet {
                     });
                 }
             });
-        } else if(engine.equals("spark")) {
-            String sparkWebUrl = yanagishimaConfig.getSparkWebUrl(datasource);
+        } else if("spark".equals(context.getEngine())) {
+            String sparkWebUrl = config.getSparkWebUrl(context.getDatasource());
             if(idOptinal.isPresent()) {
                 String jobId = idOptinal.get();
                 try {
@@ -93,9 +93,7 @@ public class HiveQueryDetailServlet extends HttpServlet {
                 response.sendRedirect(sparkWebUrl);
             }
         } else {
-            throw new IllegalArgumentException(engine + " is illegal");
+            throw new IllegalArgumentException(context.getEngine() + " is illegal");
         }
-
     }
-
 }

@@ -2,6 +2,7 @@ package yanagishima.servlet;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import me.geso.tinyorm.TinyORM;
+import yanagishima.bean.HttpRequestContext;
 import yanagishima.bean.SparkSqlJob;
 import yanagishima.config.YanagishimaConfig;
 import yanagishima.row.Query;
@@ -25,31 +26,32 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+import static java.util.Objects.requireNonNull;
 import static javax.servlet.http.HttpServletResponse.SC_FORBIDDEN;
-import static yanagishima.util.HttpRequestUtil.getRequiredParameter;
+import static yanagishima.util.JsonUtil.writeJSON;
 
 @Singleton
 public class HiveQueryStatusServlet extends HttpServlet {
-
 	private static final long serialVersionUID = 1L;
 
-	private YanagishimaConfig yanagishimaConfig;
+	private final YanagishimaConfig config;
+	private final TinyORM db;
 
 	@Inject
-	private TinyORM db;
-
-	@Inject
-	public HiveQueryStatusServlet(YanagishimaConfig yanagishimaConfig) {
-		this.yanagishimaConfig = yanagishimaConfig;
+	public HiveQueryStatusServlet(YanagishimaConfig config, TinyORM db) {
+		this.config = config;
+		this.db = db;
 	}
 
 	@Override
-	protected void doPost(HttpServletRequest request,
-			HttpServletResponse response) throws ServletException, IOException {
+	protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+		HttpRequestContext context = new HttpRequestContext(request);
+		requireNonNull(context.getDatasource(), "datasource is null");
+		requireNonNull(context.getQueryId(), "queryid is null");
+		requireNonNull(context.getEngine(), "engine is null");
 
-		String datasource = getRequiredParameter(request, "datasource");
-		if(yanagishimaConfig.isCheckDatasource()) {
-			if(!AccessControlUtil.validateDatasource(request, datasource)) {
+		if(config.isCheckDatasource()) {
+			if(!AccessControlUtil.validateDatasource(request, context.getDatasource())) {
 				try {
 					response.sendError(SC_FORBIDDEN);
 					return;
@@ -58,22 +60,20 @@ public class HiveQueryStatusServlet extends HttpServlet {
 				}
 			}
 		}
-		String queryid = getRequiredParameter(request, "queryid");
-		String resourceManagerUrl = yanagishimaConfig.getResourceManagerUrl(datasource);
+		String resourceManagerUrl = config.getResourceManagerUrl(context.getDatasource());
 		String userName = null;
-		Optional<String> hiveUser = Optional.ofNullable(request.getParameter("user"));
-		if(yanagishimaConfig.isUseAuditHttpHeaderName()) {
-			userName = request.getHeader(yanagishimaConfig.getAuditHttpHeaderName());
+		Optional<String> hiveUser = Optional.ofNullable(context.getUser());
+		if(config.isUseAuditHttpHeaderName()) {
+			userName = request.getHeader(config.getAuditHttpHeaderName());
 		} else {
 			if (hiveUser.isPresent()) {
 				userName = hiveUser.get();
 			}
 		}
 
-		String engine = getRequiredParameter(request, "engine");
-		Optional<Query> queryOptional = db.single(Query.class).where("query_id=? and datasource=? and engine=?", queryid, datasource, engine).execute();
-		if(engine.equals("hive")) {
-			Optional<Map> applicationOptional = YarnUtil.getApplication(resourceManagerUrl, queryid, userName, yanagishimaConfig.getResourceManagerBegin(datasource));
+		Optional<Query> queryOptional = db.single(Query.class).where("query_id=? and datasource=? and engine=?", context.getQueryId(), context.getDatasource(), context.getEngine()).execute();
+		if("hive".equals(context.getEngine())) {
+			Optional<Map> applicationOptional = YarnUtil.getApplication(resourceManagerUrl, context.getQueryId(), userName, config.getResourceManagerBegin(context.getDatasource()));
 			if(applicationOptional.isPresent()) {
 				try {
 					response.setContentType("application/json");
@@ -90,10 +90,10 @@ public class HiveQueryStatusServlet extends HttpServlet {
 					retVal.put("state", "RUNNING");
 					retVal.put("progress", 0);
 					retVal.put("elapsedTime", 0);
-					JsonUtil.writeJSON(response, retVal);
+					writeJSON(response, retVal);
 				}
 			}
-		} else if(engine.equals("spark")) {
+		} else if("spark".equals(context.getEngine())) {
 			HashMap<String, Object> retVal = new HashMap<String, Object>();
 			if (queryOptional.isPresent()) {
 				if (queryOptional.get().getStatus().equals(Status.SUCCEED.name())) {
@@ -106,7 +106,7 @@ public class HiveQueryStatusServlet extends HttpServlet {
 			} else {
 				retVal.put("state", "RUNNING");
 
-                String sparkJdbcApplicationId = SparkUtil.getSparkJdbcApplicationId(yanagishimaConfig.getSparkWebUrl(datasource));
+                String sparkJdbcApplicationId = SparkUtil.getSparkJdbcApplicationId(config.getSparkWebUrl(context.getDatasource()));
                 List<Map> runningList = SparkUtil.getSparkRunningJobListWithProgress(resourceManagerUrl, sparkJdbcApplicationId);
                 if(runningList.isEmpty()) {
                     retVal.put("progress", 0);
@@ -126,17 +126,14 @@ public class HiveQueryStatusServlet extends HttpServlet {
                     }
                 }
 
-				LocalDateTime submitTimeLdt = LocalDateTime.parse(queryid.substring(0, "yyyyMMdd_HHmmss".length()), DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss"));
+				LocalDateTime submitTimeLdt = LocalDateTime.parse(context.getQueryId().substring(0, "yyyyMMdd_HHmmss".length()), DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss"));
 				ZonedDateTime submitTimeZdt = submitTimeLdt.atZone(ZoneId.of("GMT", ZoneId.SHORT_IDS));
 				long elapsedTimeMillis = ChronoUnit.MILLIS.between(submitTimeZdt, ZonedDateTime.now(ZoneId.of("GMT")));
 				retVal.put("elapsedTime", elapsedTimeMillis);
 			}
-			JsonUtil.writeJSON(response, retVal);
+			writeJSON(response, retVal);
 		} else {
-			throw new IllegalArgumentException(engine + " is illegal");
+			throw new IllegalArgumentException(context.getEngine() + " is illegal");
 		}
-
-
 	}
-
 }

@@ -1,14 +1,13 @@
 package yanagishima.servlet;
 
-import me.geso.tinyorm.TinyORM;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import yanagishima.bean.HttpRequestContext;
 import yanagishima.config.YanagishimaConfig;
 import yanagishima.exception.HiveQueryErrorException;
 import yanagishima.result.HiveQueryResult;
 import yanagishima.service.HiveService;
 import yanagishima.util.AccessControlUtil;
-import yanagishima.util.JsonUtil;
 import yanagishima.util.MetadataUtil;
 
 import javax.inject.Inject;
@@ -23,50 +22,44 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import static java.util.Objects.requireNonNull;
 import static javax.servlet.http.HttpServletResponse.SC_FORBIDDEN;
-import static yanagishima.util.HttpRequestUtil.getRequiredParameter;
+import static yanagishima.util.JsonUtil.writeJSON;
 
 @Singleton
 public class HiveServlet extends HttpServlet {
-
-    private static Logger LOGGER = LoggerFactory
-            .getLogger(HiveServlet.class);
-
+    private static final Logger LOGGER = LoggerFactory.getLogger(HiveServlet.class);
     private static final long serialVersionUID = 1L;
 
-    @Inject
-    private TinyORM db;
-
-    private YanagishimaConfig yanagishimaConfig;
-
+    private final YanagishimaConfig config;
     private final HiveService hiveService;
 
     @Inject
-    public HiveServlet(YanagishimaConfig yanagishimaConfig, HiveService hiveService) {
-        this.yanagishimaConfig = yanagishimaConfig;
+    public HiveServlet(YanagishimaConfig config, HiveService hiveService) {
+        this.config = config;
         this.hiveService = hiveService;
     }
 
     @Override
-    protected void doPost(HttpServletRequest request,
-                          HttpServletResponse response) throws ServletException, IOException {
-
-        HashMap<String, Object> retVal = new HashMap<String, Object>();
-
-        Optional<String> queryOptional = Optional.ofNullable(request.getParameter("query"));
-        queryOptional.ifPresent(query -> {
+    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        HttpRequestContext context = new HttpRequestContext(request);
+        HashMap<String, Object> retVal = new HashMap<>();
+        Optional.ofNullable(context.getQuery()).ifPresent(query -> {
             try {
+                requireNonNull(context.getDatasource(), "datasource is null");
+                requireNonNull(context.getEngine(), "engine is null");
+
                 String userName = null;
-                Optional<String> hiveUser = Optional.ofNullable(request.getParameter("user"));
-                Optional<String> hivePassword = Optional.ofNullable(request.getParameter("password"));
-                if(yanagishimaConfig.isUseAuditHttpHeaderName()) {
-                    userName = request.getHeader(yanagishimaConfig.getAuditHttpHeaderName());
+                Optional<String> hiveUser = Optional.ofNullable(context.getUser());
+                Optional<String> hivePassword = Optional.ofNullable(context.getPassword());
+                if(config.isUseAuditHttpHeaderName()) {
+                    userName = request.getHeader(config.getAuditHttpHeaderName());
                 } else {
                     if (hiveUser.isPresent() && hivePassword.isPresent()) {
                         userName = hiveUser.get();
                     }
                 }
-                if (yanagishimaConfig.isUserRequired() && userName == null) {
+                if (config.isUserRequired() && userName == null) {
                     try {
                         response.sendError(SC_FORBIDDEN);
                         return;
@@ -75,9 +68,8 @@ public class HiveServlet extends HttpServlet {
                     }
                 }
 
-                String datasource = getRequiredParameter(request, "datasource");
-                if (yanagishimaConfig.isCheckDatasource()) {
-                    if (!AccessControlUtil.validateDatasource(request, datasource)) {
+                if (config.isCheckDatasource()) {
+                    if (!AccessControlUtil.validateDatasource(request, context.getDatasource())) {
                         try {
                             response.sendError(SC_FORBIDDEN);
                             return;
@@ -86,20 +78,19 @@ public class HiveServlet extends HttpServlet {
                         }
                     }
                 }
-                String engine = getRequiredParameter(request, "engine");
                 if (userName != null) {
-                    LOGGER.info(String.format("%s executed %s in datasource=%s, engine=%s", userName, query, datasource, engine));
+                    LOGGER.info(String.format("%s executed %s in datasource=%s, engine=%s", userName, query, context.getDatasource(), context.getEngine()));
                 }
 
-                boolean storeFlag = Boolean.parseBoolean(Optional.ofNullable(request.getParameter("store")).orElse("false"));
-                int limit = yanagishimaConfig.getSelectLimit();
+                boolean storeFlag = Boolean.parseBoolean(Optional.ofNullable(context.getStore()).orElse("false"));
+                int limit = config.getSelectLimit();
                 try {
-                    HiveQueryResult hiveQueryResult = hiveService.doQuery(engine, datasource, query, userName, hiveUser, hivePassword, storeFlag, limit);
+                    HiveQueryResult hiveQueryResult = hiveService.doQuery(context.getEngine(), context.getDatasource(), query, userName, hiveUser, hivePassword, storeFlag, limit);
                     String queryid = hiveQueryResult.getQueryId();
                     retVal.put("queryid", queryid);
                     retVal.put("headers", hiveQueryResult.getColumns());
                     if(query.startsWith("SHOW SCHEMAS")) {
-                        List<String> invisibleDatabases = yanagishimaConfig.getInvisibleDatabases(datasource);
+                        List<String> invisibleDatabases = config.getInvisibleDatabases(context.getDatasource());
                         retVal.put("results", hiveQueryResult.getRecords().stream().filter(list -> !invisibleDatabases.contains(list.get(0))).collect(Collectors.toList()));
                     } else {
                         retVal.put("results", hiveQueryResult.getRecords());
@@ -111,18 +102,18 @@ public class HiveServlet extends HttpServlet {
                         retVal.put("warn", warningMessage);
                     });
                     if(query.startsWith("DESCRIBE")) {
-                        if(yanagishimaConfig.getMetadataServiceUrl(datasource).isPresent()) {
+                        if(config.getMetadataServiceUrl(context.getDatasource()).isPresent()) {
                             String[] strings = query.substring("DESCRIBE ".length()).split("\\.");
                             String schema = strings[0];
                             String table = null;
-                            if(engine.equals("hive")) {
+                            if("hive".equals(context.getEngine())) {
                                 table = strings[1].substring(1, strings[1].length() - 1);
-                            } else if(engine.equals("spark")) {
+                            } else if("spark".equals(context.getEngine())) {
                                 table = strings[1];
                             } else {
-                                throw new IllegalArgumentException(engine + " is illegal");
+                                throw new IllegalArgumentException(context.getEngine() + " is illegal");
                             }
-                            MetadataUtil.setMetadata(yanagishimaConfig.getMetadataServiceUrl(datasource).get(), retVal, schema, table, hiveQueryResult.getRecords());
+                            MetadataUtil.setMetadata(config.getMetadataServiceUrl(context.getDatasource()).get(), retVal, schema, table, hiveQueryResult.getRecords());
                         }
                     }
                 } catch (HiveQueryErrorException e) {
@@ -136,9 +127,6 @@ public class HiveServlet extends HttpServlet {
                 retVal.put("error", e.getMessage());
             }
         });
-
-
-        JsonUtil.writeJSON(response, retVal);
-
+        writeJSON(response, retVal);
     }
 }
