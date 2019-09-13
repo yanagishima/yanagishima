@@ -1,28 +1,27 @@
 package yanagishima.util;
 
+import static java.lang.String.format;
+
 import java.io.File;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
-public class PathUtil {
+public final class PathUtil {
+	private PathUtil() {}
 
-	public static Path getResultFilePath(String datasource, String queryid, boolean error) {
-
+	public static Path getResultFilePath(String datasource, String queryId, boolean error) {
 		String currentPath = new File(".").getAbsolutePath();
-		String yyyymmdd = queryid.substring(0, 8);
-		File datasourceDir = new File(String.format("%s/result/%s", currentPath, datasource));
+		String yyyymmdd = queryId.substring(0, 8);
+		File datasourceDir = new File(format("%s/result/%s", currentPath, datasource));
 		if (!datasourceDir.isDirectory()) {
 			datasourceDir.mkdir();
 		}
-		File yyyymmddDir = new File(String.format("%s/result/%s/%s", currentPath, datasource, yyyymmdd));
+		File yyyymmddDir = new File(format("%s/result/%s/%s", currentPath, datasource, yyyymmdd));
 		if (!yyyymmddDir.isDirectory()) {
 			yyyymmddDir.mkdir();
 		}
-		if (error) {
-			return Paths.get(String.format("%s/result/%s/%s/%s.err", currentPath, datasource, yyyymmdd, queryid));
-		} else {
-			return Paths.get(String.format("%s/result/%s/%s/%s.tsv", currentPath, datasource, yyyymmdd, queryid));
-		}
-	}
 
+		String extension = error ? "err" : "tsv";
+		return Paths.get(format("%s/result/%s/%s/%s.%s", currentPath, datasource, yyyymmdd, queryId, extension));
+	}
 }

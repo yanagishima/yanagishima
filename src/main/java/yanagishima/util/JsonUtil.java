@@ -1,23 +1,25 @@
 package yanagishima.util;
 
-import org.codehaus.jackson.map.ObjectMapper;
-
-import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.OutputStream;
 
-public class JsonUtil {
+import javax.servlet.http.HttpServletResponse;
 
-	public static void writeJSON(HttpServletResponse resp, Object obj) {
+import org.apache.http.entity.ContentType;
+import org.codehaus.jackson.map.ObjectMapper;
 
+public final class JsonUtil {
+	private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
+
+	private JsonUtil() {}
+
+	public static void writeJSON(HttpServletResponse response, Object obj) {
 		try {
-			resp.setContentType("application/json");
-			ObjectMapper mapper = new ObjectMapper();
-			OutputStream stream = resp.getOutputStream();
-			mapper.writeValue(stream, obj);
+			response.setContentType(ContentType.APPLICATION_JSON.getMimeType());
+			OutputStream stream = response.getOutputStream();
+			OBJECT_MAPPER.writeValue(stream, obj);
 		} catch (IOException e) {
 			throw new RuntimeException(e);
 		}
 	}
-
 }

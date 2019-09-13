@@ -1,5 +1,7 @@
 package yanagishima.config;
 
+import static com.google.common.base.MoreObjects.firstNonNull;
+
 import com.google.common.base.Splitter;
 import yanagishima.util.PropertiesUtil;
 
@@ -13,7 +15,7 @@ import java.util.*;
 public class YanagishimaConfig {
 	private static final Splitter SPLITTER = Splitter.on(',').trimResults().omitEmptyStrings();
 
-	private Properties properties;
+	private final Properties properties;
 
 	public YanagishimaConfig(Properties properties) {
 		this.properties = properties;
@@ -29,10 +31,7 @@ public class YanagishimaConfig {
 
 	public String getPrestoRedirectServer(String datasource) {
 		String redirectStr = properties.getProperty("presto.redirect.server." + datasource);
-		if(redirectStr == null) {
-			return getPrestoCoordinatorServer(datasource);
-		}
-		return redirectStr;
+		return firstNonNull(redirectStr, getPrestoCoordinatorServer(datasource));
 	}
 
 	public String getCatalog(String datasource) {
@@ -45,26 +44,17 @@ public class YanagishimaConfig {
 
 	public String getUser(String datasource) {
 		String user = properties.getProperty("user." + datasource);
-		if (user == null) {
-			return "yanagishima";
-		}
-		return user;
+		return firstNonNull(user, "yanagishima");
 	}
 	
 	public String getSource(String datasource) {
 		String source = properties.getProperty("source." + datasource);
-		if (source == null) {
-		 	return "yanagishima";
-		}
-		return source;
+		return firstNonNull(source, "yanagishima");
 	}
 
 	public int getSelectLimit() {
 		String limitStr = properties.getProperty("select.limit");
-		if(limitStr == null) {
-			return 500;
-		}
-		return Integer.parseInt(limitStr);
+		return Integer.parseInt(firstNonNull(limitStr, "500"));
 	}
 
 	public String getAuditHttpHeaderName() {
@@ -121,10 +111,7 @@ public class YanagishimaConfig {
 
 	public double getQueryMaxRunTimeSeconds() {
 		String secondsStr = properties.getProperty("presto.query.max-run-time-seconds");
-		if(secondsStr == null) {
-			return 3600;
-		}
-		return Double.parseDouble(secondsStr);
+		return Double.parseDouble(firstNonNull(secondsStr, "3600"));
 	}
 
 	public double getQueryMaxRunTimeSeconds(String datasource) {
@@ -137,26 +124,17 @@ public class YanagishimaConfig {
 
 	public int getMaxResultFileByteSize() {
 		String sizeStr = properties.getProperty("presto.max-result-file-byte-size");
-		if(sizeStr == null) {
-			return 1073741824;
-		}
-		return Integer.parseInt(sizeStr);
+		return Integer.parseInt(firstNonNull(sizeStr, "1073741824"));
 	}
 
 	public int getHiveMaxResultFileByteSize() {
 		String sizeStr = properties.getProperty("hive.max-result-file-byte-size");
-		if(sizeStr == null) {
-			return 1073741824;
-		}
-		return Integer.parseInt(sizeStr);
+		return Integer.parseInt(firstNonNull(sizeStr, "1073741824"));
 	}
 
 	public int getToValuesQueryLimit() {
 		String limitStr = properties.getProperty("to.values.query.limit");
-		if(limitStr == null) {
-			return 500;
-		}
-		return Integer.parseInt(limitStr);
+		return Integer.parseInt(firstNonNull(limitStr, "500"));
 	}
 
 	public boolean isCheckDatasource() {
@@ -187,12 +165,12 @@ public class YanagishimaConfig {
 		return Optional.ofNullable(properties.getProperty("fluentd.failed.tag"));
 	}
 
-	public Optional<String> getFluentdHost() {
-		return Optional.ofNullable(properties.getProperty("fluentd.host"));
+	public String getFluentdHost() {
+		return firstNonNull(properties.getProperty("fluentd.host"), "localhost");
 	}
 
-	public Optional<String> getFluentdPort() {
-		return Optional.ofNullable(properties.getProperty("fluentd.port"));
+	public int getFluentdPort() {
+		return Integer.parseInt(firstNonNull(properties.getProperty("fluentd.port"), "24224"));
 	}
 
 	public boolean isUserRequired() {
@@ -356,18 +334,12 @@ public class YanagishimaConfig {
 
 	public int getElasticsearchMaxResultFileByteSize() {
 		String sizeStr = properties.getProperty("elasticsearch.max-result-file-byte-size");
-		if(sizeStr == null) {
-			return 1073741824;
-		}
-		return Integer.parseInt(sizeStr);
+		return Integer.parseInt(firstNonNull(sizeStr, "1073741824"));
 	}
 
 	public double getElasticsearchQueryMaxRunTimeSeconds() {
 		String secondsStr = properties.getProperty("elasticsearch.query.max-run-time-seconds");
-		if(secondsStr == null) {
-			return 3600;
-		}
-		return Double.parseDouble(secondsStr);
+		return Double.parseDouble(firstNonNull(secondsStr, "3600"));
 	}
 
 	public double getElasticsearchQueryMaxRunTimeSeconds(String datasource) {
@@ -384,7 +356,7 @@ public class YanagishimaConfig {
 
 	public boolean isMetadataService(String datasource) {
 		String property = properties.getProperty(String.format("metadata.service.url.%s", datasource));
-		if(property == null) {
+		if (property == null) {
 			return false;
 		}
 		return true;
@@ -428,7 +400,7 @@ public class YanagishimaConfig {
 
 	public boolean IsDatatimePartitionHasHyphen(String datasource) {
 		String property = properties.getProperty("datetime.partition.has.hyphen." + datasource);
-		if(property == null) {
+		if (property == null) {
 			return false;
 		}
 		return true;

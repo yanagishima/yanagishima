@@ -74,7 +74,5 @@ public class HistoryUtil {
                 retVal.put("error", "you can't see query result which other submitted");
             }
         }
-
     }
-
 }
