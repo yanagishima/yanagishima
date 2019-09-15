@@ -129,6 +129,9 @@ dependencies {
     compile 'com.github.wyukawa.elasticsearch.unofficial.jdbc.driver:elasticsearch-jdbc-driver:0.0.9'
     compile 'org.jsoup:jsoup:1.11.3'
     compile 'mysql:mysql-connector-java:5.1.47'
+    compile 'com.owlike:genson:1.6'
+    compile 'javax.ws.rs:javax.ws.rs-api:2.1.1'
+    compile 'org.glassfish.jersey.containers:jersey-container-servlet:2.25.1'
 
     // Declare the dependency for your favourite test framework you want to use in your tests.
     // TestNG is also supported by the Gradle Test task. Just change the
