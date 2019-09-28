@@ -30,6 +30,5 @@ public class HiveServletModule extends ServletModule {
 		serve("/hivePartition").with(HivePartitionServlet.class);
 		serve("/sparkPartition").with(HivePartitionServlet.class);
 		serve("/convertHive").with(ConvertHiveServlet.class);
-
 	}
 }

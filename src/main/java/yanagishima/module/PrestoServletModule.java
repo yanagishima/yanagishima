@@ -61,6 +61,5 @@ public class PrestoServletModule extends ServletModule {
 		serve("/convertPresto").with(ConvertPrestoServlet.class);
 		serve("/label").with(LabelServlet.class);
 		serve("/starredSchema").with(StarredSchemaServlet.class);
-
 	}
 }
