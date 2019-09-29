@@ -5,6 +5,7 @@ import static com.google.common.base.MoreObjects.firstNonNull;
 import com.google.common.base.Splitter;
 import yanagishima.util.PropertiesUtil;
 
+import javax.annotation.Nullable;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -19,6 +20,14 @@ public class YanagishimaConfig {
 
 	public YanagishimaConfig(Properties properties) {
 		this.properties = properties;
+	}
+
+	public int getServerPort() {
+		return Integer.parseInt(properties.getProperty("jetty.port", "8080"));
+	}
+
+	public boolean corsEnabled() {
+		return Boolean.parseBoolean(properties.getProperty("cors.enabled", "false"));
 	}
 
 	public String getPrestoCoordinatorServer(String datasource) {
@@ -374,28 +383,28 @@ public class YanagishimaConfig {
 		return Optional.ofNullable(properties.getProperty(String.format("webhdfs.proxy.password.%s", datasource)));
 	}
 
-	public Optional<String> getDatabaseType() {
-		return Optional.ofNullable(properties.getProperty("database.type"));
+	public DatabaseType getDatabaseType() {
+		String databaseType = properties.getProperty("database.type", "sqlite").toUpperCase();
+		return DatabaseType.valueOf(databaseType);
 	}
 
-	public String getMysqlHost() {
-		return PropertiesUtil.getParam(properties, "mysql.host");
+	public enum DatabaseType {
+		SQLITE,
+		MYSQL
 	}
 
-	public String getMysqlPort() {
-		return PropertiesUtil.getParam(properties, "mysql.port");
+	public String getConnectionUrl() {
+		return properties.getProperty("database.connection-url", "jdbc:sqlite:data/yanagishima.db");
 	}
 
-	public String getMysqlDatabase() {
-		return PropertiesUtil.getParam(properties, "mysql.database");
+	@Nullable
+	public String getConnectionUsername() {
+		return properties.getProperty("database.user");
 	}
 
-	public String getMysqlUser() {
-		return PropertiesUtil.getParam(properties, "mysql.user");
-	}
-
-	public String getMysqlPassword() {
-		return PropertiesUtil.getParam(properties, "mysql.password");
+	@Nullable
+	public String getConnectionPassword() {
+		return properties.getProperty("database.password");
 	}
 
 	public boolean IsDatatimePartitionHasHyphen(String datasource) {

@@ -64,14 +64,15 @@ public class BookmarkServlet extends HttpServlet {
             String engine = getRequiredParameter(request, "engine");
             db.insert(Bookmark.class).value("datasource", datasource).value("query", query).value("title", title).value("engine", engine).value("user", userName).execute();
             List<Bookmark> bookmarkList = null;
-            if(yanagishimaConfig.getDatabaseType().isPresent()) {
-                if(yanagishimaConfig.getDatabaseType().get().equals("mysql")) {
+            switch (yanagishimaConfig.getDatabaseType()) {
+                case MYSQL:
                     bookmarkList = db.searchBySQL(Bookmark.class, "select bookmark_id, datasource, engine, query, title from bookmark where bookmark_id = last_insert_id()");
-                } else {
-                    throw new IllegalArgumentException(yanagishimaConfig.getDatabaseType().get() + " is illegal database.type");
-                }
-            } else {
-                bookmarkList = db.searchBySQL(Bookmark.class, "select bookmark_id, datasource, engine, query, title from bookmark where rowid = last_insert_rowid()");
+                    break;
+                case SQLITE:
+                    bookmarkList = db.searchBySQL(Bookmark.class, "select bookmark_id, datasource, engine, query, title from bookmark where rowid = last_insert_rowid()");
+                    break;
+                default:
+                    throw new IllegalArgumentException("Illeagal database type: " + yanagishimaConfig.getDatabaseType());
             }
             if(bookmarkList.size() == 1) {
                 retVal.put("bookmark_id", bookmarkList.get(0).getBookmarkId());
