@@ -5,8 +5,6 @@ import okhttp3.Response;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import yanagishima.config.YanagishimaConfig;
-import yanagishima.util.AccessControlUtil;
-import yanagishima.util.JsonUtil;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
@@ -15,81 +13,66 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
 
 import static io.prestosql.client.OkHttpUtil.basicAuth;
 import static javax.servlet.http.HttpServletResponse.SC_FORBIDDEN;
+import static yanagishima.util.AccessControlUtil.validateDatasource;
 import static yanagishima.util.HttpRequestUtil.getRequiredParameter;
+import static yanagishima.util.JsonUtil.writeJSON;
 
 @Singleton
 public class PrestoKillServlet extends HttpServlet {
-
-	private static Logger LOGGER = LoggerFactory.getLogger(PrestoKillServlet.class);
-
+	private static final Logger LOGGER = LoggerFactory.getLogger(PrestoKillServlet.class);
 	private static final long serialVersionUID = 1L;
 
-	private YanagishimaConfig yanagishimaConfig;
-
-	private OkHttpClient httpClient = new OkHttpClient();
+	private final YanagishimaConfig config;
+	private final OkHttpClient httpClient = new OkHttpClient();
 
 	@Inject
-	public PrestoKillServlet(YanagishimaConfig yanagishimaConfig) {
-		this.yanagishimaConfig = yanagishimaConfig;
+	public PrestoKillServlet(YanagishimaConfig config) {
+		this.config = config;
 	}
 
 	@Override
-	protected void doPost(HttpServletRequest request,
-			HttpServletResponse response) throws ServletException, IOException {
-
-		HashMap<String, Object> retVal = new HashMap<String, Object>();
-
+	protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 		Optional<String> queryIdOptinal = Optional.ofNullable(request.getParameter("queryid"));
-		queryIdOptinal.ifPresent(queryId -> {
+		if (queryIdOptinal.isEmpty()) {
+			writeJSON(response, Map.of());
+			return;
+		}
+
+		try {
 			String datasource = getRequiredParameter(request, "datasource");
-			if(yanagishimaConfig.isCheckDatasource()) {
-				if(!AccessControlUtil.validateDatasource(request, datasource)) {
-					try {
-						response.sendError(SC_FORBIDDEN);
-						return;
-					} catch (IOException e) {
-						throw new RuntimeException(e);
-					}
+			if (config.isCheckDatasource() && !validateDatasource(request, datasource)) {
+				try {
+					response.sendError(SC_FORBIDDEN);
+					return;
+				} catch (IOException e) {
+					throw new RuntimeException(e);
 				}
 			}
-			try {
-				String prestoCoordinatorServer = yanagishimaConfig.getPrestoCoordinatorServer(datasource);
-				okhttp3.Request prestoRequest = new okhttp3.Request.Builder().url(prestoCoordinatorServer + "/v1/query/" + queryId).delete().build();
-				Optional<String> prestoUser = Optional.ofNullable(request.getParameter("user"));
-				Optional<String> prestoPassword = Optional.ofNullable(request.getParameter("password"));
-				Response prestoResponse = null;
-				if (prestoUser.isPresent() && prestoPassword.isPresent()) {
-					OkHttpClient.Builder clientBuilder = httpClient.newBuilder();
-					clientBuilder.addInterceptor(basicAuth(prestoUser.get(), prestoPassword.get()));
-					try {
-						prestoResponse = clientBuilder.build().newCall(prestoRequest).execute();
-					} catch (IOException e) {
-						throw new RuntimeException(e);
-					}
-				} else {
-					try {
-						prestoResponse = httpClient.newCall(prestoRequest).execute();
-					} catch (IOException e) {
-						throw new RuntimeException(e);
-					}
-				}
-				retVal.put("code", prestoResponse.code());
-				retVal.put("message", prestoResponse.message());
-				retVal.put("url", prestoResponse.request().url());
-			} catch (Throwable e) {
-				LOGGER.error(e.getMessage(), e);
-				retVal.put("error", e.getMessage());
-			}
 
-			JsonUtil.writeJSON(response, retVal);
-
-		});
-
+			String coordinatorUrl = config.getPrestoCoordinatorServer(datasource);
+			Optional<String> username = Optional.ofNullable(request.getParameter("user"));
+			Optional<String> password = Optional.ofNullable(request.getParameter("password"));
+			Response killResponse = getKillResponse(coordinatorUrl, queryIdOptinal.get(), username, password);
+			writeJSON(response, Map.of("code", killResponse.code(), "message", killResponse.message(), "url", killResponse.request().url()));
+		} catch (Throwable e) {
+			LOGGER.error(e.getMessage(), e);
+			writeJSON(response, Map.of("error", e.getMessage()));
+		}
 	}
 
+	private Response getKillResponse(String coordinatorUrl, String queryId, Optional<String> username, Optional<String> password) throws IOException
+	{
+		okhttp3.Request request = new okhttp3.Request.Builder().url(coordinatorUrl + "/v1/query/" + queryId).delete().build();
+		if (username.isPresent() && password.isPresent()) {
+			OkHttpClient.Builder clientBuilder = httpClient.newBuilder();
+			clientBuilder.addInterceptor(basicAuth(username.get(), password.get()));
+			return clientBuilder.build().newCall(request).execute();
+		}
+		return httpClient.newCall(request).execute();
+	}
 }
