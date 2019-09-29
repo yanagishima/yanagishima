@@ -1,12 +1,11 @@
 package yanagishima.servlet;
 
+import com.google.common.base.Splitter;
 import me.geso.tinyorm.TinyORM;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import yanagishima.config.YanagishimaConfig;
 import yanagishima.row.Bookmark;
-import yanagishima.util.AccessControlUtil;
-import yanagishima.util.JsonUtil;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
@@ -18,177 +17,103 @@ import java.io.IOException;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static javax.servlet.http.HttpServletResponse.SC_FORBIDDEN;
+import static com.google.common.base.Preconditions.checkState;
+import static yanagishima.util.AccessControlUtil.sendForbiddenError;
+import static yanagishima.util.AccessControlUtil.validateDatasource;
 import static yanagishima.util.HttpRequestUtil.getRequiredParameter;
+import static yanagishima.util.JsonUtil.writeJSON;
 
 @Singleton
 public class BookmarkServlet extends HttpServlet {
-
-    private static Logger LOGGER = LoggerFactory
-            .getLogger(BookmarkServlet.class);
-
+    private static final Logger LOGGER = LoggerFactory.getLogger(BookmarkServlet.class);
     private static final long serialVersionUID = 1L;
+    private static final Splitter SPLITTER = Splitter.on(',').trimResults().omitEmptyStrings();
+
+    private final YanagishimaConfig config;
+    private final TinyORM db;
 
     @Inject
-    private TinyORM db;
-
-    private YanagishimaConfig yanagishimaConfig;
-
-    @Inject
-    public BookmarkServlet(YanagishimaConfig yanagishimaConfig) {
-        this.yanagishimaConfig = yanagishimaConfig;
+    public BookmarkServlet(YanagishimaConfig config, TinyORM db) {
+        this.config = config;
+        this.db = db;
     }
 
     @Override
-    protected void doPost(HttpServletRequest request,
-                          HttpServletResponse response) throws ServletException, IOException {
-
-        HashMap<String, Object> retVal = new HashMap<String, Object>();
-
+    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         try {
             String datasource = getRequiredParameter(request, "datasource");
-            if(yanagishimaConfig.isCheckDatasource()) {
-                if(!AccessControlUtil.validateDatasource(request, datasource)) {
-                    try {
-                        response.sendError(SC_FORBIDDEN);
-                        return;
-                    } catch (IOException e) {
-                        throw new RuntimeException(e);
-                    }
-                }
+            if (config.isCheckDatasource() && !validateDatasource(request, datasource)) {
+                sendForbiddenError(response);
+                return;
             }
-
-            String userName = request.getHeader(yanagishimaConfig.getAuditHttpHeaderName());
+            String userName = request.getHeader(config.getAuditHttpHeaderName());
             String query = getRequiredParameter(request, "query");
             String title = request.getParameter("title");
             String engine = getRequiredParameter(request, "engine");
+
             db.insert(Bookmark.class).value("datasource", datasource).value("query", query).value("title", title).value("engine", engine).value("user", userName).execute();
-            List<Bookmark> bookmarkList = null;
-            switch (yanagishimaConfig.getDatabaseType()) {
+            List<Bookmark> bookmarks;
+            switch (config.getDatabaseType()) {
                 case MYSQL:
-                    bookmarkList = db.searchBySQL(Bookmark.class, "select bookmark_id, datasource, engine, query, title from bookmark where bookmark_id = last_insert_id()");
+                    bookmarks = db.searchBySQL(Bookmark.class, "select bookmark_id, datasource, engine, query, title from bookmark where bookmark_id = last_insert_id()");
                     break;
                 case SQLITE:
-                    bookmarkList = db.searchBySQL(Bookmark.class, "select bookmark_id, datasource, engine, query, title from bookmark where rowid = last_insert_rowid()");
+                    bookmarks = db.searchBySQL(Bookmark.class, "select bookmark_id, datasource, engine, query, title from bookmark where rowid = last_insert_rowid()");
                     break;
                 default:
-                    throw new IllegalArgumentException("Illeagal database type: " + yanagishimaConfig.getDatabaseType());
+                    throw new IllegalArgumentException("Illegal database type: " + config.getDatabaseType());
             }
-            if(bookmarkList.size() == 1) {
-                retVal.put("bookmark_id", bookmarkList.get(0).getBookmarkId());
-            } else {
-                retVal.put("error", "too many bookmarks = " + bookmarkList);
-            }
+            checkState(bookmarks.size() == 1, "Too many bookmarks: " + bookmarks.size());
+            writeJSON(response, Map.of("bookmark_id", bookmarks.get(0).getBookmarkId()));
         } catch (Throwable e) {
             LOGGER.error(e.getMessage(), e);
-            retVal.put("error", e.getMessage());
+            writeJSON(response, Map.of("error", e.getMessage()));
         }
-
-        JsonUtil.writeJSON(response, retVal);
-
     }
 
     @Override
-    protected void doGet(HttpServletRequest request,
-                          HttpServletResponse response) throws ServletException, IOException {
-
-        HashMap<String, Object> retVal = new HashMap<String, Object>();
-
+    protected void doGet(HttpServletRequest request, HttpServletResponse response) {
         try {
             String datasource = getRequiredParameter(request, "datasource");
-            if(yanagishimaConfig.isCheckDatasource()) {
-                if(!AccessControlUtil.validateDatasource(request, datasource)) {
-                    try {
-                        response.sendError(SC_FORBIDDEN);
-                        return;
-                    } catch (IOException e) {
-                        throw new RuntimeException(e);
-                    }
-                }
+            if (config.isCheckDatasource() && !validateDatasource(request, datasource)) {
+                sendForbiddenError(response);
+                return;
             }
-            String[] bookmarkIds = getRequiredParameter(request, "bookmark_id").split(",");
-            if(bookmarkIds.length == 0) {
-                retVal.put("bookmarkList", new ArrayList<>());
+            List<String> bookmarkIds = SPLITTER.splitToList(getRequiredParameter(request, "bookmark_id"));
+            if (bookmarkIds.isEmpty()) {
+                writeJSON(response, Map.of("bookmarkList", List.of()));
                 return;
             }
 
-            if(bookmarkIds.length == 1 && bookmarkIds[0].length() == 0) {
-                retVal.put("bookmarkList", new ArrayList<>());
-                return;
-            }
-
-            String placeholder = Arrays.stream(bookmarkIds).map(r -> "?").collect(Collectors.joining(", "));
-            List<Bookmark> bookmarkList = db.searchBySQL(Bookmark.class,
-                    "SELECT bookmark_id, datasource, engine, query, title FROM bookmark WHERE datasource=\'" + datasource + "\' and bookmark_id IN (" + placeholder + ")",
-                    Arrays.stream(bookmarkIds).map(s -> Integer.parseInt(s)).collect(Collectors.toList()));
-
-            List<Map> resultMapList = new ArrayList<>();
-            for(Bookmark bookmark : bookmarkList) {
-                Map<String, Object> m = new HashMap<>();
-                m.put("bookmark_id", bookmark.getBookmarkId());
-                m.put("datasource", bookmark.getDatasource());
-                m.put("engine", bookmark.getEngine());
-                m.put("query", bookmark.getQuery());
-                m.put("title", bookmark.getTitle());
-                resultMapList.add(m);
-            }
-            retVal.put("bookmarkList", resultMapList);
-            
+            String placeholder = bookmarkIds.stream().map(r -> "?").collect(Collectors.joining(", "));
+            List<Object> bookmarkParameters = bookmarkIds.stream().map(Integer::parseInt).collect(Collectors.toList());
+            List<Bookmark> bookmarks = db.searchBySQL(Bookmark.class, "SELECT bookmark_id, datasource, engine, query, title FROM bookmark WHERE datasource=\'" + datasource + "\' AND bookmark_id IN (" + placeholder + ")", bookmarkParameters);
+            writeJSON(response, Map.of("bookmarkList", bookmarks));
         } catch (Throwable e) {
             LOGGER.error(e.getMessage(), e);
-            retVal.put("error", e.getMessage());
+            writeJSON(response, Map.of("error", e.getMessage()));
         }
-
-        JsonUtil.writeJSON(response, retVal);
-
     }
 
-
     @Override
-    protected void doDelete(HttpServletRequest request,
-                          HttpServletResponse response) throws ServletException, IOException {
-
-        HashMap<String, Object> retVal = new HashMap<String, Object>();
-
+    protected void doDelete(HttpServletRequest request, HttpServletResponse response) {
         try {
             String datasource = getRequiredParameter(request, "datasource");
-            if(yanagishimaConfig.isCheckDatasource()) {
-                if(!AccessControlUtil.validateDatasource(request, datasource)) {
-                    try {
-                        response.sendError(SC_FORBIDDEN);
-                        return;
-                    } catch (IOException e) {
-                        throw new RuntimeException(e);
-                    }
-                }
+            if (config.isCheckDatasource() && !validateDatasource(request, datasource)) {
+                sendForbiddenError(response);
+                return;
             }
 
             String bookmarkId = getRequiredParameter(request, "bookmark_id");
-            Bookmark deletedBookmark = db.single(Bookmark.class).where("bookmark_id=?", bookmarkId).execute().get();
-            deletedBookmark.delete();
+            db.single(Bookmark.class).where("bookmark_id = ?", bookmarkId).execute().ifPresent(Bookmark::delete);
 
             String engine = getRequiredParameter(request, "engine");
-            String userName = request.getHeader(yanagishimaConfig.getAuditHttpHeaderName());
-            List<Bookmark> bookmarkList = db.search(Bookmark.class).where("datasource = ? and engine = ? and user = ?", datasource, engine, userName).execute();
-
-            List<Map> resultMapList = new ArrayList<>();
-            for(Bookmark bookmark : bookmarkList) {
-                Map<String, Object> m = new HashMap<>();
-                m.put("bookmark_id", bookmark.getBookmarkId());
-                m.put("datasource", bookmark.getDatasource());
-                m.put("engine", bookmark.getEngine());
-                m.put("query", bookmark.getQuery());
-                m.put("title", bookmark.getTitle());
-                resultMapList.add(m);
-            }
-            retVal.put("bookmarkList", resultMapList);
+            String userName = request.getHeader(config.getAuditHttpHeaderName());
+            List<Bookmark> bookmarks = db.search(Bookmark.class).where("datasource = ? AND engine = ? AND user = ?", datasource, engine, userName).execute();
+            writeJSON(response, Map.of("bookmarkList", bookmarks));
         } catch (Throwable e) {
             LOGGER.error(e.getMessage(), e);
-            retVal.put("error", e.getMessage());
+            writeJSON(response, Map.of("bookmarkList", Map.of("error", e.getMessage())));
         }
-
-        JsonUtil.writeJSON(response, retVal);
-
     }
-
 }
