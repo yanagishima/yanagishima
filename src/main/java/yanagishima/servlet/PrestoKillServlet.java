@@ -23,9 +23,9 @@ import static javax.servlet.http.HttpServletResponse.SC_FORBIDDEN;
 import static yanagishima.util.HttpRequestUtil.getRequiredParameter;
 
 @Singleton
-public class KillServlet extends HttpServlet {
+public class PrestoKillServlet extends HttpServlet {
 
-	private static Logger LOGGER = LoggerFactory.getLogger(KillServlet.class);
+	private static Logger LOGGER = LoggerFactory.getLogger(PrestoKillServlet.class);
 
 	private static final long serialVersionUID = 1L;
 
@@ -34,7 +34,7 @@ public class KillServlet extends HttpServlet {
 	private OkHttpClient httpClient = new OkHttpClient();
 
 	@Inject
-	public KillServlet(YanagishimaConfig yanagishimaConfig) {
+	public PrestoKillServlet(YanagishimaConfig yanagishimaConfig) {
 		this.yanagishimaConfig = yanagishimaConfig;
 	}
 
