@@ -1,9 +1,13 @@
 package yanagishima.servlet;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import yanagishima.config.YanagishimaConfig;
-import yanagishima.util.JsonUtil;
+import static java.lang.String.format;
+import static yanagishima.util.JsonUtil.writeJSON;
+import static yanagishima.util.PrestoQueryProvider.listToValues;
+
+import java.io.IOException;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
@@ -11,61 +15,39 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Optional;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.google.common.base.Splitter;
+
+import yanagishima.config.YanagishimaConfig;
 
 @Singleton
 public class ToValuesQueryServlet extends HttpServlet {
-
-    private static Logger LOGGER = LoggerFactory.getLogger(ToValuesQueryServlet.class);
-
+    private static final Logger LOGGER = LoggerFactory.getLogger(ToValuesQueryServlet.class);
     private static final long serialVersionUID = 1L;
+    private static final Splitter SPLITTER = Splitter.on('\n');
 
-    private final YanagishimaConfig yanagishimaConfig;
+    private final YanagishimaConfig config;
 
     @Inject
-    public ToValuesQueryServlet(YanagishimaConfig yanagishimaConfig) {
-        this.yanagishimaConfig = yanagishimaConfig;
+    public ToValuesQueryServlet(YanagishimaConfig config) {
+        this.config = config;
     }
 
     @Override
-    protected void doPost(HttpServletRequest request,
-                          HttpServletResponse response) throws ServletException, IOException {
-
-        HashMap<String, Object> retVal = new HashMap<String, Object>();
-
+    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         try {
-            Optional<String> csvOptional = Optional.ofNullable(request.getParameter("csv"));
-            csvOptional.ifPresent(csv -> {
-                String[] lines = csv.split("\n");
-                if (lines.length < 2) {
-                    throw new RuntimeException("At least, there must be 2 lines");
-                }
-                if (lines.length > yanagishimaConfig.getToValuesQueryLimit()) {
-                    throw new RuntimeException(String.format("At most, there must be %d lines", yanagishimaConfig.getToValuesQueryLimit()));
-                }
-                int lineNumber = 0;
-                List<String> rows = new ArrayList<>();
-                for (String line : lines) {
-                    if (lineNumber != 0) {
-                        rows.add("(" + line + ")");
-                    }
-                    lineNumber++;
-                }
-                String valuesQuery = String.format("SELECT * FROM ( VALUES\n%s ) AS t (%s)", String.join(",\n", rows), lines[0]);
-                LOGGER.info(String.format("query=%s", valuesQuery));
-                retVal.put("query", valuesQuery);
+            Optional.ofNullable(request.getParameter("csv")).ifPresent(csv -> {
+                List<String> lines = SPLITTER.splitToList(csv);
+                String valuesQuery = listToValues(lines, config.getToValuesQueryLimit());
+                LOGGER.info(format("query=%s", valuesQuery));
+                writeJSON(response, Map.of("query", valuesQuery));
             });
         } catch (Throwable e) {
             LOGGER.error(e.getMessage(), e);
-            retVal.put("error", e.getMessage());
+            writeJSON(response, Map.of("error", e.getMessage()));
         }
-
-        JsonUtil.writeJSON(response, retVal);
-
     }
-
 }
