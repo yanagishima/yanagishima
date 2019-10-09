@@ -1,4 +1,4 @@
-# yanagishima
+# yanagishima [![Build Status](https://travis-ci.com/yanagishima/yanagishima.svg?branch=master)](https://travis-ci.com/yanagishima/yanagishima)
 
 yanagishima is a Web UI for presto/hive.
 
