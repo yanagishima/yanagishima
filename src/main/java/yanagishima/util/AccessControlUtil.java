@@ -1,24 +1,21 @@
 package yanagishima.util;
 
+import com.google.common.base.Splitter;
 
 import javax.servlet.http.HttpServletRequest;
-import java.util.Arrays;
-import java.util.List;
 
 import static yanagishima.util.HttpRequestUtil.getRequiredHeader;
 
-public class AccessControlUtil {
+public final class AccessControlUtil {
+    private static final Splitter SPLITTER = Splitter.on(',').trimResults().omitEmptyStrings();
+
+    private AccessControlUtil() {}
 
     public static boolean validateDatasource(HttpServletRequest request, String datasource) {
-
         String header = getRequiredHeader(request, Constants.DATASOURCE_HEADER);
-        if(header.equals("*")) {
+        if (header.equals("*")) {
             return true;
         }
-        List<String> headerDatasources = Arrays.asList(header.split(","));
-        if(!headerDatasources.contains(datasource)) {
-            return false;
-        }
-        return true;
+        return SPLITTER.splitToList(header).contains(datasource);
     }
 }
