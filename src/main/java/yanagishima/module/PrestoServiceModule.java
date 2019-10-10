@@ -11,17 +11,16 @@ import java.util.Properties;
 
 public class PrestoServiceModule extends AbstractModule {
 
-	private Properties properties;
+	private final Properties properties;
 
 	public PrestoServiceModule(Properties properties) {
 		this.properties = properties;
 	}
 
+	@Override
 	protected void configure() {
 		bind(PrestoService.class).to(PrestoServiceImpl.class);
 		bind(OldPrestoService.class).to(OldPrestoServiceImpl.class);
-		bind(YanagishimaConfig.class)
-				.toInstance(
-						new YanagishimaConfig(this.properties));
+		bind(YanagishimaConfig.class).toInstance(new YanagishimaConfig(this.properties));
 	}
 }

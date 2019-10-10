@@ -7,16 +7,10 @@ import yanagishima.provider.TinyORMProvider;
 
 import java.sql.Connection;
 
-
 public class DbModule extends AbstractModule {
-
     @Override
     protected void configure() {
-
-        bind(Connection.class)
-                .toProvider(ConnectionProvider.class);
-
-        bind(TinyORM.class)
-                .toProvider(TinyORMProvider.class);
+        bind(Connection.class).toProvider(ConnectionProvider.class);
+        bind(TinyORM.class).toProvider(TinyORMProvider.class);
     }
 }
