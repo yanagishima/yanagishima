@@ -75,11 +75,9 @@ yanagishima is a Web UI for presto/hive.
   yanagishima setting is the following
   ```
   database.type=mysql
-  mysql.port=3306
-  mysql.host=localhost
-  mysql.database=yanagishima
-  mysql.user=...
-  mysql.password=...
+  database.connection-url=jdbc:mysql://localhost:3306/yanagishima?useSSL=false
+  database.user=...
+  database.password=...
   ```
 * 20.0
   * show query diff
