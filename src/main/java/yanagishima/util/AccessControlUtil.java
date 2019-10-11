@@ -3,7 +3,10 @@ package yanagishima.util;
 import com.google.common.base.Splitter;
 
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
 
+import static javax.servlet.http.HttpServletResponse.SC_FORBIDDEN;
 import static yanagishima.util.HttpRequestUtil.getRequiredHeader;
 
 public final class AccessControlUtil {
@@ -17,5 +20,13 @@ public final class AccessControlUtil {
             return true;
         }
         return SPLITTER.splitToList(header).contains(datasource);
+    }
+
+    public static void sendForbiddenError(HttpServletResponse response) {
+        try {
+            response.sendError(SC_FORBIDDEN);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 }
