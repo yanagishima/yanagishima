@@ -12,77 +12,53 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 
-public class DownloadUtil {
+public final class DownloadUtil {
+    private static final byte[] BOM = new byte[]{ (byte) 0xef, (byte) 0xbb, (byte) 0xbf };
 
-    public static void tsvDownload(HttpServletResponse response, String fileName, String datasource, String queryid, String encode, boolean header) {
-        Path resultFilePath = PathUtil.getResultFilePath(datasource, queryid, false);
-        if(!resultFilePath.toFile().exists()) {
-            throw new RuntimeException(resultFilePath.toFile().getName());
+    private DownloadUtil() {}
+
+    public static void downloadTsv(HttpServletResponse response, String fileName, String datasource, String queryid, String encode, boolean showHeader) {
+        Path filePath = PathUtil.getResultFilePath(datasource, queryid, false);
+        if(!filePath.toFile().exists()) {
+            throw new RuntimeException(filePath.toFile().getName());
         }
         response.setContentType("application/octet-stream");
         response.setHeader("Content-Disposition", "inline; filename=\"" + fileName + "\"");
-        try {
-            writeBOM(response.getOutputStream());
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-        try (PrintWriter printWriter = new PrintWriter(new OutputStreamWriter(response.getOutputStream(), encode))) {
-            try(BufferedReader br = Files.newBufferedReader(resultFilePath);
-                CSVPrinter csvPrinter = new CSVPrinter(printWriter, CSVFormat.EXCEL.withDelimiter('\t').withRecordSeparator(System.getProperty("line.separator")));) {
-                CSVParser parse = CSVFormat.EXCEL.withDelimiter('\t').withNullString("\\N").parse(br);
-                int lineNumber = 0;
-                for (CSVRecord csvRecord : parse) {
-                    List<String> columnList = new ArrayList<>();
-                    for (String column : csvRecord) {
-                        columnList.add(column);
-                    }
-                    if(header || lineNumber > 0) {
-                        csvPrinter.printRecord(columnList);
-                    }
-                    lineNumber++;
-                }
-            }
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+
+        download(response, filePath, encode, showHeader, '\t');
     }
 
-    public static void csvDownload(HttpServletResponse response, String fileName, String datasource, String queryid, String encode, boolean header) {
-        Path resultFilePath = PathUtil.getResultFilePath(datasource, queryid, false);
-        if(!resultFilePath.toFile().exists()) {
-            throw new RuntimeException(resultFilePath.toFile().getName());
+    public static void downloadCsv(HttpServletResponse response, String fileName, String datasource, String queryid, String encode, boolean showHeader) {
+        Path filePath = PathUtil.getResultFilePath(datasource, queryid, false);
+        if(!filePath.toFile().exists()) {
+            throw new RuntimeException(filePath.toFile().getName());
         }
         response.setContentType("text/csv");
         response.setHeader("Content-Disposition", "inline; filename=\"" + fileName + "\"");
-        try {
-            writeBOM(response.getOutputStream());
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
 
-        try (PrintWriter printWriter = new PrintWriter(new OutputStreamWriter(response.getOutputStream(), encode))) {
-            try(BufferedReader br = Files.newBufferedReader(resultFilePath);
-                CSVPrinter csvPrinter = new CSVPrinter(printWriter, CSVFormat.EXCEL.withRecordSeparator(System.getProperty("line.separator")));) {
-                CSVParser parse = CSVFormat.EXCEL.withDelimiter('\t').withNullString("\\N").parse(br);
-                int lineNumber = 0;
-                for (CSVRecord csvRecord : parse) {
-                    List<String> columnList = new ArrayList<>();
-                    for (String column : csvRecord) {
-                        columnList.add(column);
+        download(response, filePath, encode, showHeader, ',');
+    }
+
+    private static void download(HttpServletResponse response, Path resultFilePath, String encode, boolean showHeader, char delimiter) {
+        try (PrintWriter writer = new PrintWriter(new OutputStreamWriter(response.getOutputStream(), encode))) {
+            try(BufferedReader reader = Files.newBufferedReader(resultFilePath);
+                CSVPrinter printer = new CSVPrinter(writer, CSVFormat.EXCEL.withDelimiter(delimiter).withRecordSeparator(System.getProperty("line.separator")))) {
+                CSVParser parser = CSVFormat.EXCEL.withDelimiter('\t').withNullString("\\N").parse(reader);
+
+                response.getOutputStream().write(BOM);
+                int rowNumber = 0;
+                for (CSVRecord record : parser) {
+                    List<String> columns = new ArrayList<>();
+                    record.forEach(columns::add);
+
+                    if(showHeader || rowNumber > 0) {
+                        printer.printRecord(columns);
                     }
-                    if(header || lineNumber > 0) {
-                        csvPrinter.printRecord(columnList);
-                    }
-                    lineNumber++;
+                    rowNumber++;
                 }
             }
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
     }
-
-    public static void writeBOM(OutputStream out) throws IOException {
-        out.write(new byte[]{ (byte)0xef,(byte)0xbb, (byte)0xbf });
-    }
-
 }
