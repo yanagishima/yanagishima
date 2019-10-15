@@ -46,8 +46,8 @@ public class YanagishimaServer {
         ServletContextHandler servletContextHandler = new ServletContextHandler(server, "/", ServletContextHandler.SESSIONS);
         servletContextHandler.addFilter(new FilterHolder(new YanagishimaFilter(config.corsEnabled(), config.getAuditHttpHeaderName())), "/*", EnumSet.of(DispatcherType.REQUEST));
         servletContextHandler.addFilter(GuiceFilter.class, "/*", EnumSet.allOf(DispatcherType.class));
-        servletContextHandler.addServlet(DefaultServlet.class, "/");
         servletContextHandler.addServlet(new ServletHolder(new ServletContainer(new YanagishimaResourceConfig(config))), "/*");
+        servletContextHandler.addServlet(DefaultServlet.class, "/"); // The default servlet for "/" path should be added lastly
         servletContextHandler.setResourceBase(properties.getProperty("web.resource.dir", "web"));
 
         LOGGER.info("Yanagishima Server started...");
