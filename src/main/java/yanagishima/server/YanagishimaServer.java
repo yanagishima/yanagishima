@@ -11,8 +11,6 @@ import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.servlet.DefaultServlet;
 import org.eclipse.jetty.servlet.FilterHolder;
 import org.eclipse.jetty.servlet.ServletContextHandler;
-import org.eclipse.jetty.servlet.ServletHolder;
-import org.glassfish.jersey.servlet.ServletContainer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import yanagishima.config.YanagishimaConfig;
@@ -46,8 +44,7 @@ public class YanagishimaServer {
         ServletContextHandler servletContextHandler = new ServletContextHandler(server, "/", ServletContextHandler.SESSIONS);
         servletContextHandler.addFilter(new FilterHolder(new YanagishimaFilter(config.corsEnabled(), config.getAuditHttpHeaderName())), "/*", EnumSet.of(DispatcherType.REQUEST));
         servletContextHandler.addFilter(GuiceFilter.class, "/*", EnumSet.allOf(DispatcherType.class));
-        servletContextHandler.addServlet(new ServletHolder(new ServletContainer(new YanagishimaResourceConfig(config))), "/*");
-        servletContextHandler.addServlet(DefaultServlet.class, "/"); // The default servlet for "/" path should be added lastly
+        servletContextHandler.addServlet(DefaultServlet.class, "/");
         servletContextHandler.setResourceBase(properties.getProperty("web.resource.dir", "web"));
 
         LOGGER.info("Yanagishima Server started...");

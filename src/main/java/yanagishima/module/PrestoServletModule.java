@@ -10,6 +10,7 @@ public class PrestoServletModule extends ServletModule {
 		bind(PrestoAsyncServlet.class);
 		bind(QueryServlet.class);
 		bind(PrestoKillServlet.class);
+		bind(FormatSqlServlet.class);
 		bind(HistoryServlet.class);
 		bind(HistoryStatusServlet.class);
 		bind(ShareHistoryServlet.class);
@@ -29,6 +30,7 @@ public class PrestoServletModule extends ServletModule {
 		bind(TableListServlet.class);
 		bind(PrestoPartitionServlet.class);
 		bind(CommentServlet.class);
+		bind(ConvertPrestoServlet.class);
 		bind(LabelServlet.class);
 		bind(StarredSchemaServlet.class);
 
@@ -36,6 +38,7 @@ public class PrestoServletModule extends ServletModule {
 		serve("/prestoAsync").with(PrestoAsyncServlet.class);
 		serve("/query").with(QueryServlet.class);
 		serve("/kill").with(PrestoKillServlet.class);
+		serve("/format").with(FormatSqlServlet.class);
 		serve("/history").with(HistoryServlet.class);
 		serve("/historyStatus").with(HistoryStatusServlet.class);
 		serve("/share/shareHistory").with(ShareHistoryServlet.class);
@@ -55,6 +58,7 @@ public class PrestoServletModule extends ServletModule {
 		serve("/tableList").with(TableListServlet.class);
 		serve("/prestoPartition").with(PrestoPartitionServlet.class);
 		serve("/comment").with(CommentServlet.class);
+		serve("/convertPresto").with(ConvertPrestoServlet.class);
 		serve("/label").with(LabelServlet.class);
 		serve("/starredSchema").with(StarredSchemaServlet.class);
 	}
