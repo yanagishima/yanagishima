@@ -226,7 +226,7 @@ public class HiveServiceImpl implements HiveService {
                     hiveQueryResult.setRecords(new ArrayList<>());
                     hiveQueryResult.setColumns(new ArrayList<>());
                     return;
-                } catch (SQLException | IOException e) {
+                } catch (IOException e) {
                     throw new RuntimeException(e);
                 }
             }
