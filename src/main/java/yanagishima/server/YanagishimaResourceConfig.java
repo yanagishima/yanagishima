@@ -3,6 +3,7 @@ package yanagishima.server;
 import org.glassfish.hk2.utilities.binding.AbstractBinder;
 import org.glassfish.jersey.server.ResourceConfig;
 import yanagishima.config.YanagishimaConfig;
+import yanagishima.servlet.api.DefaultPath;
 import yanagishima.servlet.api.HiveToPrestoQueryConverter;
 import yanagishima.servlet.api.PrestoSqlFormatter;
 import yanagishima.servlet.api.PrestoToHiveQueryConverter;
@@ -15,6 +16,7 @@ public class YanagishimaResourceConfig extends ResourceConfig {
         register(PrestoSqlFormatter.class);
         register(HiveToPrestoQueryConverter.class);
         register(PrestoToHiveQueryConverter.class);
+        register(DefaultPath.class);
 
         register(new AbstractBinder() {
             @Override
