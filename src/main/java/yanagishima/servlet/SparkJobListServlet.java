@@ -2,8 +2,6 @@ package yanagishima.servlet;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import me.geso.tinyorm.TinyORM;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import yanagishima.bean.SparkSqlJob;
 import yanagishima.config.YanagishimaConfig;
 import yanagishima.util.SparkUtil;
@@ -28,9 +26,6 @@ import static yanagishima.util.HttpRequestUtil.getRequiredParameter;
 
 @Singleton
 public class SparkJobListServlet extends HttpServlet {
-
-	private static Logger LOGGER = LoggerFactory.getLogger(SparkJobListServlet.class);
-
 	private static final long serialVersionUID = 1L;
 
 	private YanagishimaConfig yanagishimaConfig;

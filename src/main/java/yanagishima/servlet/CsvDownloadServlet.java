@@ -1,8 +1,6 @@
 package yanagishima.servlet;
 
 import me.geso.tinyorm.TinyORM;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import yanagishima.config.YanagishimaConfig;
 import yanagishima.row.Query;
 import yanagishima.util.DownloadUtil;
@@ -22,9 +20,6 @@ import static yanagishima.util.HttpRequestUtil.getRequiredParameter;
 
 @Singleton
 public class CsvDownloadServlet extends HttpServlet {
-
-    private static Logger LOGGER = LoggerFactory.getLogger(CsvDownloadServlet.class);
-
     private static final long serialVersionUID = 1L;
 
     private YanagishimaConfig yanagishimaConfig;

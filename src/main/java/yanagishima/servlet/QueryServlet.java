@@ -5,8 +5,6 @@ import me.geso.tinyorm.TinyORM;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import yanagishima.config.YanagishimaConfig;
 import yanagishima.row.Query;
 
@@ -29,9 +27,6 @@ import static yanagishima.util.HttpRequestUtil.getRequiredParameter;
 
 @Singleton
 public class QueryServlet extends HttpServlet {
-
-	private static Logger LOGGER = LoggerFactory.getLogger(QueryServlet.class);
-
 	private static final long serialVersionUID = 1L;
 
 	private YanagishimaConfig yanagishimaConfig;
