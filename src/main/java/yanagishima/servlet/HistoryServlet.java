@@ -5,7 +5,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import yanagishima.config.YanagishimaConfig;
 import yanagishima.row.Query;
-import yanagishima.util.AccessControlUtil;
 import yanagishima.util.HistoryUtil;
 import yanagishima.util.JsonUtil;
 
@@ -19,7 +18,8 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Optional;
 
-import static javax.servlet.http.HttpServletResponse.SC_FORBIDDEN;
+import static yanagishima.util.AccessControlUtil.sendForbiddenError;
+import static yanagishima.util.AccessControlUtil.validateDatasource;
 import static yanagishima.util.HttpRequestUtil.getRequiredParameter;
 
 @Singleton
@@ -50,15 +50,9 @@ public class HistoryServlet extends HttpServlet {
             Optional<String> queryidOptional = Optional.ofNullable(request.getParameter("queryid"));
             if(queryidOptional.isPresent()) {
                 String datasource = getRequiredParameter(request, "datasource");
-                if(yanagishimaConfig.isCheckDatasource()) {
-                    if(!AccessControlUtil.validateDatasource(request, datasource)) {
-                        try {
-                            response.sendError(SC_FORBIDDEN);
-                            return;
-                        } catch (IOException e) {
-                            throw new RuntimeException(e);
-                        }
-                    }
+                if (yanagishimaConfig.isCheckDatasource() && !validateDatasource(request, datasource)) {
+                    sendForbiddenError(response);
+                    return;
                 }
                 String engine = request.getParameter("engine");
                 Optional<Query> queryOptional;

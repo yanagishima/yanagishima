@@ -6,7 +6,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import yanagishima.bean.SparkSqlJob;
 import yanagishima.config.YanagishimaConfig;
-import yanagishima.util.AccessControlUtil;
 import yanagishima.util.SparkUtil;
 
 import javax.inject.Inject;
@@ -23,7 +22,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import static javax.servlet.http.HttpServletResponse.SC_FORBIDDEN;
+import static yanagishima.util.AccessControlUtil.sendForbiddenError;
+import static yanagishima.util.AccessControlUtil.validateDatasource;
 import static yanagishima.util.HttpRequestUtil.getRequiredParameter;
 
 @Singleton
@@ -50,15 +50,9 @@ public class SparkJobListServlet extends HttpServlet {
 			HttpServletResponse response) throws ServletException, IOException {
 
 		String datasource = getRequiredParameter(request, "datasource");
-		if(yanagishimaConfig.isCheckDatasource()) {
-			if(!AccessControlUtil.validateDatasource(request, datasource)) {
-				try {
-					response.sendError(SC_FORBIDDEN);
-					return;
-				} catch (IOException e) {
-					throw new RuntimeException(e);
-				}
-			}
+		if (yanagishimaConfig.isCheckDatasource() & !validateDatasource(request, datasource)) {
+			sendForbiddenError(response);
+			return;
 		}
 		String resourceManagerUrl = yanagishimaConfig.getResourceManagerUrl(datasource);
 		response.setContentType("application/json");

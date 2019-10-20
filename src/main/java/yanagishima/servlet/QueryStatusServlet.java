@@ -7,7 +7,6 @@ import okhttp3.Response;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import yanagishima.config.YanagishimaConfig;
-import yanagishima.util.AccessControlUtil;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
@@ -22,7 +21,8 @@ import java.util.Map;
 import java.util.Optional;
 
 import static io.prestosql.client.OkHttpUtil.basicAuth;
-import static javax.servlet.http.HttpServletResponse.SC_FORBIDDEN;
+import static yanagishima.util.AccessControlUtil.sendForbiddenError;
+import static yanagishima.util.AccessControlUtil.validateDatasource;
 import static yanagishima.util.HttpRequestUtil.getRequiredParameter;
 
 @Singleton
@@ -46,15 +46,9 @@ public class QueryStatusServlet extends HttpServlet {
 			HttpServletResponse response) throws ServletException, IOException {
 
 		String datasource = getRequiredParameter(request, "datasource");
-		if(yanagishimaConfig.isCheckDatasource()) {
-			if(!AccessControlUtil.validateDatasource(request, datasource)) {
-				try {
-					response.sendError(SC_FORBIDDEN);
-					return;
-				} catch (IOException e) {
-					throw new RuntimeException(e);
-				}
-			}
+		if (yanagishimaConfig.isCheckDatasource() && !validateDatasource(request, datasource)) {
+			sendForbiddenError(response);
+			return;
 		}
 
 		String queryid = Optional.ofNullable(request.getParameter("queryid")).get();

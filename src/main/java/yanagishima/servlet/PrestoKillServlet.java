@@ -17,7 +17,7 @@ import java.util.Map;
 import java.util.Optional;
 
 import static io.prestosql.client.OkHttpUtil.basicAuth;
-import static javax.servlet.http.HttpServletResponse.SC_FORBIDDEN;
+import static yanagishima.util.AccessControlUtil.sendForbiddenError;
 import static yanagishima.util.AccessControlUtil.validateDatasource;
 import static yanagishima.util.HttpRequestUtil.getRequiredParameter;
 import static yanagishima.util.JsonUtil.writeJSON;
@@ -46,12 +46,8 @@ public class PrestoKillServlet extends HttpServlet {
 		try {
 			String datasource = getRequiredParameter(request, "datasource");
 			if (config.isCheckDatasource() && !validateDatasource(request, datasource)) {
-				try {
-					response.sendError(SC_FORBIDDEN);
-					return;
-				} catch (IOException e) {
-					throw new RuntimeException(e);
-				}
+				sendForbiddenError(response);
+				return;
 			}
 
 			String coordinatorUrl = config.getPrestoCoordinatorServer(datasource);

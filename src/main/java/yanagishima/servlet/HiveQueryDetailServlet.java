@@ -1,7 +1,6 @@
 package yanagishima.servlet;
 
 import yanagishima.config.YanagishimaConfig;
-import yanagishima.util.AccessControlUtil;
 import yanagishima.util.SparkUtil;
 import yanagishima.util.YarnUtil;
 
@@ -15,7 +14,8 @@ import java.io.IOException;
 import java.util.Map;
 import java.util.Optional;
 
-import static javax.servlet.http.HttpServletResponse.SC_FORBIDDEN;
+import static yanagishima.util.AccessControlUtil.sendForbiddenError;
+import static yanagishima.util.AccessControlUtil.validateDatasource;
 import static yanagishima.util.HttpRequestUtil.getRequiredParameter;
 
 @Singleton
@@ -35,15 +35,9 @@ public class HiveQueryDetailServlet extends HttpServlet {
                          HttpServletResponse response) throws ServletException, IOException {
 
         String datasource = getRequiredParameter(request, "datasource");
-        if (yanagishimaConfig.isCheckDatasource()) {
-            if (!AccessControlUtil.validateDatasource(request, datasource)) {
-                try {
-                    response.sendError(SC_FORBIDDEN);
-                    return;
-                } catch (IOException e) {
-                    throw new RuntimeException(e);
-                }
-            }
+        if (yanagishimaConfig.isCheckDatasource() && !validateDatasource(request, datasource)) {
+            sendForbiddenError(response);
+            return;
         }
         String engine = getRequiredParameter(request, "engine");
         String resourceManagerUrl = yanagishimaConfig.getResourceManagerUrl(datasource);

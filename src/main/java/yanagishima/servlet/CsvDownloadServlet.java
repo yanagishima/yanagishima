@@ -5,7 +5,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import yanagishima.config.YanagishimaConfig;
 import yanagishima.row.Query;
-import yanagishima.util.AccessControlUtil;
 import yanagishima.util.DownloadUtil;
 
 import javax.inject.Inject;
@@ -17,7 +16,8 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.Optional;
 
-import static javax.servlet.http.HttpServletResponse.SC_FORBIDDEN;
+import static yanagishima.util.AccessControlUtil.sendForbiddenError;
+import static yanagishima.util.AccessControlUtil.validateDatasource;
 import static yanagishima.util.HttpRequestUtil.getRequiredParameter;
 
 @Singleton
@@ -45,15 +45,9 @@ public class CsvDownloadServlet extends HttpServlet {
         queryidOptional.ifPresent(queryid -> {
             String fileName = queryid + ".csv";
             String datasource = getRequiredParameter(request, "datasource");
-            if(yanagishimaConfig.isCheckDatasource()) {
-                if(!AccessControlUtil.validateDatasource(request, datasource)) {
-                    try {
-                        response.sendError(SC_FORBIDDEN);
-                        return;
-                    } catch (IOException e) {
-                        throw new RuntimeException(e);
-                    }
-                }
+            if (yanagishimaConfig.isCheckDatasource() && !validateDatasource(request, datasource)) {
+                sendForbiddenError(response);
+                return;
             }
             Optional<String> encodeOptional = Optional.ofNullable(request.getParameter("encode"));
             String header = request.getParameter("header");

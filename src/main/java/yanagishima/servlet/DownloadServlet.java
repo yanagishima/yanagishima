@@ -9,11 +9,10 @@ import javax.inject.Singleton;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.io.IOException;
 import java.util.Optional;
 
 import static java.util.Objects.requireNonNull;
-import static javax.servlet.http.HttpServletResponse.SC_FORBIDDEN;
+import static yanagishima.util.AccessControlUtil.sendForbiddenError;
 import static yanagishima.util.AccessControlUtil.validateDatasource;
 import static yanagishima.util.DownloadUtil.downloadTsv;
 import static yanagishima.util.HttpRequestUtil.getRequiredParameter;
@@ -41,12 +40,8 @@ public class DownloadServlet extends HttpServlet {
 
         String datasource = getRequiredParameter(request, "datasource");
         if (config.isCheckDatasource() && !validateDatasource(request, datasource)) {
-            try {
-                response.sendError(SC_FORBIDDEN);
-                return;
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
+            sendForbiddenError(response);
+            return;
         }
 
         String fileName = queryId + ".tsv";

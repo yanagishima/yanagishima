@@ -9,7 +9,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import yanagishima.config.YanagishimaConfig;
 import yanagishima.row.Query;
-import yanagishima.util.AccessControlUtil;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
@@ -23,8 +22,9 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import static io.prestosql.client.OkHttpUtil.basicAuth;
-import static javax.servlet.http.HttpServletResponse.SC_FORBIDDEN;
 import static javax.servlet.http.HttpServletResponse.SC_OK;
+import static yanagishima.util.AccessControlUtil.sendForbiddenError;
+import static yanagishima.util.AccessControlUtil.validateDatasource;
 import static yanagishima.util.HttpRequestUtil.getRequiredParameter;
 
 @Singleton
@@ -55,15 +55,9 @@ public class QueryServlet extends HttpServlet {
 		response.setContentType("application/json");
 		PrintWriter writer = response.getWriter();
 		String datasource = getRequiredParameter(request, "datasource");
-		if(yanagishimaConfig.isCheckDatasource()) {
-			if(!AccessControlUtil.validateDatasource(request, datasource)) {
-				try {
-					response.sendError(SC_FORBIDDEN);
-					return;
-				} catch (IOException e) {
-					throw new RuntimeException(e);
-				}
-			}
+		if (yanagishimaConfig.isCheckDatasource() && !validateDatasource(request, datasource)) {
+			sendForbiddenError(response);
+			return;
 		}
 		String prestoCoordinatorServer = yanagishimaConfig.getPrestoCoordinatorServerOrNull(datasource);
 		if(prestoCoordinatorServer == null) {

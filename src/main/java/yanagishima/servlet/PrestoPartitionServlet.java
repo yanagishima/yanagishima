@@ -10,7 +10,6 @@ import org.slf4j.LoggerFactory;
 import yanagishima.config.YanagishimaConfig;
 import yanagishima.result.PrestoQueryResult;
 import yanagishima.service.PrestoService;
-import yanagishima.util.AccessControlUtil;
 import yanagishima.util.JsonUtil;
 
 import javax.inject.Inject;
@@ -24,7 +23,8 @@ import java.util.*;
 
 import static io.prestosql.client.OkHttpUtil.basicAuth;
 import static com.google.common.base.Preconditions.checkArgument;
-import static javax.servlet.http.HttpServletResponse.SC_FORBIDDEN;
+import static yanagishima.util.AccessControlUtil.sendForbiddenError;
+import static yanagishima.util.AccessControlUtil.validateDatasource;
 import static yanagishima.util.Constants.YANAGISHIMA_COMMENT;
 import static yanagishima.util.HttpRequestUtil.getRequiredParameter;
 
@@ -55,15 +55,9 @@ public class PrestoPartitionServlet extends HttpServlet {
         try {
 
             String datasource = getRequiredParameter(request, "datasource");
-            if (yanagishimaConfig.isCheckDatasource()) {
-                if (!AccessControlUtil.validateDatasource(request, datasource)) {
-                    try {
-                        response.sendError(SC_FORBIDDEN);
-                        return;
-                    } catch (IOException e) {
-                        throw new RuntimeException(e);
-                    }
-                }
+            if (yanagishimaConfig.isCheckDatasource() && !validateDatasource(request, datasource)) {
+                sendForbiddenError(response);
+                return;
             }
 
             String userName = null;

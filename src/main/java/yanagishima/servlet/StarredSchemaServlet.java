@@ -17,7 +17,7 @@ import java.util.List;
 import java.util.Map;
 
 import static com.google.common.base.Preconditions.checkState;
-import static javax.servlet.http.HttpServletResponse.SC_FORBIDDEN;
+import static yanagishima.util.AccessControlUtil.sendForbiddenError;
 import static yanagishima.util.AccessControlUtil.validateDatasource;
 import static yanagishima.util.HttpRequestUtil.getRequiredParameter;
 import static yanagishima.util.JsonUtil.writeJSON;
@@ -41,12 +41,8 @@ public class StarredSchemaServlet extends HttpServlet {
         try {
             String datasource = getRequiredParameter(request, "datasource");
             if (config.isCheckDatasource() && !validateDatasource(request, datasource)) {
-                try {
-                    response.sendError(SC_FORBIDDEN);
-                    return;
-                } catch (IOException e) {
-                    throw new RuntimeException(e);
-                }
+                sendForbiddenError(response);
+                return;
             }
             String userName = request.getHeader(config.getAuditHttpHeaderName());
             String catalog = getRequiredParameter(request, "catalog");
@@ -67,12 +63,8 @@ public class StarredSchemaServlet extends HttpServlet {
         try {
             String datasource = getRequiredParameter(request, "datasource");
             if (config.isCheckDatasource() && !validateDatasource(request, datasource)) {
-                try {
-                    response.sendError(SC_FORBIDDEN);
-                    return;
-                } catch (IOException e) {
-                    throw new RuntimeException(e);
-                }
+                sendForbiddenError(response);
+                return;
             }
 
             String starredSchemaId = getRequiredParameter(request, "starred_schema_id");
@@ -95,12 +87,8 @@ public class StarredSchemaServlet extends HttpServlet {
         try {
             String datasource = getRequiredParameter(request, "datasource");
             if (config.isCheckDatasource() && !validateDatasource(request, datasource)) {
-                try {
-                    response.sendError(SC_FORBIDDEN);
-                    return;
-                } catch (IOException e) {
-                    throw new RuntimeException(e);
-                }
+                sendForbiddenError(response);
+                return;
             }
 
             String engine = getRequiredParameter(request, "engine");
