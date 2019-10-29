@@ -8,7 +8,6 @@ import yanagishima.config.YanagishimaConfig;
 import yanagishima.exception.QueryErrorException;
 import yanagishima.result.PrestoQueryResult;
 import yanagishima.service.PrestoService;
-import yanagishima.util.AccessControlUtil;
 import yanagishima.util.JsonUtil;
 import yanagishima.util.MetadataUtil;
 
@@ -22,7 +21,8 @@ import java.io.IOException;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static javax.servlet.http.HttpServletResponse.SC_FORBIDDEN;
+import static yanagishima.util.AccessControlUtil.sendForbiddenError;
+import static yanagishima.util.AccessControlUtil.validateDatasource;
 import static yanagishima.util.Constants.YANAGISHIMA_COMMENT;
 import static yanagishima.util.HttpRequestUtil.getRequiredParameter;
 
@@ -65,13 +65,9 @@ public class PrestoServlet extends HttpServlet {
 						userName = prestoUser.get();
 					}
 				}
-				if(yanagishimaConfig.isUserRequired() && userName == null) {
-					try {
-						response.sendError(SC_FORBIDDEN);
-						return;
-					} catch (IOException e) {
-						throw new RuntimeException(e);
-					}
+				if (yanagishimaConfig.isUserRequired() && userName == null) {
+					sendForbiddenError(response);
+					return;
 				}
 				try {
 					String datasource = getRequiredParameter(request, "datasource");
@@ -80,15 +76,9 @@ public class PrestoServlet extends HttpServlet {
 						JsonUtil.writeJSON(response, retVal);
 						return;
 					}
-					if(yanagishimaConfig.isCheckDatasource()) {
-						if(!AccessControlUtil.validateDatasource(request, datasource)) {
-							try {
-								response.sendError(SC_FORBIDDEN);
-								return;
-							} catch (IOException e) {
-								throw new RuntimeException(e);
-							}
-						}
+					if (yanagishimaConfig.isCheckDatasource() && !validateDatasource(request, datasource)) {
+						sendForbiddenError(response);
+						return;
 					}
 					if(userName != null) {
 						LOGGER.info(String.format("%s executed %s in %s", userName, query, datasource));

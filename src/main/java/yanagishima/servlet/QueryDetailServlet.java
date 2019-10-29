@@ -1,9 +1,6 @@
 package yanagishima.servlet;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import yanagishima.config.YanagishimaConfig;
-import yanagishima.util.AccessControlUtil;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
@@ -13,14 +10,12 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
-import static javax.servlet.http.HttpServletResponse.SC_FORBIDDEN;
+import static yanagishima.util.AccessControlUtil.sendForbiddenError;
+import static yanagishima.util.AccessControlUtil.validateDatasource;
 import static yanagishima.util.HttpRequestUtil.getRequiredParameter;
 
 @Singleton
 public class QueryDetailServlet extends HttpServlet {
-
-	private static Logger LOGGER = LoggerFactory.getLogger(QueryDetailServlet.class);
-
 	private static final long serialVersionUID = 1L;
 
 	private YanagishimaConfig yanagishimaConfig;
@@ -35,15 +30,9 @@ public class QueryDetailServlet extends HttpServlet {
 			HttpServletResponse response) throws ServletException, IOException {
 
 		String datasource = getRequiredParameter(request, "datasource");
-		if(yanagishimaConfig.isCheckDatasource()) {
-			if(!AccessControlUtil.validateDatasource(request, datasource)) {
-				try {
-					response.sendError(SC_FORBIDDEN);
-					return;
-				} catch (IOException e) {
-					throw new RuntimeException(e);
-				}
-			}
+		if (yanagishimaConfig.isCheckDatasource() && !validateDatasource(request, datasource)) {
+			sendForbiddenError(response);
+			return;
 		}
 		String prestoRedirectServerServer = yanagishimaConfig
 				.getPrestoRedirectServer(datasource);

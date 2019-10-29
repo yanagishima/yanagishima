@@ -2,11 +2,8 @@ package yanagishima.servlet;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import me.geso.tinyorm.TinyORM;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import yanagishima.config.YanagishimaConfig;
 import yanagishima.row.Query;
-import yanagishima.util.AccessControlUtil;
 import yanagishima.util.YarnUtil;
 
 import javax.inject.Inject;
@@ -22,15 +19,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import static javax.servlet.http.HttpServletResponse.SC_FORBIDDEN;
+import static yanagishima.util.AccessControlUtil.sendForbiddenError;
+import static yanagishima.util.AccessControlUtil.validateDatasource;
 import static yanagishima.util.Constants.YANAGISHIAM_HIVE_JOB_PREFIX;
 import static yanagishima.util.HttpRequestUtil.getRequiredParameter;
 
 @Singleton
 public class YarnJobListServlet extends HttpServlet {
-
-	private static Logger LOGGER = LoggerFactory.getLogger(YarnJobListServlet.class);
-
 	private static final long serialVersionUID = 1L;
 
 	private YanagishimaConfig yanagishimaConfig;
@@ -50,15 +45,9 @@ public class YarnJobListServlet extends HttpServlet {
 			HttpServletResponse response) throws ServletException, IOException {
 
 		String datasource = getRequiredParameter(request, "datasource");
-		if(yanagishimaConfig.isCheckDatasource()) {
-			if(!AccessControlUtil.validateDatasource(request, datasource)) {
-				try {
-					response.sendError(SC_FORBIDDEN);
-					return;
-				} catch (IOException e) {
-					throw new RuntimeException(e);
-				}
-			}
+		if (yanagishimaConfig.isCheckDatasource() && !validateDatasource(request, datasource)) {
+			sendForbiddenError(response);
+			return;
 		}
 		String resourceManagerUrl = yanagishimaConfig.getResourceManagerUrl(datasource);
 		response.setContentType("application/json");

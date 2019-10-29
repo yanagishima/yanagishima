@@ -69,11 +69,11 @@ public class YanagishimaServer {
         return Guice.createInjector(
                 new PrestoServiceModule(properties),
                 new PrestoServletModule(),
-                new HiveServiceModule(properties),
+                new HiveServiceModule(),
                 new HiveServletModule(),
                 new DbModule(),
                 new PoolModule(),
-                new ElasticsearchServiceModule(properties),
+                new ElasticsearchServiceModule(),
                 new ElasticsearchServletModule());
     }
 

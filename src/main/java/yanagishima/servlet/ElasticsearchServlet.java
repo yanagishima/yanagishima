@@ -8,7 +8,6 @@ import yanagishima.exception.ElasticsearchQueryErrorException;
 import yanagishima.result.ElasticsearchQueryResult;
 import yanagishima.row.Query;
 import yanagishima.service.ElasticsearchService;
-import yanagishima.util.AccessControlUtil;
 import yanagishima.util.JsonUtil;
 
 import javax.inject.Inject;
@@ -26,7 +25,8 @@ import java.time.temporal.ChronoUnit;
 import java.util.HashMap;
 import java.util.Optional;
 
-import static javax.servlet.http.HttpServletResponse.SC_FORBIDDEN;
+import static yanagishima.util.AccessControlUtil.sendForbiddenError;
+import static yanagishima.util.AccessControlUtil.validateDatasource;
 import static yanagishima.util.Constants.YANAGISHIMA_COMMENT;
 import static yanagishima.util.HttpRequestUtil.getRequiredParameter;
 
@@ -64,24 +64,14 @@ public class ElasticsearchServlet extends HttpServlet {
                     userName = request.getHeader(yanagishimaConfig.getAuditHttpHeaderName());
                 }
                 if (yanagishimaConfig.isUserRequired() && userName == null) {
-                    try {
-                        response.sendError(SC_FORBIDDEN);
-                        return;
-                    } catch (IOException e) {
-                        throw new RuntimeException(e);
-                    }
+                    sendForbiddenError(response);
+                    return;
                 }
                 try {
                     String datasource = getRequiredParameter(request, "datasource");
-                    if (yanagishimaConfig.isCheckDatasource()) {
-                        if (!AccessControlUtil.validateDatasource(request, datasource)) {
-                            try {
-                                response.sendError(SC_FORBIDDEN);
-                                return;
-                            } catch (IOException e) {
-                                throw new RuntimeException(e);
-                            }
-                        }
+                    if (yanagishimaConfig.isCheckDatasource() && !validateDatasource(request, datasource)) {
+                        sendForbiddenError(response);
+                        return;
                     }
                     if (userName != null) {
                         LOGGER.info(String.format("%s executed %s in %s", userName, query, datasource));

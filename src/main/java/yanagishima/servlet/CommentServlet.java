@@ -22,6 +22,8 @@ import java.util.List;
 import java.util.Optional;
 
 import static javax.servlet.http.HttpServletResponse.SC_FORBIDDEN;
+import static yanagishima.util.AccessControlUtil.sendForbiddenError;
+import static yanagishima.util.AccessControlUtil.validateDatasource;
 import static yanagishima.util.HttpRequestUtil.getRequiredParameter;
 
 @Singleton
@@ -47,15 +49,9 @@ public class CommentServlet extends HttpServlet {
 
         try {
             String datasource = getRequiredParameter(request, "datasource");
-            if (yanagishimaConfig.isCheckDatasource()) {
-                if (!AccessControlUtil.validateDatasource(request, datasource)) {
-                    try {
-                        response.sendError(SC_FORBIDDEN);
-                        return;
-                    } catch (IOException e) {
-                        throw new RuntimeException(e);
-                    }
-                }
+            if (yanagishimaConfig.isCheckDatasource() && !validateDatasource(request, datasource)) {
+                sendForbiddenError(response);
+                return;
             }
 
             String userName = request.getHeader(yanagishimaConfig.getAuditHttpHeaderName());
@@ -120,7 +116,7 @@ public class CommentServlet extends HttpServlet {
         try {
             String datasource = getRequiredParameter(request, "datasource");
             if (yanagishimaConfig.isCheckDatasource()) {
-                if (!AccessControlUtil.validateDatasource(request, datasource)) {
+                if (!validateDatasource(request, datasource)) {
                     try {
                         response.sendError(SC_FORBIDDEN);
                         return;
@@ -163,7 +159,7 @@ public class CommentServlet extends HttpServlet {
         try {
             String datasource = getRequiredParameter(request, "datasource");
             if (yanagishimaConfig.isCheckDatasource()) {
-                if (!AccessControlUtil.validateDatasource(request, datasource)) {
+                if (!validateDatasource(request, datasource)) {
                     try {
                         response.sendError(SC_FORBIDDEN);
                         return;

@@ -19,8 +19,8 @@ import java.util.Optional;
 
 import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
-import static javax.servlet.http.HttpServletResponse.SC_FORBIDDEN;
 import static org.apache.commons.codec.digest.DigestUtils.md5Hex;
+import static yanagishima.util.AccessControlUtil.sendForbiddenError;
 import static yanagishima.util.AccessControlUtil.validateDatasource;
 import static yanagishima.util.HttpRequestUtil.getRequiredParameter;
 import static yanagishima.util.JsonUtil.writeJSON;
@@ -44,12 +44,8 @@ public class PublishServlet extends HttpServlet {
         try {
             String datasource = getRequiredParameter(request, "datasource");
             if (config.isCheckDatasource() && !validateDatasource(request, datasource)) {
-                try {
-                    response.sendError(SC_FORBIDDEN);
-                    return;
-                } catch (IOException e) {
-                    throw new RuntimeException(e);
-                }
+                sendForbiddenError(response);
+                return;
             }
 
             String userName = request.getHeader(config.getAuditHttpHeaderName());

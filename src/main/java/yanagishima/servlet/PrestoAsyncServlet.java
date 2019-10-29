@@ -6,7 +6,6 @@ import org.slf4j.LoggerFactory;
 import yanagishima.config.YanagishimaConfig;
 import yanagishima.service.OldPrestoService;
 import yanagishima.service.PrestoService;
-import yanagishima.util.AccessControlUtil;
 import yanagishima.util.JsonUtil;
 
 import javax.inject.Inject;
@@ -19,7 +18,8 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Optional;
 
-import static javax.servlet.http.HttpServletResponse.SC_FORBIDDEN;
+import static yanagishima.util.AccessControlUtil.sendForbiddenError;
+import static yanagishima.util.AccessControlUtil.validateDatasource;
 import static yanagishima.util.HttpRequestUtil.getRequiredParameter;
 
 @Singleton
@@ -61,24 +61,14 @@ public class PrestoAsyncServlet extends HttpServlet {
 						userName = prestoUser.get();
 					}
 				}
-				if(yanagishimaConfig.isUserRequired() && userName == null) {
-					try {
-						response.sendError(SC_FORBIDDEN);
-						return;
-					} catch (IOException e) {
-						throw new RuntimeException(e);
-					}
+				if (yanagishimaConfig.isUserRequired() && userName == null) {
+					sendForbiddenError(response);
+					return;
 				}
 				String datasource = getRequiredParameter(request, "datasource");
-				if(yanagishimaConfig.isCheckDatasource()) {
-					if(!AccessControlUtil.validateDatasource(request, datasource)) {
-						try {
-							response.sendError(SC_FORBIDDEN);
-							return;
-						} catch (IOException e) {
-							throw new RuntimeException(e);
-						}
-					}
+				if (yanagishimaConfig.isCheckDatasource() && !validateDatasource(request, datasource)) {
+					sendForbiddenError(response);
+					return;
 				}
 				if(userName != null) {
 					LOGGER.info(String.format("%s executed %s in %s", userName, query, datasource));
