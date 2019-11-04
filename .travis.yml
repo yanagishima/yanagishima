@@ -2,3 +2,10 @@ language: java
 
 dist: xenial
 jdk: openjdk11
+
+notifications:
+  webhooks:
+    urls:
+      - https://www.travisbuddy.com/
+    on_success: never
+    on_cancel: never
