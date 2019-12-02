@@ -1,6 +1,6 @@
 Visit [the official web site](https://yanagishima.github.io/yanagishima) for more information.
 
-# yanagishima [![Build Status](https://travis-ci.com/yanagishima/yanagishima.svg?branch=master)](https://travis-ci.com/yanagishima/yanagishima)
+# yanagishima [![Build Status](https://github.com/yanagishima/yanagishima/workflows/CI/badge.svg)](https://github.com/yanagishima/yanagishima/actions?query=workflow%3ACI+event%3Apush+branch%3Amaster)
 
 *yanagishima* is an open-source Web application for Presto, Hive, Elasticsearch and Spark.
 
