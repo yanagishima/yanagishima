@@ -1,0 +1,13 @@
+site_name: Yanagishima
+theme:
+  name: 'material'
+  logo: 'images/logo.svg'
+repo_url: https://github.com/yanagishima/yanagishima
+repo_name: yanagishima/yanagishima
+nav:
+  - Overview: 'index.md'
+  - Configuration: 'config.md'
+  - Deployment: 'deployment.md'
+  - Developers: 'developers.md'
+  - Upgrade: 'upgrade.md'
+  - Release Notes: 'release.md'
