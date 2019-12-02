@@ -1,0 +1,881 @@
+
+
+
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      <meta http-equiv="x-ua-compatible" content="ie=edge">
+      
+      
+      
+      
+        <meta name="lang:clipboard.copy" content="Copy to clipboard">
+      
+        <meta name="lang:clipboard.copied" content="Copied to clipboard">
+      
+        <meta name="lang:search.language" content="en">
+      
+        <meta name="lang:search.pipeline.stopwords" content="True">
+      
+        <meta name="lang:search.pipeline.trimmer" content="True">
+      
+        <meta name="lang:search.result.none" content="No matching documents">
+      
+        <meta name="lang:search.result.one" content="1 matching document">
+      
+        <meta name="lang:search.result.other" content="# matching documents">
+      
+        <meta name="lang:search.tokenizer" content="[\s\-]+">
+      
+      <link rel="shortcut icon" href="../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.0.4, mkdocs-material-4.5.0">
+    
+    
+      
+        <title>Release Notes - Yanagishima</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/application.1b62728e.css">
+      
+      
+    
+    
+      <script src="../assets/javascripts/modernizr.268332fc.js"></script>
+    
+    
+      
+        <link href="https://fonts.gstatic.com" rel="preconnect" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,400i,700|Roboto+Mono&display=fallback">
+        <style>body,input{font-family:"Roboto","Helvetica Neue",Helvetica,Arial,sans-serif}code,kbd,pre{font-family:"Roboto Mono","Courier New",Courier,monospace}</style>
+      
+    
+    <link rel="stylesheet" href="../assets/fonts/material-icons.css">
+    
+    
+    
+      
+    
+    
+  </head>
+  
+    <body dir="ltr">
+  
+    <svg class="md-svg">
+      <defs>
+        
+        
+          <svg xmlns="http://www.w3.org/2000/svg" width="416" height="448" viewBox="0 0 416 448" id="__github"><path fill="currentColor" d="M160 304q0 10-3.125 20.5t-10.75 19T128 352t-18.125-8.5-10.75-19T96 304t3.125-20.5 10.75-19T128 256t18.125 8.5 10.75 19T160 304zm160 0q0 10-3.125 20.5t-10.75 19T288 352t-18.125-8.5-10.75-19T256 304t3.125-20.5 10.75-19T288 256t18.125 8.5 10.75 19T320 304zm40 0q0-30-17.25-51T296 232q-10.25 0-48.75 5.25Q229.5 240 208 240t-39.25-2.75Q130.75 232 120 232q-29.5 0-46.75 21T56 304q0 22 8 38.375t20.25 25.75 30.5 15 35 7.375 37.25 1.75h42q20.5 0 37.25-1.75t35-7.375 30.5-15 20.25-25.75T360 304zm56-44q0 51.75-15.25 82.75-9.5 19.25-26.375 33.25t-35.25 21.5-42.5 11.875-42.875 5.5T212 416q-19.5 0-35.5-.75t-36.875-3.125-38.125-7.5-34.25-12.875T37 371.5t-21.5-28.75Q0 312 0 260q0-59.25 34-99-6.75-20.5-6.75-42.5 0-29 12.75-54.5 27 0 47.5 9.875t47.25 30.875Q171.5 96 212 96q37 0 70 8 26.25-20.5 46.75-30.25T376 64q12.75 25.5 12.75 54.5 0 21.75-6.75 42 34 40 34 99.5z"/></svg>
+        
+      </defs>
+    </svg>
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" data-md-component="overlay" for="__drawer"></label>
+    
+      <a href="#release-notes" tabindex="1" class="md-skip">
+        Skip to content
+      </a>
+    
+    
+      <header class="md-header" data-md-component="header">
+  <nav class="md-header-nav md-grid">
+    <div class="md-flex">
+      <div class="md-flex__cell md-flex__cell--shrink">
+        <a href=".." title="Yanagishima" class="md-header-nav__button md-logo">
+          
+            <img src="../images/logo.svg" width="24" height="24">
+          
+        </a>
+      </div>
+      <div class="md-flex__cell md-flex__cell--shrink">
+        <label class="md-icon md-icon--menu md-header-nav__button" for="__drawer"></label>
+      </div>
+      <div class="md-flex__cell md-flex__cell--stretch">
+        <div class="md-flex__ellipsis md-header-nav__title" data-md-component="title">
+          
+            <span class="md-header-nav__topic">
+              Yanagishima
+            </span>
+            <span class="md-header-nav__topic">
+              
+                Release Notes
+              
+            </span>
+          
+        </div>
+      </div>
+      <div class="md-flex__cell md-flex__cell--shrink">
+        
+          <label class="md-icon md-icon--search md-header-nav__button" for="__search"></label>
+          
+<div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="query" data-md-state="active">
+      <label class="md-icon md-search__icon" for="__search"></label>
+      <button type="reset" class="md-icon md-search__icon" data-md-component="reset" tabindex="-1">
+        &#xE5CD;
+      </button>
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="result">
+          <div class="md-search-result__meta">
+            Type to start searching
+          </div>
+          <ol class="md-search-result__list"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+        
+      </div>
+      
+        <div class="md-flex__cell md-flex__cell--shrink">
+          <div class="md-header-nav__source">
+            
+
+
+  
+
+<a href="https://github.com/yanagishima/yanagishima/" title="Go to repository" class="md-source" data-md-source="github">
+  
+    <div class="md-source__icon">
+      <svg viewBox="0 0 24 24" width="24" height="24">
+        <use xlink:href="#__github" width="24" height="24"></use>
+      </svg>
+    </div>
+  
+  <div class="md-source__repository">
+    yanagishima/yanagishima
+  </div>
+</a>
+          </div>
+        </div>
+      
+    </div>
+  </nav>
+</header>
+    
+    <div class="md-container">
+      
+        
+      
+      
+      <main class="md-main" role="main">
+        <div class="md-main__inner md-grid" data-md-component="container">
+          
+            
+              <div class="md-sidebar md-sidebar--primary" data-md-component="navigation">
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    <nav class="md-nav md-nav--primary" data-md-level="0">
+  <label class="md-nav__title md-nav__title--site" for="__drawer">
+    <a href=".." title="Yanagishima" class="md-nav__button md-logo">
+      
+        <img src="../images/logo.svg" width="48" height="48">
+      
+    </a>
+    Yanagishima
+  </label>
+  
+    <div class="md-nav__source">
+      
+
+
+  
+
+<a href="https://github.com/yanagishima/yanagishima/" title="Go to repository" class="md-source" data-md-source="github">
+  
+    <div class="md-source__icon">
+      <svg viewBox="0 0 24 24" width="24" height="24">
+        <use xlink:href="#__github" width="24" height="24"></use>
+      </svg>
+    </div>
+  
+  <div class="md-source__repository">
+    yanagishima/yanagishima
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+      
+
+
+  <li class="md-nav__item">
+    <a href=".." title="Overview" class="md-nav__link">
+      Overview
+    </a>
+  </li>
+
+    
+      
+      
+      
+
+
+  <li class="md-nav__item">
+    <a href="../config/" title="Configuration" class="md-nav__link">
+      Configuration
+    </a>
+  </li>
+
+    
+      
+      
+      
+
+
+  <li class="md-nav__item">
+    <a href="../deployment/" title="Deployment" class="md-nav__link">
+      Deployment
+    </a>
+  </li>
+
+    
+      
+      
+      
+
+
+  <li class="md-nav__item">
+    <a href="../developers/" title="Developers" class="md-nav__link">
+      Developers
+    </a>
+  </li>
+
+    
+      
+      
+      
+
+
+  <li class="md-nav__item">
+    <a href="../upgrade/" title="Upgrade" class="md-nav__link">
+      Upgrade
+    </a>
+  </li>
+
+    
+      
+      
+      
+
+  
+
+
+  <li class="md-nav__item md-nav__item--active">
+    
+    <input class="md-toggle md-nav__toggle" data-md-toggle="toc" type="checkbox" id="__toc">
+    
+      
+    
+    
+      <label class="md-nav__link md-nav__link--active" for="__toc">
+        Release Notes
+      </label>
+    
+    <a href="./" title="Release Notes" class="md-nav__link md-nav__link--active">
+      Release Notes
+    </a>
+    
+      
+<nav class="md-nav md-nav--secondary">
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">Table of contents</label>
+    <ul class="md-nav__list" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#version-210" class="md-nav__link">
+    Version 21.0
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#version-200" class="md-nav__link">
+    Version 20.0
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#version-190" class="md-nav__link">
+    Version 19.0
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#version-180" class="md-nav__link">
+    Version 18.0
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#version-170" class="md-nav__link">
+    Version 17.0
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#version-160" class="md-nav__link">
+    Version 16.0
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#version-150" class="md-nav__link">
+    Version 15.0
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#version-140" class="md-nav__link">
+    Version 14.0
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#version-130" class="md-nav__link">
+    Version 13.0
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#version-120" class="md-nav__link">
+    Version 12.0
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#version-110" class="md-nav__link">
+    Version 11.0
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#version-100" class="md-nav__link">
+    Version 10.0
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#version-90" class="md-nav__link">
+    Version 9.0
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#version-80" class="md-nav__link">
+    Version 8.0
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#version-70" class="md-nav__link">
+    Version 7.0
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#version-60" class="md-nav__link">
+    Version 6.0
+  </a>
+  
+</li>
+      
+      
+      
+      
+      
+    </ul>
+  
+</nav>
+    
+  </li>
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="toc">
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+<nav class="md-nav md-nav--secondary">
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">Table of contents</label>
+    <ul class="md-nav__list" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#version-210" class="md-nav__link">
+    Version 21.0
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#version-200" class="md-nav__link">
+    Version 20.0
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#version-190" class="md-nav__link">
+    Version 19.0
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#version-180" class="md-nav__link">
+    Version 18.0
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#version-170" class="md-nav__link">
+    Version 17.0
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#version-160" class="md-nav__link">
+    Version 16.0
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#version-150" class="md-nav__link">
+    Version 15.0
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#version-140" class="md-nav__link">
+    Version 14.0
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#version-130" class="md-nav__link">
+    Version 13.0
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#version-120" class="md-nav__link">
+    Version 12.0
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#version-110" class="md-nav__link">
+    Version 11.0
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#version-100" class="md-nav__link">
+    Version 10.0
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#version-90" class="md-nav__link">
+    Version 9.0
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#version-80" class="md-nav__link">
+    Version 8.0
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#version-70" class="md-nav__link">
+    Version 7.0
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#version-60" class="md-nav__link">
+    Version 6.0
+  </a>
+  
+</li>
+      
+      
+      
+      
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          <div class="md-content">
+            <article class="md-content__inner md-typeset">
+              
+                
+                  <a href="https://github.com/yanagishima/yanagishima/edit/master/docs/release.md" title="Edit this page" class="md-icon md-content__icon">&#xE3C9;</a>
+                
+                
+                <h1 id="release-notes">Release Notes</h1>
+<h2 id="version-210">Version 21.0</h2>
+<ul>
+<li>Add datasource color</li>
+<li>Add announce/notification feature</li>
+<li>Refactor UI</li>
+<li>Add detail query error message and semanticErrorName <a href="https://github.com/prestosql/presto/pull/790">presto#790</a></li>
+<li>Handle old presto due to <a href="https://github.com/prestosql/presto/issues/224">presto#224</a></li>
+<li>Improve message when result file is not found, allow.other.read.result.xxx=false</li>
+<li>Use JDK11, Gradle5</li>
+<li>Upgrade presto client library</li>
+<li>Enable to set datetime format pattern per datasource in treeview</li>
+<li>Show more information like execution time, file size, etc when query result file is removed</li>
+<li>Fix header layout</li>
+<li>Update config add user and source (#56)</li>
+<li>Avoid scroll bar from hiding note</li>
+<li>Improve partition column fetch logic in treeview</li>
+<li>Add webhdfs.proxy.user and webhdfs.proxy.password option</li>
+<li>Add a script to launch yanagishima in foreground process (#58)</li>
+<li>support mysql as yanagishima backend RDBMS create mysql table</li>
+</ul>
+<pre><code>create table if not exists query (datasource varchar(256), engine varchar(256), query_id varchar(256), fetch_result_time_string varchar(256), query_string text, user varchar(256), status varchar(256), elapsed_time_millis integer, result_file_size integer, linenumber integer, primary key(datasource, engine, query_id));
+create table if not exists publish (publish_id varchar(256), datasource varchar(256), engine varchar(256), query_id varchar(256), user varchar(256), primary key(publish_id));
+create table if not exists bookmark (bookmark_id integer primary key auto_increment, datasource varchar(256), engine varchar(256), query text, title varchar(256), user varchar(256));
+create table if not exists comment (datasource varchar(256), engine varchar(256), query_id varchar(256), content text, update_time_string varchar(256), user varchar(256), like_count integer, primary key(datasource, engine, query_id));
+create table if not exists label (datasource varchar(256), engine varchar(256), query_id varchar(256), label_name varchar(256), primary key(datasource, engine, query_id));
+</code></pre>
+
+<p>yanagishima setting is the following</p>
+<pre><code>database.type=mysql
+database.connection-url=jdbc:mysql://localhost:3306/yanagishima?useSSL=false
+database.user=...
+database.password=...
+</code></pre>
+
+<h2 id="version-200">Version 20.0</h2>
+<ul>
+<li>Show query diff</li>
+<li>Enable user to download without column header</li>
+</ul>
+<h2 id="version-190">Version 19.0</h2>
+<ul>
+<li>Support Spark SQL</li>
+<li>Show stats for presto</li>
+</ul>
+<h2 id="version-180">Version 18.0</h2>
+<ul>
+<li>Fix the bug that desktop notification doesn't work</li>
+<li>Improve catalog setting logic if there is no hive catalog</li>
+<li>Improve error logging</li>
+<li>Fix bug that java.lang.IllegalArgumentException: float is illegal</li>
+<li>Fix bug that publish doesn't work in HTTP</li>
+<li>Improve partition fetching logic with webhdfs</li>
+</ul>
+<h2 id="version-170">Version 17.0</h2>
+<ul>
+<li>Add link which can open a schema/table in Treeview</li>
+<li>Pivot</li>
+<li>Fix bug which invisible.schema doesn't work</li>
+<li>Improve hive job handling when you create/drop table</li>
+<li>Add query id link to share page</li>
+<li>Update presto library</li>
+<li>Fix partition bug</li>
+<li>Remove kill button in hive</li>
+<li>Default value of <code>use.new.show.partitions.xxx</code> is true</li>
+</ul>
+<h2 id="version-160">Version 16.0</h2>
+<ul>
+<li>Refactoring with Vuex, Vue Router, Single File Components</li>
+<li>Add BOM in CSV/TSV download files</li>
+<li>Improve to display hive map data</li>
+<li>Add pretty print on share view</li>
+<li>Enable code folding</li>
+<li>Make underscores available in placeholders</li>
+<li>Move treeview to left end tab</li>
+</ul>
+<h2 id="version-150">Version 15.0</h2>
+<ul>
+<li>Support Elasticsearch SQL</li>
+<li>Add label feature like gmail</li>
+<li>Handle presto/hive reserved keywords(e.g. group, order)</li>
+<li>Integrate metadata service</li>
+<li>Add partition filter</li>
+<li>Show column number</li>
+<li>Suppresss stacktrace</li>
+</ul>
+<h2 id="version-140">Version 14.0</h2>
+<ul>
+<li>Fix wrong line number when result file contains a new line</li>
+<li>Metadata of 14.0 is NOT compatible with 13.0, so migration is required</li>
+<li>MigrateV14.sh is the script to migrate db file.</li>
+<li>Migration process is as follows</li>
+</ul>
+<pre><code>cp data/yanagishima.db data/yanagishima.db.bak
+bin/migrateV14.sh data/yanagishima.db result
+sqlite3 data/yanagishima.db
+sqlite&gt; alter table query rename to query_old;
+sqlite&gt; alter table query_v14 rename to query;
+If you confirmed, drop table query_old
+It takes about 10 hours if db file is more than 500MB and result file is about 1TB
+</code></pre>
+
+<ul>
+<li><code>vacuum</code> and <code>create index deq_index on query(datasource, engine, query_id)</code> and <code>create index deu_index on query(datasource, engine, user)</code> may be necessary if yanagishima.db is huge</li>
+<li>Fix infinite loop bug when /queryStatus returns 500</li>
+<li>Add kill hive query feature if you use a kerberized hadoop cluster</li>
+<li>Sort table name when you use <code>Treeview</code></li>
+<li>Copy publish url to clipboard but chrome user only due to Async Clipboard API</li>
+<li>Handle presto/hive reserved keywords(e.g. group, order)</li>
+<li>Use timestamp to index.js due to cache busting</li>
+</ul>
+<h2 id="version-130">Version 13.0</h2>
+<ul>
+<li>Improve code input performance especially when query result is huge</li>
+<li>Upgrade ace editor</li>
+<li>Add message if result count exceeds 500</li>
+<li>Improve history tab logic when result file is removed</li>
+<li>Add sort partition feature</li>
+<li>Fix bug that 3 pane compare result display disappear</li>
+<li>Don't create fluency instance every request due to performance improvement</li>
+<li>Handle issue that presto doesn't support <code>show paritions</code> since 0.202</li>
+<li>Add option to use webhdfs api when there are too many partitions</li>
+</ul>
+<h2 id="version-120">Version 12.0</h2>
+<ul>
+<li>Convert hive/presto query</li>
+<li>Support graphviz to visualize presto explain result</li>
+<li>Add tooltip to <code>Set</code> in History/Bookmark tab</li>
+<li>Add new presto functions(0.196) to completion list</li>
+<li>Fix bookmark bug</li>
+<li>Fix presto authentication failed bug</li>
+</ul>
+<h2 id="version-110">Version 11.0</h2>
+<ul>
+<li>Fix timezone bug</li>
+<li>Fix exponential notation bug</li>
+<li>Support UTF-8 encoding for CSV</li>
+</ul>
+<h2 id="version-100">Version 10.0</h2>
+<ul>
+<li>Add timeline tab</li>
+</ul>
+<h2 id="version-90">Version 9.0</h2>
+<ul>
+<li>Pretty print for map data</li>
+<li>Add left panel to compare query result</li>
+<li>Support presto/hive authentication with user/password</li>
+<li>If you want to use presto TLS, you need to execute <code>keytool -import</code> https://prestosql
+.io/docs/current/security/tls.html</li>
+<li>Search query history</li>
+<li>Paging query history </li>
+<li>Improve performance to write/read result file</li>
+<li>Result file format of 9.0 is tsv, prior to 9.0 is json, so migration is required</li>
+<li>MigrateV9.sh is the script to migrate result file.</li>
+<li>If migration error occur, you can check it.</li>
+</ul>
+<pre><code>$ bin/migrateV9.sh result dest
+...
+processing /path/to/yanagishima-9.0/result/your-presto/20171010/20171010_072513_02895_xxvvj.json
+error /path/to/yanagishima-9.0/result/your-presto/20171010/20171010_072513_02895_xxvvj.json
+java.lang.RuntimeException: org.codehaus.jackson.JsonParseException: Unexpected end-of-input: expected close marker for ARRAY (from [Source: java.io.StringReader@e320068; line: 1, column: 0])
+ at [Source: java.io.StringReader@e320068; line: 1, column: 241]
+        at yanagishima.migration.MigrateV9.main(MigrateV9.java:59)
+Caused by: org.codehaus.jackson.JsonParseException: Unexpected end-of-input: expected close marker for ARRAY (from [Source: java.io.StringReader@e320068; line: 1, column: 0])
+ at [Source: java.io.StringReader@e320068; line: 1, column: 241]
+        at org.codehaus.jackson.JsonParser._constructError(JsonParser.java:1433)
+        at org.codehaus.jackson.impl.JsonParserMinimalBase._reportError(JsonParserMinimalBase.java:521)
+        at org.codehaus.jackson.impl.JsonParserMinimalBase._reportInvalidEOF(JsonParserMinimalBase.java:454)
+        at org.codehaus.jackson.impl.JsonParserBase._handleEOF(JsonParserBase.java:473)
+        at org.codehaus.jackson.impl.ReaderBasedParser._skipWSOrEnd(ReaderBasedParser.java:1496)
+        at org.codehaus.jackson.impl.ReaderBasedParser.nextToken(ReaderBasedParser.java:368)
+        at org.codehaus.jackson.map.deser.std.CollectionDeserializer.deserialize(CollectionDeserializer.java:211)
+        at org.codehaus.jackson.map.deser.std.CollectionDeserializer.deserialize(CollectionDeserializer.java:194)
+        at org.codehaus.jackson.map.deser.std.CollectionDeserializer.deserialize(CollectionDeserializer.java:30)
+        at org.codehaus.jackson.map.ObjectMapper._readMapAndClose(ObjectMapper.java:2732)
+        at org.codehaus.jackson.map.ObjectMapper.readValue(ObjectMapper.java:1863)
+        at yanagishima.migration.MigrateV9.main(MigrateV9.java:56)
+processing /path/to/yanagishima-9.0/result/your-presto/20171010/20171010_072517_02897_xxvvj.json
+...
+</code></pre>
+
+<h2 id="version-80">Version 8.0</h2>
+<ul>
+<li>Pretty print for json data</li>
+<li>Store query history/bookmark to server side db, but default setting is to use local storage</li>
+<li>Improve partition display</li>
+<li>Metadata of 9.0 is NOT compatible with 7.0, so migration is required</li>
+<li>Migration process is as follows</li>
+</ul>
+<pre><code>cp data/yanagishima.db data/yanagishima.db.bak
+sqlite3 data/yanagishima.db
+sqlite&gt; create table query_new (datasource text, engine text, query_id text, fetch_result_time_string text, query_string text, user text, primary key(datasource, engine, query_id));
+sqlite&gt; insert into query_new select datasource, engine, query_id, fetch_result_time_string, query_string, null from query;
+sqlite&gt; alter table query rename to query_old;
+sqlite&gt; alter table query_new rename to query;
+sqlite&gt; create table publish_new (publish_id text, datasource text, engine text, query_id text, user text, primary key(publish_id));
+sqlite&gt; insert into publish_new select publish_id, datasource, engine, query_id, null from publish;
+sqlite&gt; alter table publish rename to publish_old;
+sqlite&gt; alter table publish_new rename to publish;
+sqlite&gt; create table bookmark_new (bookmark_id integer primary key autoincrement, datasource text, engine text, query text, title text, user text);
+sqlite&gt; insert into bookmark_new select bookmark_id, datasource, engine, query, title, null from bookmark;
+sqlite&gt; alter table bookmark rename to bookmark_old;
+sqlite&gt; alter table bookmark_new rename to bookmark;
+If you confirmed, drop table query_old, publish_old, bookmark_old;
+</code></pre>
+
+<h2 id="version-70">Version 7.0</h2>
+<ul>
+<li>Support hive on MapReduce(yanagishima executes <code>set mapreduce.job.name=...</code>)</li>
+<li>Metadata of 7.0 is NOT compatible with 6.0, so migration is required</li>
+<li>Migration process is as follows</li>
+</ul>
+<pre><code>cp data/yanagishima.db data/yanagishima.db.bak
+sqlite3 data/yanagishima.db
+sqlite&gt; create table query_new (datasource text, engine text, query_id text, fetch_result_time_string text, query_string text, primary key(datasource, engine, query_id));
+sqlite&gt; insert into query_new select datasource, 'presto', query_id, fetch_result_time_string, query_string from query;
+sqlite&gt; alter table query rename to query_old;
+sqlite&gt; alter table query_new rename to query;
+sqlite&gt; create table publish_new (publish_id text, datasource text, engine text, query_id text, primary key(publish_id));
+sqlite&gt; insert into publish_new select publish_id, datasource, 'presto', query_id from publish;
+sqlite&gt; alter table publish rename to publish_old;
+sqlite&gt; alter table publish_new rename to publish;
+sqlite&gt; create table bookmark_new (bookmark_id integer primary key autoincrement, datasource text, engine text, query text, title text);
+sqlite&gt; insert into bookmark_new select bookmark_id, datasource, 'presto', query, title from bookmark;
+sqlite&gt; alter table bookmark rename to bookmark_old;
+sqlite&gt; alter table bookmark_new rename to bookmark;
+If you confirmed, drop table query_old, publish_old, bookmark_old;
+</code></pre>
+
+<h2 id="version-60">Version 6.0</h2>
+<ul>
+<li>Support bookmark title, so add title column to bookmark table</li>
+<li>Metadata of 6.0 is NOT compatible with 5.0, so migration is required</li>
+<li>Migration process is as follows</li>
+</ul>
+<pre><code>cp data/yanagishima.db data/yanagishima.db.bak
+sqlite3 data/yanagishima.db
+sqlite&gt; create table if not exists bookmark_new (bookmark_id integer primary key autoincrement, datasource text, query text, title text);
+sqlite&gt; insert into bookmark_new select bookmark_id, datasource, query, null from bookmark;
+sqlite&gt; alter table bookmark rename to bookmark_old;
+sqlite&gt; alter table bookmark_new rename to bookmark;
+If you confirmed, drop table bookmark_old;
+</code></pre>
+                
+                  
+                
+              
+              
+                
+
+
+              
+            </article>
+          </div>
+        </div>
+      </main>
+      
+        
+<footer class="md-footer">
+  
+    <div class="md-footer-nav">
+      <nav class="md-footer-nav__inner md-grid">
+        
+          <a href="../upgrade/" title="Upgrade" class="md-flex md-footer-nav__link md-footer-nav__link--prev" rel="prev">
+            <div class="md-flex__cell md-flex__cell--shrink">
+              <i class="md-icon md-icon--arrow-back md-footer-nav__button"></i>
+            </div>
+            <div class="md-flex__cell md-flex__cell--stretch md-footer-nav__title">
+              <span class="md-flex__ellipsis">
+                <span class="md-footer-nav__direction">
+                  Previous
+                </span>
+                Upgrade
+              </span>
+            </div>
+          </a>
+        
+        
+      </nav>
+    </div>
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-footer-copyright">
+        
+        powered by
+        <a href="https://www.mkdocs.org">MkDocs</a>
+        and
+        <a href="https://squidfunk.github.io/mkdocs-material/">
+          Material for MkDocs</a>
+      </div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    
+      <script src="../assets/javascripts/application.a8b5e56f.js"></script>
+      
+      <script>app.initialize({version:"1.0.4",url:{base:".."}})</script>
+      
+    
+  </body>
+</html>
