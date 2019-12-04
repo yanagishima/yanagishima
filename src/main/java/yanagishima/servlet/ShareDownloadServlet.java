@@ -35,8 +35,9 @@ public class ShareDownloadServlet extends HttpServlet {
         db.single(Publish.class).where("publish_id=?", publishId.get()).execute().ifPresent(publish -> {
             Optional<String> encode = Optional.ofNullable(request.getParameter("encode"));
             boolean showHeader = getOrDefaultParameter(request, "header", true);
+            boolean showBOM = getOrDefaultParameter(request, "bom", true);
             String fileName = publishId.get() + ".tsv";
-            downloadTsv(response, fileName, publish.getDatasource(), publish.getQueryId(), encode.orElse(DEFAULT_ENCODE), showHeader);
+            downloadTsv(response, fileName, publish.getDatasource(), publish.getQueryId(), encode.orElse(DEFAULT_ENCODE), showHeader, showBOM);
         });
     }
 }

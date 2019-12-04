@@ -37,7 +37,8 @@ public class ShareCsvDownloadServlet extends HttpServlet {
             Optional<String> encode = Optional.ofNullable(request.getParameter("encode"));
             String fileName = publishId + ".csv";
             boolean showHeader = getOrDefaultParameter(request, "header", true);
-            downloadCsv(response, fileName, publish.getDatasource(), publish.getQueryId(), encode.orElse(DEFAULT_ENCODE), showHeader);
+            boolean showBOM = getOrDefaultParameter(request, "bom", true);
+            downloadCsv(response, fileName, publish.getDatasource(), publish.getQueryId(), encode.orElse(DEFAULT_ENCODE), showHeader, showBOM);
         });
     }
 }

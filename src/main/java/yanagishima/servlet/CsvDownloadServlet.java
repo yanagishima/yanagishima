@@ -50,8 +50,10 @@ public class CsvDownloadServlet extends HttpServlet {
             if(header != null && header.equals("false")) {
                 headerFlag = false;
             }
+            String bom = Optional.ofNullable(request.getParameter("bom")).orElse("true");
+            boolean showBOM = Boolean.parseBoolean(bom);
             if(yanagishimaConfig.isAllowOtherReadResult(datasource)) {
-                DownloadUtil.downloadCsv(response, fileName, datasource, queryid, encodeOptional.orElse("UTF-8"), headerFlag);
+                DownloadUtil.downloadCsv(response, fileName, datasource, queryid, encodeOptional.orElse("UTF-8"), headerFlag, showBOM);
             } else {
                 String userName = request.getHeader(yanagishimaConfig.getAuditHttpHeaderName());
                 if (userName == null) {
@@ -59,7 +61,7 @@ public class CsvDownloadServlet extends HttpServlet {
                 }
                 Optional<Query> userQueryOptional = db.single(Query.class).where("query_id=? and datasource=? and user=?", queryidOptional.get(), datasource, userName).execute();
                 if(userQueryOptional.isPresent()) {
-                    DownloadUtil.downloadCsv(response, fileName, datasource, queryid, encodeOptional.orElse("UTF-8"), headerFlag);
+                    DownloadUtil.downloadCsv(response, fileName, datasource, queryid, encodeOptional.orElse("UTF-8"), headerFlag, showBOM);
                 }
             }
         });

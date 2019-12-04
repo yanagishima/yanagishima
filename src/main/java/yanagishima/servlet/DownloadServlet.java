@@ -48,15 +48,17 @@ public class DownloadServlet extends HttpServlet {
         String encode = Optional.ofNullable(request.getParameter("encode")).orElse(DEFAULT_ENCODE);
         String header = Optional.ofNullable(request.getParameter("header")).orElse("true");
         boolean showHeader = Boolean.parseBoolean(header);
+        String bom = Optional.ofNullable(request.getParameter("bom")).orElse("true");
+        boolean showBOM = Boolean.parseBoolean(bom);
         if (config.isAllowOtherReadResult(datasource)) {
-            downloadTsv(response, fileName, datasource, queryId, encode, showHeader);
+            downloadTsv(response, fileName, datasource, queryId, encode, showHeader, showBOM);
             return;
         }
         String userName = request.getHeader(config.getAuditHttpHeaderName());
         requireNonNull(userName, "Username must exist when auditing header name is enabled");
         Optional<Query> query = db.single(Query.class).where("query_id = ? AND datasource = ? AND user = ?", queryId, datasource, userName).execute();
         if (query.isPresent()) {
-            downloadTsv(response, fileName, datasource, queryId, encode, showHeader);
+            downloadTsv(response, fileName, datasource, queryId, encode, showHeader, showBOM);
         }
     }
 }
