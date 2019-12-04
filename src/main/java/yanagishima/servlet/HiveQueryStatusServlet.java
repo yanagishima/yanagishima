@@ -28,68 +28,56 @@ import java.util.Optional;
 import static yanagishima.util.AccessControlUtil.sendForbiddenError;
 import static yanagishima.util.AccessControlUtil.validateDatasource;
 import static yanagishima.util.HttpRequestUtil.getRequiredParameter;
+import static yanagishima.util.JsonUtil.writeJSON;
 
 @Singleton
 public class HiveQueryStatusServlet extends HttpServlet {
-
 	private static final long serialVersionUID = 1L;
+	private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
-	private YanagishimaConfig yanagishimaConfig;
+	private final YanagishimaConfig config;
+	private final TinyORM db;
 
 	@Inject
-	private TinyORM db;
-
-	@Inject
-	public HiveQueryStatusServlet(YanagishimaConfig yanagishimaConfig) {
-		this.yanagishimaConfig = yanagishimaConfig;
+	public HiveQueryStatusServlet(YanagishimaConfig config, TinyORM db) {
+		this.config = config;
+		this.db = db;
 	}
 
 	@Override
-	protected void doPost(HttpServletRequest request,
-			HttpServletResponse response) throws ServletException, IOException {
-
+	protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 		String datasource = getRequiredParameter(request, "datasource");
-		if (yanagishimaConfig.isCheckDatasource() && !validateDatasource(request, datasource)) {
+		if (config.isCheckDatasource() && !validateDatasource(request, datasource)) {
 			sendForbiddenError(response);
 			return;
 		}
-		String queryid = getRequiredParameter(request, "queryid");
-		String resourceManagerUrl = yanagishimaConfig.getResourceManagerUrl(datasource);
-		String userName = null;
+		String queryId = getRequiredParameter(request, "queryid");
+		String resourceManagerUrl = config.getResourceManagerUrl(datasource);
+		String user = null;
 		Optional<String> hiveUser = Optional.ofNullable(request.getParameter("user"));
-		if(yanagishimaConfig.isUseAuditHttpHeaderName()) {
-			userName = request.getHeader(yanagishimaConfig.getAuditHttpHeaderName());
+		if (config.isUseAuditHttpHeaderName()) {
+			user = request.getHeader(config.getAuditHttpHeaderName());
 		} else {
 			if (hiveUser.isPresent()) {
-				userName = hiveUser.get();
+				user = hiveUser.get();
 			}
 		}
 
 		String engine = getRequiredParameter(request, "engine");
-		Optional<Query> queryOptional = db.single(Query.class).where("query_id=? and datasource=? and engine=?", queryid, datasource, engine).execute();
-		if(engine.equals("hive")) {
-			Optional<Map> applicationOptional = YarnUtil.getApplication(resourceManagerUrl, queryid, userName, yanagishimaConfig.getResourceManagerBegin(datasource));
-			if(applicationOptional.isPresent()) {
-				try {
-					response.setContentType("application/json");
-					PrintWriter writer = response.getWriter();
-					ObjectMapper mapper = new ObjectMapper();
-					String json = mapper.writeValueAsString(applicationOptional.get());
-					writer.println(json);
-				} catch (IOException e) {
-					throw new RuntimeException(e);
-				}
-			} else {
-				if(!queryOptional.isPresent()) {
-					HashMap<String, Object> retVal = new HashMap<String, Object>();
-					retVal.put("state", "RUNNING");
-					retVal.put("progress", 0);
-					retVal.put("elapsedTime", 0);
-					JsonUtil.writeJSON(response, retVal);
-				}
+		Optional<Query> queryOptional = db.single(Query.class).where("query_id=? and datasource=? and engine=?", queryId, datasource, engine).execute();
+		if (engine.equals("hive")) {
+			Optional<Map> application = YarnUtil.getApplication(resourceManagerUrl, queryId, user, config.getResourceManagerBegin(datasource));
+			if (application.isPresent()) {
+				writeJSON(response, application.get());
+				return;
 			}
-		} else if(engine.equals("spark")) {
-			HashMap<String, Object> retVal = new HashMap<String, Object>();
+			if (queryOptional.isEmpty()) {
+				writeJSON(response, Map.of("state", "RUNNING", "progress", 0, "elapsedTime", 0));
+				return;
+			}
+		}
+		if (engine.equals("spark")) {
+			Map<String, Object> retVal = new HashMap<String, Object>();
 			if (queryOptional.isPresent()) {
 				if (queryOptional.get().getStatus().equals(Status.SUCCEED.name())) {
 					retVal.put("state", "FINISHED");
@@ -101,37 +89,37 @@ public class HiveQueryStatusServlet extends HttpServlet {
 			} else {
 				retVal.put("state", "RUNNING");
 
-                String sparkJdbcApplicationId = SparkUtil.getSparkJdbcApplicationId(yanagishimaConfig.getSparkWebUrl(datasource));
-                List<Map> runningList = SparkUtil.getSparkRunningJobListWithProgress(resourceManagerUrl, sparkJdbcApplicationId);
-                if(runningList.isEmpty()) {
-                    retVal.put("progress", 0);
-                } else {
-                    List<SparkSqlJob> sparkSqlJobList = SparkUtil.getSparkSqlJobFromSqlserver(resourceManagerUrl, sparkJdbcApplicationId);
-                    for(Map m : runningList) {
-                        String groupId = (String)m.get("jobGroup");
-                        for(SparkSqlJob ssj : sparkSqlJobList) {
-                            if(ssj.getGroupId().equals(groupId) && ssj.getUser().equals(hiveUser.orElse(null)) && !ssj.getJobIds().isEmpty()) {
-                                int numTasks = (int) m.get("numTasks");
-                                int numCompletedTasks = (int) m.get("numCompletedTasks");
-                                double progress = ((double) numCompletedTasks / numTasks) * 100;
-                                retVal.put("progress", progress);
-                                break;
-                            }
-                        }
-                    }
-                }
-
-				LocalDateTime submitTimeLdt = LocalDateTime.parse(queryid.substring(0, "yyyyMMdd_HHmmss".length()), DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss"));
-				ZonedDateTime submitTimeZdt = submitTimeLdt.atZone(ZoneId.of("GMT", ZoneId.SHORT_IDS));
-				long elapsedTimeMillis = ChronoUnit.MILLIS.between(submitTimeZdt, ZonedDateTime.now(ZoneId.of("GMT")));
-				retVal.put("elapsedTime", elapsedTimeMillis);
+				String sparkJdbcApplicationId = SparkUtil.getSparkJdbcApplicationId(config.getSparkWebUrl(datasource));
+				List<Map> runningList = SparkUtil.getSparkRunningJobListWithProgress(resourceManagerUrl, sparkJdbcApplicationId);
+				if (runningList.isEmpty()) {
+					retVal.put("progress", 0);
+				} else {
+					List<SparkSqlJob> sparkSqlJobList = SparkUtil.getSparkSqlJobFromSqlserver(resourceManagerUrl, sparkJdbcApplicationId);
+					for (Map m : runningList) {
+						String groupId = (String) m.get("jobGroup");
+						for (SparkSqlJob ssj : sparkSqlJobList) {
+							if (ssj.getGroupId().equals(groupId) && ssj.getUser().equals(hiveUser.orElse(null)) && !ssj.getJobIds().isEmpty()) {
+								int numTasks = (int) m.get("numTasks");
+								int numCompletedTasks = (int) m.get("numCompletedTasks");
+								double progress = ((double) numCompletedTasks / numTasks) * 100;
+								retVal.put("progress", progress);
+								break;
+							}
+						}
+					}
+				}
+				retVal.put("elapsedTime", toElapsedTimeMillis(queryId));
 			}
-			JsonUtil.writeJSON(response, retVal);
+			writeJSON(response, retVal);
 		} else {
 			throw new IllegalArgumentException(engine + " is illegal");
 		}
-
-
 	}
 
+	private static long toElapsedTimeMillis(String queryId) {
+		String pattern = "yyyyMMdd_HHmmss";
+		LocalDateTime submitTimeLdt = LocalDateTime.parse(queryId.substring(0, pattern.length()), DateTimeFormatter.ofPattern(pattern));
+		ZonedDateTime submitTimeZdt = submitTimeLdt.atZone(ZoneId.of("GMT", ZoneId.SHORT_IDS));
+		return ChronoUnit.MILLIS.between(submitTimeZdt, ZonedDateTime.now(ZoneId.of("GMT")));
+	}
 }
