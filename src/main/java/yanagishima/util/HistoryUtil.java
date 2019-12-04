@@ -1,10 +1,7 @@
 package yanagishima.util;
 
-import io.airlift.units.DataSize;
-import org.apache.commons.csv.CSVFormat;
-import org.apache.commons.csv.CSVParser;
-import org.apache.commons.csv.CSVRecord;
-import yanagishima.row.Query;
+import static java.lang.String.format;
+import static yanagishima.util.PathUtil.getResultFilePath;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -12,67 +9,78 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
-public class HistoryUtil {
+import javax.annotation.Nullable;
 
-    public static void createHistoryResult(HashMap<String, Object> retVal, int limit, String datasource, Query query, boolean resultVisible) {
-        String queryid = query.getQueryId();
+import org.apache.commons.csv.CSVFormat;
+import org.apache.commons.csv.CSVParser;
+import org.apache.commons.csv.CSVRecord;
+
+import io.airlift.units.DataSize;
+import yanagishima.row.Query;
+
+public final class HistoryUtil {
+    private HistoryUtil() {}
+
+    public static void createHistoryResult(Map<String, Object> responseBody, int limit, String datasource, Query query, boolean resultVisible) {
+        String queryId = query.getQueryId();
         String queryString = query.getQueryString();
-        retVal.put("queryString", queryString);
-        retVal.put("finishedTime", query.getFetchResultTimeString());
-        retVal.put("lineNumber", query.getLinenumber());
-        retVal.put("elapsedTimeMillis", query.getElapsedTimeMillis());
-        if(query.getResultFileSize() == null) {
-            retVal.put("rawDataSize", null);
-        } else {
-            DataSize rawDataSize = new DataSize(query.getResultFileSize(), DataSize.Unit.BYTE);
-            retVal.put("rawDataSize", rawDataSize.convertToMostSuccinctDataSize().toString());
-        }
+        responseBody.put("queryString", queryString);
+        responseBody.put("finishedTime", query.getFetchResultTimeString());
+        responseBody.put("lineNumber", query.getLinenumber());
+        responseBody.put("elapsedTimeMillis", query.getElapsedTimeMillis());
+        responseBody.put("rawDataSize", toSuccinctDataSize(query.getResultFileSize()));
 
-        Path errorFilePath = PathUtil.getResultFilePath(datasource, queryid, true);
+        Path errorFilePath = getResultFilePath(datasource, queryId, true);
         if (errorFilePath.toFile().exists()) {
             try {
-                retVal.put("error", String.join(System.getProperty("line.separator"), Files.readAllLines(errorFilePath)));
+                responseBody.put("error", String.join(System.getProperty("line.separator"), Files.readAllLines(errorFilePath)));
+                return;
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
-        } else {
-            if (resultVisible) {
-                List<List<String>> rowDataList = new ArrayList<List<String>>();
-                int lineNumber = 0;
-                Path resultFilePath = PathUtil.getResultFilePath(datasource, queryid, false);
-                if(!resultFilePath.toFile().exists()) {
-                    retVal.put("error", String.format("%s is not found", resultFilePath.getFileName()));
-                    return;
-                }
-                try (BufferedReader br = Files.newBufferedReader(resultFilePath, StandardCharsets.UTF_8)) {
-                    CSVParser parse = CSVFormat.EXCEL.withDelimiter('\t').withNullString("\\N").parse(br);
-                    for (CSVRecord csvRecord : parse) {
-                        List<String> columnList = new ArrayList<>();
-                        for(String column : csvRecord) {
-                            columnList.add(column);
-                        }
-                        if (lineNumber == 0) {
-                            retVal.put("headers", columnList);
-                        } else {
-                            if (queryString.toLowerCase().startsWith("show") || lineNumber <= limit) {
-                                rowDataList.add(columnList);
-                            } else {
-                                break;
-                            }
-                        }
-                        lineNumber++;
-
-                    }
-                } catch (IOException e) {
-                    throw new RuntimeException(e);
-                }
-                retVal.put("results", rowDataList);
-            } else {
-                retVal.put("error", "you can't see query result which other submitted");
-            }
         }
+        if (!resultVisible) {
+            responseBody.put("error", "you can't see query result which other submitted");
+        }
+
+        List<List<String>> rows = new ArrayList<>();
+        int lineNumber = 0;
+        Path resultFilePath = getResultFilePath(datasource, queryId, false);
+        if (!resultFilePath.toFile().exists()) {
+            responseBody.put("error", format("%s is not found", resultFilePath.getFileName()));
+            return;
+        }
+        try (BufferedReader reader = Files.newBufferedReader(resultFilePath, StandardCharsets.UTF_8)) {
+            CSVParser parser = CSVFormat.EXCEL.withDelimiter('\t').withNullString("\\N").parse(reader);
+            for (CSVRecord record : parser) {
+                List<String> row = new ArrayList<>();
+                record.forEach(row::add);
+                if (lineNumber == 0) {
+                    responseBody.put("headers", row);
+                } else {
+                    if (queryString.toLowerCase().startsWith("show") || lineNumber <= limit) {
+                        rows.add(row);
+                    } else {
+                        break;
+                    }
+                }
+                lineNumber++;
+            }
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        responseBody.put("results", rows);
+    }
+
+    @Nullable
+    private static String toSuccinctDataSize(Integer size) {
+        if (size == null) {
+            return null;
+        }
+        DataSize dataSize = new DataSize(size, DataSize.Unit.BYTE);
+        return dataSize.convertToMostSuccinctDataSize().toString();
     }
 }
