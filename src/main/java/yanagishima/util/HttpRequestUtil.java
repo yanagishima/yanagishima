@@ -7,6 +7,11 @@ import static java.lang.String.format;
 public final class HttpRequestUtil {
     private HttpRequestUtil() {}
 
+    public static String getOrDefaultParameter(HttpServletRequest request, String key, String defaultValue) {
+        String value = request.getParameter(key);
+        return value == null ? defaultValue : value;
+    }
+
     public static boolean getOrDefaultParameter(HttpServletRequest request, String key, boolean defaultValue) {
         String value = request.getParameter(key);
         return value == null ? defaultValue : Boolean.parseBoolean(value);
