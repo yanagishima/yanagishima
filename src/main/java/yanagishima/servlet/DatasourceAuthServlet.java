@@ -1,76 +1,68 @@
 package yanagishima.servlet;
 
-import com.google.common.collect.ImmutableMap;
-import yanagishima.config.YanagishimaConfig;
-import yanagishima.util.Constants;
-import yanagishima.util.JsonUtil;
+import static yanagishima.util.Constants.DATASOURCE_HEADER;
+import static yanagishima.util.HttpRequestUtil.getRequiredHeader;
+import static yanagishima.util.JsonUtil.writeJSON;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
-import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.io.IOException;
-import java.util.*;
-import java.util.stream.Collectors;
 
-import static yanagishima.util.HttpRequestUtil.getRequiredHeader;
+import yanagishima.config.YanagishimaConfig;
 
 @Singleton
 public class DatasourceAuthServlet extends HttpServlet {
-
     private static final long serialVersionUID = 1L;
 
-    private YanagishimaConfig yanagishimaConfig;
+    private final YanagishimaConfig config;
 
     @Inject
-    public DatasourceAuthServlet(YanagishimaConfig yanagishimaConfig) {
-        this.yanagishimaConfig = yanagishimaConfig;
+    public DatasourceAuthServlet(YanagishimaConfig config) {
+        this.config = config;
     }
 
     @Override
-    protected void doGet(HttpServletRequest request,
-                         HttpServletResponse response) throws ServletException, IOException {
-
-        HashMap<String, Object> retVal = new HashMap<String, Object>();
-
-        if (yanagishimaConfig.isCheckDatasource()) {
-            String header = getRequiredHeader(request, Constants.DATASOURCE_HEADER);
+    protected void doGet(HttpServletRequest request, HttpServletResponse response) {
+        Map<String, Object> responseBody = new HashMap<>();
+        if (config.isCheckDatasource()) {
+            String header = getRequiredHeader(request, DATASOURCE_HEADER);
             if (header.equals("*")) {
-                retVal.put("datasources", getDatasourceEngineList(yanagishimaConfig.getDatasources()));
+                responseBody.put("datasources", getDatasourceEngineList(config.getDatasources()));
             } else {
                 List<String> headerDatasources = Arrays.asList(header.split(","));
-                List<String> allowedDatasources = yanagishimaConfig.getDatasources().stream().filter(datasource -> headerDatasources.contains(datasource)).collect(Collectors.toList());
-                retVal.put("datasources", getDatasourceEngineList(allowedDatasources));
+                List<String> allowedDatasources = config.getDatasources().stream().filter(headerDatasources::contains).collect(Collectors.toList());
+                responseBody.put("datasources", getDatasourceEngineList(allowedDatasources));
             }
         } else {
-            retVal.put("datasources", getDatasourceEngineList(yanagishimaConfig.getDatasources()));
+            responseBody.put("datasources", getDatasourceEngineList(config.getDatasources()));
         }
-
-        JsonUtil.writeJSON(response, retVal);
+        writeJSON(response, responseBody);
     }
 
     private List<Map<String, Map<String, Object>>> getDatasourceEngineList(List<String> allowedDatasources) {
-        List<Map<String, Map<String, Object>>> datasourceEngineList = new ArrayList<>();
-        for(String datasource : allowedDatasources) {
-            Map<String, Map<String, Object>> datasourceMap = new HashMap<>();
-            List<String> allEngines = yanagishimaConfig.getEngines();
-            List<String> engines = new ArrayList<>();
-            for(String engine : allEngines) {
-                if(yanagishimaConfig.getDatasources(engine).contains(datasource)) {
-                    engines.add(engine);
-                }
-            }
-            datasourceMap.put(datasource, new ImmutableMap.Builder<String, Object>()
-                    .put("engines", engines)
-                    .put("auth", yanagishimaConfig.isAuth(datasource))
-                    .put("metadataService", yanagishimaConfig.isMetadataService(datasource))
-                    .put("datetimePartitionHasHyphen", yanagishimaConfig.IsDatatimePartitionHasHyphen(datasource))
-                    .build());
-            datasourceEngineList.add(datasourceMap);
-        }
-        return datasourceEngineList;
-    }
+        List<Map<String, Map<String, Object>>> datasourceEngines = new ArrayList<>();
+        for (String datasource : allowedDatasources) {
+            List<String> engines = config.getEngines().stream()
+                                         .filter(engine -> config.getDatasources(engine).contains(datasource))
+                                         .collect(Collectors.toList());
 
+            Map<String, Object> context = Map.of(
+                    "engines", engines,
+                    "auth", config.isAuth(datasource),
+                    "metadataService", config.isMetadataService(datasource),
+                    "datetimePartitionHasHyphen", config.IsDatatimePartitionHasHyphen(datasource));
+
+            datasourceEngines.add(Map.of(datasource, context));
+        }
+        return datasourceEngines;
+    }
 }
