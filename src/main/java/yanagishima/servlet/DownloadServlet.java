@@ -15,12 +15,12 @@ import static java.util.Objects.requireNonNull;
 import static yanagishima.util.AccessControlUtil.sendForbiddenError;
 import static yanagishima.util.AccessControlUtil.validateDatasource;
 import static yanagishima.util.DownloadUtil.downloadTsv;
+import static yanagishima.util.HttpRequestUtil.getOrDefaultParameter;
 import static yanagishima.util.HttpRequestUtil.getRequiredParameter;
 
 @Singleton
 public class DownloadServlet extends HttpServlet {
     private static final long serialVersionUID = 1L;
-    private static final String DEFAULT_ENCODE = "UTF-8";
 
     private final YanagishimaConfig config;
     private final TinyORM db;
@@ -45,18 +45,16 @@ public class DownloadServlet extends HttpServlet {
         }
 
         String fileName = queryId + ".tsv";
-        String encode = Optional.ofNullable(request.getParameter("encode")).orElse(DEFAULT_ENCODE);
-        String header = Optional.ofNullable(request.getParameter("header")).orElse("true");
-        boolean showHeader = Boolean.parseBoolean(header);
-        String bom = Optional.ofNullable(request.getParameter("bom")).orElse("true");
-        boolean showBOM = Boolean.parseBoolean(bom);
+        String encode = getOrDefaultParameter(request, "encode", "UTF-8");
+        boolean showHeader = getOrDefaultParameter(request, "header", true);
+        boolean showBOM = getOrDefaultParameter(request, "bom", true);
         if (config.isAllowOtherReadResult(datasource)) {
             downloadTsv(response, fileName, datasource, queryId, encode, showHeader, showBOM);
             return;
         }
-        String userName = request.getHeader(config.getAuditHttpHeaderName());
-        requireNonNull(userName, "Username must exist when auditing header name is enabled");
-        Optional<Query> query = db.single(Query.class).where("query_id = ? AND datasource = ? AND user = ?", queryId, datasource, userName).execute();
+        String user = request.getHeader(config.getAuditHttpHeaderName());
+        requireNonNull(user, "Username must exist when auditing header name is enabled");
+        Optional<Query> query = db.single(Query.class).where("query_id = ? AND datasource = ? AND user = ?", queryId, datasource, user).execute();
         if (query.isPresent()) {
             downloadTsv(response, fileName, datasource, queryId, encode, showHeader, showBOM);
         }
