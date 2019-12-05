@@ -14,6 +14,7 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
 
 import static yanagishima.util.HistoryUtil.createHistoryResult;
@@ -36,7 +37,7 @@ public class ShareHistoryServlet extends HttpServlet {
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) {
-        HashMap<String, Object> body = new HashMap<>();
+        Map<String, Object> body = new HashMap<>();
         try {
             String publishId = getRequiredParameter(request, "publish_id");
             db.single(Publish.class).where("publish_id = ?", publishId).execute().ifPresent(publish -> {
