@@ -16,7 +16,6 @@ import static yanagishima.util.HttpRequestUtil.getOrDefaultParameter;
 @Singleton
 public class ShareCsvDownloadServlet extends HttpServlet {
     private static final long serialVersionUID = 1L;
-    private static final String DEFAULT_ENCODE = "UTF-8";
 
     private final TinyORM db;
 
@@ -34,11 +33,11 @@ public class ShareCsvDownloadServlet extends HttpServlet {
 
         String publishId = publishIdOptional.get();
         db.single(Publish.class).where("publish_id=?", publishId).execute().ifPresent(publish -> {
-            Optional<String> encode = Optional.ofNullable(request.getParameter("encode"));
             String fileName = publishId + ".csv";
+            String encode = getOrDefaultParameter(request, "encode", "UTF-8");
             boolean showHeader = getOrDefaultParameter(request, "header", true);
             boolean showBOM = getOrDefaultParameter(request, "bom", true);
-            downloadCsv(response, fileName, publish.getDatasource(), publish.getQueryId(), encode.orElse(DEFAULT_ENCODE), showHeader, showBOM);
+            downloadCsv(response, fileName, publish.getDatasource(), publish.getQueryId(), encode, showHeader, showBOM);
         });
     }
 }
