@@ -1,6 +1,6 @@
 # Upgrade
 
-If you want to ugprade yanagishima from `xxx` to `yyy`, steps are as follows
+If you want to upgrade yanagishima from `xxx` to `yyy`, steps are as follows
 ```
 cd yanagishima-xxx
 bin/yanagishima-shutdown.sh

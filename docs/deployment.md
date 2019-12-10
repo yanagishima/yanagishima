@@ -13,7 +13,7 @@ If your reverse proxy server sets username on HTTP header just after authenticat
 
 In this case, please specify ```audit.http.header.name``` which is http header name to be passed through your proxy.
 
-If you want to deny to access without usename, please specify ```user.require=true```
+If you want to deny to access without username, please specify ```user.require=true```
 
 If you set ```check.datasource=true``` and datasource list which you want to allow on HTTP header ```X-yanagishima-datasources``` through your proxy, authorization feature is enabled.
 
