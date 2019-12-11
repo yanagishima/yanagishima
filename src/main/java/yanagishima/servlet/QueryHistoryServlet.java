@@ -6,9 +6,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import yanagishima.config.YanagishimaConfig;
 import yanagishima.row.Query;
-import yanagishima.util.JsonUtil;
 import yanagishima.util.Status;
 
+import javax.annotation.Nullable;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 import javax.servlet.ServletException;
@@ -19,94 +19,98 @@ import java.io.IOException;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static com.google.common.base.Strings.isNullOrEmpty;
 import static yanagishima.util.AccessControlUtil.sendForbiddenError;
 import static yanagishima.util.AccessControlUtil.validateDatasource;
 import static yanagishima.util.HttpRequestUtil.getRequiredParameter;
+import static yanagishima.util.JsonUtil.writeJSON;
 
 @Singleton
 public class QueryHistoryServlet extends HttpServlet {
-
-    private static Logger LOGGER = LoggerFactory
-            .getLogger(QueryHistoryServlet.class);
-
+    private static final Logger LOGGER = LoggerFactory.getLogger(QueryHistoryServlet.class);
     private static final long serialVersionUID = 1L;
 
-    @Inject
-    private TinyORM db;
-
-    private YanagishimaConfig yanagishimaConfig;
+    private final YanagishimaConfig config;
+    private final TinyORM db;
 
     @Inject
-    public QueryHistoryServlet(YanagishimaConfig yanagishimaConfig) {
-        this.yanagishimaConfig = yanagishimaConfig;
+    public QueryHistoryServlet(YanagishimaConfig config, TinyORM db) {
+        this.config = config;
+        this.db = db;
     }
 
     @Override
-    protected void doPost(HttpServletRequest request,
-                         HttpServletResponse response) throws ServletException, IOException {
+    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         doGet(request, response);
     }
 
     @Override
-    protected void doGet(HttpServletRequest request,
-                         HttpServletResponse response) throws ServletException, IOException {
-
-        HashMap<String, Object> retVal = new HashMap<String, Object>();
-
+    protected void doGet(HttpServletRequest request, HttpServletResponse response) {
+        Map<String, Object> responseBody = new HashMap<>();
         try {
             String datasource = getRequiredParameter(request, "datasource");
-            if (yanagishimaConfig.isCheckDatasource() && !validateDatasource(request, datasource)) {
+            if (config.isCheckDatasource() && !validateDatasource(request, datasource)) {
                 sendForbiddenError(response);
                 return;
             }
-            String[] queryids = Optional.ofNullable(request.getParameter("queryids")).get().split(",");
+            String[] queryIds = request.getParameter("queryids").split(",");
             String label = request.getParameter("label");
 
-            String placeholder = Arrays.stream(queryids).map(r -> "?").collect(Collectors.joining(", "));
-            List<Query> queryList;
-            if(label == null || label.length() == 0) {
-                queryList = db.searchBySQL(Query.class,
-                        "SELECT a.engine, a.query_id, a.fetch_result_time_string, a.query_string, a.status, a.elapsed_time_millis, a.result_file_size, a.linenumber, b.label_name AS label_name " +
-                                "FROM query a LEFT OUTER JOIN label b on a.datasource = b.datasource AND a.engine = b.engine AND a.query_id = b.query_id WHERE a.datasource=\'" + datasource + "\' and a.query_id IN (" + placeholder + ")",
-                        Arrays.stream(queryids).collect(Collectors.toList()));
-            } else {
-                queryList = db.searchBySQL(Query.class,
-                        "SELECT a.engine, a.query_id, a.fetch_result_time_string, a.query_string, a.status, a.elapsed_time_millis, a.result_file_size, a.linenumber, b.label_name AS label_name " +
-                                "FROM query a LEFT OUTER JOIN label b on a.datasource = b.datasource AND a.engine = b.engine AND a.query_id = b.query_id WHERE b.label_name = \'" + label + "\' and a.datasource=\'" + datasource + "\' and a.query_id IN (" + placeholder + ")",
-                        Arrays.stream(queryids).collect(Collectors.toList()));
-            }
-
-            List<List<Object>> queryHistoryList = new ArrayList<List<Object>>();
-            for (Query query : queryList) {
-                if(query.getStatus().equals(Status.FAILED.name())) {
-                    continue;
-                }
-                List<Object> row = new ArrayList<>();
-                row.add(query.getQueryId());
-                row.add(query.getQueryString());
-                row.add(query.getElapsedTimeMillis());
-                if(query.getResultFileSize() == null) {
-                    row.add(null);
-                } else {
-                    DataSize rawDataSize = new DataSize(query.getResultFileSize(), DataSize.Unit.BYTE);
-                    row.add(rawDataSize.convertToMostSuccinctDataSize().toString());
-                }
-                row.add(query.getEngine());
-                row.add(query.getFetchResultTimeString());
-                row.add(query.getLinenumber());
-                row.add(query.getExtraColumn("label_name"));
-                queryHistoryList.add(row);
-            }
-            retVal.put("headers", Arrays.asList("Id", "Query", "Time", "rawDataSize", "engine", "finishedTime", "linenumber", "labelName"));
-            retVal.put("results", queryHistoryList);
+            responseBody.put("headers", Arrays.asList("Id", "Query", "Time", "rawDataSize", "engine", "finishedTime", "linenumber", "labelName"));
+            responseBody.put("results", getHistories(label, datasource, queryIds));
 
         } catch (Throwable e) {
             LOGGER.error(e.getMessage(), e);
-            retVal.put("error", e.getMessage());
+            responseBody.put("error", e.getMessage());
         }
+        writeJSON(response, responseBody);
+    }
 
-        JsonUtil.writeJSON(response, retVal);
+    private List<List<Object>> getHistories(String label, String datasource, String[] queryIds) {
+        List<List<Object>> queryHistories = new ArrayList<>();
+        for (Query query : getQueries(label, datasource, queryIds)) {
+            if (query.getStatus().equals(Status.FAILED.name())) {
+                continue;
+            }
+            queryHistories.add(toQueryHistory(query));
+        }
+        return queryHistories;
+    }
+
+    private List<Query> getQueries(String label, String datasource, String[] queryIds) {
+        String placeholder = Arrays.stream(queryIds).map(r -> "?").collect(Collectors.joining(", "));
+        if (isNullOrEmpty(label)) {
+            return db.searchBySQL(Query.class,
+                                  "SELECT a.engine, a.query_id, a.fetch_result_time_string, a.query_string, a.status, a.elapsed_time_millis, a.result_file_size, a.linenumber, b.label_name AS label_name " +
+                                  "FROM query a LEFT OUTER JOIN label b on a.datasource = b.datasource AND a.engine = b.engine AND a.query_id = b.query_id WHERE a.datasource=\'" + datasource + "\' and a.query_id IN (" + placeholder + ")",
+                                  Arrays.stream(queryIds).collect(Collectors.toList()));
+        }
+        return db.searchBySQL(Query.class,
+                              "SELECT a.engine, a.query_id, a.fetch_result_time_string, a.query_string, a.status, a.elapsed_time_millis, a.result_file_size, a.linenumber, b.label_name AS label_name " +
+                              "FROM query a LEFT OUTER JOIN label b on a.datasource = b.datasource AND a.engine = b.engine AND a.query_id = b.query_id WHERE b.label_name = \'" + label + "\' and a.datasource=\'" + datasource + "\' and a.query_id IN (" + placeholder + ")",
+                              Arrays.stream(queryIds).collect(Collectors.toList()));
 
     }
 
+    private static List<Object> toQueryHistory(Query query) {
+        List<Object> row = new ArrayList<>();
+        row.add(query.getQueryId());
+        row.add(query.getQueryString());
+        row.add(query.getElapsedTimeMillis());
+        row.add(toSuccinctDataSize(query.getResultFileSize()));
+        row.add(query.getEngine());
+        row.add(query.getFetchResultTimeString());
+        row.add(query.getLinenumber());
+        row.add(query.getExtraColumn("label_name"));
+        return row;
+    }
+
+    @Nullable
+    private static String toSuccinctDataSize(Integer size) {
+        if (size == null) {
+            return null;
+        }
+        DataSize dataSize = new DataSize(size, DataSize.Unit.BYTE);
+        return dataSize.convertToMostSuccinctDataSize().toString();
+    }
 }
