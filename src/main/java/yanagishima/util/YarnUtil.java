@@ -1,64 +1,59 @@
 package yanagishima.util;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.annotations.VisibleForTesting;
+import static java.nio.charset.StandardCharsets.UTF_8;
+import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
+import static yanagishima.util.Constants.YANAGISHIAM_HIVE_JOB_PREFIX;
+
+import java.io.IOException;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 
 import org.apache.http.client.fluent.Request;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.message.BasicHeader;
 
-import java.io.IOException;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-
-import static java.nio.charset.StandardCharsets.UTF_8;
-import static yanagishima.util.Constants.YANAGISHIAM_HIVE_JOB_PREFIX;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.annotations.VisibleForTesting;
 
 public final class YarnUtil {
+    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
+
     private YarnUtil() {}
 
     public static String kill(String resourceManagerUrl, String applicationId) {
         try {
-            Request put = Request.Put(resourceManagerUrl + "/ws/v1/cluster/apps/" + applicationId + "/state");
-            put.addHeader(new BasicHeader("Content-Type", "application/json"));
-            ObjectMapper mapper = new ObjectMapper();
-            Map<String, String> m = new HashMap<>();
-            m.put("state", "KILLED");
-            String json = mapper.writeValueAsString(m);
-            put.body(new StringEntity(json, UTF_8));
-            return put.execute().returnContent().asString(UTF_8);
+            Request request = Request.Put(resourceManagerUrl + "/ws/v1/cluster/apps/" + applicationId + "/state");
+            request.addHeader(new BasicHeader("Content-Type", APPLICATION_JSON));
+            String json = OBJECT_MAPPER.writeValueAsString(Map.of("state", "KILLED"));
+            request.body(new StringEntity(json, UTF_8));
+            return request.execute().returnContent().asString(UTF_8);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
     }
 
-    public static Optional<Map> getApplication(String resourceManagerUrl, String queryId, String userName, Optional<String> beginOptional) {
-        List<Map> yarnJoblist = getJobList(resourceManagerUrl, beginOptional);
-        if(userName == null) {
-            return yarnJoblist.stream().filter(m -> m.get("name").equals(YANAGISHIAM_HIVE_JOB_PREFIX + queryId)).findFirst();
-        } else {
-            return yarnJoblist.stream().filter(m -> m.get("name").equals(YANAGISHIAM_HIVE_JOB_PREFIX + userName + "-" + queryId)).findFirst();
+    public static Optional<Map> getApplication(String resourceManagerUrl, String queryId, String userName, Optional<String> beginTime) {
+        List<Map> yarnJobs = getJobList(resourceManagerUrl, beginTime);
+        if (userName == null) {
+            return yarnJobs.stream().filter(job -> job.get("name").equals(YANAGISHIAM_HIVE_JOB_PREFIX + queryId)).findFirst();
         }
-
+        return yarnJobs.stream().filter(job -> job.get("name").equals(YANAGISHIAM_HIVE_JOB_PREFIX + userName + "-" + queryId)).findFirst();
     }
 
-    public static List<Map> getJobList(String resourceManagerUrl, Optional<String> beginOptional) {
-
+    public static List<Map> getJobList(String resourceManagerUrl, Optional<String> beginTime) {
         try {
-            String originalJson = null;
-            if(beginOptional.isPresent()) {
+            String json;
+            if (beginTime.isPresent()) {
                 long currentTimeMillis = System.currentTimeMillis();
-                String startedTimeBegin = String.valueOf(currentTimeMillis - Long.valueOf(beginOptional.get()));
-                originalJson = Request.Get(resourceManagerUrl + "/ws/v1/cluster/apps?startedTimeBegin=" + startedTimeBegin)
-                        .execute().returnContent().asString(UTF_8);
+                long startedTimeBegin = currentTimeMillis - Long.valueOf(beginTime.get());
+                json = Request.Get(resourceManagerUrl + "/ws/v1/cluster/apps?startedTimeBegin=" + startedTimeBegin)
+                              .execute().returnContent().asString(UTF_8);
             } else {
-                originalJson = Request.Get(resourceManagerUrl + "/ws/v1/cluster/apps")
-                        .execute().returnContent().asString(UTF_8);
+                json = Request.Get(resourceManagerUrl + "/ws/v1/cluster/apps")
+                              .execute().returnContent().asString(UTF_8);
             }
-
-            return jsonToMaps(originalJson);
+            return jsonToMaps(json);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -66,9 +61,7 @@ public final class YarnUtil {
 
     @VisibleForTesting
     public static List<Map> jsonToMaps(String json) throws IOException {
-        ObjectMapper mapper = new ObjectMapper();
-        Map map = mapper.readValue(json, Map.class);
-        List<Map> yarnJoblist = (List) ((Map) map.get("apps")).get("app");
-        return yarnJoblist;
+        Map map = OBJECT_MAPPER.readValue(json, Map.class);
+        return (List) ((Map) map.get("apps")).get("app");
     }
 }
