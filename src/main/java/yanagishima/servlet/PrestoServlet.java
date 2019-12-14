@@ -1,7 +1,7 @@
 package yanagishima.servlet;
 
 import io.prestosql.client.ClientException;
-import me.geso.tinyorm.TinyORM;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import yanagishima.config.YanagishimaConfig;
@@ -11,6 +11,7 @@ import yanagishima.service.PrestoService;
 import yanagishima.util.JsonUtil;
 import yanagishima.util.MetadataUtil;
 
+import javax.annotation.Nullable;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 import javax.servlet.ServletException;
@@ -21,131 +22,126 @@ import java.io.IOException;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static java.lang.String.format;
 import static yanagishima.util.AccessControlUtil.sendForbiddenError;
 import static yanagishima.util.AccessControlUtil.validateDatasource;
 import static yanagishima.util.Constants.YANAGISHIMA_COMMENT;
 import static yanagishima.util.HttpRequestUtil.getRequiredParameter;
+import static yanagishima.util.JsonUtil.writeJSON;
 
 @Singleton
 public class PrestoServlet extends HttpServlet {
-
-	private static Logger LOGGER = LoggerFactory.getLogger(PrestoServlet.class);
-
+	private static final Logger LOGGER = LoggerFactory.getLogger(PrestoServlet.class);
 	private static final long serialVersionUID = 1L;
 
 	private final PrestoService prestoService;
-
-	private final YanagishimaConfig yanagishimaConfig;
-
-	@Inject
-	private TinyORM db;
+	private final YanagishimaConfig config;
 
 	@Inject
-	public PrestoServlet(PrestoService prestoService, YanagishimaConfig yanagishimaConfig) {
+	public PrestoServlet(PrestoService prestoService, YanagishimaConfig config) {
 		this.prestoService = prestoService;
-		this.yanagishimaConfig = yanagishimaConfig;
+		this.config = config;
 	}
 
 	@Override
-	protected void doPost(HttpServletRequest request,
-			HttpServletResponse response) throws ServletException, IOException {
+	protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+		Map<String, Object> responseBody = new HashMap<>();
 
-		HashMap<String, Object> retVal = new HashMap<String, Object>();
-		
 		try {
 			Optional<String> queryOptional = Optional.ofNullable(request.getParameter("query"));
 			queryOptional.ifPresent(query -> {
-				String userName = null;
+				String userName = getUsername(request);
 				Optional<String> prestoUser = Optional.ofNullable(request.getParameter("user"));
 				Optional<String> prestoPassword = Optional.ofNullable(request.getParameter("password"));
-				if(yanagishimaConfig.isUseAuditHttpHeaderName()) {
-					userName = request.getHeader(yanagishimaConfig.getAuditHttpHeaderName());
-				} else {
-					if (prestoUser.isPresent() && prestoPassword.isPresent()) {
-						userName = prestoUser.get();
-					}
-				}
-				if (yanagishimaConfig.isUserRequired() && userName == null) {
+				if (config.isUserRequired() && userName == null) {
 					sendForbiddenError(response);
 					return;
 				}
 				try {
 					String datasource = getRequiredParameter(request, "datasource");
-					String prestoCoordinatorServer = yanagishimaConfig.getPrestoCoordinatorServerOrNull(datasource);
-					if(prestoCoordinatorServer == null) {
-						JsonUtil.writeJSON(response, retVal);
+					String coordinatorServer = config.getPrestoCoordinatorServerOrNull(datasource);
+					if (coordinatorServer == null) {
+						writeJSON(response, responseBody);
 						return;
 					}
-					if (yanagishimaConfig.isCheckDatasource() && !validateDatasource(request, datasource)) {
+					if (config.isCheckDatasource() && !validateDatasource(request, datasource)) {
 						sendForbiddenError(response);
 						return;
 					}
-					if(userName != null) {
-						LOGGER.info(String.format("%s executed %s in %s", userName, query, datasource));
+					if (userName != null) {
+						LOGGER.info(format("%s executed %s in %s", userName, query, datasource));
 					}
 					boolean storeFlag = Boolean.parseBoolean(Optional.ofNullable(request.getParameter("store")).orElse("false"));
 					if (prestoUser.isPresent() && prestoPassword.isPresent()) {
-						if(prestoUser.get().length() == 0) {
-							retVal.put("error", "user is empty");
-							JsonUtil.writeJSON(response, retVal);
+						if (prestoUser.get().length() == 0) {
+							responseBody.put("error", "user is empty");
+							writeJSON(response, responseBody);
 							return;
 						}
 					}
 					PrestoQueryResult prestoQueryResult;
-					if(query.startsWith(YANAGISHIMA_COMMENT)) {
+					if (query.startsWith(YANAGISHIMA_COMMENT)) {
 						prestoQueryResult = prestoService.doQuery(datasource, query, userName, prestoUser, prestoPassword, storeFlag, Integer.MAX_VALUE);
 					} else {
-						prestoQueryResult = prestoService.doQuery(datasource, query, userName, prestoUser, prestoPassword, storeFlag, yanagishimaConfig.getSelectLimit());
+						prestoQueryResult = prestoService.doQuery(datasource, query, userName, prestoUser, prestoPassword, storeFlag, config.getSelectLimit());
 					}
-					String queryid = prestoQueryResult.getQueryId();
-					retVal.put("queryid", queryid);
+					String queryId = prestoQueryResult.getQueryId();
+					responseBody.put("queryid", queryId);
 					if (prestoQueryResult.getUpdateType() == null) {
-						retVal.put("headers", prestoQueryResult.getColumns());
+						responseBody.put("headers", prestoQueryResult.getColumns());
 
-						if(query.startsWith(YANAGISHIMA_COMMENT + "SHOW SCHEMAS FROM")) {
+						if (query.startsWith(YANAGISHIMA_COMMENT + "SHOW SCHEMAS FROM")) {
 							String catalog = query.substring((YANAGISHIMA_COMMENT + "SHOW SCHEMAS FROM").length()).trim();
-							List<String> invisibleSchemas = yanagishimaConfig.getInvisibleSchemas(datasource, catalog);
-							retVal.put("results", prestoQueryResult.getRecords().stream().filter(list -> !invisibleSchemas.contains(list.get(0))).collect(Collectors.toList()));
+							List<String> invisibleSchemas = config.getInvisibleSchemas(datasource, catalog);
+							responseBody.put("results", prestoQueryResult.getRecords().stream().filter(list -> !invisibleSchemas.contains(list.get(0))).collect(Collectors.toList()));
 						} else {
-							retVal.put("results", prestoQueryResult.getRecords());
+							responseBody.put("results", prestoQueryResult.getRecords());
 						}
-						retVal.put("lineNumber", Integer.toString(prestoQueryResult.getLineNumber()));
-						retVal.put("rawDataSize", prestoQueryResult.getRawDataSize().toString());
+						responseBody.put("lineNumber", Integer.toString(prestoQueryResult.getLineNumber()));
+						responseBody.put("rawDataSize", prestoQueryResult.getRawDataSize().toString());
 						Optional<String> warningMessageOptinal = Optional.ofNullable(prestoQueryResult.getWarningMessage());
 						warningMessageOptinal.ifPresent(warningMessage -> {
-							retVal.put("warn", warningMessage);
+							responseBody.put("warn", warningMessage);
 						});
-						if(query.startsWith(YANAGISHIMA_COMMENT + "DESCRIBE")) {
-							if(yanagishimaConfig.getMetadataServiceUrl(datasource).isPresent()) {
-								String[] strings = query.substring(YANAGISHIMA_COMMENT.length() + "DESCRIBE ".length()).split("\\.");
-								String schema = strings[1];
-								String table = strings[2].substring(1, strings[2].length() - 1);
-								MetadataUtil.setMetadata(yanagishimaConfig.getMetadataServiceUrl(datasource).get(), retVal, schema, table, prestoQueryResult.getRecords());
-							}
+						if (query.startsWith(YANAGISHIMA_COMMENT + "DESCRIBE") && config.getMetadataServiceUrl(datasource).isPresent()) {
+							String[] strings = query.substring(YANAGISHIMA_COMMENT.length() + "DESCRIBE ".length()).split("\\.");
+							String schema = strings[1];
+							String table = strings[2].substring(1, strings[2].length() - 1);
+							MetadataUtil.setMetadata(config.getMetadataServiceUrl(datasource).get(), responseBody, schema, table, prestoQueryResult.getRecords());
 						}
 					}
 				} catch (QueryErrorException e) {
 					LOGGER.warn(e.getCause().getMessage());
-					retVal.put("error", e.getCause().getMessage());
-					retVal.put("queryid", e.getQueryId());
+					responseBody.put("error", e.getCause().getMessage());
+					responseBody.put("queryid", e.getQueryId());
 				} catch (ClientException e) {
-					if(prestoUser.isPresent()) {
-						LOGGER.error(String.format("%s failed to be authenticated", prestoUser.get()));
+					if (prestoUser.isPresent()) {
+						LOGGER.error(format("%s failed to be authenticated", prestoUser.get()));
 					}
 					LOGGER.error(e.getMessage(), e);
-					retVal.put("error", e.getMessage());
+					responseBody.put("error", e.getMessage());
 				} catch (Throwable e) {
 					LOGGER.error(e.getMessage(), e);
-					retVal.put("error", e.getMessage());
+					responseBody.put("error", e.getMessage());
 				}
 			});
 		} catch (Throwable e) {
 			LOGGER.error(e.getMessage(), e);
-			retVal.put("error", e.getMessage());
+			responseBody.put("error", e.getMessage());
 		}
-
-		JsonUtil.writeJSON(response, retVal);
-
+		writeJSON(response, responseBody);
 	}
 
+	@Nullable
+	private String getUsername(HttpServletRequest request) {
+		if (config.isUseAuditHttpHeaderName()) {
+			return request.getHeader(config.getAuditHttpHeaderName());
+		}
+		String user = request.getParameter("user");
+		String password = request.getParameter("password");
+		if (user != null && password != null) {
+			return user;
+		}
+		return null;
+	}
 }
