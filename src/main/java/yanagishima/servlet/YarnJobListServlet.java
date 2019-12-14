@@ -19,6 +19,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import static java.lang.String.join;
+import static java.util.Collections.nCopies;
 import static yanagishima.util.AccessControlUtil.sendForbiddenError;
 import static yanagishima.util.AccessControlUtil.validateDatasource;
 import static yanagishima.util.Constants.YANAGISHIAM_HIVE_JOB_PREFIX;
@@ -86,7 +88,7 @@ public class YarnJobListServlet extends HttpServlet {
 
 		List<String> existdbQueryidList = new ArrayList<>();
 		if(!queryidList.isEmpty()) {
-			String placeholder = queryidList.stream().map(r -> "?").collect(Collectors.joining(", "));
+			String placeholder = join(", ", nCopies(queryidList.size(), "?"));
 			List<Query> queryList = db.searchBySQL(Query.class,
 					"SELECT engine, query_id, fetch_result_time_string, query_string FROM query WHERE engine='hive' and datasource=\'" + datasource + "\' and query_id IN (" + placeholder + ")",
 					queryidList.stream().collect(Collectors.toList()));
