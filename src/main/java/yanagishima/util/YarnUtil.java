@@ -1,6 +1,8 @@
 package yanagishima.util;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.annotations.VisibleForTesting;
+
 import org.apache.http.client.fluent.Request;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.message.BasicHeader;
@@ -13,7 +15,6 @@ import java.util.Optional;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static yanagishima.util.Constants.YANAGISHIAM_HIVE_JOB_PREFIX;
-
 
 public final class YarnUtil {
     private YarnUtil() {}
@@ -57,53 +58,17 @@ public final class YarnUtil {
                         .execute().returnContent().asString(UTF_8);
             }
 
-/*
-  "apps": {
-    "app": [
-      {
-        "amNodeLabelExpression": "",
-        "finishedTime": 1502212980368,
-        "startedTime": 1502212927109,
-        "priority": 0,
-        "applicationTags": "",
-        "applicationType": "MAPREDUCE",
-        "clusterId": 1495768363173,
-        "diagnostics": "",
-        "trackingUrl": "http://localhost:8088/proxy/application_1495768363173_330723/",
-        "id": "application_1495768363173_330723",
-        "user": "hoge",
-        "name": "yanagishima-hive-20170809_164758_ac5624e46a802ea3acdcff3fdfa100d1",
-        "queue": "default",
-        "state": "FINISHED",
-        "finalStatus": "SUCCEEDED",
-        "progress": 100,
-        "trackingUI": "History",
-        "elapsedTime": 53259,
-        "amContainerLogs": "http://aaa:8042/node/containerlogs/container_e21_1495768363173_330723_01_000001/hoge",
-        "amHostHttpAddress": "aaa:8042",
-        "allocatedMB": -1,
-        "allocatedVCores": -1,
-        "runningContainers": -1,
-        "memorySeconds": 1018067,
-        "vcoreSeconds": 246,
-        "queueUsagePercentage": 0,
-        "clusterUsagePercentage": 0,
-        "preemptedResourceMB": 0,
-        "preemptedResourceVCores": 0,
-        "numNonAMContainerPreempted": 0,
-        "numAMContainerPreempted": 0,
-        "logAggregationStatus": "SUCCEEDED",
-        "unmanagedApplication": false
-      },
-      {
-*/
-            ObjectMapper mapper = new ObjectMapper();
-            Map map = mapper.readValue(originalJson, Map.class);
-            List<Map> yarnJoblist = (List) ((Map) map.get("apps")).get("app");
-            return yarnJoblist;
+            return jsonToMaps(originalJson);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
     }
 
+    @VisibleForTesting
+    public static List<Map> jsonToMaps(String json) throws IOException {
+        ObjectMapper mapper = new ObjectMapper();
+        Map map = mapper.readValue(json, Map.class);
+        List<Map> yarnJoblist = (List) ((Map) map.get("apps")).get("app");
+        return yarnJoblist;
+    }
 }
