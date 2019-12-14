@@ -1,5 +1,6 @@
 package yanagishima.servlet;
 
+import static java.lang.String.format;
 import static java.lang.String.join;
 import static java.util.Collections.nCopies;
 import static yanagishima.util.AccessControlUtil.sendForbiddenError;
@@ -19,6 +20,7 @@ import javax.inject.Singleton;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.ws.rs.core.MediaType;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -51,71 +53,79 @@ public class YarnJobListServlet extends HttpServlet {
 		}
 		String resourceManagerUrl = config.getResourceManagerUrl(datasource);
 		List<Map> yarnJobs = YarnUtil.getJobList(resourceManagerUrl, config.getResourceManagerBegin(datasource));
-		List<Map> runningJobs = yarnJobs.stream().filter(m -> m.get("state").equals("RUNNING")).collect(Collectors.toList());;
-		List<Map> finishedJobs = yarnJobs.stream().filter(m -> !m.get("state").equals("RUNNING")).collect(Collectors.toList());;
-		runningJobs.sort((a, b)-> String.class.cast(b.get("id")).compareTo(String.class.cast(a.get("id"))));
-		finishedJobs.sort((a, b)-> String.class.cast(b.get("id")).compareTo(String.class.cast(a.get("id"))));
+		List<Map> runningJobs = yarnJobs.stream().filter(job -> job.get("state").equals("RUNNING")).collect(Collectors.toList());;
+		List<Map> finishedJobs = yarnJobs.stream().filter(job -> !job.get("state").equals("RUNNING")).collect(Collectors.toList());;
+		runningJobs.sort((a, b)-> ((String) b.get("id")).compareTo((String) a.get("id")));
+		finishedJobs.sort((a, b)-> ((String) b.get("id")).compareTo((String) a.get("id")));
 
-		List<Map> limitedList;
+		List<Map> jobs;
 		if (yarnJobs.size() > LIMIT) {
-			limitedList = new ArrayList<>();
-			limitedList.addAll(runningJobs);
-			limitedList.addAll(finishedJobs.subList(0, LIMIT - runningJobs.size()));
+			jobs = new ArrayList<>();
+			jobs.addAll(runningJobs);
+			jobs.addAll(finishedJobs.subList(0, LIMIT - runningJobs.size()));
 		} else {
-			limitedList = yarnJobs;
+			jobs = yarnJobs;
 		}
 
 		String userName = request.getHeader(config.getAuditHttpHeaderName());
+		List<String> queryIds = toQueryIds(jobs, userName);
+		List<String> existingQueryIds = getExistingQueries(queryIds, datasource);
+		List<Map> jobsWitExistDb = toJobsWitExistDb(jobs, userName, existingQueryIds);
 
-		List<String> queryIds = new ArrayList<>();
-		for (Map job : limitedList) {
-			String name = (String) job.get("name");
-			if (name.startsWith(YANAGISHIAM_HIVE_JOB_PREFIX)) {
-				if (userName == null) {
-					String queryId = name.substring(YANAGISHIAM_HIVE_JOB_PREFIX.length());
-					queryIds.add(queryId);
-				} else {
-					String queryId = name.substring(YANAGISHIAM_HIVE_JOB_PREFIX.length() + userName.length() + 1);
-					queryIds.add(queryId);
-				}
-
-			}
-		}
-
-		List<String> existdbQueryidList = new ArrayList<>();
-		if (!queryIds.isEmpty()) {
-			String placeholder = join(", ", nCopies(queryIds.size(), "?"));
-			List<Query> queryList = db.searchBySQL(Query.class,
-					"SELECT engine, query_id, fetch_result_time_string, query_string FROM query WHERE engine='hive' and datasource=\'" + datasource + "\' and query_id IN (" + placeholder + ")",
-					queryIds.stream().collect(Collectors.toList()));
-
-			for (Query query : queryList) {
-				existdbQueryidList.add(query.getQueryId());
-			}
-		}
-
-		for (Map job : limitedList) {
-			String name = (String)job.get("name");
-			if (name.startsWith(YANAGISHIAM_HIVE_JOB_PREFIX)) {
-				String queryId;
-				if (userName == null) {
-					queryId = name.substring(YANAGISHIAM_HIVE_JOB_PREFIX.length());
-				} else {
-					queryId = name.substring(YANAGISHIAM_HIVE_JOB_PREFIX.length() + userName.length() + 1);
-				}
-				if (existdbQueryidList.contains(queryId)) {
-					job.put("existdb", true);
-				} else {
-					job.put("existdb", false);
-				}
-			} else {
-				job.put("existdb", false);
-			}
-		}
-
-		response.setContentType("application/json");
+		response.setContentType(MediaType.APPLICATION_JSON);
 		PrintWriter writer = response.getWriter();
-		String json = OBJECT_MAPPER.writeValueAsString(limitedList);
+		String json = OBJECT_MAPPER.writeValueAsString(jobsWitExistDb);
 		writer.println(json);
 	}
+
+	private List<String> toQueryIds(List<Map> jobs, String userName) {
+		List<String> queryIds = new ArrayList<>();
+		for (Map job : jobs) {
+			String name = (String) job.get("name");
+			if (name.startsWith(YANAGISHIAM_HIVE_JOB_PREFIX)) {
+				String queryId = jobNameToQueryId(name, userName);
+				queryIds.add(queryId);
+			}
+		}
+		return queryIds;
+	}
+
+	private List<String> getExistingQueries(List<String> queryIds, String datasource) {
+		if (queryIds.isEmpty()) {
+			return List.of();
+		}
+
+		String placeholder = join(", ", nCopies(queryIds.size(), "?"));
+		List<Query> queries = db.searchBySQL(Query.class,
+											 format("SELECT engine, query_id, fetch_result_time_string, query_string "
+													+ "FROM query "
+													+ "WHERE engine='hive' and datasource=\'%s\' and query_id IN (%s)",
+													datasource, placeholder),
+											 queryIds.stream().collect(Collectors.toList()));
+
+		return queries.stream().map(Query::getQueryId).collect(Collectors.toList());
+	}
+
+	private List<Map> toJobsWitExistDb(List<Map> jobs, String userName, List<String> existingQueryIds) {
+		List<Map> jobsWitExistDb = new ArrayList<>();
+		for (Map job : jobs) {
+			String name = (String) job.get("name");
+			boolean existDb = false;
+			if (name.startsWith(YANAGISHIAM_HIVE_JOB_PREFIX)) {
+				String queryId = jobNameToQueryId(name, userName);
+				existDb = existingQueryIds.contains(queryId);
+			}
+			job.put("existdb", existDb);
+			jobsWitExistDb.add(job);
+		}
+		return jobsWitExistDb;
+	}
+
+	private static String jobNameToQueryId(String jobName, String userName) {
+		if (userName == null) {
+			return jobName.substring(YANAGISHIAM_HIVE_JOB_PREFIX.length());
+		}
+		return jobName.substring(YANAGISHIAM_HIVE_JOB_PREFIX.length() + userName.length() + 1);
+	}
 }
+
