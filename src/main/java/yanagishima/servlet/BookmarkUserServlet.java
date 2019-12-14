@@ -5,6 +5,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import yanagishima.config.YanagishimaConfig;
 import yanagishima.row.Bookmark;
+import yanagishima.model.HttpRequestContext;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
@@ -14,9 +15,9 @@ import javax.servlet.http.HttpServletResponse;
 import java.util.List;
 import java.util.Map;
 
+import static java.util.Objects.requireNonNull;
 import static yanagishima.util.AccessControlUtil.sendForbiddenError;
 import static yanagishima.util.AccessControlUtil.validateDatasource;
-import static yanagishima.util.HttpRequestUtil.getRequiredParameter;
 import static yanagishima.util.JsonUtil.writeJSON;
 
 @Singleton
@@ -35,15 +36,17 @@ public class BookmarkUserServlet extends HttpServlet {
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) {
+        HttpRequestContext context = new HttpRequestContext(request);
         try {
-            String datasource = getRequiredParameter(request, "datasource");
-            if (config.isCheckDatasource() && !validateDatasource(request, datasource)) {
+            requireNonNull(context.getDatasource(), "datasource is null");
+
+            if (config.isCheckDatasource() && !validateDatasource(request, context.getDatasource())) {
                 sendForbiddenError(response);
                 return;
             }
-            String engine = getRequiredParameter(request, "engine");
+            requireNonNull(context.getEngine(), "engine is null");
             String userName = request.getHeader(config.getAuditHttpHeaderName());
-            List<Bookmark> bookmarks = db.search(Bookmark.class).where("datasource = ? AND engine = ? AND user = ?", datasource, engine, userName).execute();
+            List<Bookmark> bookmarks = db.search(Bookmark.class).where("datasource = ? AND engine = ? AND user = ?", context.getDatasource(), context.getDatasource(), userName).execute();
             writeJSON(response, Map.of("bookmarkList", bookmarks));
         } catch (Throwable e) {
             LOGGER.error(e.getMessage(), e);

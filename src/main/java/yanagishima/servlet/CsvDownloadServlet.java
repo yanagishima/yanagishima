@@ -5,7 +5,6 @@ import static yanagishima.util.AccessControlUtil.sendForbiddenError;
 import static yanagishima.util.AccessControlUtil.validateDatasource;
 import static yanagishima.util.DownloadUtil.downloadCsv;
 import static yanagishima.util.HttpRequestUtil.getOrDefaultParameter;
-import static yanagishima.util.HttpRequestUtil.getRequiredParameter;
 
 import java.util.Optional;
 
@@ -18,6 +17,7 @@ import javax.servlet.http.HttpServletResponse;
 import me.geso.tinyorm.TinyORM;
 import yanagishima.config.YanagishimaConfig;
 import yanagishima.row.Query;
+import yanagishima.model.HttpRequestContext;
 
 @Singleton
 public class CsvDownloadServlet extends HttpServlet {
@@ -33,29 +33,28 @@ public class CsvDownloadServlet extends HttpServlet {
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) {
-        String queryId = request.getParameter("queryid");
-        if (queryId == null) {
+        HttpRequestContext context = new HttpRequestContext(request);
+        if (context.getQueryId() == null) {
             return;
         }
 
-        String fileName = queryId + ".csv";
-        String datasource = getRequiredParameter(request, "datasource");
-        if (config.isCheckDatasource() && !validateDatasource(request, datasource)) {
+        requireNonNull(context.getDatasource(), "datasource is null");
+
+        String fileName = context.getQueryId() + ".csv";
+        if (config.isCheckDatasource() && !validateDatasource(request, context.getDatasource())) {
             sendForbiddenError(response);
             return;
         }
-        String encode = getOrDefaultParameter(request, "encode", "UTF-8");
-        boolean showHeader = getOrDefaultParameter(request, "header", true);
-        boolean showBOM = getOrDefaultParameter(request, "bom", true);
-        if (config.isAllowOtherReadResult(datasource)) {
-            downloadCsv(response, fileName, datasource, queryId, encode, showHeader, showBOM);
+
+        if (config.isAllowOtherReadResult(context.getDatasource())) {
+            downloadCsv(response, fileName, context.getDatasource(), context.getQueryId(), context.getEncode(), context.isShowHeader(), context.isShowBom());
             return;
         }
         String user = request.getHeader(config.getAuditHttpHeaderName());
         requireNonNull(user, "user is null");
-        Optional<Query> userQuery = db.single(Query.class).where("query_id=? and datasource=? and user=?", queryId, datasource, user).execute();
+        Optional<Query> userQuery = db.single(Query.class).where("query_id=? and datasource=? and user=?", context.getQueryId(), context.getDatasource(), user).execute();
         if (userQuery.isPresent()) {
-            downloadCsv(response, fileName, datasource, queryId, encode, showHeader, showBOM);
+            downloadCsv(response, fileName, context.getDatasource(), context.getQueryId(), context.getEncode(), context.isShowHeader(), context.isShowBom());
         }
     }
 }
