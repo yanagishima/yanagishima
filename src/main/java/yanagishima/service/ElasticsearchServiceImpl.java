@@ -40,15 +40,15 @@ public class ElasticsearchServiceImpl implements ElasticsearchService {
     private static final Logger LOGGER = LoggerFactory.getLogger(ElasticsearchServiceImpl.class);
     private static final CSVFormat CSV_FORMAT = CSVFormat.EXCEL.withDelimiter('\t').withNullString("\\N").withRecordSeparator(System.getProperty("line.separator"));
 
-    private final YanagishimaConfig yanagishimaConfig;
+    private final YanagishimaConfig config;
     private final TinyORM db;
     private final Fluency fluency;
 
     @Inject
-    public ElasticsearchServiceImpl(YanagishimaConfig yanagishimaConfig, TinyORM db) {
-        this.yanagishimaConfig = yanagishimaConfig;
+    public ElasticsearchServiceImpl(YanagishimaConfig config, TinyORM db) {
+        this.config = config;
         this.db = db;
-        this.fluency = buildStaticFluency(yanagishimaConfig);
+        this.fluency = buildStaticFluency(config);
     }
 
     @Override
@@ -60,7 +60,7 @@ public class ElasticsearchServiceImpl implements ElasticsearchService {
     @Override
     public ElasticsearchQueryResult doTranslate(String datasource, String query, String userName, boolean storeFlag, int limit) throws ElasticsearchQueryErrorException {
         String queryId = QueryIdUtil.generate(datasource, query, elasticsearch.name());
-        String jdbcUrl = yanagishimaConfig.getElasticsearchJdbcUrl(datasource);
+        String jdbcUrl = config.getElasticsearchJdbcUrl(datasource);
         String httpUrl = "http://" + jdbcUrl.substring(DRIVER_URL_START.length());
         ElasticsearchTranslateClient translateClient = new ElasticsearchTranslateClient(httpUrl);
         try {
@@ -72,7 +72,7 @@ public class ElasticsearchServiceImpl implements ElasticsearchService {
             columnNameList.add("lucene_query");
             Path dst = getResultFilePath(datasource, queryId, false);
             int lineNumber = 0;
-            int maxResultFileByteSize = yanagishimaConfig.getElasticsearchMaxResultFileByteSize();
+            int maxResultFileByteSize = config.getElasticsearchMaxResultFileByteSize();
             int resultBytes = 0;
             try (BufferedWriter writer = Files.newBufferedWriter(dst, StandardCharsets.UTF_8);
                  CSVPrinter printer = new CSVPrinter(writer, CSV_FORMAT)) {
@@ -117,7 +117,7 @@ public class ElasticsearchServiceImpl implements ElasticsearchService {
         checkSecretKeyword(query, datasource, queryId, userName);
         checkRequiredCondition(query, datasource, queryId, userName);
 
-        String url = yanagishimaConfig.getElasticsearchJdbcUrl(datasource);
+        String url = config.getElasticsearchJdbcUrl(datasource);
 
         try (Connection connection = DriverManager.getConnection(url)) {
             long start = System.currentTimeMillis();
@@ -137,7 +137,7 @@ public class ElasticsearchServiceImpl implements ElasticsearchService {
     }
 
     private void processData(String datasource, String query, int limit, String userName, Connection connection, String queryId, long start, ElasticsearchQueryResult result) throws SQLException {
-        Duration queryMaxRunTime = new Duration(yanagishimaConfig.getElasticsearchQueryMaxRunTimeSeconds(datasource), TimeUnit.SECONDS);
+        Duration queryMaxRunTime = new Duration(config.getElasticsearchQueryMaxRunTimeSeconds(datasource), TimeUnit.SECONDS);
         try (PreparedStatement statement = connection.prepareStatement(query)) {
             try (ResultSet resultSet = statement.executeQuery()) {
                 ResultSetMetaData metadata = resultSet.getMetaData();
@@ -149,7 +149,7 @@ public class ElasticsearchServiceImpl implements ElasticsearchService {
 
                 Path dst = getResultFilePath(datasource, queryId, false);
                 int lineNumber = 0;
-                int maxResultFileByteSize = yanagishimaConfig.getElasticsearchMaxResultFileByteSize();
+                int maxResultFileByteSize = config.getElasticsearchMaxResultFileByteSize();
                 int resultBytes = 0;
                 try (BufferedWriter writer = Files.newBufferedWriter(dst, StandardCharsets.UTF_8);
                      CSVPrinter printer = new CSVPrinter(writer, CSV_FORMAT)) {
@@ -194,7 +194,7 @@ public class ElasticsearchServiceImpl implements ElasticsearchService {
     }
 
     private void checkDisallowedKeyword(String query, String datasource, String queryId, String username) {
-        for (String keyword :  yanagishimaConfig.getElasticsearchDisallowedKeywords(datasource)) {
+        for (String keyword : config.getElasticsearchDisallowedKeywords(datasource)) {
             if (query.trim().toLowerCase().startsWith(keyword)) {
                 String message = String.format("query contains %s. This is the disallowed keywords in %s", keyword, datasource);
                 storeError(db, datasource, elasticsearch.name(), queryId, query, username, message);
@@ -204,8 +204,8 @@ public class ElasticsearchServiceImpl implements ElasticsearchService {
     }
 
     private void checkSecretKeyword(String query, String datasource, String queryId, String username) {
-        for (String elasticsearchSecretKeyword : yanagishimaConfig.getElasticsearchSecretKeywords(datasource)) {
-            if (query.contains(elasticsearchSecretKeyword)) {
+        for (String keyword : config.getElasticsearchSecretKeywords(datasource)) {
+            if (query.contains(keyword)) {
                 String message = "query error occurs";
                 storeError(db, datasource, elasticsearch.name(), queryId, query, username, message);
                 throw new RuntimeException(message);
@@ -214,12 +214,12 @@ public class ElasticsearchServiceImpl implements ElasticsearchService {
     }
 
     private void checkRequiredCondition(String query, String datasource, String queryId, String username) {
-        List<String> elasticsearchMustSpecifyConditions = yanagishimaConfig.getElasticsearchMustSpecifyConditions(datasource);
-        for (String elasticsearchMustSpecifyCondition : elasticsearchMustSpecifyConditions) {
-            String[] conditions = elasticsearchMustSpecifyCondition.split(",");
+        List<String> requiredConditions = config.getElasticsearchMustSpecifyConditions(datasource);
+        for (String requiredCondition : requiredConditions) {
+            String[] conditions = requiredCondition.split(",");
             for (String condition : conditions) {
                 String table = condition.split(":")[0];
-                if (!query.startsWith("SHOW") && !query.startsWith("DESCRIBE") && query.contains(table)) {
+                if (query.contains(table)) {
                     String[] partitionKeys = condition.split(":")[1].split("\\|");
                     for (String partitionKey : partitionKeys) {
                         if (!query.contains(partitionKey)) {
@@ -234,7 +234,7 @@ public class ElasticsearchServiceImpl implements ElasticsearchService {
     }
 
     private void emitExecutedEvent(String username, String query, String queryId, String datasource, long elapsedTime) {
-        if (yanagishimaConfig.getFluentdExecutedTag().isEmpty()) {
+        if (config.getFluentdExecutedTag().isEmpty()) {
             return;
         }
 
@@ -247,7 +247,7 @@ public class ElasticsearchServiceImpl implements ElasticsearchService {
         event.put("engine", "elasticsearch");
 
         try {
-            fluency.emit(yanagishimaConfig.getFluentdExecutedTag().get(), event);
+            fluency.emit(config.getFluentdExecutedTag().get(), event);
         } catch (IOException e) {
             LOGGER.error(e.getMessage(), e);
         }

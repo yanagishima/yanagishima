@@ -53,20 +53,20 @@ public class OldPrestoServiceImpl implements OldPrestoService {
     private static final Logger LOGGER = LoggerFactory.getLogger(OldPrestoServiceImpl.class);
     private static final CSVFormat CSV_FORMAT = CSVFormat.EXCEL.withDelimiter('\t').withNullString("\\N").withRecordSeparator(System.getProperty("line.separator"));
 
-    private final YanagishimaConfig yanagishimaConfig;
+    private final YanagishimaConfig config;
     private final OkHttpClient httpClient;
     private final ExecutorService executorService = Executors.newFixedThreadPool(10);
     private final Fluency fluency;
     private final TinyORM db;
 
     @Inject
-    public OldPrestoServiceImpl(YanagishimaConfig yanagishimaConfig, TinyORM db) {
-        this.yanagishimaConfig = yanagishimaConfig;
+    public OldPrestoServiceImpl(YanagishimaConfig config, TinyORM db) {
+        this.config = config;
         this.db = db;
         OkHttpClient.Builder builder = new OkHttpClient.Builder();
         setupTimeouts(builder, 5, SECONDS);
         httpClient = builder.build();
-        this.fluency = buildStaticFluency(yanagishimaConfig);
+        this.fluency = buildStaticFluency(config);
     }
 
     @Override
@@ -92,7 +92,7 @@ public class OldPrestoServiceImpl implements OldPrestoService {
         @Override
         public void run() {
             try {
-                int limit = yanagishimaConfig.getSelectLimit();
+                int limit = config.getSelectLimit();
                 getPrestoQueryResult(datasource, query, client, true, limit, userName);
             } catch (QueryErrorException e) {
                 LOGGER.warn(e.getCause().getMessage());
@@ -117,7 +117,7 @@ public class OldPrestoServiceImpl implements OldPrestoService {
         checkSecretKeyword(userName, query, client.currentStatusInfo().getId(), datasource);
         checkRequiredCondition(userName, query, client.currentStatusInfo().getId(), datasource);
 
-        Duration queryMaxRunTime = new Duration(yanagishimaConfig.getQueryMaxRunTimeSeconds(datasource), SECONDS);
+        Duration queryMaxRunTime = new Duration(config.getQueryMaxRunTimeSeconds(datasource), SECONDS);
         long start = System.currentTimeMillis();
         while (client.isRunning() && client.currentData().getData() == null) {
             try {
@@ -130,7 +130,7 @@ public class OldPrestoServiceImpl implements OldPrestoService {
                 throw e;
             }
 
-            if(System.currentTimeMillis() - start > queryMaxRunTime.toMillis()) {
+            if (System.currentTimeMillis() - start > queryMaxRunTime.toMillis()) {
                 String queryId = client.currentStatusInfo().getId();
                 String message = format("Query failed (#%s) in %s: Query exceeded maximum time limit of %s", queryId, datasource, queryMaxRunTime.toString());
                 storeError(db, datasource, presto.name(), queryId, query, userName, message);
@@ -145,19 +145,18 @@ public class OldPrestoServiceImpl implements OldPrestoService {
             String queryId = results.getId();
             if (results.getColumns() == null) {
                 throw new QueryErrorException(new SQLException(format("Query %s has no columns\n", results.getId())));
-            } else {
-                prestoQueryResult.setQueryId(queryId);
-                prestoQueryResult.setUpdateType(results.getUpdateType());
-                List<String> columns = Lists.transform(results.getColumns(), Column::getName);
-                prestoQueryResult.setColumns(columns);
-                List<List<String>> rows = processData(client, datasource, queryId, query, prestoQueryResult, columns, start, limit, userName);
-                prestoQueryResult.setRecords(rows);
-                if (storeFlag) {
-                    insertQueryHistory(db, datasource, presto.name(), query, userName, queryId, prestoQueryResult.getLineNumber());
-                }
-
-                emitExecutedEvent(userName, query, queryId, datasource, System.currentTimeMillis() - start);
             }
+            prestoQueryResult.setQueryId(queryId);
+            prestoQueryResult.setUpdateType(results.getUpdateType());
+            List<String> columns = Lists.transform(results.getColumns(), Column::getName);
+            prestoQueryResult.setColumns(columns);
+            List<List<String>> rows = processData(client, datasource, queryId, query, prestoQueryResult, columns, start, limit, userName);
+            prestoQueryResult.setRecords(rows);
+            if (storeFlag) {
+                insertQueryHistory(db, datasource, presto.name(), query, userName, queryId, prestoQueryResult.getLineNumber());
+            }
+
+            emitExecutedEvent(userName, query, queryId, datasource, System.currentTimeMillis() - start);
         }
 
         checkState(!client.isRunning());
@@ -202,10 +201,10 @@ public class OldPrestoServiceImpl implements OldPrestoService {
     private List<List<String>> processData(StatementClient client, String datasource, String queryId, String query, PrestoQueryResult queryResult, List<String> columns, long start, int limit, String userName) {
         List<List<String>> rows = new ArrayList<>();
 
-        Duration queryMaxRunTime = new Duration(yanagishimaConfig.getQueryMaxRunTimeSeconds(datasource), SECONDS);
+        Duration queryMaxRunTime = new Duration(config.getQueryMaxRunTimeSeconds(datasource), SECONDS);
         Path dst = getResultFilePath(datasource, queryId, false);
         int lineNumber = 0;
-        int maxResultFileByteSize = yanagishimaConfig.getMaxResultFileByteSize();
+        int maxResultFileByteSize = config.getMaxResultFileByteSize();
         int resultBytes = 0;
         try (BufferedWriter writer = Files.newBufferedWriter(dst, StandardCharsets.UTF_8);
              CSVPrinter printer = new CSVPrinter(writer, CSV_FORMAT)) {
@@ -249,7 +248,7 @@ public class OldPrestoServiceImpl implements OldPrestoService {
     }
 
     private void emitExecutedEvent(String username, String query, String queryId, String datasource, long elapsedTime) {
-        if (yanagishimaConfig.getFluentdExecutedTag().isEmpty()) {
+        if (config.getFluentdExecutedTag().isEmpty()) {
             return;
         }
 
@@ -262,14 +261,14 @@ public class OldPrestoServiceImpl implements OldPrestoService {
         event.put("engine", presto.name());
 
         try {
-            fluency.emit(yanagishimaConfig.getFluentdExecutedTag().get(), event);
+            fluency.emit(config.getFluentdExecutedTag().get(), event);
         } catch (IOException e) {
             LOGGER.error(e.getMessage(), e);
         }
     }
 
     private void emitFailedEvent(String username, String query, String datasource, QueryStatusInfo results, long elapsedTime) {
-        if (yanagishimaConfig.getFluentdFaliedTag().isEmpty()) {
+        if (config.getFluentdFaliedTag().isEmpty()) {
             return;
         }
 
@@ -284,14 +283,14 @@ public class OldPrestoServiceImpl implements OldPrestoService {
         event.put("message", results.getError().getMessage());
 
         try {
-            fluency.emit(yanagishimaConfig.getFluentdFaliedTag().get(), event);
+            fluency.emit(config.getFluentdFaliedTag().get(), event);
         } catch (IOException e) {
             LOGGER.error(e.getMessage(), e);
         }
     }
 
     private void checkSecretKeyword(String username, String query, String queryId, String datasource) {
-        for (String keyword : yanagishimaConfig.getPrestoSecretKeywords(datasource)) {
+        for (String keyword : config.getPrestoSecretKeywords(datasource)) {
             if (query.contains(keyword)) {
                 String message = "query error occurs";
                 storeError(db, datasource, presto.name(), queryId, query, username, message);
@@ -301,7 +300,7 @@ public class OldPrestoServiceImpl implements OldPrestoService {
     }
 
     private void checkRequiredCondition(String username, String query, String queryId, String datasource) {
-        for (String requiredCondition : yanagishimaConfig.getPrestoMustSpecifyConditions(datasource)) {
+        for (String requiredCondition : config.getPrestoMustSpecifyConditions(datasource)) {
             String[] conditions = requiredCondition.split(",");
             for (String condition : conditions) {
                 String table = condition.split(":")[0];
@@ -320,10 +319,10 @@ public class OldPrestoServiceImpl implements OldPrestoService {
     }
 
     private StatementClient getStatementClient(String datasource, String query, String userName, Optional<String> prestoUser, Optional<String> prestoPassword) {
-        String server = yanagishimaConfig.getPrestoCoordinatorServer(datasource);
-        String catalog = yanagishimaConfig.getCatalog(datasource);
-        String schema = yanagishimaConfig.getSchema(datasource);
-        String source = yanagishimaConfig.getSource(datasource);
+        String server = config.getPrestoCoordinatorServer(datasource);
+        String catalog = config.getCatalog(datasource);
+        String schema = config.getSchema(datasource);
+        String source = config.getSource(datasource);
 
         if (prestoUser.isPresent() && prestoPassword.isPresent()) {
             ClientSession clientSession = buildClientSession(server, prestoUser.get(), source, catalog, schema);
@@ -333,7 +332,7 @@ public class OldPrestoServiceImpl implements OldPrestoService {
             return StatementClientFactory.newStatementClient(clientBuilder.build(), clientSession, query);
         }
 
-        String user = firstNonNull(userName, yanagishimaConfig.getUser(datasource));
+        String user = firstNonNull(userName, config.getUser(datasource));
         ClientSession clientSession = buildClientSession(server, user, source, catalog, schema);
         return StatementClientFactory.newStatementClient(httpClient, clientSession, query);
     }
