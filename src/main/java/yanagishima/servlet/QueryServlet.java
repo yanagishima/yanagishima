@@ -20,6 +20,8 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import static io.prestosql.client.OkHttpUtil.basicAuth;
+import static java.lang.String.join;
+import static java.util.Collections.nCopies;
 import static javax.servlet.http.HttpServletResponse.SC_OK;
 import static yanagishima.util.AccessControlUtil.sendForbiddenError;
 import static yanagishima.util.AccessControlUtil.validateDatasource;
@@ -126,7 +128,7 @@ public class QueryServlet extends HttpServlet {
 			queryidList.add((String)m.get("queryId"));
 		}
 
-		String placeholder = queryidList.stream().map(r -> "?").collect(Collectors.joining(", "));
+		String placeholder = join(", ", nCopies(queryidList.size(), "?"));
 		List<Query> queryList = db.searchBySQL(Query.class,
 				"SELECT engine, query_id, fetch_result_time_string, query_string FROM query WHERE engine='presto' and datasource=\'" + datasource + "\' and query_id IN (" + placeholder + ")",
 				queryidList.stream().collect(Collectors.toList()));

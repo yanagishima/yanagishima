@@ -20,6 +20,8 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import static com.google.common.base.Strings.isNullOrEmpty;
+import static java.lang.String.join;
+import static java.util.Collections.nCopies;
 import static yanagishima.util.AccessControlUtil.sendForbiddenError;
 import static yanagishima.util.AccessControlUtil.validateDatasource;
 import static yanagishima.util.HttpRequestUtil.getRequiredParameter;
@@ -78,7 +80,7 @@ public class QueryHistoryServlet extends HttpServlet {
     }
 
     private List<Query> getQueries(String label, String datasource, String[] queryIds) {
-        String placeholder = Arrays.stream(queryIds).map(r -> "?").collect(Collectors.joining(", "));
+        String placeholder = join(", ", nCopies(queryIds.length, "?"));
         if (isNullOrEmpty(label)) {
             return db.searchBySQL(Query.class,
                                   "SELECT a.engine, a.query_id, a.fetch_result_time_string, a.query_string, a.status, a.elapsed_time_millis, a.result_file_size, a.linenumber, b.label_name AS label_name " +
