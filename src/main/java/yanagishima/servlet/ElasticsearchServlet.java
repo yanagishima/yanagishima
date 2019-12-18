@@ -86,15 +86,9 @@ public class ElasticsearchServlet extends HttpServlet {
                 warningMessageOptinal.ifPresent(warningMessage -> {
                     resnponseBody.put("warn", warningMessage);
                 });
-                Optional<Query> queryDataOptional = db.single(Query.class).where("query_id=? and datasource=? and engine=?", queryid, datasource, "elasticsearch").execute();
-                queryDataOptional.ifPresent(queryData -> {
-                    LocalDateTime submitTimeLdt = LocalDateTime.parse(queryid.substring(0, "yyyyMMdd_HHmmss".length()), DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss"));
-                    ZonedDateTime submitTimeZdt = submitTimeLdt.atZone(ZoneId.of("GMT", ZoneId.SHORT_IDS));
-                    String fetchResultTimeString = queryData.getFetchResultTimeString();
-                    ZonedDateTime fetchResultTime = ZonedDateTime.parse(fetchResultTimeString);
-                    long elapsedTimeMillis = ChronoUnit.MILLIS.between(submitTimeZdt, fetchResultTime);
-                    resnponseBody.put("elapsedTimeMillis", elapsedTimeMillis);
-                });
+                db.single(Query.class).where("query_id=? and datasource=? and engine=?", queryid, datasource, "elasticsearch").execute().ifPresent(queryData ->
+                    resnponseBody.put("elapsedTimeMillis", toElapsedTimeMillis(queryid, queryData))
+                );
             } catch (ElasticsearchQueryErrorException e) {
                 LOGGER.error(e.getMessage(), e);
                 resnponseBody.put("queryid", e.getQueryId());
@@ -120,5 +114,13 @@ public class ElasticsearchServlet extends HttpServlet {
             return elasticsearchService.doQuery(datasource, query, userName, false, limit);
         }
         return elasticsearchService.doQuery(datasource, query, userName, true, limit);
+    }
+
+    private static long toElapsedTimeMillis(String queryId, Query query) {
+        LocalDateTime submitTimeLdt = LocalDateTime.parse(queryId.substring(0, "yyyyMMdd_HHmmss".length()), DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss"));
+        ZonedDateTime submitTimeZdt = submitTimeLdt.atZone(ZoneId.of("GMT", ZoneId.SHORT_IDS));
+        String fetchResultTimeString = query.getFetchResultTimeString();
+        ZonedDateTime fetchResultTime = ZonedDateTime.parse(fetchResultTimeString);
+        return ChronoUnit.MILLIS.between(submitTimeZdt, fetchResultTime);
     }
 }
