@@ -81,10 +81,10 @@ public class ElasticsearchServlet extends HttpServlet {
                 resnponseBody.put("results", queryResult.getRecords());
                 resnponseBody.put("lineNumber", Integer.toString(queryResult.getLineNumber()));
                 resnponseBody.put("rawDataSize", queryResult.getRawDataSize().toString());
-                Optional<String> warningMessageOptinal = Optional.ofNullable(queryResult.getWarningMessage());
-                warningMessageOptinal.ifPresent(warningMessage -> {
-                    resnponseBody.put("warn", warningMessage);
-                });
+                // TODO: Make ElasticsearchQueryResult.warningMessage Optional<String>
+                Optional.ofNullable(queryResult.getWarningMessage()).ifPresent(warningMessage ->
+                    resnponseBody.put("warn", warningMessage)
+                );
                 db.single(Query.class).where("query_id=? and datasource=? and engine=?", queryResult.getQueryId(), datasource, "elasticsearch").execute().ifPresent(queryData ->
                     resnponseBody.put("elapsedTimeMillis", toElapsedTimeMillis(queryResult.getQueryId(), queryData))
                 );
