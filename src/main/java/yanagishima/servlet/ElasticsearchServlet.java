@@ -25,6 +25,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
+import static java.lang.String.format;
 import static yanagishima.util.AccessControlUtil.sendForbiddenError;
 import static yanagishima.util.AccessControlUtil.validateDatasource;
 import static yanagishima.util.Constants.YANAGISHIMA_COMMENT;
@@ -57,11 +58,8 @@ public class ElasticsearchServlet extends HttpServlet {
         }
 
         try {
-            String userName = null;
-            if (config.isUseAuditHttpHeaderName()) {
-                userName = request.getHeader(config.getAuditHttpHeaderName());
-            }
-            if (config.isUserRequired() && userName == null) {
+            String user = config.isUseAuditHttpHeaderName() ? request.getHeader(config.getAuditHttpHeaderName()) : null;
+            if (config.isUserRequired() && user == null) {
                 sendForbiddenError(response);
                 return;
             }
@@ -71,10 +69,10 @@ public class ElasticsearchServlet extends HttpServlet {
                     sendForbiddenError(response);
                     return;
                 }
-                if (userName != null) {
-                    LOGGER.info(String.format("%s executed %s in %s", userName, query, datasource));
+                if (user != null) {
+                    LOGGER.info(format("%s executed %s in %s", user, query, datasource));
                 }
-                ElasticsearchQueryResult queryResult = executeQuery(request, query, datasource, userName);
+                ElasticsearchQueryResult queryResult = executeQuery(request, query, datasource, user);
 
                 resnponseBody.put("queryid", queryResult.getQueryId());
                 resnponseBody.put("headers", queryResult.getColumns());
