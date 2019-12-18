@@ -12,16 +12,18 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import yanagishima.model.HttpRequestContext;
+
 @Singleton
 public class ConvertPrestoServlet extends HttpServlet {
 	private static final long serialVersionUID = 1L;
 
 	@Override
 	protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+		HttpRequestContext context = new HttpRequestContext(request);
 		Map<String, Object> responseBody = new HashMap<>();
-		String query = request.getParameter("query");
-		if (query != null) {
-			responseBody.put("prestoQuery", toPrestoQuery(query));
+		if (context.getQuery() != null) {
+			responseBody.put("prestoQuery", toPrestoQuery(context.getQuery()));
 		}
 		writeJSON(response, responseBody);
 	}

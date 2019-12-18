@@ -6,6 +6,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import yanagishima.config.YanagishimaConfig;
 import yanagishima.row.Bookmark;
+import yanagishima.model.HttpRequestContext;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
@@ -18,11 +19,11 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import static com.google.common.base.Preconditions.checkState;
+import static java.util.Objects.requireNonNull;
 import static java.lang.String.join;
 import static java.util.Collections.nCopies;
 import static yanagishima.util.AccessControlUtil.sendForbiddenError;
 import static yanagishima.util.AccessControlUtil.validateDatasource;
-import static yanagishima.util.HttpRequestUtil.getRequiredParameter;
 import static yanagishima.util.JsonUtil.writeJSON;
 
 @Singleton
@@ -42,18 +43,23 @@ public class BookmarkServlet extends HttpServlet {
 
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        HttpRequestContext context = new HttpRequestContext(request);
         try {
-            String datasource = getRequiredParameter(request, "datasource");
-            if (config.isCheckDatasource() && !validateDatasource(request, datasource)) {
+            requireNonNull(context.getDatasource(), "datasource is null");
+            requireNonNull(context.getQuery(), "query is null");
+            requireNonNull(context.getEngine(), "engine is null");
+
+            if (config.isCheckDatasource() && !validateDatasource(request, context.getDatasource())) {
                 sendForbiddenError(response);
                 return;
             }
             String userName = request.getHeader(config.getAuditHttpHeaderName());
-            String query = getRequiredParameter(request, "query");
-            String title = request.getParameter("title");
-            String engine = getRequiredParameter(request, "engine");
 
-            db.insert(Bookmark.class).value("datasource", datasource).value("query", query).value("title", title).value("engine", engine).value("user", userName).execute();
+            db.insert(Bookmark.class).value("datasource", context.getDatasource())
+              .value("query", context.getQuery())
+              .value("title", context.getTitle())
+              .value("engine", context.getEngine()
+              ).value("user", userName).execute();
             List<Bookmark> bookmarks;
             switch (config.getDatabaseType()) {
                 case MYSQL:
@@ -75,13 +81,14 @@ public class BookmarkServlet extends HttpServlet {
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) {
+        HttpRequestContext context = new HttpRequestContext(request);
         try {
-            String datasource = getRequiredParameter(request, "datasource");
-            if (config.isCheckDatasource() && !validateDatasource(request, datasource)) {
+            requireNonNull(context.getDatasource(), "datasource is null");
+            if (config.isCheckDatasource() && !validateDatasource(request, context.getDatasource())) {
                 sendForbiddenError(response);
                 return;
             }
-            List<String> bookmarkIds = SPLITTER.splitToList(getRequiredParameter(request, "bookmark_id"));
+            List<String> bookmarkIds = SPLITTER.splitToList(requireNonNull(context.getBookmarkId(), "bookmark_id is null"));
             if (bookmarkIds.isEmpty()) {
                 writeJSON(response, Map.of("bookmarkList", List.of()));
                 return;
@@ -89,7 +96,7 @@ public class BookmarkServlet extends HttpServlet {
 
             String placeholder = join(", ", nCopies(bookmarkIds.size(), "?"));
             List<Object> bookmarkParameters = bookmarkIds.stream().map(Integer::parseInt).collect(Collectors.toList());
-            List<Bookmark> bookmarks = db.searchBySQL(Bookmark.class, "SELECT bookmark_id, datasource, engine, query, title FROM bookmark WHERE datasource=\'" + datasource + "\' AND bookmark_id IN (" + placeholder + ")", bookmarkParameters);
+            List<Bookmark> bookmarks = db.searchBySQL(Bookmark.class, "SELECT bookmark_id, datasource, engine, query, title FROM bookmark WHERE datasource=\'" + context.getDatasource() + "\' AND bookmark_id IN (" + placeholder + ")", bookmarkParameters);
             writeJSON(response, Map.of("bookmarkList", bookmarks));
         } catch (Throwable e) {
             LOGGER.error(e.getMessage(), e);
@@ -99,19 +106,21 @@ public class BookmarkServlet extends HttpServlet {
 
     @Override
     protected void doDelete(HttpServletRequest request, HttpServletResponse response) {
+        HttpRequestContext context = new HttpRequestContext(request);
         try {
-            String datasource = getRequiredParameter(request, "datasource");
-            if (config.isCheckDatasource() && !validateDatasource(request, datasource)) {
+            requireNonNull(context.getDatasource(), "datasource is null");
+            requireNonNull(context.getBookmarkId(), "bookmark_id is null");
+
+            if (config.isCheckDatasource() && !validateDatasource(request, context.getDatasource())) {
                 sendForbiddenError(response);
                 return;
             }
 
-            String bookmarkId = getRequiredParameter(request, "bookmark_id");
-            db.single(Bookmark.class).where("bookmark_id = ?", bookmarkId).execute().ifPresent(Bookmark::delete);
+            db.single(Bookmark.class).where("bookmark_id = ?", context.getBookmarkId()).execute().ifPresent(Bookmark::delete);
 
-            String engine = getRequiredParameter(request, "engine");
+            requireNonNull(context.getEngine(), "engine is null");
             String userName = request.getHeader(config.getAuditHttpHeaderName());
-            List<Bookmark> bookmarks = db.search(Bookmark.class).where("datasource = ? AND engine = ? AND user = ?", datasource, engine, userName).execute();
+            List<Bookmark> bookmarks = db.search(Bookmark.class).where("datasource = ? AND engine = ? AND user = ?", context.getDatasource(), context.getEngine(), userName).execute();
             writeJSON(response, Map.of("bookmarkList", bookmarks));
         } catch (Throwable e) {
             LOGGER.error(e.getMessage(), e);
