@@ -20,6 +20,8 @@ import java.util.stream.Collectors;
 
 import static com.google.common.base.Preconditions.checkState;
 import static java.util.Objects.requireNonNull;
+import static java.lang.String.join;
+import static java.util.Collections.nCopies;
 import static yanagishima.util.AccessControlUtil.sendForbiddenError;
 import static yanagishima.util.AccessControlUtil.validateDatasource;
 import static yanagishima.util.JsonUtil.writeJSON;
@@ -92,7 +94,7 @@ public class BookmarkServlet extends HttpServlet {
                 return;
             }
 
-            String placeholder = bookmarkIds.stream().map(r -> "?").collect(Collectors.joining(", "));
+            String placeholder = join(", ", nCopies(bookmarkIds.size(), "?"));
             List<Object> bookmarkParameters = bookmarkIds.stream().map(Integer::parseInt).collect(Collectors.toList());
             List<Bookmark> bookmarks = db.searchBySQL(Bookmark.class, "SELECT bookmark_id, datasource, engine, query, title FROM bookmark WHERE datasource=\'" + context.getDatasource() + "\' AND bookmark_id IN (" + placeholder + ")", bookmarkParameters);
             writeJSON(response, Map.of("bookmarkList", bookmarks));

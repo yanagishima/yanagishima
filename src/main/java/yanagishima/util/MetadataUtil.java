@@ -20,7 +20,7 @@ public final class MetadataUtil {
 
     private MetadataUtil() {}
 
-    public static void setMetadata(String metadataServiceUrl, HashMap<String, Object> retVal, String schema, String table, List<List<String>> records) {
+    public static void setMetadata(String metadataServiceUrl, Map<String, Object> retVal, String schema, String table, List<List<String>> records) {
         try {
             String json = Request.Get(String.format("%s/%s/%s", metadataServiceUrl, schema, table)).execute().returnContent().asString(UTF_8);
             Map map = OBJECT_MAPPER.readValue(json, Map.class);

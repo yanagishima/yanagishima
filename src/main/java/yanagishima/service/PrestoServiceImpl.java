@@ -156,7 +156,7 @@ public class PrestoServiceImpl implements PrestoService {
             queryResult.setColumns(columnNames);
             List<List<String>> rows = processData(client, datasource, results.getId(), queryResult, columnNames, start, limit, userName);
             queryResult.setRecords(rows);
-            if(storeQueryHistory) {
+            if (storeQueryHistory) {
                 insertQueryHistory(db, datasource, presto.name(), query, userName, results.getId(), queryResult.getLineNumber());
             }
             emitExecutedEvent(userName, query, results.getId(), datasource, System.currentTimeMillis() - start);
