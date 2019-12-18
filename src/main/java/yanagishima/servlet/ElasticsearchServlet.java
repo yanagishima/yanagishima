@@ -74,22 +74,7 @@ public class ElasticsearchServlet extends HttpServlet {
                 if (userName != null) {
                     LOGGER.info(String.format("%s executed %s in %s", userName, query, datasource));
                 }
-                int limit;
-                if (query.startsWith(YANAGISHIMA_COMMENT)) {
-                    limit = Integer.MAX_VALUE;
-                } else {
-                    limit = config.getSelectLimit();
-                }
-                ElasticsearchQueryResult elasticsearchQueryResult = null;
-                if (request.getParameter("translate") == null) {
-                    if (query.startsWith(YANAGISHIMA_COMMENT)) {
-                        elasticsearchQueryResult = elasticsearchService.doQuery(datasource, query, userName, false, limit);
-                    } else {
-                        elasticsearchQueryResult = elasticsearchService.doQuery(datasource, query, userName, true, limit);
-                    }
-                } else {
-                    elasticsearchQueryResult = elasticsearchService.doTranslate(datasource, query, userName, true, limit);
-                }
+                ElasticsearchQueryResult elasticsearchQueryResult = executeQuery(request, query, datasource, userName);
 
                 String queryid = elasticsearchQueryResult.getQueryId();
                 resnponseBody.put("queryid", queryid);
@@ -123,5 +108,17 @@ public class ElasticsearchServlet extends HttpServlet {
             resnponseBody.put("error", e.getMessage());
         }
         writeJSON(response, resnponseBody);
+    }
+
+    private ElasticsearchQueryResult executeQuery(HttpServletRequest request, String query, String datasource, String userName) throws ElasticsearchQueryErrorException {
+        int limit = query.startsWith(YANAGISHIMA_COMMENT) ? Integer.MAX_VALUE : config.getSelectLimit();
+
+        if (request.getParameter("translate") != null) {
+            return elasticsearchService.doTranslate(datasource, query, userName, true, limit);
+        }
+        if (query.startsWith(YANAGISHIMA_COMMENT)) {
+            return elasticsearchService.doQuery(datasource, query, userName, false, limit);
+        }
+        return elasticsearchService.doQuery(datasource, query, userName, true, limit);
     }
 }
