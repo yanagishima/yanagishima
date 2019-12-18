@@ -74,20 +74,19 @@ public class ElasticsearchServlet extends HttpServlet {
                 if (userName != null) {
                     LOGGER.info(String.format("%s executed %s in %s", userName, query, datasource));
                 }
-                ElasticsearchQueryResult elasticsearchQueryResult = executeQuery(request, query, datasource, userName);
+                ElasticsearchQueryResult queryResult = executeQuery(request, query, datasource, userName);
 
-                String queryid = elasticsearchQueryResult.getQueryId();
-                resnponseBody.put("queryid", queryid);
-                resnponseBody.put("headers", elasticsearchQueryResult.getColumns());
-                resnponseBody.put("results", elasticsearchQueryResult.getRecords());
-                resnponseBody.put("lineNumber", Integer.toString(elasticsearchQueryResult.getLineNumber()));
-                resnponseBody.put("rawDataSize", elasticsearchQueryResult.getRawDataSize().toString());
-                Optional<String> warningMessageOptinal = Optional.ofNullable(elasticsearchQueryResult.getWarningMessage());
+                resnponseBody.put("queryid", queryResult.getQueryId());
+                resnponseBody.put("headers", queryResult.getColumns());
+                resnponseBody.put("results", queryResult.getRecords());
+                resnponseBody.put("lineNumber", Integer.toString(queryResult.getLineNumber()));
+                resnponseBody.put("rawDataSize", queryResult.getRawDataSize().toString());
+                Optional<String> warningMessageOptinal = Optional.ofNullable(queryResult.getWarningMessage());
                 warningMessageOptinal.ifPresent(warningMessage -> {
                     resnponseBody.put("warn", warningMessage);
                 });
-                db.single(Query.class).where("query_id=? and datasource=? and engine=?", queryid, datasource, "elasticsearch").execute().ifPresent(queryData ->
-                    resnponseBody.put("elapsedTimeMillis", toElapsedTimeMillis(queryid, queryData))
+                db.single(Query.class).where("query_id=? and datasource=? and engine=?", queryResult.getQueryId(), datasource, "elasticsearch").execute().ifPresent(queryData ->
+                    resnponseBody.put("elapsedTimeMillis", toElapsedTimeMillis(queryResult.getQueryId(), queryData))
                 );
             } catch (ElasticsearchQueryErrorException e) {
                 LOGGER.error(e.getMessage(), e);
