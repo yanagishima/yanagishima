@@ -39,6 +39,7 @@ import static io.prestosql.client.OkHttpUtil.setupTimeouts;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Verify.verify;
 import static java.lang.String.format;
+import static java.lang.String.join;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Collections.emptyMap;
 import static java.util.concurrent.TimeUnit.MINUTES;
@@ -169,8 +170,8 @@ public class PrestoServiceImpl implements PrestoService {
 
         if (client.finalStatusInfo().getError() != null) {
             QueryStatusInfo results = client.finalStatusInfo();
+            String message = getErrorMessage(results.getError().getFailureInfo());
             if(queryResult.getQueryId() == null) {
-                String message = format("Query failed (#%s) in %s: %s", results.getId(), datasource, results.getError().getMessage());
                 storeError(db, datasource, presto.name(), results.getId(), query, userName, message);
             } else {
                 Path successFile = getResultFilePath(datasource, queryResult.getQueryId(), false);
@@ -178,7 +179,7 @@ public class PrestoServiceImpl implements PrestoService {
                 try {
                     Files.delete(successFile);
                     try (BufferedWriter writer = Files.newBufferedWriter(errorFile, UTF_8)) {
-                        writer.write(format("Query failed (#%s) in %s: %s", queryResult.getQueryId(), datasource, results.getError().getMessage()));
+                        writer.write(message);
                     }
                 } catch (IOException e) {
                     throw new RuntimeException(e);
@@ -188,6 +189,18 @@ public class PrestoServiceImpl implements PrestoService {
             throw resultsException(results, datasource);
         }
         return queryResult;
+    }
+
+    private String getErrorMessage(FailureInfo failureInfo) {
+        String separator = System.lineSeparator() + "    at ";
+        StringBuilder sb = new StringBuilder();
+        sb.append(failureInfo.getType() + ": " + failureInfo.getMessage() + separator + join(separator, failureInfo.getStack()));
+        FailureInfo cause = failureInfo.getCause();
+        while (cause != null) {
+            sb.append(System.lineSeparator() + "Caused by: " + cause.getType() + ": " + cause.getMessage() + separator + join(separator, cause.getStack()));
+            cause = cause.getCause();
+        }
+        return sb.toString();
     }
 
     private List<List<String>> processData(StatementClient client, String datasource, String queryId, PrestoQueryResult queryResult, List<String> columnNames, long startTime, int maxRowLimit, String userName) {
