@@ -8,7 +8,6 @@ import yanagishima.exception.ElasticsearchQueryErrorException;
 import yanagishima.result.ElasticsearchQueryResult;
 import yanagishima.row.Query;
 import yanagishima.service.ElasticsearchService;
-import yanagishima.util.JsonUtil;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
@@ -23,111 +22,102 @@ import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
 
+import static java.lang.String.format;
 import static yanagishima.util.AccessControlUtil.sendForbiddenError;
 import static yanagishima.util.AccessControlUtil.validateDatasource;
 import static yanagishima.util.Constants.YANAGISHIMA_COMMENT;
 import static yanagishima.util.HttpRequestUtil.getRequiredParameter;
+import static yanagishima.util.JsonUtil.writeJSON;
 
 @Singleton
 public class ElasticsearchServlet extends HttpServlet {
-
-    private static Logger LOGGER = LoggerFactory.getLogger(ElasticsearchServlet.class);
-
+    private static final Logger LOGGER = LoggerFactory.getLogger(ElasticsearchServlet.class);
     private static final long serialVersionUID = 1L;
 
     private final ElasticsearchService elasticsearchService;
-
-    private final YanagishimaConfig yanagishimaConfig;
-
-    @Inject
-    private TinyORM db;
+    private final YanagishimaConfig config;
+    private final TinyORM db;
 
     @Inject
-    public ElasticsearchServlet(ElasticsearchService elasticsearchService, YanagishimaConfig yanagishimaConfig) {
+    public ElasticsearchServlet(ElasticsearchService elasticsearchService, YanagishimaConfig config, TinyORM db) {
         this.elasticsearchService = elasticsearchService;
-        this.yanagishimaConfig = yanagishimaConfig;
+        this.config = config;
+        this.db = db;
     }
 
     @Override
-    protected void doPost(HttpServletRequest request,
-                          HttpServletResponse response) throws ServletException, IOException {
-
-        HashMap<String, Object> retVal = new HashMap<String, Object>();
+    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        Map<String, Object> resnponseBody = new HashMap<>();
+        String query = request.getParameter("query");
+        if (query == null) {
+            writeJSON(response, resnponseBody);
+            return;
+        }
 
         try {
-            Optional<String> queryOptional = Optional.ofNullable(request.getParameter("query"));
-            queryOptional.ifPresent(query -> {
-                String userName = null;
-                if (yanagishimaConfig.isUseAuditHttpHeaderName()) {
-                    userName = request.getHeader(yanagishimaConfig.getAuditHttpHeaderName());
-                }
-                if (yanagishimaConfig.isUserRequired() && userName == null) {
+            String user = config.isUseAuditHttpHeaderName() ? request.getHeader(config.getAuditHttpHeaderName()) : null;
+            if (config.isUserRequired() && user == null) {
+                sendForbiddenError(response);
+                return;
+            }
+            try {
+                String datasource = getRequiredParameter(request, "datasource");
+                if (config.isCheckDatasource() && !validateDatasource(request, datasource)) {
                     sendForbiddenError(response);
                     return;
                 }
-                try {
-                    String datasource = getRequiredParameter(request, "datasource");
-                    if (yanagishimaConfig.isCheckDatasource() && !validateDatasource(request, datasource)) {
-                        sendForbiddenError(response);
-                        return;
-                    }
-                    if (userName != null) {
-                        LOGGER.info(String.format("%s executed %s in %s", userName, query, datasource));
-                    }
-                    int limit;
-                    if (query.startsWith(YANAGISHIMA_COMMENT)) {
-                        limit = Integer.MAX_VALUE;
-                    } else {
-                        limit = yanagishimaConfig.getSelectLimit();
-                    }
-                    ElasticsearchQueryResult elasticsearchQueryResult = null;
-                    if (request.getParameter("translate") == null) {
-                        if (query.startsWith(YANAGISHIMA_COMMENT)) {
-                            elasticsearchQueryResult = elasticsearchService.doQuery(datasource, query, userName, false, limit);
-                        } else {
-                            elasticsearchQueryResult = elasticsearchService.doQuery(datasource, query, userName, true, limit);
-                        }
-                    } else {
-                        elasticsearchQueryResult = elasticsearchService.doTranslate(datasource, query, userName, true, limit);
-                    }
-
-                    String queryid = elasticsearchQueryResult.getQueryId();
-                    retVal.put("queryid", queryid);
-                    retVal.put("headers", elasticsearchQueryResult.getColumns());
-                    retVal.put("results", elasticsearchQueryResult.getRecords());
-                    retVal.put("lineNumber", Integer.toString(elasticsearchQueryResult.getLineNumber()));
-                    retVal.put("rawDataSize", elasticsearchQueryResult.getRawDataSize().toString());
-                    Optional<String> warningMessageOptinal = Optional.ofNullable(elasticsearchQueryResult.getWarningMessage());
-                    warningMessageOptinal.ifPresent(warningMessage -> {
-                        retVal.put("warn", warningMessage);
-                    });
-                    Optional<Query> queryDataOptional = db.single(Query.class).where("query_id=? and datasource=? and engine=?", queryid, datasource, "elasticsearch").execute();
-                    queryDataOptional.ifPresent(queryData -> {
-                        LocalDateTime submitTimeLdt = LocalDateTime.parse(queryid.substring(0, "yyyyMMdd_HHmmss".length()), DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss"));
-                        ZonedDateTime submitTimeZdt = submitTimeLdt.atZone(ZoneId.of("GMT", ZoneId.SHORT_IDS));
-                        String fetchResultTimeString = queryData.getFetchResultTimeString();
-                        ZonedDateTime fetchResultTime = ZonedDateTime.parse(fetchResultTimeString);
-                        long elapsedTimeMillis = ChronoUnit.MILLIS.between(submitTimeZdt, fetchResultTime);
-                        retVal.put("elapsedTimeMillis", elapsedTimeMillis);
-                    });
-                } catch (ElasticsearchQueryErrorException e) {
-                    LOGGER.error(e.getMessage(), e);
-                    retVal.put("queryid", e.getQueryId());
-                    retVal.put("error", e.getCause().getMessage());
-                } catch (Throwable e) {
-                    LOGGER.error(e.getMessage(), e);
-                    retVal.put("error", e.getMessage());
+                if (user != null) {
+                    LOGGER.info(format("%s executed %s in %s", user, query, datasource));
                 }
-            });
+                ElasticsearchQueryResult queryResult = executeQuery(request, query, datasource, user);
+
+                resnponseBody.put("queryid", queryResult.getQueryId());
+                resnponseBody.put("headers", queryResult.getColumns());
+                resnponseBody.put("results", queryResult.getRecords());
+                resnponseBody.put("lineNumber", Integer.toString(queryResult.getLineNumber()));
+                resnponseBody.put("rawDataSize", queryResult.getRawDataSize().toString());
+                // TODO: Make ElasticsearchQueryResult.warningMessage Optional<String>
+                Optional.ofNullable(queryResult.getWarningMessage()).ifPresent(warningMessage ->
+                    resnponseBody.put("warn", warningMessage)
+                );
+                db.single(Query.class).where("query_id=? and datasource=? and engine=?", queryResult.getQueryId(), datasource, "elasticsearch").execute().ifPresent(queryData ->
+                    resnponseBody.put("elapsedTimeMillis", toElapsedTimeMillis(queryResult.getQueryId(), queryData))
+                );
+            } catch (ElasticsearchQueryErrorException e) {
+                LOGGER.error(e.getMessage(), e);
+                resnponseBody.put("queryid", e.getQueryId());
+                resnponseBody.put("error", e.getCause().getMessage());
+            } catch (Throwable e) {
+                LOGGER.error(e.getMessage(), e);
+                resnponseBody.put("error", e.getMessage());
+            }
         } catch (Throwable e) {
             LOGGER.error(e.getMessage(), e);
-            retVal.put("error", e.getMessage());
+            resnponseBody.put("error", e.getMessage());
         }
-
-        JsonUtil.writeJSON(response, retVal);
-
+        writeJSON(response, resnponseBody);
     }
 
+    private ElasticsearchQueryResult executeQuery(HttpServletRequest request, String query, String datasource, String userName) throws ElasticsearchQueryErrorException {
+        int limit = query.startsWith(YANAGISHIMA_COMMENT) ? Integer.MAX_VALUE : config.getSelectLimit();
+
+        if (request.getParameter("translate") != null) {
+            return elasticsearchService.doTranslate(datasource, query, userName, true, limit);
+        }
+        if (query.startsWith(YANAGISHIMA_COMMENT)) {
+            return elasticsearchService.doQuery(datasource, query, userName, false, limit);
+        }
+        return elasticsearchService.doQuery(datasource, query, userName, true, limit);
+    }
+
+    private static long toElapsedTimeMillis(String queryId, Query query) {
+        LocalDateTime submitTimeLdt = LocalDateTime.parse(queryId.substring(0, "yyyyMMdd_HHmmss".length()), DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss"));
+        ZonedDateTime submitTimeZdt = submitTimeLdt.atZone(ZoneId.of("GMT", ZoneId.SHORT_IDS));
+        String fetchResultTimeString = query.getFetchResultTimeString();
+        ZonedDateTime fetchResultTime = ZonedDateTime.parse(fetchResultTimeString);
+        return ChronoUnit.MILLIS.between(submitTimeZdt, fetchResultTime);
+    }
 }
