@@ -14,9 +14,8 @@ public final class JsonUtil {
 	private JsonUtil() {}
 
 	public static void writeJSON(HttpServletResponse response, Object obj) {
-		try {
-			response.setContentType(ContentType.APPLICATION_JSON.getMimeType());
-			OutputStream stream = response.getOutputStream();
+		response.setContentType(ContentType.APPLICATION_JSON.getMimeType());
+		try (OutputStream stream = response.getOutputStream()) {
 			OBJECT_MAPPER.writeValue(stream, obj);
 		} catch (IOException e) {
 			throw new RuntimeException(e);
