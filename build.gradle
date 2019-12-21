@@ -10,6 +10,7 @@
 // Apply the java plugin to add support for Java
 apply plugin: 'java'
 apply plugin: 'distribution'
+apply plugin: 'checkstyle'
 
 version = '21.0'
 
@@ -33,6 +34,14 @@ repositories {
 compileJava.options.encoding = 'UTF-8' // source encoding
 sourceCompatibility = JavaVersion.VERSION_11
 targetCompatibility = JavaVersion.VERSION_11
+
+checkstyle {
+    configFile = file("$project.rootDir/config/checkstyle/checkstyle.xml")
+    toolVersion = "8.22"
+    showViolations = true
+    ignoreFailures = false
+    maxWarnings = 0
+}
 
 task createDirs() {
   file('build/package').mkdirs()
