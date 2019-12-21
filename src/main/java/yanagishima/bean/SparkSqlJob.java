@@ -17,7 +17,7 @@ public class SparkSqlJob {
 
     private String finishTime;
 
-    private String Duration;
+    private String duration;
 
     private String statement;
 

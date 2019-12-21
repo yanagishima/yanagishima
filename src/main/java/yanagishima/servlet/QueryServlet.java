@@ -57,7 +57,7 @@ public class QueryServlet extends HttpServlet {
 			return;
 		}
 		String prestoCoordinatorServer = yanagishimaConfig.getPrestoCoordinatorServerOrNull(datasource);
-		if(prestoCoordinatorServer == null) {
+		if (prestoCoordinatorServer == null) {
 			writer.println("[]");
 			return;
 		}
@@ -68,7 +68,7 @@ public class QueryServlet extends HttpServlet {
 		Optional<String> prestoUser = Optional.ofNullable(request.getParameter("user"));
 		Optional<String> prestoPassword = Optional.ofNullable(request.getParameter("password"));
 		if (prestoUser.isPresent() && prestoPassword.isPresent()) {
-			if(prestoUser.get().length() == 0) {
+			if (prestoUser.get().length() == 0) {
 				HashMap<String, Object> retVal = new HashMap<String, Object>();
 				retVal.put("error", "user is empty");
 				ObjectMapper mapper = new ObjectMapper();
@@ -81,7 +81,7 @@ public class QueryServlet extends HttpServlet {
 			try (Response prestoResponse = clientBuilder.build().newCall(prestoRequest).execute()) {
 				originalJson = prestoResponse.body().string();
 				int code = prestoResponse.code();
-				if(code != SC_OK) {
+				if (code != SC_OK) {
 					HashMap<String, Object> retVal = new HashMap<String, Object>();
 					retVal.put("code", code);
 					retVal.put("error", prestoResponse.message());
@@ -95,7 +95,7 @@ public class QueryServlet extends HttpServlet {
 			try (Response prestoResponse = httpClient.newCall(prestoRequest).execute()) {
 				originalJson = prestoResponse.body().string();
 				int code = prestoResponse.code();
-				if(code != SC_OK) {
+				if (code != SC_OK) {
 					HashMap<String, Object> retVal = new HashMap<String, Object>();
 					retVal.put("code", code);
 					retVal.put("error", prestoResponse.message());
@@ -112,19 +112,19 @@ public class QueryServlet extends HttpServlet {
 		List<Map> list = mapper.readValue(originalJson, List.class);
 		List<Map> runningList = list.stream().filter(m -> m.get("state").equals("RUNNING")).collect(Collectors.toList());;
 		List<Map> notRunningList = list.stream().filter(m -> !m.get("state").equals("RUNNING")).collect(Collectors.toList());;
-		runningList.sort((a,b)-> String.class.cast(b.get("queryId")).compareTo(String.class.cast(a.get("queryId"))));
-		notRunningList.sort((a,b)-> String.class.cast(b.get("queryId")).compareTo(String.class.cast(a.get("queryId"))));
+		runningList.sort((a, b)-> String.class.cast(b.get("queryId")).compareTo(String.class.cast(a.get("queryId"))));
+		notRunningList.sort((a, b)-> String.class.cast(b.get("queryId")).compareTo(String.class.cast(a.get("queryId"))));
 
 		List<Map> limitedList = new ArrayList<>();
 		limitedList.addAll(runningList);
-		if(list.size() > LIMIT) {
+		if (list.size() > LIMIT) {
 			limitedList.addAll(notRunningList.subList(0, LIMIT - runningList.size()));
 		} else {
 			limitedList.addAll(notRunningList.subList(0, list.size() - runningList.size()));
 		}
 
 		List<String> queryidList = new ArrayList<>();
-		for(Map m : limitedList) {
+		for (Map m : limitedList) {
 			queryidList.add((String)m.get("queryId"));
 		}
 
@@ -134,12 +134,12 @@ public class QueryServlet extends HttpServlet {
 				queryidList.stream().collect(Collectors.toList()));
 
 		List<String> existdbQueryidList = new ArrayList<>();
-		for(Query query : queryList) {
+		for (Query query : queryList) {
 			existdbQueryidList.add(query.getQueryId());
 		}
-		for(Map m : limitedList) {
+		for (Map m : limitedList) {
 			String queryid = (String)m.get("queryId");
-			if(existdbQueryidList.contains(queryid)) {
+			if (existdbQueryidList.contains(queryid)) {
 				m.put("existdb", true);
 			} else {
 				m.put("existdb", false);

@@ -7,7 +7,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 public final class PrestoQueryProvider {
-    private PrestoQueryProvider() {}
+    private PrestoQueryProvider() { }
 
     public static String listToValues(List<String> lines, int maxLines) {
         checkState(lines.size() >= 2, "At least, there must be 2 lines");

@@ -16,7 +16,6 @@ import static java.util.Objects.requireNonNull;
 import static yanagishima.util.AccessControlUtil.sendForbiddenError;
 import static yanagishima.util.AccessControlUtil.validateDatasource;
 import static yanagishima.util.DownloadUtil.downloadTsv;
-import static yanagishima.util.HttpRequestUtil.getOrDefaultParameter;
 
 @Singleton
 public class DownloadServlet extends HttpServlet {

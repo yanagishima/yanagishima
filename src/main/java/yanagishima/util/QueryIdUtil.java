@@ -7,7 +7,7 @@ import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 
 public final class QueryIdUtil {
-    private QueryIdUtil() {}
+    private QueryIdUtil() { }
 
     public static String generate(String datasource, String query, String engine) {
         String yyyyMMddHHmmss = ZonedDateTime.now(ZoneId.of("GMT")).format(DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss"));

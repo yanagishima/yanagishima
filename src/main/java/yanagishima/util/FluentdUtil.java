@@ -9,7 +9,7 @@ import org.komamitsu.fluency.Fluency;
 import yanagishima.config.YanagishimaConfig;
 
 public final class FluentdUtil {
-    private FluentdUtil() {}
+    private FluentdUtil() { }
 
     @Nullable
     public static Fluency buildStaticFluency(YanagishimaConfig config) {

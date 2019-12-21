@@ -94,12 +94,28 @@ public class HiveServiceImpl implements HiveService {
     }
 
     @Override
-    public HiveQueryResult doQuery(String engine, String datasource, String query, String userName, Optional<String> hiveUser, Optional<String> hivePassword, boolean storeFlag, int limit) throws HiveQueryErrorException {
+    public HiveQueryResult doQuery(String engine,
+                                   String datasource,
+                                   String query,
+                                   String userName,
+                                   Optional<String> hiveUser,
+                                   Optional<String> hivePassword,
+                                   boolean storeFlag,
+                                   int limit) throws HiveQueryErrorException {
         String queryId = QueryIdUtil.generate(datasource, query, engine);
         return getHiveQueryResult(queryId, engine, datasource, query, storeFlag, limit, userName, hiveUser, hivePassword, false);
     }
 
-    private HiveQueryResult getHiveQueryResult(String queryId, String engine, String datasource, String query, boolean storeFlag, int limit, String userName, Optional<String> hiveUser, Optional<String> hivePassword, boolean async) throws HiveQueryErrorException {
+    private HiveQueryResult getHiveQueryResult(String queryId,
+                                               String engine,
+                                               String datasource,
+                                               String query,
+                                               boolean storeFlag,
+                                               int limit,
+                                               String userName,
+                                               Optional<String> hiveUser,
+                                               Optional<String> hivePassword,
+                                               boolean async) throws HiveQueryErrorException {
         checkDisallowedKeyword(userName, query, datasource, queryId, engine);
         checkSecretKeyword(userName, query, datasource, queryId, engine);
         checkRequiredCondition(userName, query, datasource, queryId, engine);
@@ -130,7 +146,16 @@ public class HiveServiceImpl implements HiveService {
         }
     }
 
-    private void processData(String engine, String datasource, String query, int limit, String userName, Connection connection, String queryId, long start, HiveQueryResult queryResult, boolean async) throws SQLException {
+    private void processData(String engine,
+                             String datasource,
+                             String query,
+                             int limit,
+                             String userName,
+                             Connection connection,
+                             String queryId,
+                             long start,
+                             HiveQueryResult queryResult,
+                             boolean async) throws SQLException {
         Duration queryMaxRunTime = new Duration(config.getHiveQueryMaxRunTimeSeconds(datasource), TimeUnit.SECONDS);
         try (Statement statement = connection.createStatement()) {
             int timeout = (int) queryMaxRunTime.toMillis() / 1000;

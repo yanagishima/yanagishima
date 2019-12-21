@@ -26,7 +26,7 @@ import static yanagishima.util.HttpRequestUtil.getRequiredParameter;
 @Singleton
 public class KillHiveServlet extends HttpServlet {
 
-    private static Logger LOGGER = LoggerFactory.getLogger(KillHiveServlet.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(KillHiveServlet.class);
 
     private static final long serialVersionUID = 1L;
 
@@ -55,7 +55,7 @@ public class KillHiveServlet extends HttpServlet {
             String resourceManagerUrl = yanagishimaConfig.getResourceManagerUrl(datasource);
             String userName = null;
             Optional<String> hiveUser = Optional.ofNullable(request.getParameter("user"));
-            if(yanagishimaConfig.isUseAuditHttpHeaderName()) {
+            if (yanagishimaConfig.isUseAuditHttpHeaderName()) {
                 userName = request.getHeader(yanagishimaConfig.getAuditHttpHeaderName());
             } else {
                 if (hiveUser.isPresent()) {
@@ -72,10 +72,10 @@ public class KillHiveServlet extends HttpServlet {
                     throw new RuntimeException(e);
                 }
             } else {
-                if(yanagishimaConfig.isUseJdbcCancel(datasource)) {
+                if (yanagishimaConfig.isUseJdbcCancel(datasource)) {
                     LOGGER.info(String.format("killing %s in %s by Statement#cancel", id, datasource));
-                    try(Statement statement = statementPool.getStatement(datasource, id)) {
-                        if(statement == null) {
+                    try (Statement statement = statementPool.getStatement(datasource, id)) {
+                        if (statement == null) {
                             LOGGER.error("statement is null");
                         } else {
                             statement.cancel();

@@ -26,7 +26,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import yanagishima.bean.SparkSqlJob;
 import yanagishima.config.YanagishimaConfig;
-import yanagishima.util.SparkUtil;
 
 @Singleton
 public class SparkJobListServlet extends HttpServlet {

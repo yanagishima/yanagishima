@@ -11,7 +11,7 @@ import org.codehaus.jackson.annotate.JsonProperty;
 @Table("starred_schema")
 @Data
 @EqualsAndHashCode(callSuper = false)
-public class StarredSchema extends Row<StarredSchema>{
+public class StarredSchema extends Row<StarredSchema> {
 
     @PrimaryKey
     @Column("starred_schema_id")

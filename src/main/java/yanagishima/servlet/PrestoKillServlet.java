@@ -61,8 +61,7 @@ public class PrestoKillServlet extends HttpServlet {
 		}
 	}
 
-	private Response getKillResponse(String coordinatorUrl, String queryId, Optional<String> username, Optional<String> password) throws IOException
-	{
+	private Response getKillResponse(String coordinatorUrl, String queryId, Optional<String> username, Optional<String> password) throws IOException {
 		okhttp3.Request request = new okhttp3.Request.Builder().url(coordinatorUrl + "/v1/query/" + queryId).delete().build();
 		if (username.isPresent() && password.isPresent()) {
 			OkHttpClient.Builder clientBuilder = httpClient.newBuilder();

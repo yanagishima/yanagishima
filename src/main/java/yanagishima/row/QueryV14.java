@@ -10,7 +10,7 @@ import me.geso.tinyorm.annotations.Table;
 @Table("query_v14")
 @Data
 @EqualsAndHashCode(callSuper = false)
-public class QueryV14 extends Row<QueryV14>{
+public class QueryV14 extends Row<QueryV14> {
 
     @PrimaryKey
     @Column("datasource")

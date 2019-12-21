@@ -23,8 +23,7 @@ import static yanagishima.util.HttpRequestUtil.getRequiredParameter;
 @Singleton
 public class HivePartitionServlet extends HttpServlet {
 
-    private static Logger LOGGER = LoggerFactory
-            .getLogger(HivePartitionServlet.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(HivePartitionServlet.class);
 
     private static final long serialVersionUID = 1L;
 
@@ -55,7 +54,7 @@ public class HivePartitionServlet extends HttpServlet {
             String userName = null;
             Optional<String> hiveUser = Optional.ofNullable(request.getParameter("user"));
             Optional<String> hivePassword = Optional.ofNullable(request.getParameter("password"));
-            if(yanagishimaConfig.isUseAuditHttpHeaderName()) {
+            if (yanagishimaConfig.isUseAuditHttpHeaderName()) {
                 userName = request.getHeader(yanagishimaConfig.getAuditHttpHeaderName());
             } else {
                 if (hiveUser.isPresent() && hivePassword.isPresent()) {
@@ -70,13 +69,13 @@ public class HivePartitionServlet extends HttpServlet {
             String partitionValue = request.getParameter("partitionValue");
             if (partitionColumn == null || partitionValue == null) {
                 String query = String.format("SHOW PARTITIONS %s.`%s`", schema, table);
-                if(userName != null) {
+                if (userName != null) {
                     LOGGER.info(String.format("%s executed %s in %s", userName, query, datasource));
                 }
                 HiveQueryResult hiveQueryResult = hiveService.doQuery(engine, datasource, query, userName, hiveUser, hivePassword, false, Integer.MAX_VALUE);
                 Set<String> partitions = new TreeSet<>();
                 List<List<String>> records = hiveQueryResult.getRecords();
-                String cell = records.get(0).get(0);// part1=val1/part2=val2/part3=val3'...
+                String cell = records.get(0).get(0); // part1=val1/part2=val2/part3=val3'...
                 retVal.put("column", cell.split("/")[0].split("=")[0]);
                 for (List<String> row : records) {
                     partitions.add(row.get(0).split("/")[0].split("=")[1]);
@@ -86,36 +85,36 @@ public class HivePartitionServlet extends HttpServlet {
                 String[] partitionColumnArray = partitionColumn.split(",");
                 String[] partitionColumnTypeArray = partitionColumnType.split(",");
                 String[] partitionValuesArray = partitionValue.split(",");
-                if(partitionColumnArray.length != partitionValuesArray.length) {
+                if (partitionColumnArray.length != partitionValuesArray.length) {
                     throw new RuntimeException("The number of partitionColumn must be same as partitionValue");
                 }
                 List whereList = new ArrayList<>();
-                for(int i=0; i<partitionColumnArray.length; i++) {
-                    if(partitionColumnTypeArray[i].equals("string")) {
+                for (int i = 0; i < partitionColumnArray.length; i++) {
+                    if (partitionColumnTypeArray[i].equals("string")) {
                         whereList.add(String.format("%s = '%s'", partitionColumnArray[i], partitionValuesArray[i]));
                     } else {
                         whereList.add(String.format("%s = %s", partitionColumnArray[i], partitionValuesArray[i]));
                     }
                 }
                 String query = String.format("SHOW PARTITIONS %s.`%s` PARTITION(%s)", schema, table, String.join(", ", whereList));
-                if(userName != null) {
+                if (userName != null) {
                     LOGGER.info(String.format("%s executed %s in %s", userName, query, datasource));
                 }
                 HiveQueryResult hiveQueryResult = hiveService.doQuery(engine, datasource, query, userName, hiveUser, hivePassword, false, Integer.MAX_VALUE);
                 List<List<String>> records = hiveQueryResult.getRecords();
-                String cell = records.get(0).get(0);// part1=val1/part2=val2/part3=val3'...
+                String cell = records.get(0).get(0); // part1=val1/part2=val2/part3=val3'...
                 String[] keyValues = cell.split("/");
                 int index = 0;
-                for(String keyValue : keyValues) {
-                    if(keyValue.split("=")[0].equals(partitionColumnArray[partitionColumnArray.length-1])) {
+                for (String keyValue : keyValues) {
+                    if (keyValue.split("=")[0].equals(partitionColumnArray[partitionColumnArray.length - 1])) {
                         break;
                     }
                     index++;
                 }
-                retVal.put("column", keyValues[index+1].split("=")[0]);
+                retVal.put("column", keyValues[index + 1].split("=")[0]);
                 Set<String> partitions = new TreeSet<>();
                 for (List<String> row : records) {
-                    partitions.add(row.get(0).split("/")[index+1].split("=")[1]);
+                    partitions.add(row.get(0).split("/")[index + 1].split("=")[1]);
                 }
                 retVal.put("partitions", partitions);
             }

@@ -22,7 +22,7 @@ import io.airlift.units.DataSize;
 import yanagishima.row.Query;
 
 public final class HistoryUtil {
-    private HistoryUtil() {}
+    private HistoryUtil() { }
 
     public static void createHistoryResult(Map<String, Object> responseBody, int limit, String datasource, Query query, boolean resultVisible) {
         String queryId = query.getQueryId();

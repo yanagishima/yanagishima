@@ -22,9 +22,9 @@ public class YanagishimaFilter implements Filter {
 
     @Override
     public void doFilter(ServletRequest request, ServletResponse servletResponse, FilterChain chain) throws IOException, ServletException {
-        if(corsEnabled) {
+        if (corsEnabled) {
             HttpServletResponse response = (HttpServletResponse) servletResponse;
-            if(auditHttpHeaderName == null) {
+            if (auditHttpHeaderName == null) {
                 response.setHeader("Access-Control-Allow-Headers", Constants.DATASOURCE_HEADER);
             } else {
                 response.setHeader("Access-Control-Allow-Headers", Constants.DATASOURCE_HEADER + ", " + auditHttpHeaderName);

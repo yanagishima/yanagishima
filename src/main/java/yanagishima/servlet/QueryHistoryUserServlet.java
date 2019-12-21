@@ -25,7 +25,7 @@ import static yanagishima.util.HttpRequestUtil.getRequiredParameter;
 @Singleton
 public class QueryHistoryUserServlet extends HttpServlet {
 
-    private static Logger LOGGER = LoggerFactory
+    private static final Logger LOGGER = LoggerFactory
             .getLogger(QueryHistoryUserServlet.class);
 
     private static final long serialVersionUID = 1L;
@@ -62,17 +62,33 @@ public class QueryHistoryUserServlet extends HttpServlet {
             String limit = Optional.ofNullable(request.getParameter("limit")).orElse("100");
             String label = request.getParameter("label");
             List<Query> queryList;
-            if(label == null || label.length() == 0) {
-                String joinWhere = "LEFT OUTER JOIN label b on a.datasource = b.datasource AND a.engine = b.engine AND a.query_id = b.query_id WHERE a.datasource=\'" + datasource + "\' and a.engine=\'" + engine + "\' and a.user=\'" + userName + "\' and a.status != 'FAILED' and a.query_string LIKE '%" + Optional.ofNullable(search).orElse("") + "%' ORDER BY a.query_id DESC LIMIT " + limit;
+            if (label == null || label.length() == 0) {
+                String joinWhere = "LEFT OUTER JOIN label b on a.datasource = b.datasource AND a.engine = b.engine AND a.query_id = b.query_id "
+                                   + "WHERE a.datasource=\'" + datasource + "\' "
+                                   + "and a.engine=\'" + engine + "\' and "
+                                   + "a.user=\'" + userName + "\' "
+                                   + "and a.status != 'FAILED' "
+                                   + "and a.query_string LIKE '%" + Optional.ofNullable(search).orElse("") + "%' ORDER BY a.query_id DESC LIMIT " + limit;
                 String countSql = "SELECT count(*) FROM query a " + joinWhere;
-                String fetchSql = "SELECT a.engine, a.query_id, a.fetch_result_time_string, a.query_string, a.status, a.elapsed_time_millis, a.result_file_size, a.linenumber, b.label_name AS label_name FROM query a " + joinWhere;
+                String fetchSql = "SELECT "
+                                  + "a.engine, "
+                                  + "a.query_id, "
+                                  + "a.fetch_result_time_string, "
+                                  + "a.query_string, "
+                                  + "a.status, "
+                                  + "a.elapsed_time_millis, "
+                                  + "a.result_file_size, "
+                                  + "a.linenumber, "
+                                  + "b.label_name AS label_name "
+                                  + "FROM query a " + joinWhere;
                 retVal.put("hit", db.queryForLong(countSql).getAsLong());
                 queryList = db.searchBySQL(Query.class, fetchSql);
             } else {
                 queryList = db.searchBySQL(Query.class,
-                        "SELECT a.engine, a.query_id, a.fetch_result_time_string, a.query_string, a.status, a.elapsed_time_millis, a.result_file_size, a.linenumber, b.label_name AS label_name " +
-                                "FROM query a LEFT OUTER JOIN label b on a.datasource = b.datasource AND a.engine = b.engine AND a.query_id = b.query_id WHERE a.status != 'FAILED' and b.label_name = \'" + label
-                                + "\' and a.datasource=\'" + datasource + "\' and a.engine=\'" + engine + "\' and a.user=\'" + userName + "\' LIMIT " + limit);
+                        "SELECT a.engine, a.query_id, a.fetch_result_time_string, a.query_string, a.status, a.elapsed_time_millis, a.result_file_size, a.linenumber, b.label_name AS label_name "
+                        + "FROM query a LEFT OUTER JOIN label b on a.datasource = b.datasource AND a.engine = b.engine AND a.query_id = b.query_id "
+                        + "WHERE a.status != 'FAILED' and b.label_name = \'" + label
+                        + "\' and a.datasource=\'" + datasource + "\' and a.engine=\'" + engine + "\' and a.user=\'" + userName + "\' LIMIT " + limit);
                 retVal.put("hit", queryList.size());
             }
 
@@ -82,7 +98,7 @@ public class QueryHistoryUserServlet extends HttpServlet {
                 row.add(query.getQueryId());
                 row.add(query.getQueryString());
                 row.add(query.getElapsedTimeMillis());
-                if(query.getResultFileSize() == null) {
+                if (query.getResultFileSize() == null) {
                     row.add(null);
                 } else {
                     DataSize rawDataSize = new DataSize(query.getResultFileSize(), DataSize.Unit.BYTE);
@@ -95,7 +111,7 @@ public class QueryHistoryUserServlet extends HttpServlet {
                 queryHistoryList.add(row);
             }
 
-            if(queryHistoryList.isEmpty()) {
+            if (queryHistoryList.isEmpty()) {
                 retVal.put("results", Collections.emptyList());
             } else {
                 retVal.put("results", queryHistoryList);

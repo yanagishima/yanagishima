@@ -7,7 +7,7 @@ import static java.lang.String.format;
 import static yanagishima.util.DbUtil.storeError;
 
 public final class TimeoutUtil {
-    private TimeoutUtil() {}
+    private TimeoutUtil() { }
 
     public static void checkTimeout(TinyORM db, Duration queryMaxRunTime, long start, String datasource, String engine, String queryId, String query, String user) {
         if (System.currentTimeMillis() - start > queryMaxRunTime.toMillis()) {

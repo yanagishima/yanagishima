@@ -8,7 +8,6 @@ import yanagishima.config.YanagishimaConfig;
 import yanagishima.exception.QueryErrorException;
 import yanagishima.result.PrestoQueryResult;
 import yanagishima.service.PrestoService;
-import yanagishima.util.JsonUtil;
 import yanagishima.util.MetadataUtil;
 
 import javax.annotation.Nullable;

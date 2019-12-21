@@ -91,7 +91,7 @@ public class LabelServlet extends HttpServlet {
             String engine = getRequiredParameter(request, "engine");
             String queryid = getRequiredParameter(request, "queryid");
             Optional<Label> optionalLabel = db.single(Label.class).where("datasource = ? and engine = ? and query_id = ?", datasource, engine, queryid).execute();
-            if(optionalLabel.isPresent()) {
+            if (optionalLabel.isPresent()) {
                 retVal.put("label", optionalLabel.get().getLabelName());
             }
         } catch (Throwable e) {
@@ -126,7 +126,7 @@ public class LabelServlet extends HttpServlet {
             String engine = getRequiredParameter(request, "engine");
             String queryid = getRequiredParameter(request, "queryid");
             Optional<Label> optionaldeletedLabel = db.single(Label.class).where("datasource = ? and engine = ? and query_id = ?", datasource, engine, queryid).execute();
-            if(optionaldeletedLabel.isPresent()) {
+            if (optionaldeletedLabel.isPresent()) {
                 optionaldeletedLabel.get().delete();;
             }
             retVal.put("datasource", datasource);

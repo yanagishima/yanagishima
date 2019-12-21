@@ -106,7 +106,7 @@ public class PrestoServiceImpl implements PrestoService {
             } catch (Throwable e) {
                 LOGGER.error(e.getMessage(), e);
             } finally {
-                if(this.client != null) {
+                if (this.client != null) {
                     this.client.close();
                 }
             }
@@ -114,7 +114,13 @@ public class PrestoServiceImpl implements PrestoService {
     }
 
     @Override
-    public PrestoQueryResult doQuery(String datasource, String query, String userName, Optional<String> prestoUser, Optional<String> prestoPassword, boolean storeFlag, int limit) throws QueryErrorException {
+    public PrestoQueryResult doQuery(String datasource,
+                                     String query,
+                                     String userName,
+                                     Optional<String> prestoUser,
+                                     Optional<String> prestoPassword,
+                                     boolean storeFlag,
+                                     int limit) throws QueryErrorException {
         try (StatementClient client = getStatementClient(datasource, query, userName, prestoUser, prestoPassword)) {
             return getPrestoQueryResult(datasource, query, client, storeFlag, limit, userName);
         }
@@ -171,7 +177,7 @@ public class PrestoServiceImpl implements PrestoService {
         if (client.finalStatusInfo().getError() != null) {
             QueryStatusInfo results = client.finalStatusInfo();
             String message = getErrorMessage(results.getError().getFailureInfo());
-            if(queryResult.getQueryId() == null) {
+            if (queryResult.getQueryId() == null) {
                 storeError(db, datasource, presto.name(), results.getId(), query, userName, message);
             } else {
                 Path successFile = getResultFilePath(datasource, queryResult.getQueryId(), false);
@@ -203,7 +209,14 @@ public class PrestoServiceImpl implements PrestoService {
         return sb.toString();
     }
 
-    private List<List<String>> processData(StatementClient client, String datasource, String queryId, PrestoQueryResult queryResult, List<String> columnNames, long startTime, int maxRowLimit, String userName) {
+    private List<List<String>> processData(StatementClient client,
+                                           String datasource,
+                                           String queryId,
+                                           PrestoQueryResult queryResult,
+                                           List<String> columnNames,
+                                           long startTime,
+                                           int maxRowLimit,
+                                           String userName) {
         List<List<String>> rows = new ArrayList<>();
         Duration queryMaxRunTime = new Duration(config.getQueryMaxRunTimeSeconds(datasource), SECONDS);
         Path resultPath = getResultFilePath(datasource, queryId, false);
@@ -294,7 +307,7 @@ public class PrestoServiceImpl implements PrestoService {
 
     private void checkSecretKeyword(String query, String datasource, String id, String username, List<String> secretKeywords) {
         for (String secretKeyword : secretKeywords) {
-            if(query.contains(secretKeyword)) {
+            if (query.contains(secretKeyword)) {
                 String message = "query error occurs";
                 storeError(db, datasource, presto.name(), id, query, username, message);
                 throw new RuntimeException(message);
@@ -343,7 +356,7 @@ public class PrestoServiceImpl implements PrestoService {
     private static ClientSession buildClientSession(String server, String user, String source, String catalog, String schema) {
         return new ClientSession(URI.create(server), user, source, Optional.empty(), ImmutableSet.of(), null, catalog,
                                  schema, null, ZoneId.systemDefault(), Locale.getDefault(),
-                                 ImmutableMap.of(), ImmutableMap.of(), emptyMap(), emptyMap(), ImmutableMap.of(),null, new Duration(2, MINUTES));
+                                 ImmutableMap.of(), ImmutableMap.of(), emptyMap(), emptyMap(), ImmutableMap.of(), null, new Duration(2, MINUTES));
     }
 
     private static QueryErrorException resultsException(QueryStatusInfo results, String datasource) {

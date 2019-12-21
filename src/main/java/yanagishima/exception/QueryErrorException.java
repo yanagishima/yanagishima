@@ -16,5 +16,7 @@ public class QueryErrorException extends Exception {
 		this.queryId = queryId;
 	}
 
-	public String getQueryId() { return queryId; }
+	public String getQueryId() {
+		return queryId;
+	}
 }

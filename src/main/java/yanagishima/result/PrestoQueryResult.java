@@ -45,9 +45,13 @@ public class PrestoQueryResult {
         this.warningMessage = warningMessage;
     }
 
-    public String getQueryId() { return queryId; }
+    public String getQueryId() {
+        return queryId;
+    }
 
-    public void setQueryId(String queryId) { this.queryId = queryId; }
+    public void setQueryId(String queryId) {
+        this.queryId = queryId;
+    }
 
     public int getLineNumber() {
         return lineNumber;
