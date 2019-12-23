@@ -11,7 +11,7 @@ import org.codehaus.jackson.map.ObjectMapper;
 public final class JsonUtil {
 	private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
-	private JsonUtil() {}
+	private JsonUtil() { }
 
 	public static void writeJSON(HttpServletResponse response, Object obj) {
 		response.setContentType(ContentType.APPLICATION_JSON.getMimeType());

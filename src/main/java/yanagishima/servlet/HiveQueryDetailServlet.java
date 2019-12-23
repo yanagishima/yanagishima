@@ -42,7 +42,7 @@ public class HiveQueryDetailServlet extends HttpServlet {
         String engine = getRequiredParameter(request, "engine");
         String resourceManagerUrl = yanagishimaConfig.getResourceManagerUrl(datasource);
         Optional<String> idOptinal = Optional.ofNullable(request.getParameter("id"));
-        if(engine.equals("hive")) {
+        if (engine.equals("hive")) {
             idOptinal.ifPresent(id -> {
                 if (id.startsWith("application_")) {
                     try {
@@ -53,7 +53,7 @@ public class HiveQueryDetailServlet extends HttpServlet {
                 } else {
                     String userName = null;
                     Optional<String> hiveUser = Optional.ofNullable(request.getParameter("user"));
-                    if(yanagishimaConfig.isUseAuditHttpHeaderName()) {
+                    if (yanagishimaConfig.isUseAuditHttpHeaderName()) {
                         userName = request.getHeader(yanagishimaConfig.getAuditHttpHeaderName());
                     } else {
                         if (hiveUser.isPresent()) {
@@ -71,9 +71,9 @@ public class HiveQueryDetailServlet extends HttpServlet {
                     });
                 }
             });
-        } else if(engine.equals("spark")) {
+        } else if (engine.equals("spark")) {
             String sparkWebUrl = yanagishimaConfig.getSparkWebUrl(datasource);
-            if(idOptinal.isPresent()) {
+            if (idOptinal.isPresent()) {
                 String jobId = idOptinal.get();
                 try {
                     Integer.parseInt(jobId);

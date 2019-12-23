@@ -5,7 +5,7 @@ import javax.servlet.http.HttpServletRequest;
 import static java.lang.String.format;
 
 public final class HttpRequestUtil {
-    private HttpRequestUtil() {}
+    private HttpRequestUtil() { }
 
     public static String getOrDefaultParameter(HttpServletRequest request, String key, String defaultValue) {
         String value = request.getParameter(key);

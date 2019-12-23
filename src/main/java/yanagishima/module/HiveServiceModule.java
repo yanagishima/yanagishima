@@ -5,7 +5,7 @@ import yanagishima.service.HiveService;
 import yanagishima.service.HiveServiceImpl;
 
 public class HiveServiceModule extends AbstractModule {
-    public HiveServiceModule() {}
+    public HiveServiceModule() { }
 
     @Override
     protected void configure() {

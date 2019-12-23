@@ -126,7 +126,7 @@ public class PrestoPartitionServlet extends HttpServlet {
                     for (int i = 0; i < partitionColumnArray.length; i++) {
                         if (partitionColumnTypeArray[i].equals("varchar")) {
                             whereList.add(format("%s = '%s'", partitionColumnArray[i], partitionValuesArray[i]));
-                        } else if(partitionColumnTypeArray[i].equals("date")) {
+                        } else if (partitionColumnTypeArray[i].equals("date")) {
                             whereList.add(format("%s = DATE '%s'", partitionColumnArray[i], partitionValuesArray[i]));
                         } else {
                             whereList.add(format("%s = %s", partitionColumnArray[i], partitionValuesArray[i]));
@@ -140,7 +140,7 @@ public class PrestoPartitionServlet extends HttpServlet {
                     List<String> columns = prestoQueryResult.getColumns();
                     int index = 0;
                     for (String column : columns) {
-                        if (column.equals(partitionColumnArray[partitionColumnArray.length-1])) {
+                        if (column.equals(partitionColumnArray[partitionColumnArray.length - 1])) {
                             break;
                         }
                         index++;

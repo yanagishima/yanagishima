@@ -25,7 +25,7 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 public final class SparkUtil {
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
-    private SparkUtil() {}
+    private SparkUtil() { }
 
     public static String getSparkJdbcApplicationId(String sparkWebUrl) {
         OkHttpClient client = new OkHttpClient();

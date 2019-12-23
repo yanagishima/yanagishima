@@ -8,7 +8,6 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -18,7 +17,7 @@ public final class MetadataUtil {
     private static final Logger LOGGER = LoggerFactory.getLogger(MetadataUtil.class);
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
-    private MetadataUtil() {}
+    private MetadataUtil() { }
 
     public static void setMetadata(String metadataServiceUrl, Map<String, Object> retVal, String schema, String table, List<List<String>> records) {
         try {
@@ -31,7 +30,7 @@ public final class MetadataUtil {
                 for (String column : records.get(i)) {
                     newColumnList.add(column);
                 }
-                if(i < columns.size()) {
+                if (i < columns.size()) {
                     Object n = columns.get(i).get("note");
                     if (n == null) {
                         newColumnList.add(null);

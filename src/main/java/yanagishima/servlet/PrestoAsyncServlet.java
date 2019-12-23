@@ -25,7 +25,7 @@ import static yanagishima.util.HttpRequestUtil.getRequiredParameter;
 @Singleton
 public class PrestoAsyncServlet extends HttpServlet {
 
-	private static Logger LOGGER = LoggerFactory.getLogger(PrestoAsyncServlet.class);
+	private static final Logger LOGGER = LoggerFactory.getLogger(PrestoAsyncServlet.class);
 
 	private static final long serialVersionUID = 1L;
 
@@ -54,7 +54,7 @@ public class PrestoAsyncServlet extends HttpServlet {
 				String userName = null;
 				Optional<String> prestoUser = Optional.ofNullable(request.getParameter("user"));
 				Optional<String> prestoPassword = Optional.ofNullable(request.getParameter("password"));
-				if(yanagishimaConfig.isUseAuditHttpHeaderName()) {
+				if (yanagishimaConfig.isUseAuditHttpHeaderName()) {
 					userName = request.getHeader(yanagishimaConfig.getAuditHttpHeaderName());
 				} else {
 					if (prestoUser.isPresent() && prestoPassword.isPresent()) {
@@ -70,11 +70,11 @@ public class PrestoAsyncServlet extends HttpServlet {
 					sendForbiddenError(response);
 					return;
 				}
-				if(userName != null) {
+				if (userName != null) {
 					LOGGER.info(String.format("%s executed %s in %s", userName, query, datasource));
 				}
 				if (prestoUser.isPresent() && prestoPassword.isPresent()) {
-					if(prestoUser.get().length() == 0) {
+					if (prestoUser.get().length() == 0) {
 						retVal.put("error", "user is empty");
 						JsonUtil.writeJSON(response, retVal);
 						return;
@@ -82,14 +82,14 @@ public class PrestoAsyncServlet extends HttpServlet {
 				}
 				try {
 					String queryid;
-					if(yanagishimaConfig.isUseOldPresto(datasource)) {
+					if (yanagishimaConfig.isUseOldPresto(datasource)) {
 						queryid = oldPrestoService.doQueryAsync(datasource, query, userName, prestoUser, prestoPassword);
 					} else {
 						queryid = prestoService.doQueryAsync(datasource, query, userName, prestoUser, prestoPassword);
 					}
 					retVal.put("queryid", queryid);
 				} catch (ClientException e) {
-					if(prestoUser.isPresent()) {
+					if (prestoUser.isPresent()) {
 						LOGGER.error(String.format("%s failed to be authenticated", prestoUser.get()));
 					}
 					LOGGER.error(e.getMessage(), e);

@@ -9,7 +9,7 @@ import java.nio.file.Paths;
 public final class PathUtil {
 	private static final String CURRENT_PATH = new File(".").getAbsolutePath();
 
-	private PathUtil() {}
+	private PathUtil() { }
 
 	public static Path getResultFilePath(String datasource, String queryId, boolean error) {
 		String date = queryId.substring(0, 8);

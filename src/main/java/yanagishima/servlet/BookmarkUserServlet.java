@@ -22,7 +22,7 @@ import static yanagishima.util.JsonUtil.writeJSON;
 
 @Singleton
 public class BookmarkUserServlet extends HttpServlet {
-    private static Logger LOGGER = LoggerFactory.getLogger(BookmarkUserServlet.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(BookmarkUserServlet.class);
     private static final long serialVersionUID = 1L;
 
     private final YanagishimaConfig config;

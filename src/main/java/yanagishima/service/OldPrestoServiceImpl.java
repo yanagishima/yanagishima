@@ -99,7 +99,7 @@ public class OldPrestoServiceImpl implements OldPrestoService {
             } catch (Throwable e) {
                 LOGGER.error(e.getMessage(), e);
             } finally {
-                if(client != null) {
+                if (client != null) {
                     client.close();
                 }
             }
@@ -107,7 +107,13 @@ public class OldPrestoServiceImpl implements OldPrestoService {
     }
 
     @Override
-    public PrestoQueryResult doQuery(String datasource, String query, String userName, Optional<String> prestoUser, Optional<String> prestoPassword, boolean storeFlag, int limit) throws QueryErrorException {
+    public PrestoQueryResult doQuery(String datasource,
+                                     String query,
+                                     String userName,
+                                     Optional<String> prestoUser,
+                                     Optional<String> prestoPassword,
+                                     boolean storeFlag,
+                                     int limit) throws QueryErrorException {
         try (StatementClient client = getStatementClient(datasource, query, userName, prestoUser, prestoPassword)) {
             return getPrestoQueryResult(datasource, query, client, storeFlag, limit, userName);
         }
@@ -198,7 +204,15 @@ public class OldPrestoServiceImpl implements OldPrestoService {
         return prestoQueryResult;
     }
 
-    private List<List<String>> processData(StatementClient client, String datasource, String queryId, String query, PrestoQueryResult queryResult, List<String> columns, long start, int limit, String userName) {
+    private List<List<String>> processData(StatementClient client,
+                                           String datasource,
+                                           String queryId,
+                                           String query,
+                                           PrestoQueryResult queryResult,
+                                           List<String> columns,
+                                           long start,
+                                           int limit,
+                                           String userName) {
         List<List<String>> rows = new ArrayList<>();
 
         Duration queryMaxRunTime = new Duration(config.getQueryMaxRunTimeSeconds(datasource), SECONDS);
@@ -220,7 +234,7 @@ public class OldPrestoServiceImpl implements OldPrestoService {
 
                         lineNumber++;
                         resultBytes += row.toString().getBytes(StandardCharsets.UTF_8).length;
-                        if(resultBytes > maxResultFileByteSize) {
+                        if (resultBytes > maxResultFileByteSize) {
                             String message = format("Result file size exceeded %s bytes. queryId=%s, datasource=%s", maxResultFileByteSize, queryId, datasource);
                             storeError(db, datasource, presto.name(), client.currentStatusInfo().getId(), query, userName, message);
                             throw new RuntimeException(message);
@@ -340,7 +354,7 @@ public class OldPrestoServiceImpl implements OldPrestoService {
     private static ClientSession buildClientSession(String server, String user, String source, String catalog, String schema) {
         return new ClientSession(URI.create(server), user, source, Optional.empty(), ImmutableSet.of(), null, catalog,
                                  schema, null, TimeZone.getDefault().getID(), Locale.getDefault(),
-                                 ImmutableMap.of(), ImmutableMap.of(), emptyMap(),null, new Duration(2, MINUTES));
+                                 ImmutableMap.of(), ImmutableMap.of(), emptyMap(), null, new Duration(2, MINUTES));
     }
 
     private static QueryErrorException resultsException(QueryStatusInfo results, String datasource) {

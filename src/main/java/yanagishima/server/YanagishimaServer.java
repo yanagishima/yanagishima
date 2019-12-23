@@ -82,19 +82,108 @@ public class YanagishimaServer {
              Statement statement = connection.createStatement()) {
             switch (databaseType) {
                 case SQLITE:
-                    statement.executeUpdate("CREATE TABLE IF NOT EXISTS query (datasource text, engine text, query_id text, fetch_result_time_string text, query_string text, user text, status text, elapsed_time_millis integer, result_file_size integer, linenumber integer, primary key(datasource, engine, query_id))");
-                    statement.executeUpdate("CREATE TABLE IF NOT EXISTS publish (publish_id text, datasource text, engine text, query_id text, user text, primary key(publish_id))");
-                    statement.executeUpdate("CREATE TABLE IF NOT EXISTS bookmark (bookmark_id integer primary key autoincrement, datasource text, engine text, query text, title text, user text)");
-                    statement.executeUpdate("CREATE TABLE IF NOT EXISTS comment (datasource text, engine text, query_id text, content text, update_time_string text, user text, like_count integer, primary key(datasource, engine, query_id))");
-                    statement.executeUpdate("CREATE TABLE IF NOT EXISTS label (datasource text, engine text, query_id text, label_name text, primary key(datasource, engine, query_id))");
+                    statement.executeUpdate(""
+                                            + "CREATE TABLE IF NOT EXISTS query ("
+                                            + "datasource text, "
+                                            + "engine text, "
+                                            + "query_id text, "
+                                            + "fetch_result_time_string text, "
+                                            + "query_string text, "
+                                            + "user text, "
+                                            + "status text, "
+                                            + "elapsed_time_millis integer, "
+                                            + "result_file_size integer, "
+                                            + "linenumber integer, "
+                                            + "primary key(datasource, engine, query_id))");
+                    statement.executeUpdate(""
+                                            + "CREATE TABLE IF NOT EXISTS publish ("
+                                            + "publish_id text, "
+                                            + "datasource text, "
+                                            + "engine text, "
+                                            + "query_id text, "
+                                            + "user text, "
+                                            + "primary key(publish_id))");
+                    statement.executeUpdate(""
+                                            + "CREATE TABLE IF NOT EXISTS bookmark ("
+                                            + "bookmark_id integer primary key autoincrement, "
+                                            + "datasource text, "
+                                            + "engine text, "
+                                            + "query text, "
+                                            + "title text, "
+                                            + "user text)");
+                    statement.executeUpdate(""
+                                            + "CREATE TABLE IF NOT EXISTS comment ("
+                                            + "datasource text, "
+                                            + "engine text, "
+                                            + "query_id text, "
+                                            + "content text, "
+                                            + "update_time_string text, "
+                                            + "user text, "
+                                            + "like_count integer, "
+                                            + "primary key(datasource, engine, query_id))");
+                    statement.executeUpdate(""
+                                            + "CREATE TABLE IF NOT EXISTS label ("
+                                            + "datasource text, "
+                                            + "engine text, "
+                                            + "query_id text, "
+                                            + "label_name text, "
+                                            + "primary key(datasource, engine, query_id))");
                     break;
                 case MYSQL:
-                    statement.executeUpdate("CREATE TABLE IF NOT EXISTS query (datasource varchar(256), engine varchar(256), query_id varchar(256), fetch_result_time_string varchar(256), query_string mediumtext, user varchar(256), status varchar(256), elapsed_time_millis integer, result_file_size integer, linenumber integer, primary key(datasource, engine, query_id))");
-                    statement.executeUpdate("CREATE TABLE IF NOT EXISTS publish (publish_id varchar(256), datasource varchar(256), engine varchar(256), query_id varchar(256), user varchar(256), primary key(publish_id))");
-                    statement.executeUpdate("CREATE TABLE IF NOT EXISTS bookmark (bookmark_id integer primary key auto_increment, datasource varchar(256), engine varchar(256), query text, title varchar(256), user varchar(256))");
-                    statement.executeUpdate("CREATE TABLE IF NOT EXISTS comment (datasource varchar(256), engine varchar(256), query_id varchar(256), content text, update_time_string varchar(256), user varchar(256), like_count integer, primary key(datasource, engine, query_id))");
-                    statement.executeUpdate("CREATE TABLE IF NOT EXISTS label (datasource varchar(256), engine varchar(256), query_id varchar(256), label_name varchar(256), primary key(datasource, engine, query_id))");
-                    statement.executeUpdate("CREATE TABLE IF NOT EXISTS starred_schema (starred_schema_id integer primary key auto_increment, datasource varchar(256) not null, engine varchar(256) not null, catalog varchar(256) not null, `schema` varchar(256) not null, user varchar(256))");
+                    statement.executeUpdate(""
+                                            + "CREATE TABLE IF NOT EXISTS query ("
+                                            + "datasource varchar(256), "
+                                            + "engine varchar(256), "
+                                            + "query_id varchar(256), "
+                                            + "fetch_result_time_string varchar(256), "
+                                            + "query_string mediumtext, "
+                                            + "user varchar(256), "
+                                            + "status varchar(256), "
+                                            + "elapsed_time_millis integer, "
+                                            + "result_file_size integer, "
+                                            + "linenumber integer, "
+                                            + "primary key(datasource, engine, query_id))");
+                    statement.executeUpdate(""
+                                            + "CREATE TABLE IF NOT EXISTS publish ("
+                                            + "publish_id varchar(256), "
+                                            + "datasource varchar(256), "
+                                            + "engine varchar(256), "
+                                            + "query_id varchar(256), "
+                                            + "user varchar(256), "
+                                            + "primary key(publish_id))");
+                    statement.executeUpdate(""
+                                            + "CREATE TABLE IF NOT EXISTS bookmark ("
+                                            + "bookmark_id integer primary key auto_increment, "
+                                            + "datasource varchar(256), "
+                                            + "engine varchar(256), "
+                                            + "query text, "
+                                            + "title varchar(256), "
+                                            + "user varchar(256))");
+                    statement.executeUpdate(""
+                                            + "CREATE TABLE IF NOT EXISTS comment ("
+                                            + "datasource varchar(256), "
+                                            + "engine varchar(256), "
+                                            + "query_id varchar(256), "
+                                            + "content text, "
+                                            + "update_time_string varchar(256), "
+                                            + "user varchar(256), "
+                                            + "like_count integer, "
+                                            + "primary key(datasource, engine, query_id))");
+                    statement.executeUpdate(""
+                                            + "CREATE TABLE IF NOT EXISTS label ("
+                                            + "datasource varchar(256), "
+                                            + "engine varchar(256), "
+                                            + "query_id varchar(256), "
+                                            + "label_name varchar(256), "
+                                            + "primary key(datasource, engine, query_id))");
+                    statement.executeUpdate(""
+                                            + "CREATE TABLE IF NOT EXISTS starred_schema ("
+                                            + "starred_schema_id integer primary key auto_increment, "
+                                            + "datasource varchar(256) not null, "
+                                            + "engine varchar(256) not null, "
+                                            + "catalog varchar(256) not null, "
+                                            + "`schema` varchar(256) not null, "
+                                            + "user varchar(256))");
                     break;
                 default:
                     throw new IllegalArgumentException("Illegal database type: " + databaseType);

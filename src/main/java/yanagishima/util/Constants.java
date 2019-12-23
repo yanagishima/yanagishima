@@ -1,7 +1,7 @@
 package yanagishima.util;
 
 public final class Constants {
-    private Constants() {}
+    private Constants() { }
 
     public static final String DATASOURCE_HEADER = "X-yanagishima-datasources";
 

@@ -19,7 +19,7 @@ import com.google.common.annotations.VisibleForTesting;
 public final class YarnUtil {
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
-    private YarnUtil() {}
+    private YarnUtil() { }
 
     public static String kill(String resourceManagerUrl, String applicationId) {
         try {

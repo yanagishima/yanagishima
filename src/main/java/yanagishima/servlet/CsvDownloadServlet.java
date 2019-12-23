@@ -4,7 +4,6 @@ import static java.util.Objects.requireNonNull;
 import static yanagishima.util.AccessControlUtil.sendForbiddenError;
 import static yanagishima.util.AccessControlUtil.validateDatasource;
 import static yanagishima.util.DownloadUtil.downloadCsv;
-import static yanagishima.util.HttpRequestUtil.getOrDefaultParameter;
 
 import java.util.Optional;
 

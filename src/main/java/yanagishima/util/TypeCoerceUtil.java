@@ -3,7 +3,7 @@ package yanagishima.util;
 import java.math.BigDecimal;
 
 public final class TypeCoerceUtil {
-    private TypeCoerceUtil() {}
+    private TypeCoerceUtil() { }
 
     public static String objectToString(Object object) {
         if (object == null) {

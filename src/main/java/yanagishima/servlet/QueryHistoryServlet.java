@@ -83,13 +83,37 @@ public class QueryHistoryServlet extends HttpServlet {
         String placeholder = join(", ", nCopies(queryIds.length, "?"));
         if (isNullOrEmpty(label)) {
             return db.searchBySQL(Query.class,
-                                  "SELECT a.engine, a.query_id, a.fetch_result_time_string, a.query_string, a.status, a.elapsed_time_millis, a.result_file_size, a.linenumber, b.label_name AS label_name " +
-                                  "FROM query a LEFT OUTER JOIN label b on a.datasource = b.datasource AND a.engine = b.engine AND a.query_id = b.query_id WHERE a.datasource=\'" + datasource + "\' and a.query_id IN (" + placeholder + ")",
+                                  "SELECT "
+                                  + "a.engine, "
+                                  + "a.query_id, "
+                                  + "a.fetch_result_time_string, "
+                                  + "a.query_string, "
+                                  + "a.status, "
+                                  + "a.elapsed_time_millis, "
+                                  + "a.result_file_size, "
+                                  + "a.linenumber, "
+                                  + "b.label_name AS label_name "
+                                  + "FROM query a "
+                                  + "LEFT OUTER JOIN label b "
+                                  + "on a.datasource = b.datasource AND a.engine = b.engine AND a.query_id = b.query_id "
+                                  + "WHERE a.datasource=\'" + datasource + "\' and a.query_id IN (" + placeholder + ")",
                                   Arrays.stream(queryIds).collect(Collectors.toList()));
         }
         return db.searchBySQL(Query.class,
-                              "SELECT a.engine, a.query_id, a.fetch_result_time_string, a.query_string, a.status, a.elapsed_time_millis, a.result_file_size, a.linenumber, b.label_name AS label_name " +
-                              "FROM query a LEFT OUTER JOIN label b on a.datasource = b.datasource AND a.engine = b.engine AND a.query_id = b.query_id WHERE b.label_name = \'" + label + "\' and a.datasource=\'" + datasource + "\' and a.query_id IN (" + placeholder + ")",
+                              "SELECT "
+                              + "a.engine, "
+                              + "a.query_id, "
+                              + "a.fetch_result_time_string, "
+                              + "a.query_string, "
+                              + "a.status, "
+                              + "a.elapsed_time_millis, "
+                              + "a.result_file_size, "
+                              + "a.linenumber, "
+                              + "b.label_name AS label_name "
+                              + "FROM query a "
+                              + "LEFT OUTER JOIN label b "
+                              + "on a.datasource = b.datasource AND a.engine = b.engine AND a.query_id = b.query_id "
+                              + "WHERE b.label_name = \'" + label + "\' and a.datasource=\'" + datasource + "\' and a.query_id IN (" + placeholder + ")",
                               Arrays.stream(queryIds).collect(Collectors.toList()));
 
     }

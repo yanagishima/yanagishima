@@ -27,7 +27,7 @@ import static yanagishima.util.HttpRequestUtil.getRequiredParameter;
 @Singleton
 public class TableListServlet extends HttpServlet {
 
-    private static Logger LOGGER = LoggerFactory
+    private static final Logger LOGGER = LoggerFactory
             .getLogger(TableListServlet.class);
 
     private static final long serialVersionUID = 1L;
@@ -57,7 +57,7 @@ public class TableListServlet extends HttpServlet {
             }
 
             String prestoCoordinatorServer = yanagishimaConfig.getPrestoCoordinatorServerOrNull(datasource);
-            if(prestoCoordinatorServer == null) {
+            if (prestoCoordinatorServer == null) {
                 JsonUtil.writeJSON(response, retVal);
                 return;
             }
@@ -66,7 +66,7 @@ public class TableListServlet extends HttpServlet {
             String userName = null;
             Optional<String> prestoUser = Optional.ofNullable(request.getParameter("user"));
             Optional<String> prestoPassword = Optional.ofNullable(request.getParameter("password"));
-            if(yanagishimaConfig.isUseAuditHttpHeaderName()) {
+            if (yanagishimaConfig.isUseAuditHttpHeaderName()) {
                 userName = request.getHeader(yanagishimaConfig.getAuditHttpHeaderName());
             } else {
                 if (prestoUser.isPresent() && prestoPassword.isPresent()) {
@@ -74,7 +74,7 @@ public class TableListServlet extends HttpServlet {
                 }
             }
             if (prestoUser.isPresent() && prestoPassword.isPresent()) {
-                if(prestoUser.get().length() == 0) {
+                if (prestoUser.get().length() == 0) {
                     retVal.put("error", "user is empty");
                     JsonUtil.writeJSON(response, retVal);
                     return;
@@ -82,12 +82,15 @@ public class TableListServlet extends HttpServlet {
             }
             List<String> invisibleSchemas = yanagishimaConfig.getInvisibleSchemas(datasource, catalog);
             String notin = "('" + String.join("','", invisibleSchemas) + "')";
-            String query = String.format("%sSELECT table_catalog || '.' || table_schema || '.' || table_name FROM %s.information_schema.tables WHERE table_schema NOT IN %s", YANAGISHIMA_COMMENT, catalog, notin);
+            String query = String.format("%sSELECT table_catalog || '.' || table_schema || '.' || table_name FROM %s.information_schema.tables WHERE table_schema NOT IN %s",
+                                         YANAGISHIMA_COMMENT, catalog, notin);
             try {
-                List<String> tables = prestoService.doQuery(datasource, query, userName, prestoUser, prestoPassword, false, Integer.MAX_VALUE).getRecords().stream().map(list -> list.get(0)).collect(Collectors.toList());
+                List<String> tables = prestoService.doQuery(datasource, query, userName, prestoUser, prestoPassword, false, Integer.MAX_VALUE).getRecords().stream()
+                                                   .map(list -> list.get(0))
+                                                   .collect(Collectors.toList());
                 retVal.put("tableList", tables);
             } catch (ClientException e) {
-                if(prestoUser.isPresent()) {
+                if (prestoUser.isPresent()) {
                     LOGGER.error(String.format("%s failed to be authenticated", prestoUser.get()));
                 }
                 LOGGER.error(e.getMessage(), e);

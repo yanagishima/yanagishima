@@ -10,7 +10,7 @@ import me.geso.tinyorm.annotations.Table;
 @Table("publish")
 @Data
 @EqualsAndHashCode(callSuper = false)
-public class Publish extends Row<Publish>{
+public class Publish extends Row<Publish> {
 
     @PrimaryKey
     @Column("publish_id")

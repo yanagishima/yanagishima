@@ -19,7 +19,7 @@ public class MigrateV9 {
     private static final CSVFormat CSV_FORMAT = CSVFormat.EXCEL.withDelimiter('\t').withNullString("\\N").withRecordSeparator(System.getProperty("line.separator"));
 
     public static void main(String[] args) throws IOException {
-        if (args.length != 2 ) {
+        if (args.length != 2) {
             System.out.println("please specify source and destination directory");
             System.exit(1);
         }
@@ -62,7 +62,7 @@ public class MigrateV9 {
                     System.out.println("error " + filePath);
                     e.printStackTrace();
                 }
-            } else if(filePath.endsWith(".err")) {
+            } else if (filePath.endsWith(".err")) {
                 String destFileName = file.getName();
                 Path destPath = Paths.get(destDir, datasourceDir.getName(), yyyymmddDir.getName(), destFileName);
                 Files.copy(Paths.get(file.getAbsolutePath()), destPath);

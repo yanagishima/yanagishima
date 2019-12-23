@@ -3,7 +3,7 @@ package yanagishima.util;
 import java.util.Properties;
 
 public final class PropertiesUtil {
-    private PropertiesUtil() {}
+    private PropertiesUtil() { }
 
     public static String getParam(Properties properties, String key) {
         String value = properties.getProperty(key);

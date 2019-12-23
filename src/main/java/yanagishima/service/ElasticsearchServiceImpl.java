@@ -112,7 +112,12 @@ public class ElasticsearchServiceImpl implements ElasticsearchService {
         }
     }
 
-    private ElasticsearchQueryResult getElasticsearchQueryResult(String queryId, String datasource, String query, boolean storeFlag, int limit, String userName) throws ElasticsearchQueryErrorException {
+    private ElasticsearchQueryResult getElasticsearchQueryResult(String queryId,
+                                                                 String datasource,
+                                                                 String query,
+                                                                 boolean storeFlag,
+                                                                 int limit,
+                                                                 String userName) throws ElasticsearchQueryErrorException {
         checkDisallowedKeyword(query, datasource, queryId, userName);
         checkSecretKeyword(query, datasource, queryId, userName);
         checkRequiredCondition(query, datasource, queryId, userName);

@@ -85,10 +85,10 @@ public class YanagishimaConfig {
 	public List<String> getDatasources() {
 		List<String> datasources = new ArrayList<>();
 		List<String> engines = getEngines();
-		for(String engine : engines) {
+		for (String engine : engines) {
 			List<String> datasourceList = getDatasources(engine);
-			for(String datasource : datasourceList) {
-				if(!datasources.contains(datasource)) {
+			for (String datasource : datasourceList) {
+				if (!datasources.contains(datasource)) {
 					datasources.add(datasource);
 				}
 			}
@@ -107,7 +107,7 @@ public class YanagishimaConfig {
 
 	public double getQueryMaxRunTimeSeconds(String datasource) {
 		String property = properties.getProperty("presto.query.max-run-time-seconds" + "." + datasource);
-		if(property == null) {
+		if (property == null) {
 			return getQueryMaxRunTimeSeconds();
 		}
 		return Double.parseDouble(property);
@@ -134,7 +134,7 @@ public class YanagishimaConfig {
 
 	public List<String> getInvisibleSchemas(String datasource, String catalog) {
 		String invisibleSchemas = properties.getProperty("invisible.schema." + datasource + "." + catalog);
-		if(invisibleSchemas == null) {
+		if (invisibleSchemas == null) {
 			return Collections.emptyList();
 		}
 		return SPLITTER.splitToList(invisibleSchemas);
@@ -142,7 +142,7 @@ public class YanagishimaConfig {
 
 	public List<String> getInvisibleDatabases(String datasource) {
 		String invisibleDatabases = properties.getProperty("invisible.database." + datasource);
-		if(invisibleDatabases == null) {
+		if (invisibleDatabases == null) {
 			return Collections.emptyList();
 		}
 		return SPLITTER.splitToList(invisibleDatabases);
@@ -194,7 +194,7 @@ public class YanagishimaConfig {
 
 	public double getHiveQueryMaxRunTimeSeconds(String datasource) {
 		String property = properties.getProperty("hive.query.max-run-time-seconds" + "." + datasource);
-		if(property == null) {
+		if (property == null) {
 			return getHiveQueryMaxRunTimeSeconds();
 		}
 		return Double.parseDouble(property);
@@ -210,7 +210,7 @@ public class YanagishimaConfig {
 
 	public List<String> getHiveDisallowedKeywords(String datasource) {
 		String property = properties.getProperty("hive.disallowed.keywords." + datasource);
-		if(property == null) {
+		if (property == null) {
 				return Collections.emptyList();
 		}
 		return SPLITTER.splitToList(property);
@@ -219,7 +219,7 @@ public class YanagishimaConfig {
 	public List<String> getHiveSetupQueryList(String datasource) {
 		String property = properties.getProperty("hive.setup.query.path." + datasource);
 		List<String> hiveSetupQueryList = new ArrayList<>();
-		if(property == null) {
+		if (property == null) {
 			return Collections.emptyList();
 		} else {
 			try (BufferedReader br = Files.newBufferedReader(Paths.get(property), StandardCharsets.UTF_8)) {
@@ -241,7 +241,7 @@ public class YanagishimaConfig {
 
 	public List<String> getHiveSecretKeywords(String datasource) {
 		String property = properties.getProperty("hive.secret.keywords." + datasource);
-		if(property == null) {
+		if (property == null) {
 			return Collections.emptyList();
 		}
 		return SPLITTER.splitToList(property);
@@ -249,7 +249,7 @@ public class YanagishimaConfig {
 
 	public List<String> getPrestoSecretKeywords(String datasource) {
 		String property = properties.getProperty("presto.secret.keywords." + datasource);
-		if(property == null) {
+		if (property == null) {
 			return Collections.emptyList();
 		}
 		return SPLITTER.splitToList(property);
@@ -257,7 +257,7 @@ public class YanagishimaConfig {
 
 	public List<String> getPrestoMustSpecifyConditions(String datasource) {
 		String property = properties.getProperty("presto.must.specify.conditions." + datasource);
-		if(property == null) {
+		if (property == null) {
 			return Collections.emptyList();
 		}
 		return SPLITTER.splitToList(property);
@@ -265,7 +265,7 @@ public class YanagishimaConfig {
 
 	public List<String> getHiveMustSpecifyConditions(String datasource) {
 		String property = properties.getProperty("hive.must.specify.conditions." + datasource);
-		if(property == null) {
+		if (property == null) {
 			return Collections.emptyList();
 		}
 		return SPLITTER.splitToList(property);
@@ -297,7 +297,7 @@ public class YanagishimaConfig {
 
 	public List<String> getElasticsearchSecretKeywords(String datasource) {
 		String property = properties.getProperty("elasticsearch.secret.keywords." + datasource);
-		if(property == null) {
+		if (property == null) {
 			return Collections.emptyList();
 		}
 		return SPLITTER.splitToList(property);
@@ -305,7 +305,7 @@ public class YanagishimaConfig {
 
 	public List<String> getElasticsearchMustSpecifyConditions(String datasource) {
 		String property = properties.getProperty("elasticsearch.must.specify.conditions." + datasource);
-		if(property == null) {
+		if (property == null) {
 			return Collections.emptyList();
 		}
 		return SPLITTER.splitToList(property);
@@ -317,7 +317,7 @@ public class YanagishimaConfig {
 
 	public List<String> getElasticsearchDisallowedKeywords(String datasource) {
 		String property = properties.getProperty("elasticsearch.disallowed.keywords." + datasource);
-		if(property == null) {
+		if (property == null) {
 			return Collections.emptyList();
 		}
 		return SPLITTER.splitToList(property);
@@ -335,7 +335,7 @@ public class YanagishimaConfig {
 
 	public double getElasticsearchQueryMaxRunTimeSeconds(String datasource) {
 		String property = properties.getProperty("elasticsearch.query.max-run-time-seconds" + "." + datasource);
-		if(property == null) {
+		if (property == null) {
 			return getElasticsearchQueryMaxRunTimeSeconds();
 		}
 		return Double.parseDouble(property);
@@ -389,7 +389,7 @@ public class YanagishimaConfig {
 		return properties.getProperty("database.password");
 	}
 
-	public boolean IsDatatimePartitionHasHyphen(String datasource) {
+	public boolean isDatatimePartitionHasHyphen(String datasource) {
 		String property = properties.getProperty("datetime.partition.has.hyphen." + datasource);
 		if (property == null) {
 			return false;
