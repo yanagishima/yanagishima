@@ -4,7 +4,7 @@ services:
     image: sunnywalden/yanagishima
     container_name: yanagishima
     volumes:
-      - conf/yanagishima.properties:/opt/yanagishima/conf/yanagishima.properties
+      - ./conf/yanagishima.properties:/opt/yanagishima/conf/yanagishima.properties
     ports:
       - "8899:8899"
     networks:
