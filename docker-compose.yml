@@ -1,0 +1,16 @@
+version: '3.7'
+services:
+  web:
+    image: sunnywalden/yanagishima
+    container_name: yanagishima
+    volumes:
+      - ../data/yanagishima.properties:conf/yanagishima.properties
+    ports:
+      - "8899:8899"
+    networks:
+      - yanagishima
+    restart: always
+
+networks:
+  yanagishima:
+    driver: bridge
