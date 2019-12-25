@@ -11,6 +11,7 @@ Visit [the official web site](https://yanagishima.github.io/yanagishima) for mor
 
 * Java 11
 * Node.js
+* Python 2
 
 ## Quick Start
 ```
@@ -29,4 +30,17 @@ see http://localhost:8080/
 # Stop
 ```
 bin/yanagishima-shutdown.sh
+
 ```
+
+## Deploy in docker
+
+```
+
+git clone [code-url] --depth 1
+
+docker-compose up -d
+
+```
+ 
+
