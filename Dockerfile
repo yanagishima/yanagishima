@@ -13,7 +13,7 @@ WORKDIR /opt/yanagishima
 
 # install node
 RUN apt-get update && \
-    apt-get install -y build-essential wget xz && \
+    apt-get install -y build-essential wget xz-utils && \
     wget https://nodejs.org/dist/v12.14.0/node-v12.14.0-linux-x64.tar.xz && \
     xz -d node-v12.14.0-linux-x64.tar.xz && \
     tar -xf node-v12.14.0-linux-x64.tar && \
