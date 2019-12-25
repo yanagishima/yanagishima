@@ -31,14 +31,15 @@ RUN npm config set prefix '/root/.npm-global' && \
     cd /tmp/yanagishima && \
     cd web && \
     npm install node-sass && \
-    cd .. && \
-    ./gradlew distZip && \
+    cd ..
+
+RUN ./gradlew distZip && \
     cd build/distributions && \
     unzip yanagishima-*.zip && \
     mv yanagishima-* /opt/yanagishima && \
     rm -rf /tmp/yanagishima && \
     rm -rf yanagishima-*.zip
 
-ENTRYPOINT ['/bin/bash', '-c', 'bin/yanagishima-start.sh']
+ENTRYPOINT ["/bin/bash", "-c", "bin/yanagishima-start.sh"]
 
 
