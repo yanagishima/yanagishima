@@ -7,7 +7,7 @@ RUN mkdir -p /root/.pip/
 
 ADD pip.conf /root/.pip/
 
-COPY . /tmp/yanagishima
+COPY docker /tmp/yanagishima
 
 WORKDIR /opt/yanagishima
 
@@ -20,16 +20,16 @@ RUN apt-get update && \
     mv node-v12.14.0-linux-x64 /usr/local/node && \
     rm -rf /node-v12.14.0-linux-x64.tar.xz && \
     mkdir /root/.npm-global && \
-    npm config set prefix '/root/.npm-global' && \
-    npm config set registry https://registry.npm.taobao.org && \
     # install python
     apt-get install -y python
 
 ENV PATH /usr/local/node/bin:/root/.npm-global/bin:$PATH
-    NPM_CONFIG_PREFIX /root/.npm-global
+ENV NPM_CONFIG_PREFIX /root/.npm-global
 
 # deply yanagishima
-RUN cd /tmp/yanagishima && \
+RUN npm config set prefix '/root/.npm-global' && \
+    npm config set registry https://registry.npm.taobao.org && \
+    cd /tmp/yanagishima && \
 #    npm install --unsafe-perm -g node-sass && \
     cd web && \
     npm install node-sass && \
