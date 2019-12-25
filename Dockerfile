@@ -7,7 +7,7 @@ RUN mkdir -p /root/.pip/
 
 ADD pip.conf /root/.pip/
 
-COPY . /tmp/yanagishima
+COPY . /tmp/yanagishima/
 
 WORKDIR /opt/yanagishima
 
@@ -20,7 +20,6 @@ RUN apt-get update && \
     mv node-v12.14.0-linux-x64 /usr/local/node && \
     rm -rf /node-v12.14.0-linux-x64.tar.xz && \
     mkdir /root/.npm-global && \
-    # install python
     apt-get install -y python
 
 ENV PATH /usr/local/node/bin:/root/.npm-global/bin:$PATH
@@ -30,13 +29,15 @@ ENV NPM_CONFIG_PREFIX /root/.npm-global
 RUN npm config set prefix '/root/.npm-global' && \
     npm config set registry https://registry.npm.taobao.org && \
     cd /tmp/yanagishima && \
-#    npm install --unsafe-perm -g node-sass && \
     cd web && \
     npm install node-sass && \
+    cd .. && \
     ./gradlew distZip && \
     cd build/distributions && \
-    unzip yanagishima-21.0 && \
-    mv yanagishima-21.0 /opt/yanagishima
+    unzip yanagishima-*.zip && \
+    mv yanagishima-* /opt/yanagishima && \
+    rm -rf /tmp/yanagishima && \
+    rm -rf yanagishima-*.zip
 
 ENTRYPOINT ['/bin/bash', '-c', 'bin/yanagishima-start.sh']
 
