@@ -7,7 +7,7 @@ RUN mkdir -p /root/.pip/
 
 ADD pip.conf /root/.pip/
 
-COPY docker /tmp/yanagishima
+COPY . /tmp/yanagishima
 
 WORKDIR /opt/yanagishima
 
