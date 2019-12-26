@@ -11,6 +11,8 @@ COPY . /tmp/yanagishima/
 
 WORKDIR /opt/yanagishima
 
+ENV VERSION 21.0
+
 # install node
 RUN apt-get update && \
     apt-get install -y build-essential wget xz-utils && \
@@ -36,10 +38,11 @@ RUN cd /tmp/yanagishima && \
     ./gradlew distZip && \
     cd build/distributions && \
     unzip yanagishima-*.zip && \
-    mv yanagishima-* /opt/yanagishima && \
-    rm -rf /tmp/yanagishima && \
-    rm -rf yanagishima-*.zip
+    rm -rf yanagishima-*.zip && \
+    mv yanagishima-* /opt/ && \
+    cd /opt && mv yanagishima-* yanagishima && \
+    rm -rf /tmp/yanagishima
 
-ENTRYPOINT ["/bin/bash", "-c", "/opt/yanagishima/bin/yanagishima-start.sh"]
+ENTRYPOINT ["/bin/bash", "-c", "bin/yanagishima-start.sh"]
 
 
