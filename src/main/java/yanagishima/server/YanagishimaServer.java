@@ -3,6 +3,7 @@ package yanagishima.server;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.servlet.GuiceFilter;
+
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
@@ -11,6 +12,8 @@ import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.servlet.DefaultServlet;
 import org.eclipse.jetty.servlet.FilterHolder;
 import org.eclipse.jetty.servlet.ServletContextHandler;
+import org.eclipse.jetty.servlet.ServletHolder;
+import org.glassfish.jersey.servlet.ServletContainer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import yanagishima.config.YanagishimaConfig;
@@ -46,6 +49,7 @@ public class YanagishimaServer {
         servletContextHandler.addFilter(GuiceFilter.class, "/*", EnumSet.allOf(DispatcherType.class));
         servletContextHandler.addServlet(DefaultServlet.class, "/");
         servletContextHandler.setResourceBase(properties.getProperty("web.resource.dir", "web"));
+        servletContextHandler.addServlet(new ServletHolder(new ServletContainer(new ServerResourceConfig(injector))), "/v1/*");
 
         LOGGER.info("Yanagishima Server started...");
         server.start();

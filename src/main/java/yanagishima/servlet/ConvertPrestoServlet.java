@@ -15,6 +15,7 @@ import javax.servlet.http.HttpServletResponse;
 import yanagishima.model.HttpRequestContext;
 
 @Singleton
+@Deprecated
 public class ConvertPrestoServlet extends HttpServlet {
 	private static final long serialVersionUID = 1L;
 

@@ -126,10 +126,17 @@ dependencies {
     compile 'com.github.wyukawa.elasticsearch.unofficial.jdbc.driver:elasticsearch-jdbc-driver:0.0.9'
     compile 'org.jsoup:jsoup:1.11.3'
     compile 'mysql:mysql-connector-java:5.1.47'
+    compile 'javax.ws.rs:javax.ws.rs-api:2.1.1'
+    compile 'com.owlike:genson:1.6'
+    compile 'org.glassfish.jersey.containers:jersey-container-servlet:2.25.1'
 
     errorprone 'com.google.errorprone:error_prone_core:2.3.4'
 
     // For tests
     testCompile 'junit:junit:4.11'
     testCompile 'org.mockito:mockito-core:2.23.4'
+}
+
+configurations {
+    all*.exclude group: 'com.sun.jersey'
 }

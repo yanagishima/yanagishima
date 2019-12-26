@@ -62,7 +62,7 @@ const apis = {
   publish: '/publish',
   bookmark: '/bookmark',
   format: '/format',
-  convertPresto: '/convertPresto',
+  convertPresto: '/v1/convertPresto',
   convertHive: '/convertHive',
   kill: '/kill',
   detail: '/queryDetail?datasource={datasource}&queryid={queryid}',
