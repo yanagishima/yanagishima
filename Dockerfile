@@ -37,10 +37,10 @@ RUN npm config set prefix '/root/.npm-global' && \
 RUN cd /tmp/yanagishima && \
     ./gradlew distZip && \
     cd build/distributions && \
-    unzip yanagishima-*.zip && \
-    rm -rf yanagishima-*.zip && \
-    mv yanagishima-* /opt/ && \
-    cd /opt && mv yanagishima-* yanagishima && \
+    unzip yanagishima-$VERSION.zip && \
+    rm -rf yanagishima-$VERSION.zip && \
+    mv yanagishima-$VERSION /opt/ && \
+    cd /opt && mv yanagishima-$VERSION yanagishima && \
     rm -rf /tmp/yanagishima
 
 ENTRYPOINT ["/bin/bash", "-c", "bin/yanagishima-start.sh"]
