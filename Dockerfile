@@ -40,6 +40,6 @@ RUN ./gradlew distZip && \
     rm -rf /tmp/yanagishima && \
     rm -rf yanagishima-*.zip
 
-ENTRYPOINT ["/bin/bash", "-c", "bin/yanagishima-start.sh"]
+ENTRYPOINT ["/bin/bash", "-c", "/opt/yanagishima/bin/yanagishima-start.sh"]
 
 
