@@ -1,6 +1,5 @@
 package yanagishima.provider;
 
-import lombok.extern.slf4j.Slf4j;
 import yanagishima.config.YanagishimaConfig;
 
 import javax.inject.Inject;
@@ -9,7 +8,6 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 
-@Slf4j
 public class ConnectionProvider implements Provider<Connection> {
 	private final YanagishimaConfig config;
 
