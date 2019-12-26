@@ -7,9 +7,11 @@ RUN mkdir -p /root/.pip/
 
 ADD pip.conf /root/.pip/
 
-COPY . /tmp/yanagishima/
+WORKDIR /tmp/yanagishima
 
-WORKDIR /opt/yanagishima
+COPY . $WORKDIR
+
+
 
 ENV VERSION 21.0
 
@@ -30,11 +32,11 @@ ENV NPM_CONFIG_PREFIX /root/.npm-global
 # deply yanagishima
 RUN npm config set prefix '/root/.npm-global' && \
     npm config set registry https://registry.npm.taobao.org && \
-    cd /tmp/yanagishima && \
+    cd $WORKDIR && \
     cd web && \
     npm install node-sass
 
-RUN cd /tmp/yanagishima && \
+RUN cd $WORKDIR && \
     ./gradlew distZip && \
     cd build/distributions && \
     unzip yanagishima-$VERSION.zip && \
@@ -43,6 +45,8 @@ RUN cd /tmp/yanagishima && \
     cd /opt && mv yanagishima-$VERSION yanagishima && \
     rm -rf /tmp/yanagishima
 
-ENTRYPOINT ["/bin/bash", "-c", "bin/yanagishima-start.sh"]
+WORKDIR /opt/yanagishima
+
+ENTRYPOINT ["/bin/bash","-c","bin/yanagishima-start.sh"]
 
 
