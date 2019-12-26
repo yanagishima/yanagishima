@@ -30,10 +30,10 @@ RUN npm config set prefix '/root/.npm-global' && \
     npm config set registry https://registry.npm.taobao.org && \
     cd /tmp/yanagishima && \
     cd web && \
-    npm install node-sass && \
-    cd ..
+    npm install node-sass
 
-RUN ./gradlew distZip && \
+RUN cd /tmp/yanagishima && \
+    ./gradlew distZip && \
     cd build/distributions && \
     unzip yanagishima-*.zip && \
     mv yanagishima-* /opt/yanagishima && \
