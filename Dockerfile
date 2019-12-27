@@ -44,7 +44,7 @@ RUN cd $TMP_PATH && \
     rm -rf yanagishima-$VERSION.zip && \
     mv yanagishima-$VERSION /opt/ && \
     cd /opt && mv yanagishima-$VERSION yanagishima && \
-    sed 's/"$@" &/"$@"/g' bin/yanagishima-start.sh && \
+    sed -i 's/"$@" &/"$@"/g' bin/yanagishima-start.sh && \
     rm -rf /tmp/yanagishima
 
 WORKDIR /opt/yanagishima
