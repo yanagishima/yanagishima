@@ -18,14 +18,13 @@
         </div>
       </template>
       <template v-else>
-        <table class="table table-bordered table-fixed table-hover" v-if="response && response.length">
+        <table class="table table-sm table-bordered table-fixed table-hover" v-if="response && response.length">
           <thead>
           <tr>
-            <th width="5%" class="text-right">ID</th>
+            <th width="50" class="text-right">ID</th>
             <th width="20%">Title</th>
             <th width="65%">Query</th>
-            <th width="5%" class="text-center">Set</th>
-            <th width="5%" class="text-center">Del</th>
+            <th width="50" class="text-center">Del</th>
           </tr>
           </thead>
           <tbody>
@@ -38,12 +37,11 @@
               <template v-if="item.title">{{item.title}}</template>
               <span class="text-muted" v-else>(none)</span>
             </td>
-            <td>
+            <td class="td-hover">
+              <button class="btn btn-sm btn-secondary set" @click.prevent="setBookmark(item)">
+                <i class="far fa-fw fa-keyboard"></i>
+              </button>
               <BaseAce :code="item.query" :readonly="true" css-class="bg-transparent"></BaseAce>
-            </td>
-            <td class="text-center">
-              <a href="#" class="btn btn-sm btn-secondary" @click.prevent="setBookmark(item)"
-                 data-dismiss="modal" title="Set query to editor"><i class="far fa-fw fa-keyboard"></i></a>
             </td>
             <td class="text-center">
               <a href="#" class="btn btn-sm btn-secondary" @click.prevent="deleteBookmark(item.bookmark_id)"><i

@@ -18,7 +18,7 @@
       <div id="header-sub">
         <div class="container">
           <div class="row align-items-center pt-3">
-            <div class="col-9">
+            <div class="col-8">
               <template v-if="loading">
                 <strong>Loading</strong>
               </template>
@@ -41,11 +41,11 @@
                       data-placement="left"></i>
                   {{response.finishedTime | extractDate}}
                 </span>
-                <span class="mr-2" v-if="response && response.elapsedTimeMillis">
+                <span class="mr-2 d-md-none d-lg-inline" v-if="response && response.elapsedTimeMillis">
                   <strong>{{(response.elapsedTimeMillis / 1000).ceil(2)}}</strong><span
                   class="text-muted ml-1">sec</span>
                 </span>
-                <span class="mr-2" v-if="response && response.rawDataSize">
+                <span class="mr-2 d-md-none d-lg-inline" v-if="response && response.rawDataSize">
                   <strong>{{response.rawDataSize.remove('B')}}</strong><span class="text-muted ml-1">byte</span>
                 </span>
                 <span class="mr-2" v-if="response && response.results && response.lineNumber">
@@ -56,18 +56,18 @@
                   </template>
                   <span class="text-muted ml-1">results</span>
                 </span>
-                <span class="mr-2" v-if="response && response.headers">
+                <span class="mr-2 d-md-none d-lg-inline" v-if="response && response.headers">
                   <strong>{{response.headers.length}}</strong><span class="text-muted ml-1">columns</span>
                 </span>
               </template>
             </div>
-            <div class="col-3 text-right">
-              <label class="ml-2">
-                <input type="checkbox" v-model="isPretty">
+            <div class="col-4 text-right">
+              <label>
+                <input type="checkbox" v-model="isPretty" class="align-middle">
                 Pretty print
               </label>
               <div class="btn-group ml-2" v-if="response && response.rawDataSize">
-                <a href="#" data-toggle="dropdown">Download<i class="fa fa-fw fa-download ml-1"></i></a>
+                <a href="#" class="btn btn-sm btn-secondary" data-toggle="dropdown"><i class="fa fa-fw fa-download"></i><span class="d-md-none d-lg-inline ml-1">Download</span></a>
                 <div class="dropdown-menu dropdown-menu-right">
                   <div class="dropdown-header">header</div>
                   <a :href="buildShareDownloadUrl(publishId, false, true)" class="dropdown-item">TSV</a>
@@ -112,7 +112,7 @@
                 <div class="card-header">
                   <strong>{{chartTypes[chart].name}}</strong>
                 </div>
-                <div class="card-block">
+                <div class="card-body">
                   <vue-chart :chart-type="chartTypes[chart].type" :columns="chartColumns" :rows="chartRows"
                              :options="Object.assign({}, chartOptions, chartTypes[chart].option)"></vue-chart>
                   <div v-if="response.lineNumber > 501" class="text-right text-muted">
@@ -123,7 +123,7 @@
             </div>
             <div class="mb-3" v-if="enablePivot && pivot">
               <div class="card">
-                <div class="card-block">
+                <div class="card-body">
                   <pivot :data="pivotRows" :fields="[]" :row-fields="rowFields" :col-fields="colFields" :reducer="reducer" :default-show-settings="false">
                   </pivot>
                   <div v-if="response.lineNumber > 501" class="text-right text-muted">
@@ -164,7 +164,7 @@
           </div>
         </div>
       </div>
-      <div class="card-block">
+      <div class="card-body">
         <div id="comment-body">
           <template v-if="response.comment.content">
             <pre class="comment"><BaseAutoLink :text="response.comment.content.escapeHTML()"></BaseAutoLink></pre>

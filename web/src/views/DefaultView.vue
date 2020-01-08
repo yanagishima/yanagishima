@@ -1,14 +1,17 @@
 <template>
   <div id="wrapper" :class="{open: isSideHistoryOpen, [`datasource_${datasourceIndex}`]: true}">
     <main id="main">
-      <TheHeader @logo-click="init(true)"/>
-      <TheContent v-if="!unload"/>
-      <TheFooter/>
-
+      <transition-group tag="div">
+        <TheSettings v-if="isSettingOpen" key="header-setting"/>
+        <div key="content">
+          <TheHeader @logo-click="init(true)"/>
+          <TheContent v-if="!unload"/>
+          <TheFooter/>
+        </div>
+      </transition-group>
       <!-- sub windows -->
       <TheComment/>
       <TheBottomPanel/>
-
       <!-- modals -->
       <ModalNotification/>
       <ModalHelp/>
@@ -16,7 +19,6 @@
       <ModalPartition/>
       <ModalAuth/>
     </main>
-
     <!-- sub -->
     <button id="btn-panel" class="btn btn-secondary px-0 py-2" @click.prevent="openPanel" v-if="!isSideHistoryOpen"
             title="Latest history">
@@ -31,6 +33,7 @@ import {mapState, mapGetters} from 'vuex'
 import $ from 'jquery'
 import toastr from 'toastr'
 import Favico from 'favico.js'
+import TheSettings from '@/components/TheSettings'
 import TheHeader from '@/components/TheHeader'
 import TheContent from '@/components/TheContent'
 import TheFooter from '@/components/TheFooter'
@@ -50,6 +53,7 @@ const favico = new Favico()
 export default {
   name: 'DefaultView',
   components: {
+    TheSettings,
     TheHeader,
     TheContent,
     TheFooter,
@@ -81,7 +85,8 @@ export default {
       engine: state => state.hash.engine,
       queryid: state => state.hash.queryid,
       tab: state => state.hash.tab,
-      bookmark_id: state => state.hash.bookmark_id
+      bookmark_id: state => state.hash.bookmark_id,
+      isSettingOpen: state => state.isSettingOpen
     }),
     ...mapGetters([
       'hashString',
@@ -283,4 +288,12 @@ export default {
 </script>
 
 <style scoped>
+.v-leave-active {
+  z-index: -1;
+  position: absolute;
+  transition: all .3s linear;
+}
+.v-move {
+  transition: all .3s ease-out;
+}
 </style>

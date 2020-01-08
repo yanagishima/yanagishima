@@ -1,7 +1,7 @@
 <template>
   <div>
     <div class="header row align-items-center pt-3">
-      <div class="col-9">
+      <div class="col-8">
         <template v-if="loading">
           <template v-if="runningProgress">
             <strong>Running</strong>
@@ -27,11 +27,11 @@
                 data-placement="left"></i>
             {{response.finishedTime | extractDate}}
           </span>
-          <span class="mr-2" v-if="response && response.elapsedTimeMillis">
+          <span class="mr-2 d-md-none d-lg-inline" v-if="response && response.elapsedTimeMillis">
             <strong>{{(response.elapsedTimeMillis / 1000).ceil(2)}}</strong><span
             class="text-muted ml-1">sec</span>
           </span>
-          <span class="mr-2" v-if="response && response.rawDataSize">
+          <span class="mr-2 d-md-none d-lg-inline" v-if="response && response.rawDataSize">
             <strong>{{response.rawDataSize.remove('B')}}</strong><span class="text-muted ml-1">byte</span>
           </span>
           <span class="mr-2" v-if="response && response.results && response.lineNumber">
@@ -42,51 +42,29 @@
             </template>
             <span class="text-muted ml-1">results</span>
           </span>
-          <span class="mr-2" v-if="response && response.headers">
+          <span class="mr-2 d-md-none d-lg-inline" v-if="response && response.headers">
             <strong>{{response.headers.length}}</strong><span class="text-muted ml-1">columns</span>
           </span>
-          <template v-if="editLabel">
-            <span class="mr-2">
-              <input type="text" v-model.lazy="inputLabel" :disabled="label">
-              <button type="button" class="btn btn-sm btn-secondary" @click="addLabel" :disabled="label">add</button>
-              <template v-if="label">
-                <button type="button" class="btn btn-sm btn-secondary" @click="moveHisotryTab(label)">{{label}}</button>
-                <button type="button" class="btn btn-sm btn-secondary" @click="removeLabel()"><i class="fa fa-fw fa-times mr-1"></i></button>
-              </template>
-            </span>
-          </template>
         </template>
       </div>
       <template v-if="response && response.results">
-        <div class="col-3 text-right">
-          <label class="ml-2">
-            <input type="checkbox" v-model="isPrettyModel" :disabled="actionDisabled">
+        <div class="col-4 text-right">
+          <label>
+            <input type="checkbox" v-model="isPrettyModel" :disabled="actionDisabled" class="align-middle">
             Pretty print
           </label>
-          <div class="btn-group ml-2">
+          <div class="btn-group mx-2">
             <a :href="buildDownloadUrl(datasource, queryid, isCsv, includeHeader)" class="btn btn-sm btn-secondary"
-               :class="{disabled: actionDisabled}" data-toggle="tooltip"
-               data-animation="false" title="Download">Download</a>
+               :class="{disabled: actionDisabled}" data-toggle="tooltip" data-html="true"
+               data-animation="false" title="Can change format in <i class='fa fa-cog'></i> setting"><i class="fa fa-fw fa-download"></i><span class="d-md-none d-lg-inline ml-1">Download</span></a>
           </div>
-          <div class="btn-group">
-            <a href="#" data-toggle="dropdown"><i class="fa fa-fw fa-download ml-1"></i></a>
-            <div class="dropdown-menu dropdown-menu-right">
-              <div class="dropdown-header">header</div>
-              <a :href="buildDownloadUrl(datasource, queryid, false, true)" class="dropdown-item">TSV</a>
-              <a :href="buildDownloadUrl(datasource, queryid, true, true)" class="dropdown-item">CSV</a>
-              <div class="dropdown-header">no header</div>
-              <a :href="buildDownloadUrl(datasource, queryid, false, false)" class="dropdown-item">TSV</a>
-              <a :href="buildDownloadUrl(datasource, queryid, true, false)" class="dropdown-item">CSV</a>
-            </div>
-          </div>
-          <button class="btn btn-sm btn-secondary ml-2" :disabled="actionDisabled" @click="publish"
+          <button class="btn btn-sm btn-secondary" :disabled="actionDisabled" @click="publish"
                   data-toggle="tooltip" data-animation="false" title="Publish Readonly Result">
-            <i class="fa fa-fw fa-globe mr-1"></i>Publish
+            <i class="fa fa-fw fa-globe"></i><span class="d-md-none d-lg-inline ml-1">Publish</span>
           </button>
         </div>
       </template>
     </div>
-
     <template v-if="loading">
       <template v-if="runningProgress !== -1">
         <div v-if="runningTime" class="alert alert-info">
@@ -96,8 +74,8 @@
             </div>
             <div class="col">
               <div class="progress">
-                <div class="progress-bar progress-bar-striped progress-bar-animated bg-info"
-                     :style="`width: ${runningProgress}%`">
+                <div class="progress-bar progress-bar-striped progress-bar-animated bg-info flex-row"
+                     role="progressbar" :style="`width: ${runningProgress}%`">
                   <template v-if="runningProgress"><strong>{{runningProgress}}</strong>%</template>
                 </div>
               </div>
@@ -106,7 +84,7 @@
               <div class="btn-group">
                 <a href="#" class="btn btn-sm btn-secondary" @click.prevent="killQuery"><i
                   class="fa fa-fw fa-times mr-1 text-danger"></i>Kill</a>
-                <a class="btn btn-sm btn-secondary" :href="buildDetailUrl(isPresto, isHive, isSpark, datasource, runningQueryid)"
+                <a class="btn btn-sm btn-secondary" :href="buildDetailUrl(isPresto, isHive, isSpark, isElasticsearch, datasource, runningQueryid)"
                    :target="'_blank'"><i class="fa fa-fw fa-info"></i>Info</a>
               </div>
             </div>
@@ -126,24 +104,26 @@
       <template v-if="queryString">
         <template v-if="error">
           <div class="alert alert-danger">
-            <pre>{{error}}</pre>
+            <pre class="pb-3">{{error}}</pre>
           </div>
         </template>
         <template v-else>
           <template v-if="response.error">
             <div class="alert alert-danger">
-              {{response.error}}
+              <pre class="pb-3">{{response.error}}</pre>
             </div>
           </template>
           <template v-else>
             <template v-if="/^EXPLAIN /i.test(queryString)">
               <template v-if="isPresto && /^EXPLAIN \(FORMAT GRAPHVIZ\)/i.test(queryString)">
-                <a href="#lity-svg-image" data-lity>
-                  <img :src="`data:image/svg+xml,${encodeURIComponent(explainGraphResult)}`" class="img-fluid">
-                </a>
-                <div id="lity-svg-image" class="lity-hide" style="background:#fff; overflow: auto;">
-                  <img :src="`data:image/svg+xml,${encodeURIComponent(explainGraphResult)}`">
-                </div>
+                <template v-if="explainGraphResult">
+                  <a href="#lity-svg-image" data-lity>
+                    <img :src="`data:image/svg+xml,${encodeURIComponent(explainGraphResult)}`" class="img-fluid">
+                  </a>
+                  <div id="lity-svg-image" class="lity-hide" style="background:#fff; overflow: auto;">
+                    <img :src="`data:image/svg+xml,${encodeURIComponent(explainGraphResult)}`">
+                  </div>
+                </template>
               </template>
               <template v-else>
                 <pre id="explain"><code v-html="explainTextResult"></code></pre>
@@ -155,7 +135,7 @@
                   <div class="card-header">
                     PRESTO VIEW DDL
                   </div>
-                  <div class="card-block">
+                  <div class="card-body">
                     <BaseAce :code="response.results[0][0]" :readonly="true" :max-lines="Infinity"></BaseAce>
                   </div>
                 </div>
@@ -165,7 +145,7 @@
                   <div class="card-header">
                     SHOW CREATE TABLE
                   </div>
-                  <div class="card-block">
+                  <div class="card-body">
                     <BaseAce :code="createTableResult" :readonly="true" :max-lines="Infinity"></BaseAce>
                   </div>
                 </div>
@@ -182,27 +162,22 @@
                       <div class="card-header">
                         <div class="row align-items-center">
                           <div class="col">
-                            <label v-for="(val, key) in validChartTypes" :key="key" class="form-check-label mr-3">
-                              <input class="form-check-input mr-2" type="radio" v-model="chartModel" :value="key">{{val.name}}
-                            </label>
+                            <div v-for="(val, key) in validChartTypes" :key="key" class="form-check form-check-inline">
+                              <input class="form-check-input" type="radio" :id="`chart${val.name}Radio`" v-model="chartModel" :value="key">
+                              <label class="form-check-label" :for="`chart${val.name}Radio`">{{val.name}}</label>
+                            </div>
                           </div>
                           <div class="col-1">
                             <button type="button" class="close" @click="setChart(0)"><span>&times;</span></button>
                           </div>
                         </div>
                       </div>
-                      <div class="card-block">
-                        <!-- :chart-type="validChartTypes[chart]"のようにすればループ不要だが、そうするとグラフが書き変わらない -->
-                        <!-- ループにして:keyを指定することで、グラフが書き換わるようになる -->
-                        <template v-for="(val, key) in validChartTypes">
-                          <template v-if="chart == key">
-                            <vue-chart :key="key" :chart-type="val.type" :columns="chartColumns" :rows="chartRows"
-                                       :options="Object.assign({}, chartOptions, val.option)"></vue-chart>
-                            <div v-if="response.lineNumber > 501" :key="key" class="text-right text-muted">
-                              This data is only top 500.
-                            </div>
-                          </template>
-                        </template>
+                      <div class="card-body">
+                        <vue-chart :key="chart" :chart-type="validChartTypes[chart].type" :columns="chartColumns" :rows="chartRows"
+                                   :options="Object.assign({}, chartOptions, validChartTypes[chart].option)" />
+                        <div v-if="response.lineNumber > 501" class="text-right text-muted">
+                          This data is only top 500.
+                        </div>
                       </div>
                     </div>
                     <a v-else href="#" @click.prevent="setChart(1)">
@@ -213,7 +188,7 @@
                     <div v-if="pivot" class="card">
                       <div class="card-header">
                         <button type="button" class="close" @click="setPivot(0)"><span>&times;</span></button>
-                        <div class="card-block">
+                        <div class="card-body">
                           <pivot :data="pivotRows" :fields="[]" :row-fields="rowFields" :col-fields="colFields" :reducer="reducer" :default-show-settings="false">
                           </pivot>
                           <div v-if="response.lineNumber > 501" class="text-right text-muted">
@@ -237,8 +212,6 @@
 
 <script>
 import {mapState, mapGetters} from 'vuex'
-import Viz from 'viz.js'
-import {Module, render} from 'viz.js/full.render.js'
 import toastr from 'toastr'
 import ResultTable from '@/components/ResultTable'
 import util from '@/mixins/util'
@@ -246,8 +219,6 @@ import chart from '@/mixins/chart'
 import pivot from '@/mixins/pivot'
 import {CHART_TYPES, CHART_OPTIONS} from '@/constants'
 import Pivot from '@marketconnect/vue-pivot-table'
-
-let viz = new Viz({Module, render})
 
 export default {
   name: 'TabResult',
@@ -275,6 +246,7 @@ export default {
       'isPresto',
       'isHive',
       'isSpark',
+      'isElasticsearch',
       'datasourceEngine'
     ]),
     ...mapState('result', [
@@ -336,18 +308,18 @@ export default {
     }
   },
   watch: {
-    response (val) {
+    async response (val) {
       if (val && val.results && this.isPresto && /^EXPLAIN \(FORMAT GRAPHVIZ\)/i.test(this.queryString)) {
-        viz.renderString(val.results[0][0])
-          .then(svg => {
-            this.explainGraphResult = svg
-          })
-          .catch(error => {
-            // Create a new Viz instance (@see Caveats page for more info)
-            // https://github.com/mdaines/viz.js/wiki/Caveats
-            viz = new Viz({Module, render})
-            console.error(error)
-          })
+        try {
+          const [{default: Viz}, {Module, render}] = await Promise.all([
+            import(/* webpackChunkName: "viz" */ 'viz.js'),
+            import(/* webpackChunkName: "viz" */ 'viz.js/full.render.js')
+          ])
+          const viz = new Viz({Module, render})
+          this.explainGraphResult = await viz.renderString(val.results[0][0])
+        } catch (e) {
+          console.error(e)
+        }
       } else {
         this.explainGraphResult = null
       }

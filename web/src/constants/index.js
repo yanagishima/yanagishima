@@ -1,6 +1,6 @@
 export const SITENAME = 'yanagishima'
 
-export const VERSION = '21.0'
+export const VERSION = '22.0'
 
 export const LINKS = {
   aboutThis: 'https://github.com/yanagishima/yanagishima/blob/master/README.md',
@@ -53,7 +53,8 @@ export const HASH_KEYS = [
   ['pivot', false],
   ['line', false],
   ['table', false],
-  ['where', false]
+  ['where', false],
+  ['bookmark_params', false]
 ]
 
 export const HIDDEN_QUERY_PREFIX = '/* yanagishima */'

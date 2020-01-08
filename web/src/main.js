@@ -2,7 +2,7 @@
 // (runtime-only or standalone) has been set in webpack.base.conf with an alias.
 import Sugar from 'sugar'
 import 'bootstrap/dist/js/bootstrap.bundle'
-import '@/assets/scss/bootstrap.scss'
+import '@/assets/scss/custom.scss'
 import 'toastr/toastr.scss'
 import 'lity'
 import 'lity/dist/lity.min.css'

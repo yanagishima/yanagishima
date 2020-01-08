@@ -13,7 +13,7 @@
              :href="buildUrl({datasource, engine, tab: 'result', queryid: h[0]})" :title="h[1]">
             <button class="btn btn-sm btn-secondary panel px-2" @click.stop.prevent="openBottomPanel(h[0])"><i
               class="fa fa-fw fa-columns fa-rotate-270"></i></button>
-            <div class="ace-font word-break">
+            <div class="ace-font text-break">
               {{h[1].compact().truncate(128)}}
             </div>
           </a>

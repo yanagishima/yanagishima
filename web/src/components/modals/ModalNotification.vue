@@ -3,7 +3,7 @@
     <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
       <div class="modal-content">
         <div class="modal-header">
-          <h5 class="modal-title">Notifications</h5>
+          <h5 class="modal-title"><strong>Notifications</strong></h5>
           <button type="button" class="close" data-dismiss="modal"><span>&times;</span></button>
         </div>
         <div class="modal-body">
@@ -44,13 +44,4 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-// want to use new bootstrap here without affecting other places so import it locally
-//
-// TODO: use latest bootstrap on yanagishima spa wholely and remove this line.
-// yanagishima spa includes entire bootstrap source code copied from original.
-// So new version of bootstrap is not used although it's defined in package.json dependency.
-// We should overwrite only _custom.scss and leave the others as they are.
-// It may be affect yanagishima spa wholely because the version of bootstrap yanagishima spa are using now is
-// beta and many apis have been changed.
-@import 'bootstrap/scss/bootstrap.scss';
 </style>

@@ -1,6 +1,7 @@
 <template>
   <div>
-    <table class="table table-auto table-bordered table-hover table-responsive">
+    <div class="table-responsive">
+      <table class="table table-auto table-bordered table-hover">
       <thead>
       <tr>
         <th class="text-muted">line</th>
@@ -20,6 +21,7 @@
       </tr>
       </tbody>
     </table>
+    </div>
     <div class="text-left" v-if="result.lineNumber > 501">This data is only top 500.</div>
   </div>
 </template>

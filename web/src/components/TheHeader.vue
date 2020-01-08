@@ -1,6 +1,5 @@
 <template>
   <header id="header">
-    <TheSettings v-if="isSettingOpen"/>
     <div v-if="isAnnounceUnread" class="alert alert-warning d-flex justify-content-between mb-0 px-4">
       <span><i class="fas fa-exclamation-triangle mr-1"></i><BaseAutoLink :text="announce.text"></BaseAutoLink></span>
       <button class="btn btn-link alert-link p-0" @click="closeAnnounce"><u>confirm</u></button>
@@ -16,21 +15,18 @@
 
 <script>
 import {mapState, mapGetters} from 'vuex'
-import TheSettings from '@/components/TheSettings'
 import TheHeaderUpper from '@/components/TheHeaderUpper'
 import TheHeaderLower from '@/components/TheHeaderLower'
 
 export default {
   name: 'TheHeader',
   components: {
-    TheSettings,
     TheHeaderUpper,
     TheHeaderLower
   },
   computed: {
     ...mapState({
-      engine: state => state.hash.engine,
-      isSettingOpen: state => state.isSettingOpen
+      engine: state => state.hash.engine
     }),
     ...mapGetters([
       'datasourceEngine'

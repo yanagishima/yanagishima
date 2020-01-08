@@ -3,6 +3,10 @@
 </template>
 
 <script>
+import ace from 'ace-builds/src-min-noconflict/ace'
+import 'ace-builds/src-min-noconflict/ext-language_tools'
+import './ace/themes'
+import './ace/snippets'
 import CustomSqlMode from './ace/CustomSqlMode'
 
 export default {
@@ -102,75 +106,75 @@ export default {
     }
   },
   mounted () {
-    const ace = window.ace.edit(this.$el)
+    const a = ace.edit(this.$el)
 
-    ace.$blockScrolling = Infinity
-    ace.setShowPrintMargin(false)
-    ace.setTheme(`ace/theme/${this.theme}`)
-    ace.getSession().setMode(new CustomSqlMode())
-    ace.getSession().setUseWrapMode(true)
-    ace.setFontSize(13)
-    ace.setValue(this.code, 1)
-    ace.setStyle(this.cssClass, true)
-    ace.commands.bindKey('Ctrl-P', 'golineup')
-    ace.commands.bindKey('Ctrl-T', '')
-    ace.commands.bindKey('Command-L', '')
-    ace.commands.removeCommand('find')
-    ace.renderer.setShowGutter(this.showGutter)
+    a.$blockScrolling = Infinity
+    a.setShowPrintMargin(false)
+    a.setTheme(`ace/theme/${this.theme}`)
+    a.getSession().setMode(new CustomSqlMode())
+    a.getSession().setUseWrapMode(true)
+    a.setFontSize(13)
+    a.setValue(this.code, 1)
+    a.setStyle(this.cssClass, true)
+    a.commands.bindKey('Ctrl-P', 'golineup')
+    a.commands.bindKey('Ctrl-T', '')
+    a.commands.bindKey('Command-L', '')
+    a.commands.removeCommand('find')
+    a.renderer.setShowGutter(this.showGutter)
 
     if (this.readonly) {
-      ace.setReadOnly(true)
-      ace.gotoLine(1, 1)
-      ace.renderer.setShowGutter(false)
-      ace.setHighlightActiveLine(false)
-      ace.setOptions({
+      a.setReadOnly(true)
+      a.gotoLine(1, 1)
+      a.renderer.setShowGutter(false)
+      a.setHighlightActiveLine(false)
+      a.setOptions({
         minLines: 1,
         maxLines: this.maxLines || 8
       })
-      ace.renderer.$cursorLayer.element.style.display = 'none'
+      a.renderer.$cursorLayer.element.style.display = 'none'
     } else {
-      ace.setOptions({
+      a.setOptions({
         minLines: this.minLines || 4,
         maxLines: this.maxLines || 16
       })
 
-      ace.on('change', () => {
-        const value = ace.getValue()
+      a.on('change', () => {
+        const value = a.getValue()
         this.prevCode = value
         this.$emit('change-code', value)
       })
 
-      ace.commands.addCommand({
+      a.commands.addCommand({
         name: 'run',
         bindKey: {
           win: 'Ctrl-Enter',
           mac: 'Ctrl-Enter'
         },
-        exec: () => this.$emit('run-code', ace.getValue())
+        exec: () => this.$emit('run-code', a.getValue())
       })
-      ace.commands.addCommand({
+      a.commands.addCommand({
         name: 'validate',
         bindKey: {
           win: 'Shift-Enter',
           mac: 'Shift-Enter'
         },
-        exec: () => this.$emit('validate-code', ace.getValue())
+        exec: () => this.$emit('validate-code', a.getValue())
       })
-      ace.commands.addCommand({
+      a.commands.addCommand({
         name: 'format',
         bindKey: {
           win: 'Ctrl-Shift-F',
           mac: 'Ctrl-Shift-F'
         },
-        exec: () => this.$emit('format-code', ace.getValue())
+        exec: () => this.$emit('format-code', a.getValue())
       })
     }
 
-    this.ace = ace
+    this.ace = a
   },
   methods: {
     startAutoComplete () {
-      const langTools = window.ace.require('ace/ext/language_tools')
+      const langTools = ace.require('ace/ext/language_tools')
       const completeWords = this.completeWords
       const completers = {
         getCompletions (editor, session, pos, prefix, callback) {

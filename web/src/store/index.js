@@ -80,7 +80,8 @@ function initialHash () {
     pivot: 0,
     line: 0,
     table: '',
-    where: ''
+    where: '',
+    bookmark_params: ''
   }
 }
 

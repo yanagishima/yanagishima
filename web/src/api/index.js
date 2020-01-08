@@ -90,7 +90,8 @@ const apis = {
   sparkAsync: '/sparkAsync',
   sparkQueryStatus: '/sparkQueryStatus',
   sparkQueryDetail: '/sparkQueryDetail?engine=spark&datasource={datasource}',
-  sparkJobList: '/sparkJobList'
+  sparkJobList: '/sparkJobList',
+  starredSchema: '/starredSchema'
 }
 
 function addHiddenQueryPrefix (query) {
@@ -176,6 +177,38 @@ export async function getSchemataSpark (datasource, authInfo) {
   return response.data
 }
 
+export async function getStarredSchemata (datasource, engine, catalog) {
+  const params = {
+    datasource,
+    engine,
+    catalog
+  }
+  const response = await client.get(apis.starredSchema, {params})
+  return response.data
+}
+
+export async function postStarredSchema (datasource, engine, catalog, schema) {
+  const params = {
+    datasource,
+    engine,
+    catalog,
+    schema
+  }
+  const response = await client.post(apis.starredSchema, makeFormParams(params))
+  return response.data
+}
+
+export async function deleteStarredSchema (datasource, engine, catalog, id) {
+  const params = {
+    datasource,
+    engine,
+    catalog,
+    starred_schema_id: id
+  }
+  const response = await client.delete(apis.starredSchema, {params})
+  return response.data
+}
+
 export async function getTablesPresto (datasource, catalog, schema, authInfo) {
   const params = {
     datasource,
@@ -223,7 +256,7 @@ export async function getTablesElasticsearch (datasource, authInfo) {
 export async function getColumnsPresto (datasource, catalog, schema, table, authInfo) {
   const params = {
     datasource,
-    query: addHiddenQueryPrefix(`DESCRIBE "${catalog}"."${schema}"."${table}"`),
+    query: addHiddenQueryPrefix(`DESCRIBE ${catalog}.${schema}."${table}"`),
     ...authInfo
   }
   const response = await client.post(apis.presto, makeFormParams(params))
@@ -687,13 +720,16 @@ export function buildShareDownloadUrl (publishId, isCsv, includeHeader) {
   return BASE_URL + api.format({publishId, includeHeader})
 }
 
-export function buildDetailUrl (isPresto, isHive, isSpark, datasource, queryid) {
+export function buildDetailUrl (isPresto, isHive, isSpark, isElasticsearch, datasource, queryid) {
   if (isPresto) {
     return BASE_URL + apis.detail.format({datasource, queryid})
   } else if (isHive) {
     return BASE_URL + apis.hiveQueryDetail.format({datasource, id: queryid})
   } else if (isSpark) {
     return BASE_URL + apis.sparkQueryDetail.format({datasource})
+  } else if (isElasticsearch) {
+    // dummy
+    return BASE_URL
   } else {
     throw new Error('not supported')
   }

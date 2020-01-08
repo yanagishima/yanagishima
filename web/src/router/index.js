@@ -3,7 +3,6 @@ import Router from 'vue-router'
 import DefaultView from '@/views/DefaultView'
 import ShareView from '@/views/ShareView'
 import ErrorView from '@/views/ErrorView'
-import DiffView from '@/views/DiffView'
 
 Vue.use(Router)
 
@@ -12,7 +11,7 @@ export default new Router({
   routes: [
     {
       path: '/diff',
-      component: DiffView
+      component: () => import(/* webpackChunkName: "diff-view" */ '@/views/DiffView')
     },
     {
       path: '/share',

@@ -2,12 +2,11 @@ import toastr from 'toastr'
 import * as api from '@/api'
 import {DATE_COLUMN_NAMES} from '@/constants'
 
-const defaultCatalog = 'hive'
-
 const state = () => {
   return {
     catalogs: [],
     schemata: [],
+    starredSchemata: [],
     tables: [],
 
     catalog: '',
@@ -78,11 +77,7 @@ const actions = {
 
     if (data.results && data.results.length) {
       commit('setCatalogs', {data: data.results.map(r => r[0])})
-      if (state.catalogs.includes(defaultCatalog)) {
-        commit('setCatalog', {data: defaultCatalog})
-      } else {
-        commit('setCatalog', {data: state.catalogs[0]})
-      }
+      commit('setCatalog', {data: state.catalogs[0]})
     } else {
       commit('setCatalogs', {data: []})
       if (data.error) {
@@ -90,31 +85,57 @@ const actions = {
       }
     }
   },
-  async getSchemata ({commit, state, rootState, rootGetters}) {
+  async getSchemata ({commit, dispatch, state, rootState, rootGetters}) {
     const {datasource} = rootState.hash
     const {authInfo, isPresto, isHive, isSpark} = rootGetters
     const {catalog} = state
 
-    let data
+    let allPromise
     if (isPresto) {
-      data = await api.getSchemataPresto(datasource, catalog, authInfo)
+      allPromise = api.getSchemataPresto(datasource, catalog, authInfo)
     } else if (isHive) {
-      data = await api.getSchemataHive(datasource, authInfo)
+      allPromise = api.getSchemataHive(datasource, authInfo)
     } else if (isSpark) {
-      data = await api.getSchemataSpark(datasource, authInfo)
+      allPromise = api.getSchemataSpark(datasource, authInfo)
     } else {
       throw new Error('not supported')
     }
 
-    if (data.results && data.results.length) {
-      commit('setSchemata', {data: data.results.map(r => r[0])})
-      commit('setSchema', {data: state.schemata[0]})
+    const starredPromise = dispatch('getStarredSchemata')
+
+    const [all] = await Promise.all([allPromise, starredPromise])
+
+    if (all.results && all.results.length) {
+      commit('setSchemata', {data: all.results.map(r => r[0])})
+      let schema = state.schemata[0]
+      if (state.starredSchemata.length) {
+        schema = state.starredSchemata.map(s => s.schema).sort()[0]
+      }
+      commit('setSchema', {data: schema})
     } else {
       commit('setSchemata', {data: []})
-      if (data.error) {
-        toastr.error(data.error)
+      if (all.error) {
+        toastr.error(all.error)
       }
     }
+  },
+  async getStarredSchemata ({commit, state, rootState}) {
+    const {datasource, engine} = rootState.hash
+    const {catalog} = state
+    const data = await api.getStarredSchemata(datasource, engine, catalog)
+    commit('setStarredSchemata', {data: data.starredSchemaList})
+  },
+  async postStarredSchema ({dispatch, state, rootState}, {schema}) {
+    const { datasource, engine } = rootState.hash
+    const { catalog } = state
+    await api.postStarredSchema(datasource, engine, catalog, schema)
+    return dispatch('getStarredSchemata')
+  },
+  async deleteStarredSchema ({dispatch, state, rootState}, {id}) {
+    const { datasource, engine } = rootState.hash
+    const { catalog } = state
+    await api.deleteStarredSchema(datasource, engine, catalog, id)
+    return dispatch('getStarredSchemata')
   },
   async getTables ({commit, state, rootState, rootGetters}) {
     const {datasource} = rootState.hash
@@ -311,6 +332,9 @@ const mutations = {
   },
   setSchemata (state, {data}) {
     state.schemata = data
+  },
+  setStarredSchemata (state, {data}) {
+    state.starredSchemata = data
   },
   setTables (state, {data}) {
     state.tables = data

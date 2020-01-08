@@ -3,7 +3,7 @@ apply plugin: 'distribution'
 apply plugin: 'checkstyle'
 apply plugin: 'net.ltgt.errorprone'
 
-version = '21.0'
+version = '22.0'
 
 repositories {
     mavenCentral()
