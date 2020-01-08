@@ -301,6 +301,13 @@
     <ul class="md-nav__list" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#version-220" class="md-nav__link">
+    Version 22.0
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#version-210" class="md-nav__link">
     Version 21.0
   </a>
@@ -444,6 +451,13 @@
     <ul class="md-nav__list" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#version-220" class="md-nav__link">
+    Version 22.0
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#version-210" class="md-nav__link">
     Version 21.0
   </a>
@@ -575,6 +589,30 @@
                 
                 
                 <h1 id="release-notes">Release Notes</h1>
+<h2 id="version-220">Version 22.0</h2>
+<ul>
+<li>Avoid scroll bar from hiding error message</li>
+<li>Remove embedded old bootstrap</li>
+<li>Add tooltip for presto row column type</li>
+<li>Delete unnecessary scss import</li>
+<li>Introduce starred schema</li>
+<li>Create URL to set bookmarked query with parameter</li>
+<li>Bundle ace editor</li>
+<li>Lazy load big and rarely used js libraries</li>
+<li>Redesign treeview layout</li>
+<li>Redesign Partition Layout</li>
+<li>Support presto date type</li>
+<li>Add presto query page link to query</li>
+<li>Add filter query list by source</li>
+<li>Fix bug that history tab doesn't show when you use elasticsearch</li>
+<li>Improve result tab download UI</li>
+<li>Improve Header transition</li>
+<li>Refactor server side logic</li>
+<li>Upgrade Gradle from 5.0 to 5.2</li>
+<li>Improve server side logging logic</li>
+<li>Fix bug when user submits very long query</li>
+<li>Introduce mkdocs documentation</li>
+</ul>
 <h2 id="version-210">Version 21.0</h2>
 <ul>
 <li>Add datasource color</li>
@@ -593,16 +631,9 @@
 <li>Improve partition column fetch logic in treeview</li>
 <li>Add webhdfs.proxy.user and webhdfs.proxy.password option</li>
 <li>Add a script to launch yanagishima in foreground process (#58)</li>
-<li>support mysql as yanagishima backend RDBMS create mysql table</li>
+<li>Support mysql as yanagishima backend RDBMS
+yanagishima setting is the following</li>
 </ul>
-<pre><code>create table if not exists query (datasource varchar(256), engine varchar(256), query_id varchar(256), fetch_result_time_string varchar(256), query_string text, user varchar(256), status varchar(256), elapsed_time_millis integer, result_file_size integer, linenumber integer, primary key(datasource, engine, query_id));
-create table if not exists publish (publish_id varchar(256), datasource varchar(256), engine varchar(256), query_id varchar(256), user varchar(256), primary key(publish_id));
-create table if not exists bookmark (bookmark_id integer primary key auto_increment, datasource varchar(256), engine varchar(256), query text, title varchar(256), user varchar(256));
-create table if not exists comment (datasource varchar(256), engine varchar(256), query_id varchar(256), content text, update_time_string varchar(256), user varchar(256), like_count integer, primary key(datasource, engine, query_id));
-create table if not exists label (datasource varchar(256), engine varchar(256), query_id varchar(256), label_name varchar(256), primary key(datasource, engine, query_id));
-</code></pre>
-
-<p>yanagishima setting is the following</p>
 <pre><code>database.type=mysql
 database.connection-url=jdbc:mysql://localhost:3306/yanagishima?useSSL=false
 database.user=...

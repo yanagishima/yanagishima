@@ -328,7 +328,7 @@
 yanagishima can log username for each query executions and authorize per datasource.</p>
 <p>If your reverse proxy server sets username on HTTP header just after authentication, before proxied requests you can use it.</p>
 <p>In this case, please specify <code>audit.http.header.name</code> which is http header name to be passed through your proxy.</p>
-<p>If you want to deny to access without usename, please specify <code>user.require=true</code></p>
+<p>If you want to deny to access without username, please specify <code>user.require=true</code></p>
 <p>If you set <code>check.datasource=true</code> and datasource list which you want to allow on HTTP header <code>X-yanagishima-datasources</code> through your proxy, authorization feature is enabled.</p>
 <p>For example, if there are three datasources(aaa and bbb and ccc) and <code>X-yanagishima-datasources=aaa,bbb</code> is set, user can't access to datasource ccc.</p>
 <p>If you use a presto with LDAP, you need to specify <code>auth.xxx=true</code> in your yanagishima.properties</p>
