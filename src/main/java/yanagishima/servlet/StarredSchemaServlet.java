@@ -49,8 +49,19 @@ public class StarredSchemaServlet extends HttpServlet {
             String engine = getRequiredParameter(request, "engine");
             String schema = getRequiredParameter(request, "schema");
             db.insert(StarredSchema.class).value("datasource", datasource).value("engine", engine).value("catalog", catalog).value("schema", schema).value("user", userName).execute();
-            List<StarredSchema> starredSchemas = db.searchBySQL(StarredSchema.class, "SELECT starred_schema_id, datasource, engine, catalog, `schema` FROM starred_schema "
-                                                                                     + "WHERE starred_schema_id = last_insert_id()");
+            List<StarredSchema> starredSchemas;
+            switch (config.getDatabaseType()) {
+                case MYSQL:
+                    starredSchemas = db.searchBySQL(StarredSchema.class, "SELECT starred_schema_id, datasource, engine, catalog, `schema` FROM starred_schema "
+                            + "WHERE starred_schema_id = last_insert_id()");
+                    break;
+                case SQLITE:
+                    starredSchemas = db.searchBySQL(StarredSchema.class, "SELECT starred_schema_id, datasource, engine, catalog, schema FROM starred_schema "
+                            + "WHERE rowid = last_insert_rowid()");
+                    break;
+                default:
+                    throw new IllegalArgumentException("Illegal database type: " + config.getDatabaseType());
+            }
             checkState(starredSchemas.size() == 1, "Too many starred schemas: " + starredSchemas);
             writeJSON(response, Map.of("starred_schema_id", starredSchemas.get(0).getStarredSchemaId()));
         } catch (Throwable e) {

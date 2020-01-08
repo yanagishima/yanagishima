@@ -128,6 +128,14 @@ public class YanagishimaServer {
                                             + "query_id text, "
                                             + "label_name text, "
                                             + "primary key(datasource, engine, query_id))");
+                    statement.executeUpdate(""
+                                            + "CREATE TABLE IF NOT EXISTS starred_schema ("
+                                            + "starred_schema_id integer primary key autoincrement, "
+                                            + "datasource text not null, "
+                                            + "engine text not null, "
+                                            + "catalog text not null, "
+                                            + "schema text not null, "
+                                            + "user text)");
                     break;
                 case MYSQL:
                     statement.executeUpdate(""
