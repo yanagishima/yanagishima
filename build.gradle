@@ -102,7 +102,7 @@ dependencies {
     compile 'org.slf4j:slf4j-api:1.7.10'
     compile 'org.slf4j:slf4j-log4j12:1.7.10'
     compile 'log4j:log4j:1.2.17'
-    compile 'org.eclipse.jetty.aggregate:jetty-all:9.3.7.v20160115'
+    compile 'org.eclipse.jetty.aggregate:jetty-all:9.4.25.v20191220'
     compile 'javax.servlet:javax.servlet-api:3.1.0'
     compile 'com.facebook.presto:presto-client:0.215'
     compile 'io.prestosql:presto-client:313'
