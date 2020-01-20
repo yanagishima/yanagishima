@@ -1,0 +1,22 @@
+version: '2'
+services:
+  yanagishima:
+    image: 'yanagishima:{version}'
+    depends_on:
+      - mysql
+    ports:
+      - '8080:8080'
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:13306/test?allowPublicKeyRetrieval=true&useSSL=false
+
+  mysql:
+    image: 'mysql:8.0.21'
+    ports:
+      - '13306:13306'
+    command:
+      mysqld --port 13306
+    environment:
+      MYSQL_USER: test
+      MYSQL_PASSWORD: test
+      MYSQL_ROOT_PASSWORD: test
+      MYSQL_DATABASE: test
