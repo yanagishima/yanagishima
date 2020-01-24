@@ -24,6 +24,9 @@ public final class MetadataUtil {
             String json = Request.Get(String.format("%s/%s/%s/%s", metadataServiceUrl, catalog, schema, table)).execute().returnContent().asString(UTF_8);
             Map map = OBJECT_MAPPER.readValue(json, Map.class);
             List<Map> columns = (List) map.get("columns");
+            if (columns == null) {
+                return;
+            }
             List<List<String>> newRecordList = new ArrayList<List<String>>();
             for (int i = 0; i < records.size(); i++) {
                 List<String> newColumnList = new ArrayList<>();
