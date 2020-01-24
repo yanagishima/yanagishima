@@ -27,7 +27,6 @@ import yanagishima.config.YanagishimaConfig;
 import yanagishima.exception.HiveQueryErrorException;
 import yanagishima.result.HiveQueryResult;
 import yanagishima.service.HiveService;
-import yanagishima.util.MetadataUtil;
 
 @Singleton
 public class HiveServlet extends HttpServlet {
