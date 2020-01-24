@@ -19,9 +19,9 @@ public final class MetadataUtil {
 
     private MetadataUtil() { }
 
-    public static void setMetadata(String metadataServiceUrl, Map<String, Object> retVal, String schema, String table, List<List<String>> records) {
+    public static void setMetadata(String metadataServiceUrl, Map<String, Object> retVal, String catalog, String schema, String table, List<List<String>> records) {
         try {
-            String json = Request.Get(String.format("%s/%s/%s", metadataServiceUrl, schema, table)).execute().returnContent().asString(UTF_8);
+            String json = Request.Get(String.format("%s/%s/%s/%s", metadataServiceUrl, catalog, schema, table)).execute().returnContent().asString(UTF_8);
             Map map = OBJECT_MAPPER.readValue(json, Map.class);
             List<Map> columns = (List) map.get("columns");
             List<List<String>> newRecordList = new ArrayList<List<String>>();

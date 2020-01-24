@@ -104,9 +104,10 @@ public class PrestoServlet extends HttpServlet {
 						});
 						if (query.startsWith(YANAGISHIMA_COMMENT + "DESCRIBE") && config.getMetadataServiceUrl(datasource).isPresent()) {
 							String[] strings = query.substring(YANAGISHIMA_COMMENT.length() + "DESCRIBE ".length()).split("\\.");
+							String catalog = strings[0];
 							String schema = strings[1];
 							String table = strings[2].substring(1, strings[2].length() - 1);
-							MetadataUtil.setMetadata(config.getMetadataServiceUrl(datasource).get(), responseBody, schema, table, prestoQueryResult.getRecords());
+							MetadataUtil.setMetadata(config.getMetadataServiceUrl(datasource).get(), responseBody, catalog, schema, table, prestoQueryResult.getRecords());
 						}
 					}
 				} catch (QueryErrorException e) {

@@ -88,14 +88,6 @@ public class HiveServlet extends HttpServlet {
                                                       .filter(list -> !config.getInvisibleDatabases(datasource).contains(list.get(0)))
                                                       .collect(Collectors.toList()));
             }
-
-            if (query.startsWith("DESCRIBE") && config.getMetadataServiceUrl(datasource).isPresent()) {
-                String[] schemaTable = query.substring("DESCRIBE ".length()).split("\\.");
-                String schema = schemaTable[0];
-                String table = toTableName(engine, schemaTable[1]);
-                MetadataUtil.setMetadata(config.getMetadataServiceUrl(datasource).get(), reponseBody, schema, table, queryResult.getRecords());
-            }
-
         } catch (Throwable e) {
             if (e instanceof HiveQueryErrorException) {
                 reponseBody.put("queryid", ((HiveQueryErrorException) e).getQueryId());
