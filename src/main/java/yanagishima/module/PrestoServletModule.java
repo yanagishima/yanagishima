@@ -33,6 +33,7 @@ public class PrestoServletModule extends ServletModule {
 		bind(ConvertPrestoServlet.class);
 		bind(LabelServlet.class);
 		bind(StarredSchemaServlet.class);
+		bind(CheckPrestoQueryServlet.class);
 
 		serve("/presto").with(PrestoServlet.class);
 		serve("/prestoAsync").with(PrestoAsyncServlet.class);
@@ -61,5 +62,6 @@ public class PrestoServletModule extends ServletModule {
 		serve("/convertPresto").with(ConvertPrestoServlet.class);
 		serve("/label").with(LabelServlet.class);
 		serve("/starredSchema").with(StarredSchemaServlet.class);
+		serve("/checkPrestoQuery").with(CheckPrestoQueryServlet.class);
 	}
 }
