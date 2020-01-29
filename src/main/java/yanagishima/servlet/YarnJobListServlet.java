@@ -59,7 +59,9 @@ public class YarnJobListServlet extends HttpServlet {
 		finishedJobs.sort((a, b)-> ((String) b.get("id")).compareTo((String) a.get("id")));
 
 		List<Map> jobs;
-		if (yarnJobs.size() > LIMIT) {
+		if (runningJobs.size() >= LIMIT) {
+			jobs = runningJobs.subList(0, LIMIT);
+		} else if (yarnJobs.size() > LIMIT) {
 			jobs = new ArrayList<>();
 			jobs.addAll(runningJobs);
 			jobs.addAll(finishedJobs.subList(0, LIMIT - runningJobs.size()));
