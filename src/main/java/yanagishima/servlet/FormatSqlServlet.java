@@ -40,6 +40,7 @@ public class FormatSqlServlet extends HttpServlet {
 			LOGGER.error(e.getMessage(), e);
 			if (e instanceof ParsingException) {
 				responseBody.put("errorLineNumber", ((ParsingException) e).getLineNumber());
+				responseBody.put("errorColumnNumber", ((ParsingException) e).getColumnNumber());
 			}
 			responseBody.put("error", e.getMessage());
 		}
