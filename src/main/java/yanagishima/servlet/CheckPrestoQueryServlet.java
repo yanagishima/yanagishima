@@ -1,6 +1,7 @@
 package yanagishima.servlet;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.base.Splitter;
 import io.prestosql.sql.parser.ParsingException;
 import io.prestosql.sql.parser.ParsingOptions;
 import io.prestosql.sql.parser.SqlParser;
@@ -23,6 +24,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -103,7 +105,11 @@ public class CheckPrestoQueryServlet extends HttpServlet {
                     if (state.equals("FAILED")) {
                         Map failureInfo = (Map)status.get("failureInfo");
                         if (failureInfo != null) {
-                            responseBody.put("error", failureInfo.get("message"));
+                            //line 2:8: Column 'foo' cannot be resolved
+                            String message = (String)failureInfo.get("message");
+                            List<String> strings = Splitter.on(' ').splitToList(message);
+                            String prefix = strings.get(0) + " " + strings.get(1) + " ";
+                            responseBody.put("error", message.substring(prefix.length()));
                             Map errorLocation = (Map)failureInfo.get("errorLocation");
                             if (errorLocation != null) {
                                 int lineNumber = (Integer)errorLocation.get("lineNumber");
