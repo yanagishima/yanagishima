@@ -83,7 +83,7 @@ public class CheckPrestoQueryServlet extends HttpServlet {
             String user = getUsername(request);
             Optional<String> prestoUser = Optional.ofNullable(request.getParameter("user"));
             Optional<String> prestoPassword = Optional.ofNullable(request.getParameter("password"));
-            String explainQuery = format("%sEXPLAIN ANALYZE %s", YANAGISHIMA_COMMENT, query);
+            String explainQuery = format("%sEXPLAIN ANALYZE\n%s", YANAGISHIMA_COMMENT, query);
             String queryId = null;
             try {
                 PrestoQueryResult prestoQueryResult = prestoService.doQuery(datasource, explainQuery, user, prestoUser, prestoPassword, false, Integer.MAX_VALUE);
@@ -102,10 +102,16 @@ public class CheckPrestoQueryServlet extends HttpServlet {
                     String state = (String)status.get("state");
                     if (state.equals("FAILED")) {
                         Map failureInfo = (Map)status.get("failureInfo");
-                        Map errorLocation = (Map)failureInfo.get("errorLocation");
-                        responseBody.put("errorLineNumber", errorLocation.get("lineNumber"));
-                        responseBody.put("errorColumnNumber", errorLocation.get("columnNumber"));
-                        responseBody.put("error", failureInfo.get("message"));
+                        if (failureInfo != null) {
+                            responseBody.put("error", failureInfo.get("message"));
+                            Map errorLocation = (Map)failureInfo.get("errorLocation");
+                            if (errorLocation != null) {
+                                int lineNumber = (Integer)errorLocation.get("lineNumber");
+                                int columnNumber = (Integer)errorLocation.get("columnNumber");
+                                responseBody.put("errorLineNumber", lineNumber - 1);
+                                responseBody.put("errorColumnNumber", columnNumber);
+                            }
+                        }
                     } else if (state.equals("FINISHED")) {
                         Map queryStats = (Map) status.get("queryStats");
                         responseBody.put("physicalInputDataSize", queryStats.get("physicalInputDataSize"));
