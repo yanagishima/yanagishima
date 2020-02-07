@@ -10,6 +10,7 @@ import okhttp3.Response;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import yanagishima.config.YanagishimaConfig;
+import yanagishima.exception.QueryErrorException;
 import yanagishima.result.PrestoQueryResult;
 import yanagishima.service.PrestoService;
 
@@ -83,17 +84,35 @@ public class CheckPrestoQueryServlet extends HttpServlet {
             Optional<String> prestoUser = Optional.ofNullable(request.getParameter("user"));
             Optional<String> prestoPassword = Optional.ofNullable(request.getParameter("password"));
             String explainQuery = format("%sEXPLAIN ANALYZE %s", YANAGISHIMA_COMMENT, query);
-            PrestoQueryResult prestoQueryResult = prestoService.doQuery(datasource, explainQuery, user, prestoUser, prestoPassword, false, Integer.MAX_VALUE);
+            String queryId = null;
+            try {
+                PrestoQueryResult prestoQueryResult = prestoService.doQuery(datasource, explainQuery, user, prestoUser, prestoPassword, false, Integer.MAX_VALUE);
+                queryId = prestoQueryResult.getQueryId();
+            } catch (QueryErrorException e) {
+                LOGGER.error(e.getMessage(), e);
+                queryId = e.getQueryId();
+            }
+
             String coordinatorServer = config.getPrestoCoordinatorServer(datasource);
-            Request prestoRequest = new Request.Builder().url(coordinatorServer + "/v1/query/" + prestoQueryResult.getQueryId()).build();
+            Request prestoRequest = new Request.Builder().url(coordinatorServer + "/v1/query/" + queryId).build();
             try (Response prestoResponse = buildClient(request).newCall(prestoRequest).execute()) {
                 if (prestoResponse.isSuccessful() && prestoResponse.body() != null) {
                     String json = prestoResponse.body().string();
                     Map status = OBJECT_MAPPER.readValue(json, Map.class);
-                    Map queryStats = (Map) status.get("queryStats");
-                    responseBody.put("physicalInputDataSize", queryStats.get("physicalInputDataSize"));
-                    int physicalInputPositions = (Integer) queryStats.get("physicalInputPositions");
-                    responseBody.put("physicalInputPositions", physicalInputPositions);
+                    String state = (String)status.get("state");
+                    if (state.equals("FAILED")) {
+                        Map failureInfo = (Map)status.get("failureInfo");
+                        Map errorLocation = (Map)failureInfo.get("errorLocation");
+                        responseBody.put("errorLineNumber", errorLocation.get("lineNumber"));
+                        responseBody.put("errorColumnNumber", errorLocation.get("columnNumber"));
+                        responseBody.put("error", failureInfo.get("message"));
+                    } else if (state.equals("FINISHED")) {
+                        Map queryStats = (Map) status.get("queryStats");
+                        responseBody.put("physicalInputDataSize", queryStats.get("physicalInputDataSize"));
+                        responseBody.put("physicalInputPositions", queryStats.get("physicalInputPositions"));
+                    } else {
+                        throw new IllegalArgumentException("Illegal state: " + state);
+                    }
                 }
             }
         } catch (Throwable e) {
