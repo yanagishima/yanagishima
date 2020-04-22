@@ -7,6 +7,7 @@ import static yanagishima.util.HttpRequestUtil.getRequiredParameter;
 import static yanagishima.util.JsonUtil.writeJSON;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -22,6 +23,7 @@ import org.slf4j.LoggerFactory;
 import me.geso.tinyorm.TinyORM;
 import yanagishima.config.YanagishimaConfig;
 import yanagishima.row.Query;
+import yanagishima.row.SessionProperty;
 
 @Singleton
 public class HistoryServlet extends HttpServlet {
@@ -72,7 +74,8 @@ public class HistoryServlet extends HttpServlet {
                 } else {
                     resultVisible = userQueryOptional.isPresent();
                 }
-                createHistoryResult(responseBody, config.getSelectLimit(), datasource, query, resultVisible);
+                List<SessionProperty> sessionPropertyList = db.search(SessionProperty.class).where("datasource = ? AND engine = ? AND query_id = ?", datasource, engine, queryId).execute();
+                createHistoryResult(responseBody, config.getSelectLimit(), datasource, query, resultVisible, sessionPropertyList);
             });
         } catch (Throwable e) {
             LOGGER.error(e.getMessage(), e);

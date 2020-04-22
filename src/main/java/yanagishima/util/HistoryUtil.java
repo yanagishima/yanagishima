@@ -8,9 +8,7 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import javax.annotation.Nullable;
 
@@ -20,11 +18,12 @@ import org.apache.commons.csv.CSVRecord;
 
 import io.airlift.units.DataSize;
 import yanagishima.row.Query;
+import yanagishima.row.SessionProperty;
 
 public final class HistoryUtil {
     private HistoryUtil() { }
 
-    public static void createHistoryResult(Map<String, Object> responseBody, int limit, String datasource, Query query, boolean resultVisible) {
+    public static void createHistoryResult(Map<String, Object> responseBody, int limit, String datasource, Query query, boolean resultVisible, List<SessionProperty> sessionPropertyList) {
         String queryId = query.getQueryId();
         String queryString = query.getQueryString();
         responseBody.put("queryString", queryString);
@@ -32,6 +31,12 @@ public final class HistoryUtil {
         responseBody.put("lineNumber", query.getLinenumber());
         responseBody.put("elapsedTimeMillis", query.getElapsedTimeMillis());
         responseBody.put("rawDataSize", toSuccinctDataSize(query.getResultFileSize()));
+
+        Map<String, String> map = new HashMap<>();
+        for (SessionProperty sessionProperty : sessionPropertyList) {
+            map.put(sessionProperty.getSessionKey(), sessionProperty.getSessionValue());
+        }
+        responseBody.put("session_property", map);
 
         Path errorFilePath = getResultFilePath(datasource, queryId, true);
         if (errorFilePath.toFile().exists()) {

@@ -1,5 +1,6 @@
 package yanagishima.service;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.prestosql.client.*;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -45,6 +46,7 @@ import static java.util.Collections.emptyMap;
 import static java.util.concurrent.TimeUnit.MINUTES;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static yanagishima.util.DbUtil.insertQueryHistory;
+import static yanagishima.util.DbUtil.insertSessionProperty;
 import static yanagishima.util.DbUtil.storeError;
 import static yanagishima.util.FluentdUtil.buildStaticFluency;
 import static yanagishima.util.PathUtil.getResultFilePath;
@@ -66,6 +68,9 @@ public class PrestoServiceImpl implements PrestoService {
 
     private final int maxResultFileByteSize;
 
+    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
+    private Map<String, String> properties = ImmutableMap.of();
+
     @Inject
     public PrestoServiceImpl(YanagishimaConfig config, TinyORM db) {
         this.config = config;
@@ -78,7 +83,16 @@ public class PrestoServiceImpl implements PrestoService {
     }
 
     @Override
-    public String doQueryAsync(String datasource, String query, String userName, Optional<String> prestoUser, Optional<String> prestoPassword) {
+    public String doQueryAsync(String datasource, String query, Optional<String> sessionPropertyOptional, String userName, Optional<String> prestoUser, Optional<String> prestoPassword) {
+        sessionPropertyOptional.ifPresent(sessionProperty -> {
+            try {
+                properties = OBJECT_MAPPER.readValue(sessionProperty, Map.class);
+            } catch (IOException e) {
+                LOGGER.error(e.getMessage(), e);
+                throw new RuntimeException(e);
+            }
+        });
+
         StatementClient client = getStatementClient(datasource, query, userName, prestoUser, prestoPassword);
         executorService.submit(new Task(client, datasource, query, userName));
         return client.currentStatusInfo().getId();
@@ -165,6 +179,7 @@ public class PrestoServiceImpl implements PrestoService {
             queryResult.setRecords(rows);
             if (storeQueryHistory) {
                 insertQueryHistory(db, datasource, presto.name(), query, userName, results.getId(), queryResult.getLineNumber());
+                insertSessionProperty(db, datasource, presto.name(), results.getId(), properties);
             }
             emitExecutedEvent(userName, query, results.getId(), datasource, System.currentTimeMillis() - start);
         }
@@ -341,7 +356,7 @@ public class PrestoServiceImpl implements PrestoService {
         String source = config.getSource(datasource);
 
         if (prestoUser.isPresent() && prestoPassword.isPresent()) {
-            ClientSession clientSession = buildClientSession(server, prestoUser.get(), source, catalog, schema);
+            ClientSession clientSession = buildClientSession(server, prestoUser.get(), source, catalog, schema, properties);
             checkArgument(clientSession.getServer().getScheme().equalsIgnoreCase("https"), "Authentication using username/password requires HTTPS to be enabled");
             OkHttpClient.Builder clientBuilder = httpClient.newBuilder();
             clientBuilder.addInterceptor(basicAuth(prestoUser.get(), prestoPassword.get()));
@@ -349,14 +364,14 @@ public class PrestoServiceImpl implements PrestoService {
         }
 
         String user = firstNonNull(userName, config.getUser(datasource));
-        ClientSession clientSession = buildClientSession(server, user, source, catalog, schema);
+        ClientSession clientSession = buildClientSession(server, user, source, catalog, schema, properties);
         return StatementClientFactory.newStatementClient(httpClient, clientSession, query);
     }
 
-    private static ClientSession buildClientSession(String server, String user, String source, String catalog, String schema) {
+    private static ClientSession buildClientSession(String server, String user, String source, String catalog, String schema, Map<String, String> properties) {
         return new ClientSession(URI.create(server), user, source, Optional.empty(), ImmutableSet.of(), null, catalog,
                                  schema, null, ZoneId.systemDefault(), Locale.getDefault(),
-                                 ImmutableMap.of(), ImmutableMap.of(), emptyMap(), emptyMap(), ImmutableMap.of(), null, new Duration(2, MINUTES));
+                                 ImmutableMap.of(), properties, emptyMap(), emptyMap(), ImmutableMap.of(), null, new Duration(2, MINUTES));
     }
 
     private static QueryErrorException resultsException(QueryStatusInfo results, String datasource) {
