@@ -7,6 +7,7 @@ import yanagishima.config.YanagishimaConfig;
 import yanagishima.row.Comment;
 import yanagishima.row.Publish;
 import yanagishima.row.Query;
+import yanagishima.row.SessionProperty;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
@@ -14,6 +15,7 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -47,7 +49,8 @@ public class ShareHistoryServlet extends HttpServlet {
                 body.put("queryid", queryId);
                 Query query = db.single(Query.class).where("query_id = ? AND datasource = ?", queryId, datasource).execute().get();
                 body.put("engine", query.getEngine());
-                createHistoryResult(body, config.getSelectLimit(), datasource, query, true);
+                List<SessionProperty> sessionPropertyList = db.search(SessionProperty.class).where("datasource = ? AND engine = ? AND query_id = ?", datasource, query.getEngine(), queryId).execute();
+                createHistoryResult(body, config.getSelectLimit(), datasource, query, true, sessionPropertyList);
                 Optional<Comment> comment = db.single(Comment.class).where("datasource = ? AND engine = ? AND query_id = ?", datasource, query.getEngine(), queryId).execute();
                 body.put("comment", comment.orElse(null));
             });

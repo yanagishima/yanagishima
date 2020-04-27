@@ -73,7 +73,8 @@ public class PrestoAsyncServlet extends HttpServlet {
                 return;
             }
             try {
-                String queryId = executeQuery(datasource, query, user, prestoUser, prestoPassword);
+                Optional<String> sessionPropertyOptional = Optional.ofNullable(request.getParameter("session_property"));
+                String queryId = executeQuery(datasource, query, sessionPropertyOptional, user, prestoUser, prestoPassword);
                 responseBody.put("queryid", queryId);
             } catch (ClientException e) {
                 if (prestoUser.isPresent()) {
@@ -92,11 +93,11 @@ public class PrestoAsyncServlet extends HttpServlet {
         writeJSON(response, responseBody);
     }
 
-    private String executeQuery(String datasource, String query, String user, Optional<String> prestoUser, Optional<String> prestoPassword) {
+    private String executeQuery(String datasource, String query, Optional<String> sessionPropertyOptional, String user, Optional<String> prestoUser, Optional<String> prestoPassword) {
         if (config.isUseOldPresto(datasource)) {
             return oldPrestoService.doQueryAsync(datasource, query, user, prestoUser, prestoPassword);
         }
-        return prestoService.doQueryAsync(datasource, query, user, prestoUser, prestoPassword);
+        return prestoService.doQueryAsync(datasource, query, sessionPropertyOptional, user, prestoUser, prestoPassword);
     }
 
     private String getUsername(HttpServletRequest request) {

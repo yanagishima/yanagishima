@@ -136,6 +136,14 @@ public class YanagishimaServer {
                                             + "catalog text not null, "
                                             + "schema text not null, "
                                             + "user text)");
+                    statement.executeUpdate(""
+                                            + "CREATE TABLE IF NOT EXISTS session_property ("
+                                            + "session_property_id integer primary key autoincrement, "
+                                            + "datasource text not null, "
+                                            + "engine text not null, "
+                                            + "query_id text not null, "
+                                            + "session_key text not null, "
+                                            + "session_value text not null)");
                     break;
                 case MYSQL:
                     statement.executeUpdate(""
@@ -192,6 +200,14 @@ public class YanagishimaServer {
                                             + "catalog varchar(256) not null, "
                                             + "`schema` varchar(256) not null, "
                                             + "user varchar(256))");
+                    statement.executeUpdate(""
+                                            + "CREATE TABLE IF NOT EXISTS session_property ("
+                                            + "session_property_id integer primary key auto_increment, "
+                                            + "datasource varchar(256) not null, "
+                                            + "engine varchar(256) not null, "
+                                            + "query_id varchar(256) not null, "
+                                            + "session_key varchar(256) not null, "
+                                            + "session_value varchar(256) not null)");
                     break;
                 default:
                     throw new IllegalArgumentException("Illegal database type: " + databaseType);
