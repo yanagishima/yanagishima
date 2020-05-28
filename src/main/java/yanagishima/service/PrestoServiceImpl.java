@@ -116,7 +116,7 @@ public class PrestoServiceImpl implements PrestoService {
             try {
                 getPrestoQueryResult(this.datasource, this.query, this.client, true, config.getSelectLimit(), this.userName);
             } catch (QueryErrorException e) {
-                LOGGER.warn(e.getCause().getMessage());
+                LOGGER.error(e.getMessage(), e);
             } catch (Throwable e) {
                 LOGGER.error(e.getMessage(), e);
             } finally {
