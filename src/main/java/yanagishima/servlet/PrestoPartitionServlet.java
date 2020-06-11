@@ -124,7 +124,7 @@ public class PrestoPartitionServlet extends HttpServlet {
                 } else {
                     List<String> whereList = new ArrayList<>();
                     for (int i = 0; i < partitionColumnArray.length; i++) {
-                        if (partitionColumnTypeArray[i].equals("varchar")) {
+                        if (partitionColumnTypeArray[i].equals("varchar") || partitionColumnTypeArray[i].equals("string")) {
                             whereList.add(format("%s = '%s'", partitionColumnArray[i], partitionValuesArray[i]));
                         } else if (partitionColumnTypeArray[i].equals("date")) {
                             whereList.add(format("%s = DATE '%s'", partitionColumnArray[i], partitionValuesArray[i]));
