@@ -31,4 +31,7 @@ public class Bookmark extends Row<Bookmark> {
 
     @Column("user")
     private String user;
+
+    @Column("snippet")
+    private String snippet;
 }

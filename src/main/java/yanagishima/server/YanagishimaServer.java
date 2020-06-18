@@ -110,7 +110,8 @@ public class YanagishimaServer {
                                             + "engine text, "
                                             + "query text, "
                                             + "title text, "
-                                            + "user text)");
+                                            + "user text, "
+                                            + "snippet text)");
                     statement.executeUpdate(""
                                             + "CREATE TABLE IF NOT EXISTS comment ("
                                             + "datasource text, "
@@ -174,7 +175,8 @@ public class YanagishimaServer {
                                             + "engine varchar(256), "
                                             + "query text, "
                                             + "title varchar(256), "
-                                            + "user varchar(256))");
+                                            + "user varchar(256), "
+                                            + "snippet varchar(256))");
                     statement.executeUpdate(""
                                             + "CREATE TABLE IF NOT EXISTS comment ("
                                             + "datasource varchar(256), "

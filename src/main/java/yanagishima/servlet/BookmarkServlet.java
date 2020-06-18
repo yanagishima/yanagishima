@@ -58,15 +58,16 @@ public class BookmarkServlet extends HttpServlet {
             db.insert(Bookmark.class).value("datasource", context.getDatasource())
               .value("query", context.getQuery())
               .value("title", context.getTitle())
-              .value("engine", context.getEngine()
-              ).value("user", userName).execute();
+              .value("engine", context.getEngine())
+              .value("user", userName)
+              .value("snippet", context.getSnippet()).execute();
             List<Bookmark> bookmarks;
             switch (config.getDatabaseType()) {
                 case MYSQL:
-                    bookmarks = db.searchBySQL(Bookmark.class, "select bookmark_id, datasource, engine, query, title from bookmark where bookmark_id = last_insert_id()");
+                    bookmarks = db.searchBySQL(Bookmark.class, "select bookmark_id, datasource, engine, query, title, user, snippet from bookmark where bookmark_id = last_insert_id()");
                     break;
                 case SQLITE:
-                    bookmarks = db.searchBySQL(Bookmark.class, "select bookmark_id, datasource, engine, query, title from bookmark where rowid = last_insert_rowid()");
+                    bookmarks = db.searchBySQL(Bookmark.class, "select bookmark_id, datasource, engine, query, title, user, snippet from bookmark where rowid = last_insert_rowid()");
                     break;
                 default:
                     throw new IllegalArgumentException("Illegal database type: " + config.getDatabaseType());
@@ -96,7 +97,7 @@ public class BookmarkServlet extends HttpServlet {
 
             String placeholder = join(", ", nCopies(bookmarkIds.size(), "?"));
             List<Object> bookmarkParameters = bookmarkIds.stream().map(Integer::parseInt).collect(Collectors.toList());
-            List<Bookmark> bookmarks = db.searchBySQL(Bookmark.class, "SELECT bookmark_id, datasource, engine, query, title "
+            List<Bookmark> bookmarks = db.searchBySQL(Bookmark.class, "SELECT bookmark_id, datasource, engine, query, title, snippet "
                                                                       + "FROM bookmark "
                                                                       + "WHERE datasource=\'" + context.getDatasource() + "\' AND bookmark_id IN (" + placeholder + ")", bookmarkParameters);
             writeJSON(response, Map.of("bookmarkList", bookmarks));
