@@ -14,6 +14,7 @@ public class HttpRequestContext {
 
     private final String title;
     private final String bookmarkId;
+    private final String snippet;
 
     private final String like;
     private final String search;
@@ -31,6 +32,7 @@ public class HttpRequestContext {
         this.query = request.getParameter("query");
         this.title = request.getParameter("title");
         this.bookmarkId = request.getParameter("bookmark_id");
+        this.snippet = request.getParameter("snippet");
         this.like = request.getParameter("like");
         this.search = request.getParameter("search");
         this.sort = request.getParameter("sort");
@@ -68,6 +70,11 @@ public class HttpRequestContext {
     @Nullable
     public String getBookmarkId() {
         return bookmarkId;
+    }
+
+    @Nullable
+    public String getSnippet() {
+        return snippet;
     }
 
     @Nullable
