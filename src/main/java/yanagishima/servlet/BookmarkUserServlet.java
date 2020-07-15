@@ -46,7 +46,12 @@ public class BookmarkUserServlet extends HttpServlet {
             }
             requireNonNull(context.getEngine(), "engine is null");
             String userName = request.getHeader(config.getAuditHttpHeaderName());
-            List<Bookmark> bookmarks = db.search(Bookmark.class).where("datasource = ? AND engine = ? AND user = ?", context.getDatasource(), context.getEngine(), userName).execute();
+            List<Bookmark> bookmarks;
+            if (context.isShowBookmarkAll()) {
+                bookmarks = db.search(Bookmark.class).where("engine = ? AND user = ?", context.getEngine(), userName).execute();
+            } else {
+                bookmarks = db.search(Bookmark.class).where("datasource = ? AND engine = ? AND user = ?", context.getDatasource(), context.getEngine(), userName).execute();
+            }
             writeJSON(response, Map.of("bookmarkList", bookmarks));
         } catch (Throwable e) {
             LOGGER.error(e.getMessage(), e);
