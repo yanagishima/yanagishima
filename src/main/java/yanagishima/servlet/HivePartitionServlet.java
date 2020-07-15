@@ -72,10 +72,12 @@ public class HivePartitionServlet extends HttpServlet {
                 HiveQueryResult hiveQueryResult = hiveService.doQuery(engine, datasource, query, user, hiveUser, hivePassword, false, Integer.MAX_VALUE);
                 Set<String> partitions = new TreeSet<>();
                 List<List<String>> records = hiveQueryResult.getRecords();
-                String cell = records.get(0).get(0); // part1=val1/part2=val2/part3=val3'...
-                responseBody.put("column", cell.split("/")[0].split("=")[0]);
-                for (List<String> row : records) {
-                    partitions.add(row.get(0).split("/")[0].split("=")[1]);
+                if (records.size() > 0) {
+                    String cell = records.get(0).get(0); // part1=val1/part2=val2/part3=val3'...
+                    responseBody.put("column", cell.split("/")[0].split("=")[0]);
+                    for (List<String> row : records) {
+                        partitions.add(row.get(0).split("/")[0].split("=")[1]);
+                    }
                 }
                 responseBody.put("partitions", partitions);
             } else {
