@@ -77,8 +77,14 @@ public class QueryServlet extends HttpServlet {
             clientBuilder.addInterceptor(basicAuth(user.get(), password.get()));
             client = clientBuilder.build();
         }
+        String userName = request.getHeader(config.getAuditHttpHeaderName());
+        Request prestoRequest;
+        if (userName == null) {
+            prestoRequest = new Request.Builder().url(coordinatorServer + "/v1/query").build();
+        } else {
+            prestoRequest = new Request.Builder().url(coordinatorServer + "/v1/query").addHeader("X-Presto-User", userName).build();
+        }
 
-        Request prestoRequest = new Request.Builder().url(coordinatorServer + "/v1/query").build();
         String originalJson;
         try (Response prestoResponse = client.newCall(prestoRequest).execute()) {
             originalJson = prestoResponse.body().string();
