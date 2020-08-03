@@ -311,7 +311,6 @@ public class PrestoServiceImpl implements PrestoService {
         event.put("errorName", status.getError().getErrorName());
         event.put("errorType", status.getError().getErrorType());
         event.put("message", status.getError().getMessage());
-        event.put("semanticErrorName", status.getError().getSemanticErrorName().orElse(null));
 
         try {
             fluency.emit(config.getFluentdFaliedTag().get(), event);
@@ -370,7 +369,7 @@ public class PrestoServiceImpl implements PrestoService {
 
     private static ClientSession buildClientSession(String server, String user, String source, String catalog, String schema, Map<String, String> properties) {
         return new ClientSession(URI.create(server), user, source, Optional.empty(), ImmutableSet.of(), null, catalog,
-                                 schema, null, ZoneId.systemDefault(), Locale.getDefault(),
+                                 schema, null, ZoneId.systemDefault(), false, Locale.getDefault(),
                                  ImmutableMap.of(), properties, emptyMap(), emptyMap(), ImmutableMap.of(), null, new Duration(2, MINUTES));
     }
 
