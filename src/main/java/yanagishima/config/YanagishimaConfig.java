@@ -400,4 +400,9 @@ public class YanagishimaConfig {
 	public boolean isUseOldPresto(String datasource) {
 		return Boolean.parseBoolean(properties.getProperty("use.old.presto." + datasource));
 	}
+
+    public String getHiveDriverClassName(String datawsource) {
+        String property = properties.getProperty("hive.jdbc.driver." + datawsource, "org.apache.hive.jdbc.HiveDriver");
+        return property;
+    }
 }
