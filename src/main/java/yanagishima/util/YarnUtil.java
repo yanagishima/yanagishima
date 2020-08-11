@@ -62,6 +62,9 @@ public final class YarnUtil {
     @VisibleForTesting
     public static List<Map> jsonToMaps(String json) throws IOException {
         Map map = OBJECT_MAPPER.readValue(json, Map.class);
+        if (map.get("apps") == null) {
+            return List.of();
+        }
         return (List) ((Map) map.get("apps")).get("app");
     }
 }
