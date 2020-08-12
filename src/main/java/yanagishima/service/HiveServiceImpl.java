@@ -121,7 +121,7 @@ public class HiveServiceImpl implements HiveService {
         checkRequiredCondition(userName, query, datasource, queryId, engine);
 
         try {
-            Class.forName("org.apache.hive.jdbc.HiveDriver");
+            Class.forName(config.getHiveDriverClassName(datasource));
         } catch (ClassNotFoundException e) {
             throw new RuntimeException(e);
         }
