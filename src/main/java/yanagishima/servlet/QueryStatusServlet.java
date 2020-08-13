@@ -54,7 +54,13 @@ public class QueryStatusServlet extends HttpServlet {
 		String queryId = request.getParameter("queryid");
 		String coordinatorServer = config.getPrestoCoordinatorServer(datasource);
 		String json;
-		Request prestoRequest = new Request.Builder().url(coordinatorServer + "/v1/query/" + queryId).build();
+		String userName = request.getHeader(config.getAuditHttpHeaderName());
+		Request prestoRequest;
+		if (userName == null) {
+			prestoRequest = new Request.Builder().url(coordinatorServer + "/v1/query/" + queryId).build();
+		} else {
+			prestoRequest = new Request.Builder().url(coordinatorServer + "/v1/query/" + queryId).addHeader("X-Presto-User", userName).build();
+		}
 		try (Response prestoResponse = buildClient(request).newCall(prestoRequest).execute()) {
 			if (!prestoResponse.isSuccessful() || prestoResponse.body() == null) {
 				writeJSON(response, toMap(prestoResponse.code(), prestoResponse.message()));

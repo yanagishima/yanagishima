@@ -51,9 +51,10 @@ public class PrestoKillServlet extends HttpServlet {
 			}
 
 			String coordinatorUrl = config.getPrestoCoordinatorServer(datasource);
-			Optional<String> username = Optional.ofNullable(request.getParameter("user"));
+			Optional<String> user = Optional.ofNullable(request.getParameter("user"));
 			Optional<String> password = Optional.ofNullable(request.getParameter("password"));
-			Response killResponse = getKillResponse(coordinatorUrl, queryIdOptinal.get(), username, password);
+			String userName = request.getHeader(config.getAuditHttpHeaderName());
+			Response killResponse = getKillResponse(coordinatorUrl, queryIdOptinal.get(), userName, user, password);
 			writeJSON(response, Map.of("code", killResponse.code(), "message", killResponse.message(), "url", killResponse.request().url()));
 		} catch (Throwable e) {
 			LOGGER.error(e.getMessage(), e);
@@ -61,11 +62,16 @@ public class PrestoKillServlet extends HttpServlet {
 		}
 	}
 
-	private Response getKillResponse(String coordinatorUrl, String queryId, Optional<String> username, Optional<String> password) throws IOException {
-		okhttp3.Request request = new okhttp3.Request.Builder().url(coordinatorUrl + "/v1/query/" + queryId).delete().build();
-		if (username.isPresent() && password.isPresent()) {
+	private Response getKillResponse(String coordinatorUrl, String queryId, String userName, Optional<String> user, Optional<String> password) throws IOException {
+		okhttp3.Request request;
+		if (userName == null) {
+			request = new okhttp3.Request.Builder().url(coordinatorUrl + "/v1/query/" + queryId).delete().build();
+		} else {
+			request = new okhttp3.Request.Builder().url(coordinatorUrl + "/v1/query/" + queryId).addHeader("X-Presto-User", userName).delete().build();
+		}
+		if (user.isPresent() && password.isPresent()) {
 			OkHttpClient.Builder clientBuilder = httpClient.newBuilder();
-			clientBuilder.addInterceptor(basicAuth(username.get(), password.get()));
+			clientBuilder.addInterceptor(basicAuth(user.get(), password.get()));
 			return clientBuilder.build().newCall(request).execute();
 		}
 		return httpClient.newCall(request).execute();
