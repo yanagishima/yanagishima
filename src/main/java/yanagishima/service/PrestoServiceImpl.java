@@ -143,7 +143,7 @@ public class PrestoServiceImpl implements PrestoService {
     private PrestoQueryResult getPrestoQueryResult(String datasource, String query, StatementClient client, boolean storeQueryHistory, int limit, String userName) throws QueryErrorException {
         checkSecretKeyword(query, datasource, client.currentStatusInfo().getId(), userName, config.getPrestoSecretKeywords(datasource));
         checkRequiredCondition(datasource, query, client.currentStatusInfo().getId(), userName,  config.getPrestoMustSpecifyConditions(datasource));
-        List<String> prestoDisallowedKeywords = yanagishimaConfig.getPrestoDisallowedKeywords(datasource);
+        List<String> prestoDisallowedKeywords = config.getPrestoDisallowedKeywords(datasource);
         for (String prestoDisallowedKeyword : prestoDisallowedKeywords) {
             if (query.trim().toLowerCase().startsWith(prestoDisallowedKeyword)) {
                 String message = String.format("query contains %s. This is the disallowed keywords in %s", prestoDisallowedKeyword, datasource);
