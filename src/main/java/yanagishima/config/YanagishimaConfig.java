@@ -249,6 +249,15 @@ public class YanagishimaConfig {
 		}
 	}
 
+	public List<String> getPrestoDisallowedKeywords(String datasource) {
+		String property = properties.getProperty("presto.disallowed.keywords." + datasource);
+		if(property == null) {
+			return Collections.emptyList();
+		} else {
+			return Arrays.asList(property.split(","));
+		}
+	}
+
 	public List<String> getHiveSetupQueryList(String datasource) {
 		String property = properties.getProperty("hive.setup.query.path." + datasource);
 		List<String> hiveSetupQueryList = new ArrayList<>();

@@ -127,7 +127,7 @@ public class PrestoServiceImpl implements PrestoService {
         }
     }
 
-    private PrestoQueryResult getPrestoQueryResult(String datasource, String query, StatementClient client, boolean storeFlag, int limit, String userName) throws QueryErrorException {
+        private PrestoQueryResult getPrestoQueryResult(String datasource, String query, StatementClient client, boolean storeFlag, int limit, String userName) throws QueryErrorException {
 
         List<String> prestoSecretKeywords = yanagishimaConfig.getPrestoSecretKeywords(datasource);
         for(String prestoSecretKeyword : prestoSecretKeywords) {
@@ -138,6 +138,14 @@ public class PrestoServiceImpl implements PrestoService {
             }
         }
 
+        List<String> prestoDisallowedKeywords = yanagishimaConfig.getPrestoDisallowedKeywords(datasource);
+        for (String prestoDisallowedKeyword : prestoDisallowedKeywords) {
+            if (query.trim().toLowerCase().startsWith(prestoDisallowedKeyword)) {
+                String message = String.format("query contains %s. This is the disallowed keywords in %s", prestoDisallowedKeyword, datasource);
+                storeError(db, datasource, "presto", client.currentStatusInfo().getId(), query, userName, message);
+                throw new RuntimeException(message);
+            }
+        }
         List<String> prestoMustSpectifyConditions = yanagishimaConfig.getPrestoMustSpectifyConditions(datasource);
         for(String prestoMustSpectifyCondition : prestoMustSpectifyConditions) {
             String[] conditions = prestoMustSpectifyCondition.split(",");
