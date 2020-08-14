@@ -52,6 +52,7 @@ import static yanagishima.util.FluentdUtil.buildStaticFluency;
 import static yanagishima.util.PathUtil.getResultFilePath;
 import static yanagishima.util.QueryEngine.presto;
 import static yanagishima.util.TimeoutUtil.checkTimeout;
+import static yanagishima.util.DbUtil.storeError;
 
 public class PrestoServiceImpl implements PrestoService {
     private static final Logger LOGGER = LoggerFactory.getLogger(PrestoServiceImpl.class);
