@@ -7,15 +7,10 @@ import java.util.concurrent.ConcurrentHashMap;
 @Singleton
 public class StatementPool {
 
-    private ConcurrentHashMap<String, ConcurrentHashMap<String, Statement>> statementMap = new ConcurrentHashMap<String, ConcurrentHashMap<String, Statement>>();
+    private ConcurrentHashMap<String, ConcurrentHashMap<String, Statement>> statementMap = new ConcurrentHashMap<>();
 
     public void putStatement(String datasource, String queryId, Statement statement) {
-        ConcurrentHashMap<String, Statement> map = null;
-        if(statementMap.contains(datasource)) {
-            map = statementMap.get(datasource);
-        } else {
-            map = new ConcurrentHashMap<String, Statement>();
-        }
+        ConcurrentHashMap<String, Statement> map = statementMap.getOrDefault(datasource, new ConcurrentHashMap<>());
         map.put(queryId, statement);
         statementMap.put(datasource, map);
     }

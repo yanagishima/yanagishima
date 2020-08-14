@@ -1,6 +1,8 @@
 package yanagishima.util;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.annotations.VisibleForTesting;
+
 import okhttp3.HttpUrl;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
@@ -17,21 +19,22 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import static com.google.common.base.Preconditions.checkArgument;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
+public final class SparkUtil {
+    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
-public class SparkUtil {
+    private SparkUtil() { }
 
     public static String getSparkJdbcApplicationId(String sparkWebUrl) {
         OkHttpClient client = new OkHttpClient();
-        Request okhttpRequest = new Request.Builder().url(sparkWebUrl).build();
-        try (Response okhttpResponse = client.newCall(okhttpRequest).execute()) {
-            HttpUrl url = okhttpResponse.request().url();
+        Request request = new Request.Builder().url(sparkWebUrl).build();
+        try (Response response = client.newCall(request).execute()) {
+            HttpUrl url = response.request().url();
             // http://spark.thrift.server:4040 -> http://resourcemanager:8088/proxy/redirect/application_xxxxxxx/
             String sparkJdbcApplicationId = url.pathSegments().get(url.pathSize() - 2);
-            if (!sparkJdbcApplicationId.startsWith("application_")) {
-                throw new IllegalArgumentException(sparkJdbcApplicationId + " is illegal");
-            }
+            checkArgument(sparkJdbcApplicationId.startsWith("application_"));
             return sparkJdbcApplicationId;
         } catch (IOException e) {
             throw new RuntimeException(e);
@@ -41,10 +44,13 @@ public class SparkUtil {
     public static List<SparkSqlJob> getSparkSqlJobFromSqlserver(String resourceManagerUrl, String sparkJdbcApplicationId) {
         try {
             List<SparkSqlJob> sparkSqlJobs = new ArrayList<>();
-            Document doc = Jsoup.connect(resourceManagerUrl + "/proxy/" + sparkJdbcApplicationId + "/sqlserver").get();
+            Document document = Jsoup.connect(resourceManagerUrl + "/proxy/" + sparkJdbcApplicationId + "/sqlserver").get();
             // SQL Statistics
             // User	JobID	GroupID	Start Time	Finish Time	Duration	Statement	State	Detail
-            Element table = doc.getElementsByTag("tbody").last();
+            Element table = document.getElementsByTag("tbody").last();
+            if (table == null) {
+                return sparkSqlJobs;
+            }
             for (Element row : table.getElementsByTag("tr")) {
                 SparkSqlJob sparkSqlJob = new SparkSqlJob();
                 Elements td = row.getElementsByTag("td");
@@ -73,66 +79,31 @@ public class SparkUtil {
         }
     }
 
-    public static List<Map> getSparkJobList(String resourceManagerUrl, String sparkJdbcApplicationId) {
+    public static List<Map> getSparkRunningJobListWithProgress(String resourceManagerUrl, String sparkJdbcApplicationId) {
+        List<Map> jobs = getSparkJobs(resourceManagerUrl, sparkJdbcApplicationId).stream()
+                                                                                 .filter(job -> job.get("status").equals("RUNNING"))
+                                                                                 .collect(Collectors.toList());
+        for (Map job : jobs) {
+            int numTasks = (int) job.get("numTasks");
+            int numCompletedTasks = (int) job.get("numCompletedTasks");
+            double progress = ((double) numCompletedTasks / numTasks) * 100;
+            job.put("progress", progress);
+        }
+        return jobs;
+    }
+
+    private static List<Map> getSparkJobs(String resourceManagerUrl, String sparkJdbcApplicationId) {
         try {
-            String originalJson = org.apache.http.client.fluent.Request.Get(resourceManagerUrl + "/proxy/" + sparkJdbcApplicationId + "/api/v1/applications/" + sparkJdbcApplicationId + "/jobs")
+            String json = org.apache.http.client.fluent.Request.Get(resourceManagerUrl + "/proxy/" + sparkJdbcApplicationId + "/api/v1/applications/" + sparkJdbcApplicationId + "/jobs")
                     .execute().returnContent().asString(UTF_8);
-/*
-[ {
-  "jobId" : 15,
-  "name" : "run at AccessController.java:0",
-  "description" : "SELECT * FROM ... LIMIT 100",
-  "submissionTime" : "2019-02-21T02:23:54.513GMT",
-  "completionTime" : "2019-02-21T02:24:02.561GMT",
-  "stageIds" : [ 21 ],
-  "jobGroup" : "b46b9cee-bb9d-4d10-8b44-5f7328ce5748",
-  "status" : "SUCCEEDED",
-  "numTasks" : 1,
-  "numActiveTasks" : 0,
-  "numCompletedTasks" : 1,
-  "numSkippedTasks" : 0,
-  "numFailedTasks" : 0,
-  "numActiveStages" : 0,
-  "numCompletedStages" : 1,
-  "numSkippedStages" : 0,
-  "numFailedStages" : 0
-}, {
-  "jobId" : 14,
-  "name" : "run at AccessController.java:0",
-  "description" : "SELECT * FROM ... LIMIT 100",
-  "submissionTime" : "2019-02-21T02:19:38.946GMT",
-  "completionTime" : "2019-02-21T02:19:50.317GMT",
-  "stageIds" : [ 20 ],
-  "jobGroup" : "7040a016-2f3c-47ee-a28e-086dcada02a4",
-  "status" : "SUCCEEDED",
-  "numTasks" : 1,
-  "numActiveTasks" : 0,
-  "numCompletedTasks" : 1,
-  "numSkippedTasks" : 0,
-  "numFailedTasks" : 0,
-  "numActiveStages" : 0,
-  "numCompletedStages" : 1,
-  "numSkippedStages" : 0,
-  "numFailedStages" : 0
-},
-...
-*/
-            ObjectMapper mapper = new ObjectMapper();
-            List<Map> jobList = mapper.readValue(originalJson, List.class);
-            return jobList;
+            return jsonToMaps(json);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
     }
 
-    public static List<Map> getSparkRunningJobListWithProgress(String resourceManagerUrl, String sparkJdbcApplicationId) {
-        List<Map> jobList = getSparkJobList(resourceManagerUrl, sparkJdbcApplicationId).stream().filter(m -> m.get("status").equals("RUNNING")).collect(Collectors.toList());
-        for (Map m : jobList) {
-            int numTasks = (int) m.get("numTasks");
-            int numCompletedTasks = (int) m.get("numCompletedTasks");
-            double progress = ((double) numCompletedTasks / numTasks) * 100;
-            m.put("progress", progress);
-        }
-        return jobList;
+    @VisibleForTesting
+    public static List<Map> jsonToMaps(String json) throws IOException {
+        return OBJECT_MAPPER.readValue(json, List.class);
     }
 }

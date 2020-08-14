@@ -2,6 +2,7 @@ package yanagishima.util;
 
 import me.geso.tinyorm.TinyORM;
 import yanagishima.row.Query;
+import yanagishima.row.SessionProperty;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -13,10 +14,12 @@ import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
+import java.util.Map;
 
 import static yanagishima.util.PathUtil.getResultFilePath;
 
-public class DbUtil {
+public final class DbUtil {
+    private DbUtil() { }
 
     public static void storeError(TinyORM db, String datasource, String engine, String queryId, String query, String user, String errorMessage) {
         try {
@@ -74,5 +77,17 @@ public class DbUtil {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    public static void insertSessionProperty(TinyORM db, String datasource, String engine, String queryId, Map<String, String> properties) {
+        properties.forEach((key, value) ->
+                db.insert(SessionProperty.class)
+                .value("datasource", datasource)
+                .value("engine", engine)
+                .value("query_id", queryId)
+                .value("session_key", key)
+                .value("session_value", value)
+                .execute()
+        );
     }
 }

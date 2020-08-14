@@ -25,7 +25,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-import static javax.servlet.http.HttpServletResponse.SC_FORBIDDEN;
+import static yanagishima.util.AccessControlUtil.sendForbiddenError;
+import static yanagishima.util.AccessControlUtil.validateDatasource;
+import static yanagishima.util.HttpRequestUtil.getRequiredParameter;
 
 @Singleton
 public class HiveQueryStatusServlet extends HttpServlet {
@@ -46,22 +48,16 @@ public class HiveQueryStatusServlet extends HttpServlet {
 	protected void doPost(HttpServletRequest request,
 			HttpServletResponse response) throws ServletException, IOException {
 
-		String datasource = HttpRequestUtil.getParam(request, "datasource");
-		if(yanagishimaConfig.isCheckDatasource()) {
-			if(!AccessControlUtil.validateDatasource(request, datasource)) {
-				try {
-					response.sendError(SC_FORBIDDEN);
-					return;
-				} catch (IOException e) {
-					throw new RuntimeException(e);
-				}
-			}
+		String datasource = getRequiredParameter(request, "datasource");
+		if (yanagishimaConfig.isCheckDatasource() && !validateDatasource(request, datasource)) {
+			sendForbiddenError(response);
+			return;
 		}
-		String queryid = HttpRequestUtil.getParam(request, "queryid");
+		String queryid = getRequiredParameter(request, "queryid");
 		String resourceManagerUrl = yanagishimaConfig.getResourceManagerUrl(datasource);
 		String userName = null;
 		Optional<String> hiveUser = Optional.ofNullable(request.getParameter("user"));
-		if(yanagishimaConfig.isUseAuditHttpHeaderName()) {
+		if (yanagishimaConfig.isUseAuditHttpHeaderName()) {
 			userName = request.getHeader(yanagishimaConfig.getAuditHttpHeaderName());
 		} else {
 			if (hiveUser.isPresent()) {
@@ -69,11 +65,11 @@ public class HiveQueryStatusServlet extends HttpServlet {
 			}
 		}
 
-		String engine = HttpRequestUtil.getParam(request, "engine");
+		String engine = getRequiredParameter(request, "engine");
 		Optional<Query> queryOptional = db.single(Query.class).where("query_id=? and datasource=? and engine=?", queryid, datasource, engine).execute();
-		if(engine.equals("hive")) {
+		if (engine.equals("hive")) {
 			Optional<Map> applicationOptional = YarnUtil.getApplication(resourceManagerUrl, queryid, userName, yanagishimaConfig.getResourceManagerBegin(datasource));
-			if(applicationOptional.isPresent()) {
+			if (applicationOptional.isPresent()) {
 				try {
 					response.setContentType("application/json");
 					PrintWriter writer = response.getWriter();
@@ -84,7 +80,7 @@ public class HiveQueryStatusServlet extends HttpServlet {
 					throw new RuntimeException(e);
 				}
 			} else {
-				if(!queryOptional.isPresent()) {
+				if (!queryOptional.isPresent()) {
 					HashMap<String, Object> retVal = new HashMap<String, Object>();
 					retVal.put("state", "RUNNING");
 					retVal.put("progress", 0);
@@ -92,7 +88,7 @@ public class HiveQueryStatusServlet extends HttpServlet {
 					JsonUtil.writeJSON(response, retVal);
 				}
 			}
-		} else if(engine.equals("spark")) {
+		} else if (engine.equals("spark")) {
 			HashMap<String, Object> retVal = new HashMap<String, Object>();
 			if (queryOptional.isPresent()) {
 				if (queryOptional.get().getStatus().equals(Status.SUCCEED.name())) {
@@ -107,14 +103,14 @@ public class HiveQueryStatusServlet extends HttpServlet {
 
                 String sparkJdbcApplicationId = SparkUtil.getSparkJdbcApplicationId(yanagishimaConfig.getSparkWebUrl(datasource));
                 List<Map> runningList = SparkUtil.getSparkRunningJobListWithProgress(resourceManagerUrl, sparkJdbcApplicationId);
-                if(runningList.isEmpty()) {
+                if (runningList.isEmpty()) {
                     retVal.put("progress", 0);
                 } else {
                     List<SparkSqlJob> sparkSqlJobList = SparkUtil.getSparkSqlJobFromSqlserver(resourceManagerUrl, sparkJdbcApplicationId);
-                    for(Map m : runningList) {
+                    for (Map m : runningList) {
                         String groupId = (String)m.get("jobGroup");
-                        for(SparkSqlJob ssj : sparkSqlJobList) {
-                            if(ssj.getGroupId().equals(groupId) && ssj.getUser().equals(hiveUser.orElse(null)) && !ssj.getJobIds().isEmpty()) {
+                        for (SparkSqlJob ssj : sparkSqlJobList) {
+                            if (ssj.getGroupId().equals(groupId) && ssj.getUser().equals(hiveUser.orElse(null)) && !ssj.getJobIds().isEmpty()) {
                                 int numTasks = (int) m.get("numTasks");
                                 int numCompletedTasks = (int) m.get("numCompletedTasks");
                                 double progress = ((double) numCompletedTasks / numTasks) * 100;

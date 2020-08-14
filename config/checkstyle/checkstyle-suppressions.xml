@@ -1,0 +1,17 @@
+<?xml version="1.0"?>
+<!DOCTYPE suppressions PUBLIC
+        "-//Puppy Crawl//DTD Suppressions 1.1//EN"
+        "http://www.puppycrawl.com/dtds/suppressions_1_1.dtd">
+
+<suppressions>
+    <suppress checks="[a-zA-Z0-9]*" files="[\\/]generated/source[\\/]"/>
+
+    <!-- Suppress Javadoc-related checks in test directories -->
+    <suppress checks="JavadocPackage" files="[\\/]test[\\/]"/>
+    <suppress checks="JavadocMethod" files="[\\/]test[\\/]"/>
+
+    <!-- Special care for Application class to make Spring Boot work -->
+    <suppress checks="UncommentedMain" files="Application"/>
+    <suppress checks="FinalClass" files="Application"/>
+    <suppress checks="HideUtilityClassConstructor" files="Application"/>
+</suppressions>

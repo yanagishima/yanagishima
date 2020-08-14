@@ -9,6 +9,8 @@ import result from '@/store/modules/result'
 import treeview from '@/store/modules/treeview'
 import timeline from '@/store/modules/timeline'
 import editor from '@/store/modules/editor'
+import notification from '@/store/modules/notification'
+import announce from '@/store/modules/announce'
 import * as api from '@/api'
 import * as ls from '@/store/localStorage'
 
@@ -50,6 +52,16 @@ const settings = {
     lsKey: 'theme',
     type: 'string'
   },
+  isCsv: {
+    default: false,
+    lsKey: 'isCsv',
+    type: 'boolean'
+  },
+  includeHeader: {
+    default: true,
+    lsKey: 'includeHeader',
+    type: 'boolean'
+  },
   isLocalStorage: {
     default: true,
     lsKey: 'localstorage',
@@ -67,7 +79,9 @@ function initialHash () {
     chart: 0,
     pivot: 0,
     line: 0,
-    table: ''
+    table: '',
+    where: '',
+    bookmark_params: ''
   }
 }
 
@@ -80,7 +94,9 @@ export default new Vuex.Store({
     result,
     treeview,
     timeline,
-    editor
+    editor,
+    notification,
+    announce
   },
   state: {
     settings: Object.entries(settings).reduce((obj, [key, val]) => Object.assign(obj, {[key]: val.default}), {}),
@@ -88,6 +104,7 @@ export default new Vuex.Store({
     engines: {},
     auths: {},
     metadataServices: {},
+    datetimePartitionHasHyphen: {},
     hash: initialHash(),
     authUser: null,
     authPass: null,
@@ -139,6 +156,10 @@ export default new Vuex.Store({
     },
     isMetadataService (state) {
       return state.metadataServices[state.hash.datasource]
+    },
+    datetimePartitionFormat (state) {
+      return state.datetimePartitionHasHyphen[state.hash.datasource]
+        ? '{yyyy}-{MM}-{dd}' : '{yyyy}{MM}{dd}'
     }
   },
   mutations: {
@@ -166,18 +187,21 @@ export default new Vuex.Store({
       const engines = {}
       const auths = {}
       const metadataServices = {}
+      const datetimePartitionHasHyphen = {}
       data.forEach(d => {
         Object.entries(d).forEach(([key, val]) => {
           datasources.push(key)
           engines[key] = val.engines
           auths[key] = val.auth
           metadataServices[key] = val.metadataService
+          datetimePartitionHasHyphen[key] = val.datetimePartitionHasHyphen
         })
       })
       state.datasources = datasources
       state.engines = engines
       state.auths = auths
       state.metadataServices = metadataServices
+      state.datetimePartitionHasHyphen = datetimePartitionHasHyphen
 
       ls.setItemJson('engines', engines)
       ls.setItemJson('auths', auths)

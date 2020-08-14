@@ -12,9 +12,9 @@
             <table class="table table-fixed">
               <thead>
               <tr>
-                <th width="25%">Effective Range</th>
-                <th width="25%">Keyboard</th>
-                <th width="50%">Command</th>
+                <th class="w-25">Effective Range</th>
+                <th class="w-25">Keyboard</th>
+                <th class="w-50">Command</th>
               </tr>
               </thead>
               <tbody>
@@ -52,10 +52,10 @@
             <table class="table table-fixed">
               <tbody>
               <tr>
-                <td width="70%">
+                <td>
                   <BaseAce :code="demo.variables" :readonly="true" css-class="bg-transparent"></BaseAce>
                 </td>
-                <td width="30%" class="text-right">
+                <td class="w-25 text-right">
                   <a href="#" class="btn btn-sm btn-secondary" @click.prevent="variablesDemo"><i
                     class="fa fa-fw fa-play mr-1"></i>Demo</a>
                 </td>
@@ -68,10 +68,10 @@
             <table class="table table-fixed">
               <tbody>
               <tr>
-                <td width="70%">
+                <td>
                   <BaseAce code="SELECT dt, pageview FROM sample" :readonly="true" css-class="bg-transparent"></BaseAce>
                 </td>
-                <td width="30%" class="text-right">
+                <td class="w-25 text-right">
                   <a href="#" class="btn btn-sm btn-secondary" @click.prevent="chartDemo"><i
                     class="fa fa-fw fa-play mr-1"></i>Demo</a>
                 </td>

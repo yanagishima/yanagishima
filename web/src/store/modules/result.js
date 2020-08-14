@@ -240,14 +240,13 @@ const actions = {
         commit('editor/setInputQuery', {data: data.queryString.remove(/^EXPLAIN( \(TYPE DISTRIBUTED\)| \(TYPE VALIDATE\)| \(FORMAT GRAPHVIZ\)| ANALYZE|) /i)}, {root: true})
         commit('setEditLabel', {data: data.editLabel})
 
-        if (!data.error) {
-          if (data.results && /^show partitions /i.test(data.queryString)) {
-            data.results.sortBy(r => r[0], true)
-          }
-          commit('setResponse', {data})
-        } else {
+        if (data.error) {
           commit('setError', {data: data.error})
         }
+        if (data.results && /^show partitions /i.test(data.queryString)) {
+          data.results.sortBy(r => r[0], true)
+        }
+        commit('setResponse', {data})
       } else {
         commit('setQueryString', {data: ''})
       }

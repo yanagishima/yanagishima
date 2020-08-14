@@ -5,17 +5,11 @@ import io.airlift.units.DataSize;
 import java.util.List;
 
 public class HiveQueryResult {
-
     private List<String> columns;
-
     private List<List<String>> records;
-
     private String warningMessage;
-
     private String queryId;
-
     private int lineNumber;
-
     private DataSize rawDataSize;
 
     public List<String> getColumns() {

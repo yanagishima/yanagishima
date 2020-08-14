@@ -6,7 +6,8 @@ import me.geso.tinyorm.TinyORM;
 import static java.lang.String.format;
 import static yanagishima.util.DbUtil.storeError;
 
-public class TimeoutUtil {
+public final class TimeoutUtil {
+    private TimeoutUtil() { }
 
     public static void checkTimeout(TinyORM db, Duration queryMaxRunTime, long start, String datasource, String engine, String queryId, String query, String user) {
         if (System.currentTimeMillis() - start > queryMaxRunTime.toMillis()) {

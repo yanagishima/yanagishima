@@ -11,22 +11,21 @@
         </div>
         <div class="modal-body p-4">
           <div class="card-deck">
-            <div class="card" v-for="key in partitionKeys" :key="key">
-              <div class="card-header">
-                <i class="fa fa-fw mr-1" @click.prevent="toggleOrder(key)"
-                   :class="{'fa-arrow-up': !orderDesc[key], 'fa-arrow-down': orderDesc[key]}"></i>
-                {{key}}
-                <span v-if="sortedPartitionValues[key] && sortedPartitionValues[key].length"
-                      class="badge badge-default badge-pill">{{sortedPartitionValues[key].length}}</span>
-                <div class="float-right form-filter">
-                  <i class="fa fa-filter mt-1 mr-1" :class="{'text-primary': filterPartitionKeywords[key] && filterPartitionKeywords[key].length, 'text-muted': !filterPartitionKeywords[key] || !filterPartitionKeywords[key].length}"></i>
-                  <input type="text" class="pull-right form-filter-input" v-model="filterPartitionKeywords[key]">
+            <div class="card ml-0" v-for="key in partitionKeys" :key="key">
+              <div class="card-header d-flex justify-content-between align-items-center p-2">
+                <div class="col-7 d-flex align-items-center px-0">
+                  <span role="button" @click.prevent="toggleOrder(key)" style="cursor: pointer"><i class="fa fa-fw" :class="{'fa-arrow-up': !orderDesc[key], 'fa-arrow-down': orderDesc[key]}"></i>{{key}}</span><span v-if="sortedPartitionValues[key] && sortedPartitionValues[key].length"
+                  class="badge badge-secondary badge-pill ml-1">{{sortedPartitionValues[key].length}}</span>
+                </div>
+                <div class="col-5 px-0 form-filter d-flex align-items-center">
+                  <small><i class="fa fa-filter mr-1" :class="{'text-primary': filterPartitionKeywords[key] && filterPartitionKeywords[key].length, 'text-muted': !filterPartitionKeywords[key] || !filterPartitionKeywords[key].length}"></i></small>
+                  <input type="text" class="form-filter-input w-100" v-model="filterPartitionKeywords[key]">
                 </div>
               </div>
-              <div v-if="loadingPartitions && key === nextPartitionKey" class="card-block">
+              <div v-if="loadingPartitions && key === nextPartitionKey" class="card-body">
                 <i class="fa fa-fw fa-spinner fa-pulse mr-1"></i>Loading
               </div>
-              <div v-else-if="!partitionValues[key] || !partitionValues[key].length" class="card-block">
+              <div v-else-if="!partitionValues[key] || !partitionValues[key].length" class="card-body">
                 <span class="text-muted">No result</span>
               </div>
               <div v-else class="list-group list-group-flush">
@@ -36,15 +35,15 @@
                             @click="setPartitionToQuery(key, val)">
                       <i class="far fa-fw fa-keyboard mr-1"></i>Set
                     </button>
-                    {{val.substring(0, 32)}}
+                    {{val.substring(0, 50)}}
                   </div>
                   <a v-else href="#" :key="val" @click.prevent="selectAndGetNextPartition(key, val)"
-                     class="list-group-item" :class="{active: selectedPartitions[key] === val}">
+                     class="list-group-item text-truncate" :class="{active: selectedPartitions[key] === val}" :title="val">
                     <button class="btn btn-sm btn-secondary set" data-dismiss="modal"
                             @click="setPartitionToQuery(key, val)"><i
                       class="far fa-fw fa-keyboard mr-1"></i>Set
                     </button>
-                    {{val.substring(0, 32)}}
+                    {{val.substring(0, 50)}}
                   </a>
                 </template>
               </div>
@@ -150,6 +149,8 @@ export default {
       for (const [i, k] of this.partitionKeys.entries()) {
         if (this.partitionKeysTypes[i] === 'varchar' || this.partitionKeysTypes[i] === 'string') {
           where.push(`${k}='${this.selectedPartitions[k]}'`)
+        } else if (this.partitionKeysTypes[i] === 'date') {
+          where.push(`${k}=DATE '${this.selectedPartitions[k]}'`)
         } else {
           where.push(`${k}=${this.selectedPartitions[k]}`)
         }

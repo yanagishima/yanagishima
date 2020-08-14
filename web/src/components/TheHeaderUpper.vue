@@ -1,19 +1,21 @@
 <template>
   <div id="header-upper" class="py-2">
-    <div class="row align-items-center">
-      <div class="col-8">
+    <div class="d-flex align-items-center justify-content-between">
+      <div>
         <h1 id="logo" class="d-inline-block mr-4">
           <a :href="buildUrl({datasource, engine})" @click.prevent="$emit('logo-click')">
             <span id="logo-figure" class="mr-2"></span>{{sitename}}
           </a>
-          <span class="l-2 font-weight-normal">{{version}}</span>
         </h1>
         <span class="mr-2">
-          <small class="mr-1">Datasource</small>
+          <small>Source</small>
           <template v-if="datasources && datasources.length > 1">
-            <div class="btn-group">
-              <button v-for="item in datasources" :key="item" @click.prevent="setDatasource(item)" class="btn btn-sm"
-                      :class="{'btn-primary': item !== datasource, 'btn-secondary': item === datasource}">{{item}}</button>
+            <div class="dropdown d-inline-block">
+              <button class="btn btn-sm btn-primary" data-toggle="dropdown">{{datasource}}</button>
+              <div class="dropdown-menu">
+                <button v-for="d in datasources" :key="d" class="dropdown-item" :class="{active: d === datasource}"
+                        @click.prevent="setDatasource(d)">{{d}}</button>
+              </div>
             </div>
           </template>
           <template v-else>
@@ -21,46 +23,44 @@
           </template>
         </span>
         <span class="mr-2">
-          <small class="mr-1">Engine</small>
+          <small>Engine</small>
           <template v-if="engines[datasource] && engines[datasource].length > 1">
-            <div class="btn-group">
-              <button v-for="item in engines[datasource]" :key="item" @click.prevent="setEngine(item)" class="btn btn-sm"
-                      :class="{'btn-primary': item !== engine, 'btn-secondary': item === engine}">{{item}}</button>
+            <div class="dropdown d-inline-block">
+              <button class="btn btn-sm btn-primary" data-toggle="dropdown">{{engine}}</button>
+              <div class="dropdown-menu">
+                <button v-for="e in engines[datasource]" :key="e" class="dropdown-item" :class="{active: e === engine}"
+                        @click="setEngine(e)">{{e}}</button>
+              </div>
             </div>
           </template>
           <template v-else>
             <strong>{{engine}}</strong>
           </template>
         </span>
-        <span v-if="auths[datasource]" class="mr-2">
-          <small class="mr-1">User</small>
-          <button type="button" class="btn btn-sm btn-primary" data-toggle="modal" data-target="#auth">
-            <template v-if="authUser">
-              {{authUser}}
-            </template>
-            <template v-else>
-              ?
-            </template>
-          </button>
-        </span>
       </div>
-      <div class="col-4 text-right">
-        <template v-if="isPresto">
-          <a href="https://prestosql.io/docs/current/" class="text-white mr-2" target="_blank"><i
-            class="fa fa-fw fa-external-link mr-1"></i>Presto Doc</a>
+      <div>
+        <a href="#notification" class="text-white mr-2" data-toggle="modal" data-target="#notification">
+          <span class="notification-bell-wrapper" :class="{unread: hasNotificationUnread}"><i class="fas fa-lg fa-bell notification-bell"></i></span>
+        </a>
+        <template v-if="auths[datasource]">
+          <a href="#auth" class="text-white mr-2" data-toggle="modal" data-target="#auth">
+            <i v-if="authUser" class="fas fa-lg fa-user"></i>
+            <i v-else class="fas fa-lg fa-user-times"></i>
+          </a>
         </template>
-        <template v-else-if="isHive">
-          <a href="https://cwiki.apache.org/confluence/display/Hive/LanguageManual" class="text-white mr-2"
-             target="_blank"><i class="fa fa-fw fa-external-link mr-1"></i>Hive Doc</a>
-        </template>
-        <template v-else-if="isSpark">
-          <a href="https://spark.apache.org/" class="text-white mr-2"
-             target="_blank"><i class="fa fa-fw fa-external-link mr-1"></i>Spark Doc</a>
-        </template>
-        <a href="#help" class="text-white mr-2" data-toggle="modal" data-target="#help"><i
-          class="fa fa-fw fa-question mr-1"></i>Help</a>
-        <a href="#settings" class="text-white mr-2" @click.prevent="toggleSettingOpen"><i
-          class="fa fa-fw fa-cog mr-1" :class="{'fa-spin': isSettingOpen}"></i>Settings</a>
+        <div class="dropdown d-inline-block mr-2">
+          <a href="#" data-toggle="dropdown" class="text-white"><i class="fa fa-lg fa-question"></i></a>
+          <div class="dropdown-menu dropdown-menu-right" style="right: auto">
+            <small class="dropdown-item-text text-muted ml-2">Version {{version}}</small>
+            <div class="dropdown-divider my-1"></div>
+            <a href="#help" class="dropdown-item mr-2" data-toggle="modal" data-target="#help">Help</a>
+            <a v-if="isPresto" href="https://prestosql.io/docs/current/" class="dropdown-item" target="_blank" rel="noopener">Presto Doc</a>
+            <a v-if="isHive" href="https://cwiki.apache.org/confluence/display/Hive/LanguageManual" class="dropdown-item" target="_blank" rel="noopener">Hive Doc</a>
+            <a v-if="isSpark" href="https://spark.apache.org/" class="dropdown-item" target="_blank" rel="noopener">Spark Doc</a>
+          </div>
+        </div>
+        <a href="#settings" class="text-white" @click.prevent="toggleSettingOpen"><i
+          class="fa fa-lg fa-cog" :class="{'fa-spin': isSettingOpen}"></i></a>
       </div>
     </div>
   </div>
@@ -97,7 +97,10 @@ export default {
       'isPresto',
       'isHive',
       'isSpark'
-    ])
+    ]),
+    ...mapGetters('notification', {
+      hasNotificationUnread: 'hasUnread'
+    })
   },
   methods: {
     setDatasource (datasource) {
@@ -113,5 +116,98 @@ export default {
 }
 </script>
 
-<style scoped>
+<style scoped lang="scss">
+$duration: 1s;
+$timing: ease-out;
+$count: 5;
+
+.notification-bell-wrapper {
+  display: inline-block;
+  position: relative;
+  width: 1rem;
+  height: 1rem;
+  text-align: center;
+
+  &.unread {
+    &:before, &:after {
+      content: "";
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      top: 0;
+      left: 0;
+      border: 2px solid white;
+      border-radius: 50%;
+      opacity: 0;
+    }
+  }
+
+  &:before {
+    animation: notification-bell-before $duration $timing 0s $count;
+  }
+
+  &:after {
+    animation: notification-bell-after $duration $timing 0s $count;
+  }
+}
+
+.unread .notification-bell {
+  animation: notification-bell-swing $duration $timing 0s $count;
+}
+
+@keyframes notification-bell-before {
+  0%, 40% {
+    transform: scale(0);
+    opacity: 0;
+  }
+
+  50% {
+    transform: scale(1.2);
+    opacity: .2;
+  }
+
+  100% {
+    transform: scale(2);
+    opacity: 0
+  }
+}
+
+@keyframes notification-bell-after {
+  0%, 40% {
+    transform: scale(0);
+    opacity: 0;
+  }
+
+  50% {
+    transform: scale(1.5);
+    opacity: .1;
+  }
+
+  100% {
+    transform: scale(2.3);
+    opacity: 0;
+  }
+}
+
+@keyframes notification-bell-swing {
+  30% {
+    transform: rotateZ(0);
+  }
+
+  40% {
+    transform: rotateZ(-30deg);
+  }
+
+  60% {
+    transform: rotateZ(25deg);
+  }
+
+  80% {
+    transform: rotateZ(-15deg);
+  }
+
+  100% {
+    transform: rotateZ(5deg);
+  }
+}
 </style>

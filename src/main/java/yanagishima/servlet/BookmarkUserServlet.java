@@ -5,84 +5,57 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import yanagishima.config.YanagishimaConfig;
 import yanagishima.row.Bookmark;
-import yanagishima.util.AccessControlUtil;
-import yanagishima.util.HttpRequestUtil;
-import yanagishima.util.JsonUtil;
+import yanagishima.model.HttpRequestContext;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
-import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static javax.servlet.http.HttpServletResponse.SC_FORBIDDEN;
+import static java.util.Objects.requireNonNull;
+import static yanagishima.util.AccessControlUtil.sendForbiddenError;
+import static yanagishima.util.AccessControlUtil.validateDatasource;
+import static yanagishima.util.JsonUtil.writeJSON;
 
 @Singleton
 public class BookmarkUserServlet extends HttpServlet {
-
-    private static Logger LOGGER = LoggerFactory
-            .getLogger(BookmarkUserServlet.class);
-
+    private static final Logger LOGGER = LoggerFactory.getLogger(BookmarkUserServlet.class);
     private static final long serialVersionUID = 1L;
 
-    @Inject
-    private TinyORM db;
-
-    private YanagishimaConfig yanagishimaConfig;
+    private final YanagishimaConfig config;
+    private final TinyORM db;
 
     @Inject
-    public BookmarkUserServlet(YanagishimaConfig yanagishimaConfig) {
-        this.yanagishimaConfig = yanagishimaConfig;
+    public BookmarkUserServlet(YanagishimaConfig config, TinyORM db) {
+        this.config = config;
+        this.db = db;
     }
 
     @Override
-    protected void doGet(HttpServletRequest request,
-                          HttpServletResponse response) throws ServletException, IOException {
-
-        HashMap<String, Object> retVal = new HashMap<String, Object>();
-
+    protected void doGet(HttpServletRequest request, HttpServletResponse response) {
+        HttpRequestContext context = new HttpRequestContext(request);
         try {
-            String datasource = HttpRequestUtil.getParam(request, "datasource");
-            if(yanagishimaConfig.isCheckDatasource()) {
-                if(!AccessControlUtil.validateDatasource(request, datasource)) {
-                    try {
-                        response.sendError(SC_FORBIDDEN);
-                        return;
-                    } catch (IOException e) {
-                        throw new RuntimeException(e);
-                    }
-                }
-            }
+            requireNonNull(context.getDatasource(), "datasource is null");
 
-            String engine = HttpRequestUtil.getParam(request, "engine");
-            String userName = request.getHeader(yanagishimaConfig.getAuditHttpHeaderName());
-            List<Bookmark> bookmarkList = db.search(Bookmark.class).where("datasource = ? and engine = ? and user = ?", datasource, engine, userName).execute();
-
-            List<Map> resultMapList = new ArrayList<>();
-            for(Bookmark bookmark : bookmarkList) {
-                Map<String, Object> m = new HashMap<>();
-                m.put("bookmark_id", bookmark.getBookmarkId());
-                m.put("datasource", bookmark.getDatasource());
-                m.put("engine", bookmark.getEngine());
-                m.put("query", bookmark.getQuery());
-                m.put("title", bookmark.getTitle());
-                resultMapList.add(m);
+            if (config.isCheckDatasource() && !validateDatasource(request, context.getDatasource())) {
+                sendForbiddenError(response);
+                return;
             }
-            retVal.put("bookmarkList", resultMapList);
-            
+            requireNonNull(context.getEngine(), "engine is null");
+            String userName = request.getHeader(config.getAuditHttpHeaderName());
+            List<Bookmark> bookmarks;
+            if (context.isShowBookmarkAll()) {
+                bookmarks = db.search(Bookmark.class).where("engine = ? AND user = ?", context.getEngine(), userName).execute();
+            } else {
+                bookmarks = db.search(Bookmark.class).where("datasource = ? AND engine = ? AND user = ?", context.getDatasource(), context.getEngine(), userName).execute();
+            }
+            writeJSON(response, Map.of("bookmarkList", bookmarks));
         } catch (Throwable e) {
             LOGGER.error(e.getMessage(), e);
-            retVal.put("error", e.getMessage());
+            writeJSON(response, Map.of("error", e.getMessage()));
         }
-
-        JsonUtil.writeJSON(response, retVal);
-
     }
-
 }

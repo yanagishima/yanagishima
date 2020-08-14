@@ -1,25 +1,35 @@
 package yanagishima.util;
 
-
 import javax.servlet.http.HttpServletRequest;
 
-public class HttpRequestUtil {
+import static java.lang.String.format;
 
-    public static String getParam(HttpServletRequest request, String name) {
-        String p = request.getParameter(name);
-        if (p == null) {
-            throw new RuntimeException("Missing required parameter '" + name + "'.");
-        } else {
-            return p;
-        }
+public final class HttpRequestUtil {
+    private HttpRequestUtil() { }
+
+    public static String getOrDefaultParameter(HttpServletRequest request, String key, String defaultValue) {
+        String value = request.getParameter(key);
+        return value == null ? defaultValue : value;
     }
 
-    public static String getHeader(HttpServletRequest request, String name) {
-        String p = request.getHeader(name);
-        if (p == null) {
-            throw new RuntimeException("Missing required header '" + name + "'.");
-        } else {
-            return p;
+    public static boolean getOrDefaultParameter(HttpServletRequest request, String key, boolean defaultValue) {
+        String value = request.getParameter(key);
+        return value == null ? defaultValue : Boolean.parseBoolean(value);
+    }
+
+    public static String getRequiredParameter(HttpServletRequest request, String key) {
+        String value = request.getParameter(key);
+        if (value == null) {
+            throw new IllegalArgumentException(format("Missing required parameter '%s'", key));
         }
+        return value;
+    }
+
+    public static String getRequiredHeader(HttpServletRequest request, String key) {
+        String value = request.getHeader(key);
+        if (value == null) {
+            throw new IllegalArgumentException(format("Missing required header '%s'", key));
+        }
+        return value;
     }
 }

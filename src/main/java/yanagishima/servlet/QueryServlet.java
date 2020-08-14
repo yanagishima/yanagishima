@@ -1,16 +1,21 @@
 package yanagishima.servlet;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import me.geso.tinyorm.TinyORM;
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.Response;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import yanagishima.config.YanagishimaConfig;
-import yanagishima.row.Query;
-import yanagishima.util.AccessControlUtil;
-import yanagishima.util.HttpRequestUtil;
+import static io.prestosql.client.OkHttpUtil.basicAuth;
+import static java.lang.String.format;
+import static java.lang.String.join;
+import static java.util.Collections.nCopies;
+import static javax.servlet.http.HttpServletResponse.SC_OK;
+import static yanagishima.util.AccessControlUtil.sendForbiddenError;
+import static yanagishima.util.AccessControlUtil.validateDatasource;
+import static yanagishima.util.HttpRequestUtil.getRequiredParameter;
+
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
@@ -18,145 +23,107 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.io.IOException;
-import java.io.PrintWriter;
-import java.util.*;
-import java.util.stream.Collectors;
 
-import static com.facebook.presto.client.OkHttpUtil.basicAuth;
-import static javax.servlet.http.HttpServletResponse.SC_FORBIDDEN;
-import static javax.servlet.http.HttpServletResponse.SC_HTTP_VERSION_NOT_SUPPORTED;
-import static javax.servlet.http.HttpServletResponse.SC_OK;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import me.geso.tinyorm.TinyORM;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.Response;
+import yanagishima.config.YanagishimaConfig;
+import yanagishima.row.Query;
 
 @Singleton
 public class QueryServlet extends HttpServlet {
+    private static final long serialVersionUID = 1L;
+    private static final int LIMIT = 100;
+    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
-	private static Logger LOGGER = LoggerFactory.getLogger(QueryServlet.class);
+    private final YanagishimaConfig config;
+    private final TinyORM db;
 
-	private static final long serialVersionUID = 1L;
+    private final OkHttpClient httpClient = new OkHttpClient();
 
-	private YanagishimaConfig yanagishimaConfig;
+    @Inject
+    public QueryServlet(YanagishimaConfig config, TinyORM db) {
+        this.config = config;
+        this.db = db;
+    }
 
-	@Inject
-	private TinyORM db;
+    @Override
+    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        response.setContentType("application/json");
+        PrintWriter writer = response.getWriter();
+        String datasource = getRequiredParameter(request, "datasource");
+        if (config.isCheckDatasource() && !validateDatasource(request, datasource)) {
+            sendForbiddenError(response);
+            return;
+        }
+        String coordinatorServer = config.getPrestoCoordinatorServerOrNull(datasource);
+        if (coordinatorServer == null) {
+            writer.println("[]");
+            return;
+        }
 
-	private static final int LIMIT = 100;
+        Optional<String> user = Optional.ofNullable(request.getParameter("user"));
+        Optional<String> password = Optional.ofNullable(request.getParameter("password"));
+        OkHttpClient client = httpClient;
+        if (user.isPresent() && password.isPresent()) {
+            if (user.get().isEmpty()) {
+                writer.println(OBJECT_MAPPER.writeValueAsString(Map.of("error", "user is empty")));
+                return;
+            }
+            OkHttpClient.Builder clientBuilder = httpClient.newBuilder();
+            clientBuilder.addInterceptor(basicAuth(user.get(), password.get()));
+            client = clientBuilder.build();
+        }
+        String userName = request.getHeader(config.getAuditHttpHeaderName());
+        Request prestoRequest;
+        if (userName == null) {
+            prestoRequest = new Request.Builder().url(coordinatorServer + "/v1/query").build();
+        } else {
+            prestoRequest = new Request.Builder().url(coordinatorServer + "/v1/query").addHeader("X-Presto-User", userName).build();
+        }
 
-	private OkHttpClient httpClient = new OkHttpClient();
+        String originalJson;
+        try (Response prestoResponse = client.newCall(prestoRequest).execute()) {
+            originalJson = prestoResponse.body().string();
+            int code = prestoResponse.code();
+            if (code != SC_OK) {
+                writer.println(OBJECT_MAPPER.writeValueAsString(Map.of("code", code, "error", prestoResponse.message())));
+                return;
+            }
+        }
 
-	@Inject
-	public QueryServlet(YanagishimaConfig yanagishimaConfig) {
-		this.yanagishimaConfig = yanagishimaConfig;
-	}
+        List<Map> list = OBJECT_MAPPER.readValue(originalJson, List.class);
+        List<Map> runningList = list.stream().filter(m -> m.get("state").equals("RUNNING")).collect(Collectors.toList());
+        List<Map> notRunningList = list.stream().filter(m -> !m.get("state").equals("RUNNING")).collect(Collectors.toList());
+        runningList.sort((a, b) -> String.class.cast(b.get("queryId")).compareTo(String.class.cast(a.get("queryId"))));
+        notRunningList.sort((a, b) -> String.class.cast(b.get("queryId")).compareTo(String.class.cast(a.get("queryId"))));
 
-	@Override
-	protected void doPost(HttpServletRequest request,
-			HttpServletResponse response) throws ServletException, IOException {
+        List<Map> limitedList = new ArrayList<>();
+        limitedList.addAll(runningList);
+        limitedList.addAll(notRunningList.subList(0, Math.min(LIMIT, list.size()) - runningList.size()));
 
-		response.setContentType("application/json");
-		PrintWriter writer = response.getWriter();
-		String datasource = HttpRequestUtil.getParam(request, "datasource");
-		if(yanagishimaConfig.isCheckDatasource()) {
-			if(!AccessControlUtil.validateDatasource(request, datasource)) {
-				try {
-					response.sendError(SC_FORBIDDEN);
-					return;
-				} catch (IOException e) {
-					throw new RuntimeException(e);
-				}
-			}
-		}
-		String prestoCoordinatorServer = yanagishimaConfig.getPrestoCoordinatorServerOrNull(datasource);
-		if(prestoCoordinatorServer == null) {
-			writer.println("[]");
-			return;
-		}
+        List<String> queryIds = limitedList.stream().map(query -> (String) query.get("queryId")).collect(Collectors.toList());
 
-		String originalJson = null;
-		Request prestoRequest = new Request.Builder().url(prestoCoordinatorServer + "/v1/query").build();
+        String placeholder = join(", ", nCopies(queryIds.size(), "?"));
+        List<Query> queries = db.searchBySQL(Query.class,
+                                             format("SELECT engine, query_id, fetch_result_time_string, query_string "
+                                                    + "FROM query "
+                                                    + "WHERE engine='presto' and datasource=\'%s\' and query_id IN (%s)",
+                                                    datasource, placeholder),
+                                             new ArrayList<>(queryIds));
 
-		Optional<String> prestoUser = Optional.ofNullable(request.getParameter("user"));
-		Optional<String> prestoPassword = Optional.ofNullable(request.getParameter("password"));
-		if (prestoUser.isPresent() && prestoPassword.isPresent()) {
-			if(prestoUser.get().length() == 0) {
-				HashMap<String, Object> retVal = new HashMap<String, Object>();
-				retVal.put("error", "user is empty");
-				ObjectMapper mapper = new ObjectMapper();
-				String json = mapper.writeValueAsString(retVal);
-				writer.println(json);
-				return;
-			}
-			OkHttpClient.Builder clientBuilder = httpClient.newBuilder();
-			clientBuilder.addInterceptor(basicAuth(prestoUser.get(), prestoPassword.get()));
-			try (Response prestoResponse = clientBuilder.build().newCall(prestoRequest).execute()) {
-				originalJson = prestoResponse.body().string();
-				int code = prestoResponse.code();
-				if(code != SC_OK) {
-					HashMap<String, Object> retVal = new HashMap<String, Object>();
-					retVal.put("code", code);
-					retVal.put("error", prestoResponse.message());
-					ObjectMapper mapper = new ObjectMapper();
-					String json = mapper.writeValueAsString(retVal);
-					writer.println(json);
-					return;
-				}
-			}
-		} else {
-			try (Response prestoResponse = httpClient.newCall(prestoRequest).execute()) {
-				originalJson = prestoResponse.body().string();
-				int code = prestoResponse.code();
-				if(code != SC_OK) {
-					HashMap<String, Object> retVal = new HashMap<String, Object>();
-					retVal.put("code", code);
-					retVal.put("error", prestoResponse.message());
-					ObjectMapper mapper = new ObjectMapper();
-					String json = mapper.writeValueAsString(retVal);
-					writer.println(json);
-					return;
-				}
-
-			}
-		}
-
-		ObjectMapper mapper = new ObjectMapper();
-		List<Map> list = mapper.readValue(originalJson, List.class);
-		List<Map> runningList = list.stream().filter(m -> m.get("state").equals("RUNNING")).collect(Collectors.toList());;
-		List<Map> notRunningList = list.stream().filter(m -> !m.get("state").equals("RUNNING")).collect(Collectors.toList());;
-		runningList.sort((a,b)-> String.class.cast(b.get("queryId")).compareTo(String.class.cast(a.get("queryId"))));
-		notRunningList.sort((a,b)-> String.class.cast(b.get("queryId")).compareTo(String.class.cast(a.get("queryId"))));
-
-		List<Map> limitedList = new ArrayList<>();
-		limitedList.addAll(runningList);
-		if(list.size() > LIMIT) {
-			limitedList.addAll(notRunningList.subList(0, LIMIT - runningList.size()));
-		} else {
-			limitedList.addAll(notRunningList.subList(0, list.size() - runningList.size()));
-		}
-
-		List<String> queryidList = new ArrayList<>();
-		for(Map m : limitedList) {
-			queryidList.add((String)m.get("queryId"));
-		}
-
-		String placeholder = queryidList.stream().map(r -> "?").collect(Collectors.joining(", "));
-		List<Query> queryList = db.searchBySQL(Query.class,
-				"SELECT engine, query_id, fetch_result_time_string, query_string FROM query WHERE engine='presto' and datasource=\'" + datasource + "\' and query_id IN (" + placeholder + ")",
-				queryidList.stream().collect(Collectors.toList()));
-
-		List<String> existdbQueryidList = new ArrayList<>();
-		for(Query query : queryList) {
-			existdbQueryidList.add(query.getQueryId());
-		}
-		for(Map m : limitedList) {
-			String queryid = (String)m.get("queryId");
-			if(existdbQueryidList.contains(queryid)) {
-				m.put("existdb", true);
-			} else {
-				m.put("existdb", false);
-			}
-		}
-		String json = mapper.writeValueAsString(limitedList);
-		writer.println(json);
-	}
-
+        List<String> existDbQueryIds = new ArrayList<>();
+        for (Query query : queries) {
+            existDbQueryIds.add(query.getQueryId());
+        }
+        for (Map query : limitedList) {
+            String queryId = (String) query.get("queryId");
+            query.put("existdb", existDbQueryIds.contains(queryId));
+        }
+        String json = OBJECT_MAPPER.writeValueAsString(limitedList);
+        writer.println(json);
+    }
 }

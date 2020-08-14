@@ -1,5 +1,5 @@
 <template>
-  <div id="header-loower">
+  <div id="header-lower">
     <div class="editor mb-2">
       <BaseAce :code="inputQuery" :goto-line="gotoLine" :focus="focus" :min-lines="settings.minline" :max-lines="Infinity"
            :theme="settings.theme" @change-code="setInputQuery" @run-code="runQuery"
@@ -18,11 +18,11 @@
       </div>
     </fieldset>
     <div class="row align-items-end">
-      <div class="col">
+      <div class="col-7 col-lg-6">
         <ul class="nav nav-tabs">
           <li class="nav-item" v-for="t in tabs" :key="t.id">
             <a class="nav-link" href="#" @click.prevent="setTab(t.id)" :class="{active: t.id === tab}">
-              <i class="fa-fw mr-1" :class="`${t.iconStyle || 'fas'} fa-${t.icon}`"></i><span class="hidden-lg-down">{{t.name}}</span>
+              <i class="fa-fw mr-1" :class="`${t.iconStyle || 'fas'} fa-${t.icon}`"></i><span class="d-none d-xl-inline">{{t.name}}</span>
             </a>
           </li>
         </ul>
@@ -47,31 +47,25 @@
                     :disabled="!inputQuery.length || existBookmark"><i class="far fa-fw fa-star"></i></button>
           </div>
           <div class="btn-group ml-3">
-            <button type="button" class="btn btn-primary px-4"
-                    :disabled="!inputQuery.length || loading || !datasourceIndex"
-                    @click="runQuery()"><i class="fa fa-fw fa-play mr-1"></i><strong>Run</strong>
+            <button type="button" class="btn btn-primary" :disabled="!runnable"
+                  @click="runQuery()"><i class="fa fa-fw fa-play mr-1"></i><strong>Run</strong>
             </button>
-            <template v-if="isPresto">
-              <button type="button" class="btn btn-primary"
-                    :disabled="!inputQuery.length || loading || !datasourceIndex" @click="explainQuery">Explain(T)
-              </button>
-              <button type="button" class="btn btn-primary"
-                    :disabled="!inputQuery.length || loading || !datasourceIndex" @click="explainGraphvizQuery">Explain(G)
-              </button>
-            </template>
-            <template v-else-if="isHive || isSpark">
-              <button type="button" class="btn btn-primary"
-                    :disabled="!inputQuery.length || loading || !datasourceIndex" @click="explainQuery">Explain
-              </button>
-            </template>
-            <template v-else-if="isElasticsearch">
-              <button type="button" class="btn btn-primary"
-                    :disabled="!inputQuery.length || loading || !datasourceIndex" @click="translateQuery">Translate
-              </button>
-              <button type="button" class="btn btn-primary"
-                    :disabled="!inputQuery.length || loading || !datasourceIndex" @click="explainQuery">Explain
-              </button>
-            </template>
+            <button type="button" class="btn btn-primary dropdown-toggle dropdown-toggle-split" data-toggle="dropdown" :disabled="!runnable">
+              <span class="sr-only">Toggle Dropdown</span>
+            </button>
+            <div class="dropdown-menu dropdown-menu-right" style="right: auto">
+              <template v-if="isPresto">
+                <button type="button" class="dropdown-item" :disabled="!runnable" @click="explainQuery">Explain (Text)</button>
+                <button type="button" class="dropdown-item" :disabled="!runnable" @click="explainGraphvizQuery">Explain (Graph)</button>
+              </template>
+              <template v-else-if="isHive || isSpark">
+                <button type="button" class="dropdown-item" :disabled="!runnable" @click="explainQuery">Explain</button>
+              </template>
+              <template v-else-if="isElasticsearch">
+                <button type="button" class="dropdown-item" :disabled="!runnable" @click="translateQuery">Translate</button>
+                <button type="button" class="dropdown-item" :disabled="!runnable" @click="explainQuery">Explain</button>
+              </template>
+            </div>
           </div>
         </div>
       </div>
@@ -96,7 +90,8 @@ export default {
     ]),
     ...mapState({
       tab: state => state.hash.tab,
-      engine: state => state.hash.engine
+      engine: state => state.hash.engine,
+      bookmark_params: state => state.hash.bookmark_params
     }),
     ...mapState('editor', [
       'inputQuery',
@@ -126,7 +121,12 @@ export default {
       if (detectedVariables === null) {
         return []
       }
-      return detectedVariables.unique().map(v => ({str: v, key: v.remove(/[${}]/g), value: ''}))
+      try {
+        const o = JSON.parse(this.bookmark_params)
+        return detectedVariables.unique().map(v => ({str: v, key: v.remove(/[${}]/g), value: o[v.remove(/[${}]/g)]}))
+      } catch (e) {
+        return detectedVariables.unique().map(v => ({str: v, key: v.remove(/[${}]/g), value: ''}))
+      }
     },
     existBookmark () {
       return this.bookmarks.some(b => b.query === this.inputQuery)
@@ -138,6 +138,9 @@ export default {
       } else {
         return text
       }
+    },
+    runnable () {
+      return this.inputQuery && !this.loading && this.datasourceIndex
     }
   },
   watch: {

@@ -57,8 +57,8 @@ const apis = {
   history: '/history',
   historyStatus: '/historyStatus',
   queryHistory: '/queryHistory?datasource={datasource}',
-  download: '/download?datasource={datasource}&queryid={queryid}&encode=UTF-8',
-  csvdownload: '/csvdownload?datasource={datasource}&queryid={queryid}&encode=UTF-8',
+  download: '/download?datasource={datasource}&queryid={queryid}&encode=UTF-8&header={includeHeader}',
+  csvdownload: '/csvdownload?datasource={datasource}&queryid={queryid}&encode=UTF-8&header={includeHeader}',
   publish: '/publish',
   bookmark: '/bookmark',
   format: '/format',
@@ -67,8 +67,8 @@ const apis = {
   kill: '/kill',
   detail: '/queryDetail?datasource={datasource}&queryid={queryid}',
   shareHistory: '/share/shareHistory',
-  shareDownload: '/share/download?publish_id={publishId}&encode=UTF-8',
-  shareCsvDownload: '/share/csvdownload?publish_id={publishId}&encode=UTF-8',
+  shareDownload: '/share/download?publish_id={publishId}&encode=UTF-8&header={includeHeader}',
+  shareCsvDownload: '/share/csvdownload?publish_id={publishId}&encode=UTF-8&header={includeHeader}',
   toValuesQuery: '/toValuesQuery',
   hive: '/hive',
   hiveAsync: '/hiveAsync',
@@ -90,7 +90,8 @@ const apis = {
   sparkAsync: '/sparkAsync',
   sparkQueryStatus: '/sparkQueryStatus',
   sparkQueryDetail: '/sparkQueryDetail?engine=spark&datasource={datasource}',
-  sparkJobList: '/sparkJobList'
+  sparkJobList: '/sparkJobList',
+  starredSchema: '/starredSchema'
 }
 
 function addHiddenQueryPrefix (query) {
@@ -173,6 +174,38 @@ export async function getSchemataSpark (datasource, authInfo) {
     ...authInfo
   }
   const response = await client.post(apis.spark, makeFormParams(params))
+  return response.data
+}
+
+export async function getStarredSchemata (datasource, engine, catalog) {
+  const params = {
+    datasource,
+    engine,
+    catalog
+  }
+  const response = await client.get(apis.starredSchema, {params})
+  return response.data
+}
+
+export async function postStarredSchema (datasource, engine, catalog, schema) {
+  const params = {
+    datasource,
+    engine,
+    catalog,
+    schema
+  }
+  const response = await client.post(apis.starredSchema, makeFormParams(params))
+  return response.data
+}
+
+export async function deleteStarredSchema (datasource, engine, catalog, id) {
+  const params = {
+    datasource,
+    engine,
+    catalog,
+    starred_schema_id: id
+  }
+  const response = await client.delete(apis.starredSchema, {params})
   return response.data
 }
 
@@ -677,23 +710,26 @@ export async function getSharedQueryResult (publishId) {
   return response.data
 }
 
-export function buildDownloadUrl (datasource, queryid, isCsv) {
+export function buildDownloadUrl (datasource, queryid, isCsv, includeHeader) {
   const api = isCsv ? apis.csvdownload : apis.download
-  return BASE_URL + api.format({datasource, queryid})
+  return BASE_URL + api.format({datasource, queryid, includeHeader})
 }
 
-export function buildShareDownloadUrl (publishId, isCsv) {
+export function buildShareDownloadUrl (publishId, isCsv, includeHeader) {
   const api = isCsv ? apis.shareCsvDownload : apis.shareDownload
-  return BASE_URL + api.format({publishId})
+  return BASE_URL + api.format({publishId, includeHeader})
 }
 
-export function buildDetailUrl (isPresto, isHive, isSpark, datasource, queryid) {
+export function buildDetailUrl (isPresto, isHive, isSpark, isElasticsearch, datasource, queryid) {
   if (isPresto) {
     return BASE_URL + apis.detail.format({datasource, queryid})
   } else if (isHive) {
     return BASE_URL + apis.hiveQueryDetail.format({datasource, id: queryid})
   } else if (isSpark) {
     return BASE_URL + apis.sparkQueryDetail.format({datasource})
+  } else if (isElasticsearch) {
+    // dummy
+    return BASE_URL
   } else {
     throw new Error('not supported')
   }

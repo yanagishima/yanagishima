@@ -1,3 +1,6 @@
+import ace from 'ace-builds/src-min-noconflict/ace'
+import 'ace-builds/src-min-noconflict/mode-sql'
+
 const oop = ace.require('ace/lib/oop')
 const BaseFoldMode = ace.require('ace/mode/folding/fold_mode').FoldMode
 

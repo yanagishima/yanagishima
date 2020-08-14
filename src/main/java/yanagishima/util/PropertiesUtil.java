@@ -2,14 +2,14 @@ package yanagishima.util;
 
 import java.util.Properties;
 
-public class PropertiesUtil {
+public final class PropertiesUtil {
+    private PropertiesUtil() { }
 
     public static String getParam(Properties properties, String key) {
-        String p = properties.getProperty(key);
-        if (p == null) {
+        String value = properties.getProperty(key);
+        if (value == null) {
             throw new RuntimeException("Missing required parameter '" + key + "'.");
-        } else {
-            return p;
         }
+        return value;
     }
 }

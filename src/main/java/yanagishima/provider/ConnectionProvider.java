@@ -1,28 +1,25 @@
 package yanagishima.provider;
 
-import lombok.extern.slf4j.Slf4j;
+import yanagishima.config.YanagishimaConfig;
 
+import javax.inject.Inject;
 import javax.inject.Provider;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 
-/**
- * This is a JDBC connection provider.
- */
-@Slf4j
 public class ConnectionProvider implements Provider<Connection> {
+	private final YanagishimaConfig config;
 
-	private Connection connection;
+	@Inject
+	public ConnectionProvider(YanagishimaConfig config) {
+		this.config = config;
+	}
 
 	@Override
 	public Connection get() {
 		try {
-			if (connection == null) {
-				connection = DriverManager.getConnection("jdbc:sqlite:data/yanagishima.db");
-			}
-
-			return connection;
+			return DriverManager.getConnection(config.getConnectionUrl(), config.getConnectionUsername(), config.getConnectionPassword());
 		} catch (SQLException e) {
 			throw new RuntimeException(e);
 		}

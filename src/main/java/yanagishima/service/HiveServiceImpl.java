@@ -17,7 +17,6 @@ import yanagishima.util.QueryIdUtil;
 import javax.inject.Inject;
 import java.io.BufferedWriter;
 import java.io.IOException;
-import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -27,40 +26,32 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
+import static java.lang.String.format;
 import static yanagishima.util.Constants.YANAGISHIAM_HIVE_JOB_PREFIX;
 import static yanagishima.util.DbUtil.insertQueryHistory;
 import static yanagishima.util.DbUtil.storeError;
+import static yanagishima.util.FluentdUtil.buildStaticFluency;
 import static yanagishima.util.PathUtil.getResultFilePath;
+import static yanagishima.util.QueryEngine.hive;
+import static yanagishima.util.QueryEngine.spark;
 import static yanagishima.util.TimeoutUtil.checkTimeout;
+import static yanagishima.util.TypeCoerceUtil.objectToString;
 
 public class HiveServiceImpl implements HiveService {
+    private static final Logger LOGGER = LoggerFactory.getLogger(HiveServiceImpl.class);
 
-    private static Logger LOGGER = LoggerFactory.getLogger(HiveServiceImpl.class);
-
-    private YanagishimaConfig yanagishimaConfig;
-
-    private ExecutorService executorService = Executors.newFixedThreadPool(10);
-
-    private Fluency fluency;
-
-    @Inject
-    private TinyORM db;
+    private final YanagishimaConfig config;
+    private final ExecutorService executorService = Executors.newFixedThreadPool(10);
+    private final TinyORM db;
+    private final Fluency fluency;
+    private final StatementPool statementPool;
 
     @Inject
-    private StatementPool statementPool;
-
-    @Inject
-    public HiveServiceImpl(YanagishimaConfig yanagishimaConfig) {
-        this.yanagishimaConfig = yanagishimaConfig;
-        if (yanagishimaConfig.getFluentdExecutedTag().isPresent()) {
-            String fluentdHost = yanagishimaConfig.getFluentdHost().orElse("localhost");
-            int fluentdPort = Integer.parseInt(yanagishimaConfig.getFluentdPort().orElse("24224"));
-            try {
-                fluency = Fluency.defaultFluency(fluentdHost, fluentdPort);
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
-        }
+    public HiveServiceImpl(YanagishimaConfig config, TinyORM db, StatementPool statementPool) {
+        this.config = config;
+        this.db = db;
+        this.fluency = buildStaticFluency(config);
+        this.statementPool = statementPool;
     }
 
     @Override
@@ -71,14 +62,13 @@ public class HiveServiceImpl implements HiveService {
     }
 
     public class Task implements Runnable {
-        private String queryId;
-
-        private String engine;
-        private String datasource;
-        private String query;
-        private String userName;
-        private Optional<String> hiveUser;
-        private Optional<String> hivePassword;
+        private final String queryId;
+        private final String engine;
+        private final String datasource;
+        private final String query;
+        private final String userName;
+        private final Optional<String> hiveUser;
+        private final Optional<String> hivePassword;
 
         public Task(String queryId, String engine, String datasource, String query, String userName, Optional<String> hiveUser, Optional<String> hivePassword) {
             this.queryId = queryId;
@@ -93,8 +83,8 @@ public class HiveServiceImpl implements HiveService {
         @Override
         public void run() {
             try {
-                int limit = yanagishimaConfig.getSelectLimit();
-                getHiveQueryResult(this.queryId, this.engine, this.datasource, this.query, true, limit, this.userName, this.hiveUser, this.hivePassword, true);
+                int limit = config.getSelectLimit();
+                getHiveQueryResult(queryId, engine, datasource, query, true, limit, userName, hiveUser, hivePassword, true);
             } catch (HiveQueryErrorException e) {
                 LOGGER.warn(e.getCause().getMessage());
             } catch (Throwable e) {
@@ -104,72 +94,42 @@ public class HiveServiceImpl implements HiveService {
     }
 
     @Override
-    public HiveQueryResult doQuery(String engine, String datasource, String query, String userName, Optional<String> hiveUser, Optional<String> hivePassword, boolean storeFlag, int limit) throws HiveQueryErrorException {
+    public HiveQueryResult doQuery(String engine,
+                                   String datasource,
+                                   String query,
+                                   String userName,
+                                   Optional<String> hiveUser,
+                                   Optional<String> hivePassword,
+                                   boolean storeFlag,
+                                   int limit) throws HiveQueryErrorException {
         String queryId = QueryIdUtil.generate(datasource, query, engine);
         return getHiveQueryResult(queryId, engine, datasource, query, storeFlag, limit, userName, hiveUser, hivePassword, false);
     }
 
-    private HiveQueryResult getHiveQueryResult(String queryId, String engine, String datasource, String query, boolean storeFlag, int limit, String userName, Optional<String> hiveUser, Optional<String> hivePassword, boolean async) throws HiveQueryErrorException {
-
-        List<String> hiveDisallowedKeywords = yanagishimaConfig.getHiveDisallowedKeywords(datasource);
-        for (String hiveDisallowedKeyword : hiveDisallowedKeywords) {
-            if (query.trim().toLowerCase().startsWith(hiveDisallowedKeyword)) {
-                String message = String.format("query contains %s. This is the disallowed keywords in %s", hiveDisallowedKeyword, datasource);
-                storeError(db, datasource, engine, queryId, query, userName, message);
-                throw new RuntimeException(message);
-            }
-        }
-
-        List<String> hiveSecretKeywords = yanagishimaConfig.getHiveSecretKeywords(datasource);
-        for (String hiveSecretKeyword : hiveSecretKeywords) {
-            if (query.indexOf(hiveSecretKeyword) != -1) {
-                String message = "query error occurs";
-                storeError(db, datasource, engine, queryId, query, userName, message);
-                throw new RuntimeException(message);
-            }
-        }
-
-        List<String> hiveMustSpectifyConditions = yanagishimaConfig.getHiveMustSpectifyConditions(datasource);
-        for (String hiveMustSpectifyCondition : hiveMustSpectifyConditions) {
-            String[] conditions = hiveMustSpectifyCondition.split(",");
-            for (String condition : conditions) {
-                String table = condition.split(":")[0];
-                if (!query.startsWith("SHOW") && !query.startsWith("DESCRIBE") && query.indexOf(table) != -1) {
-                    String[] partitionKeys = condition.split(":")[1].split("\\|");
-                    for (String partitionKey : partitionKeys) {
-                        if (query.indexOf(partitionKey) == -1) {
-                            String message = String.format("If you query %s, you must specify %s in where clause", table, partitionKey);
-                            storeError(db, datasource, engine, queryId, query, userName, message);
-                            throw new RuntimeException(message);
-                        }
-                    }
-                }
-            }
-        }
+    private HiveQueryResult getHiveQueryResult(String queryId,
+                                               String engine,
+                                               String datasource,
+                                               String query,
+                                               boolean storeFlag,
+                                               int limit,
+                                               String userName,
+                                               Optional<String> hiveUser,
+                                               Optional<String> hivePassword,
+                                               boolean async) throws HiveQueryErrorException {
+        checkDisallowedKeyword(userName, query, datasource, queryId, engine);
+        checkSecretKeyword(userName, query, datasource, queryId, engine);
+        checkRequiredCondition(userName, query, datasource, queryId, engine);
 
         try {
-            Class.forName("org.apache.hive.jdbc.HiveDriver");
+            Class.forName(config.getHiveDriverClassName(datasource));
         } catch (ClassNotFoundException e) {
             throw new RuntimeException(e);
         }
 
-        String url = null;
-        if(engine.equals("hive")) {
-            url = yanagishimaConfig.getHiveJdbcUrl(datasource);
-        } else if(engine.equals("spark")) {
-            url = yanagishimaConfig.getSparkJdbcUrl(datasource);
-        } else {
-            throw new IllegalArgumentException(engine + " is illegal");
-        }
-        String user = yanagishimaConfig.getHiveJdbcUser(datasource);
-        String password = yanagishimaConfig.getHiveJdbcPassword(datasource);
+        String url = getJdbcUrl(datasource, engine, userName);
+        Credential credential = new Credential(config.getHiveJdbcUser(datasource), config.getHiveJdbcPassword(datasource), hiveUser, hivePassword);
 
-        if (hiveUser.isPresent() && hivePassword.isPresent()) {
-            user = hiveUser.get();
-            password = hivePassword.get();
-        }
-
-        try (Connection connection = DriverManager.getConnection(url, user, password)) {
+        try (Connection connection = DriverManager.getConnection(url, credential.getUser(), credential.getPassword())) {
             long start = System.currentTimeMillis();
             HiveQueryResult hiveQueryResult = new HiveQueryResult();
             hiveQueryResult.setQueryId(queryId);
@@ -177,22 +137,7 @@ public class HiveServiceImpl implements HiveService {
             if (storeFlag) {
                 insertQueryHistory(db, datasource, engine, query, userName, queryId, hiveQueryResult.getLineNumber());
             }
-            if (yanagishimaConfig.getFluentdExecutedTag().isPresent()) {
-                try {
-                    long end = System.currentTimeMillis();
-                    String tag = yanagishimaConfig.getFluentdExecutedTag().get();
-                    Map<String, Object> event = new HashMap<>();
-                    event.put("elapsed_time_millseconds", end - start);
-                    event.put("user", userName);
-                    event.put("query", query);
-                    event.put("query_id", queryId);
-                    event.put("datasource", datasource);
-                    event.put("engine", engine);
-                    fluency.emit(tag, event);
-                } catch (IOException e) {
-                    LOGGER.error(e.getMessage(), e);
-                }
-            }
+            emitExecutedEvent(userName, query, queryId, datasource, engine, System.currentTimeMillis() - start);
             return hiveQueryResult;
 
         } catch (SQLException e) {
@@ -201,122 +146,203 @@ public class HiveServiceImpl implements HiveService {
         }
     }
 
-    private void processData(String engine, String datasource, String query, int limit, String userName, Connection connection, String queryId, long start, HiveQueryResult hiveQueryResult, boolean async) throws SQLException {
-        Duration queryMaxRunTime = new Duration(this.yanagishimaConfig.getHiveQueryMaxRunTimeSeconds(datasource), TimeUnit.SECONDS);
+    private void processData(String engine,
+                             String datasource,
+                             String query,
+                             int limit,
+                             String userName,
+                             Connection connection,
+                             String queryId,
+                             long start,
+                             HiveQueryResult queryResult,
+                             boolean async) throws SQLException {
+        Duration queryMaxRunTime = new Duration(config.getHiveQueryMaxRunTimeSeconds(datasource), TimeUnit.SECONDS);
         try (Statement statement = connection.createStatement()) {
             int timeout = (int) queryMaxRunTime.toMillis() / 1000;
             statement.setQueryTimeout(timeout);
-            if(engine.equals("hive")) {
-                String jobName = null;
-                if (userName == null) {
-                    jobName = YANAGISHIAM_HIVE_JOB_PREFIX + queryId;
-                } else {
-                    jobName = YANAGISHIAM_HIVE_JOB_PREFIX + userName + "-" + queryId;
-                }
-                statement.execute("set mapreduce.job.name=" + jobName);
-                List<String> hiveSetupQueryList = this.yanagishimaConfig.getHiveSetupQueryList(datasource);
+            if (engine.equals(hive.name())) {
+                statement.execute("set mapreduce.job.name=" + toJobName(queryId, userName));
+                List<String> hiveSetupQueryList = config.getHiveSetupQueryList(datasource);
                 for (String hiveSetupQuery : hiveSetupQueryList) {
                     statement.execute(hiveSetupQuery);
                 }
             }
 
-            if (async && yanagishimaConfig.isUseJdbcCancel(datasource)) {
+            if (async && config.isUseJdbcCancel(datasource)) {
                 statementPool.putStatement(datasource, queryId, statement);
             }
 
-            if(query.trim().toLowerCase().startsWith("create") || query.trim().toLowerCase().startsWith("drop")) {
+            boolean hasResultSet = statement.execute(query);
+            if (!hasResultSet) {
                 try {
-                    statement.execute(query);
                     Path dst = getResultFilePath(datasource, queryId, false);
                     dst.toFile().createNewFile();
-                    hiveQueryResult.setLineNumber(0);
-                    hiveQueryResult.setRawDataSize(new DataSize(0, DataSize.Unit.BYTE));
-                    hiveQueryResult.setRecords(new ArrayList<>());
-                    hiveQueryResult.setColumns(new ArrayList<>());
+                    queryResult.setLineNumber(0);
+                    queryResult.setRawDataSize(new DataSize(0, DataSize.Unit.BYTE));
+                    queryResult.setRecords(new ArrayList<>());
+                    queryResult.setColumns(new ArrayList<>());
                     return;
-                } catch (SQLException | IOException e) {
+                } catch (IOException e) {
                     throw new RuntimeException(e);
                 }
             }
 
-            try (ResultSet resultSet = statement.executeQuery(query)) {
-                ResultSetMetaData resultSetMetaData = resultSet.getMetaData();
-                int columnCount = resultSetMetaData.getColumnCount();
+            try (ResultSet resultSet = statement.getResultSet()) {
+                ResultSetMetaData metadata = resultSet.getMetaData();
+                int columnCount = metadata.getColumnCount();
                 List<String> columnNameList = new ArrayList<>();
                 for (int i = 1; i <= columnCount; i++) {
-                    columnNameList.add(resultSetMetaData.getColumnName(i));
+                    columnNameList.add(metadata.getColumnName(i));
                 }
 
                 Path dst = getResultFilePath(datasource, queryId, false);
                 int lineNumber = 0;
-                int maxResultFileByteSize = yanagishimaConfig.getHiveMaxResultFileByteSize();
+                int maxResultFileByteSize = config.getHiveMaxResultFileByteSize();
                 int resultBytes = 0;
                 try (BufferedWriter bw = Files.newBufferedWriter(dst, StandardCharsets.UTF_8);
-                     CSVPrinter csvPrinter = new CSVPrinter(bw, CSVFormat.EXCEL.withDelimiter('\t').withNullString("\\N").withRecordSeparator(System.getProperty("line.separator")));) {
-                    csvPrinter.printRecord(columnNameList);
+                     CSVPrinter printer = new CSVPrinter(bw, CSVFormat.EXCEL.withDelimiter('\t').withNullString("\\N").withRecordSeparator(System.getProperty("line.separator")))) {
+                    printer.printRecord(columnNameList);
                     lineNumber++;
-                    hiveQueryResult.setColumns(columnNameList);
-                    List<List<String>> rowDataList = new ArrayList<>();
+                    queryResult.setColumns(columnNameList);
+
+                    List<List<String>> rows = new ArrayList<>();
                     while (resultSet.next()) {
-                        List<String> columnDataList = new ArrayList<>();
+                        List<String> row = new ArrayList<>();
                         for (int i = 1; i <= columnCount; i++) {
-                            Object resultObject = resultSet.getObject(i);
-                            if (resultObject instanceof Long) {
-                                columnDataList.add(((Long) resultObject).toString());
-                            } else if (resultObject instanceof Double) {
-                                if (Double.isNaN((Double) resultObject) || Double.isInfinite((Double) resultObject)) {
-                                    columnDataList.add(resultObject.toString());
-                                } else {
-                                    columnDataList.add(BigDecimal.valueOf((Double) resultObject).toPlainString());
-                                }
-                            } else {
-                                if (resultObject == null) {
-                                    columnDataList.add(null);
-                                } else {
-                                    columnDataList.add(resultObject.toString());
-                                }
-                            }
+                            row.add(objectToString(resultSet.getObject(i)));
                         }
 
-                        try {
-                            csvPrinter.printRecord(columnDataList);
-                            lineNumber++;
-                            resultBytes += columnDataList.toString().getBytes(StandardCharsets.UTF_8).length;
-                            if (resultBytes > maxResultFileByteSize) {
-                                String message = String.format("Result file size exceeded %s bytes. queryId=%s, datasource=%s", maxResultFileByteSize, queryId, datasource);
-                                storeError(db, datasource, engine, queryId, query, userName, message);
-                                throw new RuntimeException(message);
-                            }
-                        } catch (IOException e) {
-                            throw new RuntimeException(e);
+                        printer.printRecord(row);
+                        lineNumber++;
+                        resultBytes += row.toString().getBytes(StandardCharsets.UTF_8).length;
+                        if (resultBytes > maxResultFileByteSize) {
+                            String message = format("Result file size exceeded %s bytes. queryId=%s, datasource=%s", maxResultFileByteSize, queryId, datasource);
+                            storeError(db, datasource, engine, queryId, query, userName, message);
+                            throw new RuntimeException(message);
                         }
-                        if (query.toLowerCase().startsWith("show") || rowDataList.size() < limit) {
-                            rowDataList.add(columnDataList);
+
+                        if (query.toLowerCase().startsWith("show") || rows.size() < limit) {
+                            rows.add(row);
                         } else {
-                            hiveQueryResult.setWarningMessage(String.format("now fetch size is %d. This is more than %d. So, fetch operation stopped.", rowDataList.size(), limit));
+                            queryResult.setWarningMessage(format("now fetch size is %d. This is more than %d. So, fetch operation stopped.", rows.size(), limit));
                         }
 
                         checkTimeout(db, queryMaxRunTime, start, datasource, engine, queryId, query, userName);
                     }
-                    hiveQueryResult.setLineNumber(lineNumber);
-                    hiveQueryResult.setRecords(rowDataList);
-                    if (async && yanagishimaConfig.isUseJdbcCancel(datasource)) {
+                    queryResult.setLineNumber(lineNumber);
+                    queryResult.setRecords(rows);
+                    if (async && config.isUseJdbcCancel(datasource)) {
                         statementPool.removeStatement(datasource, queryId);
                     }
-                } catch (IOException e) {
-                    throw new RuntimeException(e);
-                }
 
-                try {
-                    long size = Files.size(dst);
-                    DataSize rawDataSize = new DataSize(size, DataSize.Unit.BYTE);
-                    hiveQueryResult.setRawDataSize(rawDataSize.convertToMostSuccinctDataSize());
+                    DataSize rawDataSize = new DataSize(Files.size(dst), DataSize.Unit.BYTE);
+                    queryResult.setRawDataSize(rawDataSize.convertToMostSuccinctDataSize());
                 } catch (IOException e) {
                     throw new RuntimeException(e);
                 }
             }
-
         }
     }
 
+    private void checkDisallowedKeyword(String userName, String query, String datasource, String queryId, String engine) {
+        for (String keyword : config.getHiveDisallowedKeywords(datasource)) {
+            if (query.trim().toLowerCase().startsWith(keyword)) {
+                String message = format("query contains %s. This is the disallowed keywords in %s", keyword, datasource);
+                storeError(db, datasource, engine, queryId, query, userName, message);
+                throw new RuntimeException(message);
+            }
+        }
+    }
+
+    private void checkSecretKeyword(String userName, String query, String datasource, String queryId, String engine) {
+        for (String keyword : config.getHiveSecretKeywords(datasource)) {
+            if (query.contains(keyword)) {
+                String message = "query error occurs";
+                storeError(db, datasource, engine, queryId, query, userName, message);
+                throw new RuntimeException(message);
+            }
+        }
+    }
+
+    private void checkRequiredCondition(String userName, String query, String datasource, String queryId, String engine) {
+        for (String requiredCondition : config.getHiveMustSpecifyConditions(datasource)) {
+            String[] conditions = requiredCondition.split(",");
+            for (String condition : conditions) {
+                String table = condition.split(":")[0];
+                if (!query.startsWith("SHOW") && !query.startsWith("DESCRIBE") && query.contains(table)) {
+                    String[] partitionKeys = condition.split(":")[1].split("\\|");
+                    for (String partitionKey : partitionKeys) {
+                        if (!query.contains(partitionKey)) {
+                            String message = format("If you query %s, you must specify %s in where clause", table, partitionKey);
+                            storeError(db, datasource, engine, queryId, query, userName, message);
+                            throw new RuntimeException(message);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private void emitExecutedEvent(String username, String query, String queryId, String datasource, String engine, long elapsedTime) {
+        if (config.getFluentdExecutedTag().isEmpty()) {
+            return;
+        }
+
+        Map<String, Object> event = new HashMap<>();
+        event.put("elapsed_time_millseconds", elapsedTime);
+        event.put("user", username);
+        event.put("query", query);
+        event.put("query_id", queryId);
+        event.put("datasource", datasource);
+        event.put("engine", engine);
+
+        try {
+            fluency.emit(config.getFluentdExecutedTag().get(), event);
+        } catch (IOException e) {
+            LOGGER.error(e.getMessage(), e);
+        }
+    }
+
+    private String getJdbcUrl(String datasource, String engine, String userName) {
+        if (engine.equals(hive.name())) {
+            if (config.isHiveImpersonation(datasource)) {
+                return format("%s;hive.server2.proxy.user=%s", config.getHiveJdbcUrl(datasource), userName);
+            }
+            return config.getHiveJdbcUrl(datasource);
+        }
+        if (engine.equals(spark.name())) {
+            return config.getSparkJdbcUrl(datasource);
+        }
+        throw new IllegalArgumentException(engine + " is illegal");
+    }
+
+    private static String toJobName(String queryId, String userName) {
+        if (userName == null) {
+             return YANAGISHIAM_HIVE_JOB_PREFIX + queryId;
+        }
+        return YANAGISHIAM_HIVE_JOB_PREFIX + userName + "-" + queryId;
+    }
+
+    class Credential {
+        private final String user;
+        private final String password;
+
+        Credential(String user, String password, Optional<String> hiveUser, Optional<String> hivePassword) {
+            if (hiveUser.isPresent() && hivePassword.isPresent()) {
+                this.user = hiveUser.get();
+                this.password = hivePassword.get();
+            } else {
+                this.user = user;
+                this.password = password;
+            }
+        }
+
+        public String getUser() {
+            return user;
+        }
+
+        public String getPassword() {
+            return password;
+        }
+    }
 }

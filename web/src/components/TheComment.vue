@@ -30,7 +30,7 @@
         </div>
       </div>
     </div>
-    <div class="card-block">
+    <div class="card-body">
       <div id="comment-body">
         <template v-if="comment.edit">
           <textarea class="form-control mb-3" v-model="inputCommentModel" :rows="inputCommentRows"

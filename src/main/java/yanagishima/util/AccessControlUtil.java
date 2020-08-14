@@ -1,22 +1,32 @@
 package yanagishima.util;
 
+import com.google.common.base.Splitter;
 
 import javax.servlet.http.HttpServletRequest;
-import java.util.Arrays;
-import java.util.List;
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
 
-public class AccessControlUtil {
+import static javax.servlet.http.HttpServletResponse.SC_FORBIDDEN;
+import static yanagishima.util.HttpRequestUtil.getRequiredHeader;
+
+public final class AccessControlUtil {
+    private static final Splitter SPLITTER = Splitter.on(',').trimResults().omitEmptyStrings();
+
+    private AccessControlUtil() { }
 
     public static boolean validateDatasource(HttpServletRequest request, String datasource) {
-
-        String header = HttpRequestUtil.getHeader(request, Constants.DATASOURCE_HEADER);
-        if(header.equals("*")) {
+        String header = getRequiredHeader(request, Constants.DATASOURCE_HEADER);
+        if (header.equals("*")) {
             return true;
         }
-        List<String> headerDatasources = Arrays.asList(header.split(","));
-        if(!headerDatasources.contains(datasource)) {
-            return false;
+        return SPLITTER.splitToList(header).contains(datasource);
+    }
+
+    public static void sendForbiddenError(HttpServletResponse response) {
+        try {
+            response.sendError(SC_FORBIDDEN);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         }
-        return true;
     }
 }

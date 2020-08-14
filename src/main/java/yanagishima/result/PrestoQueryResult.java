@@ -5,71 +5,68 @@ import io.airlift.units.DataSize;
 import java.util.List;
 
 public class PrestoQueryResult {
-	
-	private String updateType;
-	
-	private List<String> columns;
-	
-	private List<List<String>> records;
-	
-	private String warningMessage;
+    private String updateType;
+    private List<String> columns;
+    private List<List<String>> records;
+    private String warningMessage;
+    private String queryId;
+    private int lineNumber;
+    private DataSize rawDataSize;
 
-	private String queryId;
+    public String getUpdateType() {
+        return updateType;
+    }
 
-	private int lineNumber;
+    public void setUpdateType(String updateType) {
+        this.updateType = updateType;
+    }
 
-	private DataSize rawDataSize;
+    public List<String> getColumns() {
+        return columns;
+    }
 
-	public String getUpdateType() {
-		return updateType;
-	}
+    public void setColumns(List<String> columns) {
+        this.columns = columns;
+    }
 
-	public void setUpdateType(String updateType) {
-		this.updateType = updateType;
-	}
+    public List<List<String>> getRecords() {
+        return records;
+    }
 
-	public List<String> getColumns() {
-		return columns;
-	}
+    public void setRecords(List<List<String>> records) {
+        this.records = records;
+    }
 
-	public void setColumns(List<String> columns) {
-		this.columns = columns;
-	}
+    public String getWarningMessage() {
+        return warningMessage;
+    }
 
-	public List<List<String>> getRecords() {
-		return records;
-	}
+    public void setWarningMessage(String warningMessage) {
+        this.warningMessage = warningMessage;
+    }
 
-	public void setRecords(List<List<String>> records) {
-		this.records = records;
-	}
+    public String getQueryId() {
+        return queryId;
+    }
 
-	public String getWarningMessage() {
-		return warningMessage;
-	}
+    public void setQueryId(String queryId) {
+        this.queryId = queryId;
+    }
 
-	public void setWarningMessage(String warningMessage) {
-		this.warningMessage = warningMessage;
-	}
+    public int getLineNumber() {
+        return lineNumber;
+    }
 
-	public String getQueryId() { return queryId; }
+    public void setLineNumber(int lineNumber) {
+        this.lineNumber = lineNumber;
+    }
 
-	public void setQueryId(String queryId) { this.queryId = queryId; }
+    public DataSize getRawDataSize() {
+        return rawDataSize;
+    }
 
-	public int getLineNumber() {
-		return lineNumber;
-	}
-
-	public void setLineNumber(int lineNumber) {
-		this.lineNumber = lineNumber;
-	}
-
-	public DataSize getRawDataSize() {
-		return rawDataSize;
-	}
-
-	public void setRawDataSize(DataSize rawDataSize) {
-		this.rawDataSize = rawDataSize;
-	}
+    public void setRawDataSize(DataSize rawDataSize) {
+        this.rawDataSize = rawDataSize;
+    }
 
 }

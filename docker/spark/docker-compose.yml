@@ -1,0 +1,9 @@
+version: '2'
+services:
+  spark:
+    hostname: spark
+    image: 'metabase/spark:2.1.1'
+    ports:
+      - '10001:10000'
+      - '18088:8088'
+      - '14040:4040'

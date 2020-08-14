@@ -1,16 +1,16 @@
 <template>
   <div>
-    <div class="header row align-items-center pt-3">
-      <div class="col">
-        <span><strong class="mr-2">{{datasource}}</strong>as of<strong class="ml-2">{{now}}</strong></span>
-      </div>
-      <div class="col text-right">
-        <label class="form-check-label mr-3" v-if="isPresto">
-          <input class="form-check-input mr-1" type="checkbox" v-model="isOpenQueryModel">Full Query
-        </label>
-        <label class="form-check-label mr-3">
-          <input class="form-check-input mr-1" type="checkbox" v-model="isAdminModeModel">Admin Mode
-        </label>
+    <div class="header d-flex justify-content-between align-items-center pt-3">
+      <span><strong class="mr-2">{{datasource}}</strong>as of<strong class="ml-2">{{now}}</strong></span>
+      <div class="d-flex align-items-center">
+        <div class="form-check form-check-inline" v-if="isPresto">
+          <input class="form-check-input mr-1" type="checkbox" id="fullQueryCheckbox" v-model="isOpenQueryModel">
+          <label class="form-check-label" for="fullQueryCheckbox">Full Query</label>
+        </div>
+        <div class="form-check form-check-inline">
+          <input class="form-check-input mr-1" type="checkbox" id="adminModeCheckbox" v-model="isAdminModeModel">
+          <label class="form-check-label" for="adminModeCheckbox">Admin Mode</label>
+        </div>
         <button class="btn btn-sm btn-secondary" @click="getQlist">
           <i class="fa fa-fw fa-sync mr-1"></i>Refresh
         </button>
@@ -24,14 +24,15 @@
         </div>
       </template>
       <template v-else>
-        <div v-if="filterUser !== ''" class="alert alert-info">
-          <button class="close" @click="filterUser = ''"><span>&times;</span></button>
-          <span class="mr-3">Filter by <strong>{{filterUser}}</strong></span>
+        <div v-if="filterUser !== '' || filterSource !== ''" class="alert alert-info">
+          <button class="close" @click="setFilter('', '')"><span>&times;</span></button>
+          <span v-if="filterUser !== ''" class="mr-3">User Filter by <strong>{{filterUser}}</strong></span>
+          <span v-else class="mr-3">Source Filter by <strong>{{filterSource}}</strong></span>
           <span class="mr-2"><strong>{{orderedQlist.length}}</strong> Results</span>
           <span class="mr-2" v-if="orderedFailQlist.length"><strong>{{orderedFailQlist.length}}</strong> Fails</span>
         </div>
         <template v-if="isPresto">
-          <table v-if="orderedQlist.length" class="table table-bordered table-fixed table-hover">
+          <table v-if="orderedQlist.length" class="table table-sm table-bordered table-fixed table-hover">
             <thead>
             <tr>
               <th width="7%">State</th>
@@ -41,7 +42,7 @@
               <th width="12.5%">Source</th>
               <th width="12.5%">User</th>
               <th width="4%" class="text-center">Kill</th>
-              <th width="4%" class="text-center">Info</th>
+              <th width="45" class="text-center">Info</th>
             </tr>
             </thead>
             <tbody>
@@ -72,14 +73,14 @@
                 <pre v-if="isOpenQuery" class="ace-font mb-0">{{item.query}}</pre>
                 <span :title="item.query" v-else>{{item.query.compact()}}</span>
               </td>
-              <td>{{item.session.source}}</td>
-              <td><a href="#" @click.prevent="filterUser = item.session.user">{{item.session.user}}</a></td>
+              <td><a v-if="item.session.source" href="#" @click.prevent="setFilter(item.session.source, '')">{{item.session.source}}</a></td>
+              <td><a href="#" @click.prevent="setFilter('', item.session.user)">{{item.session.user}}</a></td>
               <td class="text-center"><a v-if="isRunning(item.state)" href="#" @click.prevent="killQuery(item.queryId)"
                                          class="btn btn-sm btn-secondary p-1"><i
                 class="fa fa-fw fa-times text-danger"></i></a></td>
               <td class="text-center">
                 <a target="_blank" class="btn btn-sm btn-secondary p-1"
-                   :href="buildDetailUrl(isPresto, isHive, isSpark, datasource, item.queryId)"><i class="fa fa-fw fa-info"></i></a>
+                   :href="buildDetailUrl(isPresto, isHive, isSpark, isElasticsearch, datasource, item.queryId)"><i class="fa fa-fw fa-info"></i></a>
               </td>
             </tr>
             </tbody>
@@ -89,7 +90,7 @@
           </div>
         </template>
         <template v-else-if="isHive">
-          <table v-if="orderedQlist.length" class="table table-bordered table-fixed table-hover">
+          <table v-if="orderedQlist.length" class="table table-sm table-bordered table-fixed table-hover">
             <thead>
             <tr>
               <th width="7%">State</th>
@@ -97,7 +98,7 @@
               <th width="5%" class="text-right">Elapsed</th>
               <th width="51.5%">Name</th>
               <th width="12.5%">User</th>
-              <th width="4%" class="text-center">Info</th>
+              <th width="45" class="text-center">Info</th>
             </tr>
             </thead>
             <tbody>
@@ -129,7 +130,7 @@
               </td>
               <td>{{item.user}}</td>
               <td class="text-center"><a target="_blank" class="btn btn-sm btn-secondary p-1"
-                                         :href="buildDetailUrl(isPresto, isHive, isSpark, datasource, item.id)"><i
+                                         :href="buildDetailUrl(isPresto, isHive, isSpark, isElasticsearch, datasource, item.id)"><i
                 class="fa fa-fw fa-info"></i></a></td>
             </tr>
             </tbody>
@@ -139,7 +140,7 @@
           </div>
         </template>
         <template v-else-if="isSpark">
-          <table v-if="orderedQlist.length" class="table table-bordered table-fixed table-hover">
+          <table v-if="orderedQlist.length" class="table table-sm table-bordered table-fixed table-hover">
             <thead>
             <tr>
               <th width="5%">status</th>
@@ -148,7 +149,7 @@
               <th width="5%" class="text-right">Elapsed</th>
               <th width="64%">query</th>
               <th width="5%">user</th>
-              <th width="4%" class="text-center">Info</th>
+              <th width="45" class="text-center">Info</th>
             </tr>
             </thead>
             <tbody>
@@ -174,7 +175,7 @@
               </td>
               <td><a href="#" @click.prevent="filterUser = item.user">{{item.user}}</a></td>
               <td class="text-center"><a target="_blank" class="btn btn-sm btn-secondary p-1"
-                                         :href="buildDetailUrl(isPresto, isHive, isSpark, datasource)"><i
+                                         :href="buildDetailUrl(isPresto, isHive, isSpark, isElasticsearch, datasource)"><i
                 class="fa fa-fw fa-info"></i></a></td>
             </tr>
             </tbody>
@@ -198,7 +199,8 @@ export default {
   mixins: [util],
   data () {
     return {
-      filterUser: ''
+      filterUser: '',
+      filterSource: ''
     }
   },
   computed: {
@@ -248,7 +250,8 @@ export default {
       let qlist
       if (this.isPresto) {
         qlist = this.response.filter(q => {
-          if (this.filterUser === '' || this.filterUser === q.session.user) {
+          if ((this.filterSource === '' || this.filterSource === q.session.source) &&
+            (this.filterUser === '' || this.filterUser === q.session.user)) {
             if (this.isSuperAdminMode) {
               return true
             }
@@ -284,7 +287,7 @@ export default {
       return running.concat(finished)
     },
     orderedFailQlist () {
-      return this.response.filter(q => this.filterUser === '' || (this.isPresto && this.filterUser === q.session.user && q.state === 'FAILED'))
+      return this.orderedQlist.filter(q => q.state === 'FAILED')
     }
   },
   watch: {
@@ -325,6 +328,10 @@ export default {
       } else {
         return applicationId
       }
+    },
+    setFilter (source, user) {
+      this.filterSource = source
+      this.filterUser = user
     }
   }
 }

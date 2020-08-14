@@ -1,45 +1,42 @@
 package yanagishima.servlet;
 
 import me.geso.tinyorm.TinyORM;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import yanagishima.row.Publish;
-import yanagishima.util.DownloadUtil;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
-import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.io.IOException;
 import java.util.Optional;
+
+import static yanagishima.util.DownloadUtil.downloadTsv;
+import static yanagishima.util.HttpRequestUtil.getOrDefaultParameter;
 
 @Singleton
 public class ShareDownloadServlet extends HttpServlet {
-
-    private static Logger LOGGER = LoggerFactory.getLogger(ShareDownloadServlet.class);
-
     private static final long serialVersionUID = 1L;
 
+    private final TinyORM db;
+
     @Inject
-    private TinyORM db;
-
-    @Override
-    protected void doGet(HttpServletRequest request,
-                         HttpServletResponse response) throws ServletException, IOException {
-
-        Optional<String> publishIdOptional = Optional.ofNullable(request.getParameter("publish_id"));
-        publishIdOptional.ifPresent(publishId -> {
-            String fileName = publishId + ".tsv";
-            Optional<Publish> publishOptional = db.single(Publish.class).where("publish_id=?", publishId).execute();
-            publishOptional.ifPresent(publish -> {
-                String datasource = publishOptional.get().getDatasource();
-                String queryid = publishOptional.get().getQueryId();
-                Optional<String> encodeOptional = Optional.ofNullable(request.getParameter("encode"));
-                DownloadUtil.tsvDownload(response, fileName, datasource, queryid, encodeOptional.orElse("UTF-8"));
-            });
-        });
+    public ShareDownloadServlet(TinyORM db) {
+        this.db = db;
     }
 
+    @Override
+    protected void doGet(HttpServletRequest request, HttpServletResponse response) {
+        Optional<String> publishId = Optional.ofNullable(request.getParameter("publish_id"));
+        if (publishId.isEmpty()) {
+            return;
+        }
+
+        db.single(Publish.class).where("publish_id=?", publishId.get()).execute().ifPresent(publish -> {
+            String encode = getOrDefaultParameter(request, "encode", "UTF-8");
+            boolean showHeader = getOrDefaultParameter(request, "header", true);
+            boolean showBOM = getOrDefaultParameter(request, "bom", true);
+            String fileName = publishId.get() + ".tsv";
+            downloadTsv(response, fileName, publish.getDatasource(), publish.getQueryId(), encode, showHeader, showBOM);
+        });
+    }
 }

@@ -10,6 +10,10 @@ export default new Router({
   mode: 'history',
   routes: [
     {
+      path: '/diff',
+      component: () => import(/* webpackChunkName: "diff-view" */ '@/views/DiffView')
+    },
+    {
       path: '/share',
       component: ShareView
     },

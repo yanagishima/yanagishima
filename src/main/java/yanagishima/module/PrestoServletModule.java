@@ -9,7 +9,7 @@ public class PrestoServletModule extends ServletModule {
 		bind(PrestoServlet.class);
 		bind(PrestoAsyncServlet.class);
 		bind(QueryServlet.class);
-		bind(KillServlet.class);
+		bind(PrestoKillServlet.class);
 		bind(FormatSqlServlet.class);
 		bind(HistoryServlet.class);
 		bind(HistoryStatusServlet.class);
@@ -32,11 +32,14 @@ public class PrestoServletModule extends ServletModule {
 		bind(CommentServlet.class);
 		bind(ConvertPrestoServlet.class);
 		bind(LabelServlet.class);
+		bind(StarredSchemaServlet.class);
+		bind(CheckPrestoQueryServlet.class);
+		bind(HealthCheckServlet.class);
 
 		serve("/presto").with(PrestoServlet.class);
 		serve("/prestoAsync").with(PrestoAsyncServlet.class);
 		serve("/query").with(QueryServlet.class);
-		serve("/kill").with(KillServlet.class);
+		serve("/kill").with(PrestoKillServlet.class);
 		serve("/format").with(FormatSqlServlet.class);
 		serve("/history").with(HistoryServlet.class);
 		serve("/historyStatus").with(HistoryStatusServlet.class);
@@ -59,6 +62,8 @@ public class PrestoServletModule extends ServletModule {
 		serve("/comment").with(CommentServlet.class);
 		serve("/convertPresto").with(ConvertPrestoServlet.class);
 		serve("/label").with(LabelServlet.class);
-
+		serve("/starredSchema").with(StarredSchemaServlet.class);
+		serve("/checkPrestoQuery").with(CheckPrestoQueryServlet.class);
+		serve("/healthCheck").with(HealthCheckServlet.class);
 	}
 }

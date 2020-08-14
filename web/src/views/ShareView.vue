@@ -18,61 +18,64 @@
       <div id="header-sub">
         <div class="container">
           <div class="row align-items-center pt-3">
-            <div class="col-9">
+            <div class="col-8">
               <template v-if="loading">
                 <strong>Loading</strong>
               </template>
               <template v-else>
-                <template v-if="response.error || error">
+                <span class="mr-3" v-if="response && response.error || error">
                   <strong><i class="fa fa-exclamation-triangle text-danger mr-1"></i>Error</strong>
-                </template>
-                <template v-else>
-                  <span v-if="response.results">
-                    <span class="mr-3" v-if="response.lineNumber">
-                      <i class="fas fa-file-alt" title="Publish ID" data-toggle="tooltip"
-                         data-placement="left"></i>
-                      <strong>{{publishId}}</strong>
-                    </span>
-                    <span class="mr-3" v-if="response.queryid">
-                      <a :href="buildShareUrl(datasource, engine, queryid, chart, pivot, line)">{{queryid}}</a>
-                    </span>
-                    <span class="mr-2" v-if="response.finishedTime">
-                      <i class="fa fa-calendar" title="Finished time" data-toggle="tooltip" data-animation="false"
-                         data-placement="left"></i>
-                      {{response.finishedTime | extractDate}}
-                    </span>
-                    <span class="mr-2" v-if="response.elapsedTimeMillis">
-                      <strong>{{(response.elapsedTimeMillis / 1000).ceil(2)}}</strong><span
-                      class="text-muted ml-1">sec</span>
-                    </span>
-                    <span class="mr-2" v-if="response.rawDataSize">
-                      <strong>{{response.rawDataSize.remove('B')}}</strong><span class="text-muted ml-1">byte</span>
-                    </span>
-                    <span class="mr-2" v-if="response.lineNumber">
-                      <strong>{{response.results.length | formatNumber}}</strong>
-                      <template v-if="response.results.length !== response.lineNumber - 1">
-                        <span class="mx-1">/</span><strong>{{response.lineNumber - 1 | formatNumber}}</strong>
-                      </template>
-                      <span class="text-muted ml-1">results</span>
-                    </span>
-                  </span>
-                  <span class="mr-2" v-if="response.headers">
-                    <strong>{{response.headers.length}}</strong><span class="text-muted ml-1">columns</span>
-                  </span>
-                  <span v-else><strong>No result</strong></span>
-                </template>
+                </span>
+                <span v-else-if="response && response.results"></span>
+                <span v-else><strong>No result</strong></span>
+                <span class="mr-3" v-if="response && response.lineNumber">
+                  <i class="fas fa-file-alt" title="Publish ID" data-toggle="tooltip"
+                      data-placement="left"></i>
+                  <strong>{{publishId}}</strong>
+                </span>
+                <span class="mr-3" v-if="response && response.queryid">
+                  <a :href="buildShareUrl(datasource, engine, queryid, chart, pivot, line)">{{queryid}}</a>
+                </span>
+                <span class="mr-2" v-if="response && response.finishedTime">
+                  <i class="fa fa-calendar" title="Finished time" data-toggle="tooltip" data-animation="false"
+                      data-placement="left"></i>
+                  {{response.finishedTime | extractDate}}
+                </span>
+                <span class="mr-2 d-md-none d-lg-inline" v-if="response && response.elapsedTimeMillis">
+                  <strong>{{(response.elapsedTimeMillis / 1000).ceil(2)}}</strong><span
+                  class="text-muted ml-1">sec</span>
+                </span>
+                <span class="mr-2 d-md-none d-lg-inline" v-if="response && response.rawDataSize">
+                  <strong>{{response.rawDataSize.remove('B')}}</strong><span class="text-muted ml-1">byte</span>
+                </span>
+                <span class="mr-2" v-if="response && response.results && response.lineNumber">
+                  <strong>{{response.results.length | formatNumber}}</strong>
+                  <template v-if="response.results.length !== response.lineNumber - 1">
+                    <span class="mx-1">/</span>
+                    <strong>{{response.lineNumber - 1 | formatNumber}}</strong>
+                  </template>
+                  <span class="text-muted ml-1">results</span>
+                </span>
+                <span class="mr-2 d-md-none d-lg-inline" v-if="response && response.headers">
+                  <strong>{{response.headers.length}}</strong><span class="text-muted ml-1">columns</span>
+                </span>
               </template>
             </div>
-            <div class="col-3 text-right">
-              <label class="ml-2">
-                <input type="checkbox" v-model="isPretty">
+            <div class="col-4 text-right">
+              <label>
+                <input type="checkbox" v-model="isPretty" class="align-middle">
                 Pretty print
               </label>
-              <div class="btn-group ml-2">
-                <a :href="buildShareDownloadUrl(publishId, false)" class="btn btn-sm btn-secondary"
-                   :class="{disabledDownload}"><i class="fa fa-fw fa-download mr-1"></i>TSV</a>
-                <a :href="buildShareDownloadUrl(publishId, true)" class="btn btn-sm btn-secondary"
-                   :class="{disabledDownload}"><i class="fa fa-fw fa-download mr-1"></i>CSV</a>
+              <div class="btn-group ml-2" v-if="response && response.rawDataSize">
+                <a href="#" class="btn btn-sm btn-secondary" data-toggle="dropdown"><i class="fa fa-fw fa-download"></i><span class="d-md-none d-lg-inline ml-1">Download</span></a>
+                <div class="dropdown-menu dropdown-menu-right">
+                  <div class="dropdown-header">header</div>
+                  <a :href="buildShareDownloadUrl(publishId, false, true)" class="dropdown-item">TSV</a>
+                  <a :href="buildShareDownloadUrl(publishId, true, true)" class="dropdown-item">CSV</a>
+                  <div class="dropdown-header">no header</div>
+                  <a :href="buildShareDownloadUrl(publishId, false, false)" class="dropdown-item">TSV</a>
+                  <a :href="buildShareDownloadUrl(publishId, true, false)" class="dropdown-item">CSV</a>
+                </div>
               </div>
             </div>
           </div>
@@ -109,7 +112,7 @@
                 <div class="card-header">
                   <strong>{{chartTypes[chart].name}}</strong>
                 </div>
-                <div class="card-block">
+                <div class="card-body">
                   <vue-chart :chart-type="chartTypes[chart].type" :columns="chartColumns" :rows="chartRows"
                              :options="Object.assign({}, chartOptions, chartTypes[chart].option)"></vue-chart>
                   <div v-if="response.lineNumber > 501" class="text-right text-muted">
@@ -120,7 +123,7 @@
             </div>
             <div class="mb-3" v-if="enablePivot && pivot">
               <div class="card">
-                <div class="card-block">
+                <div class="card-body">
                   <pivot :data="pivotRows" :fields="[]" :row-fields="rowFields" :col-fields="colFields" :reducer="reducer" :default-show-settings="false">
                   </pivot>
                   <div v-if="response.lineNumber > 501" class="text-right text-muted">
@@ -130,15 +133,6 @@
               </div>
             </div>
             <ResultTable :result="response" :pretty="isPretty" :line="line" :readonly="true"/>
-          </template>
-          <template v-else>
-            <div class="alert alert-warning" role="alert">
-              <div class="row align-items-center">
-                <div class="col">
-                  <i class="fa fa-fw fa-frown-o mr-1"></i>I'm sorry.
-                </div>
-              </div>
-            </div>
           </template>
         </template>
       </div>
@@ -170,7 +164,7 @@
           </div>
         </div>
       </div>
-      <div class="card-block">
+      <div class="card-body">
         <div id="comment-body">
           <template v-if="response.comment.content">
             <pre class="comment"><BaseAutoLink :text="response.comment.content.escapeHTML()"></BaseAutoLink></pre>
@@ -256,7 +250,8 @@ export default {
           this.visibleComment = data.comment != null
           this.$store.commit('loadComplete')
         })
-        .catch(() => {
+        .catch(error => {
+          this.error = error
         })
     }
   },

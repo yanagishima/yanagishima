@@ -10,13 +10,14 @@
           <table class="table table-bordered table-fixed table-hover mb-0">
             <tbody>
             <tr v-for="item in themes" :key="item">
-              <td width="25%">
-                <label class="form-check-label" :class="{'font-weight-bold': item === theme}">
-                  <input type="radio" class="form-check-input mr-2" v-model="themeModel" :value="item"
-                         @change="hideModal('theme')">{{item | humanize}}
-                </label>
+              <td class="w-25">
+                <div class="form-check" :class="{'font-weight-bold': item === theme}">
+                  <input class="form-check-input" type="radio" :id="`theme${item}Radio`" v-model="themeModel" :value="item"
+                         @change="hideModal('theme')">
+                  <label class="form-check-label" :for="`theme${item}Radio`">{{item | humanize}}</label>
+                </div>
               </td>
-              <td width="75%">
+              <td>
                 <BaseAce code="SELECT * FROM catalog.schema.table LIMIT 100" :theme="item" :readonly="true"></BaseAce>
               </td>
             </tr>

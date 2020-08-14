@@ -1,13 +1,14 @@
 package yanagishima.servlet;
 
-import me.geso.tinyorm.TinyORM;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import yanagishima.config.YanagishimaConfig;
-import yanagishima.row.Label;
-import yanagishima.util.AccessControlUtil;
-import yanagishima.util.HttpRequestUtil;
-import yanagishima.util.JsonUtil;
+import static yanagishima.util.AccessControlUtil.sendForbiddenError;
+import static yanagishima.util.AccessControlUtil.validateDatasource;
+import static yanagishima.util.HttpRequestUtil.getRequiredParameter;
+import static yanagishima.util.JsonUtil.writeJSON;
+
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
@@ -15,143 +16,105 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Optional;
 
-import static javax.servlet.http.HttpServletResponse.SC_FORBIDDEN;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import me.geso.tinyorm.TinyORM;
+import yanagishima.config.YanagishimaConfig;
+import yanagishima.row.Label;
 
 @Singleton
 public class LabelServlet extends HttpServlet {
-
     private static final long serialVersionUID = 1L;
-    private static final Logger LOGGER = LoggerFactory
-            .getLogger(LabelServlet.class);
-    private final YanagishimaConfig yanagishimaConfig;
-    @Inject
-    private TinyORM db;
+    private static final Logger LOG = LoggerFactory.getLogger(LabelServlet.class);
+
+    private final TinyORM db;
+    private final YanagishimaConfig config;
 
     @Inject
-    public LabelServlet(YanagishimaConfig yanagishimaConfig) {
-        this.yanagishimaConfig = yanagishimaConfig;
+    public LabelServlet(TinyORM db, YanagishimaConfig config) {
+        this.db = db;
+        this.config = config;
     }
 
     @Override
-    protected void doPost(HttpServletRequest request,
-                          HttpServletResponse response) throws ServletException, IOException {
-
-        HashMap<String, Object> retVal = new HashMap<>();
-
+    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        Map<String, Object> responseBody = new HashMap<>();
         try {
-            String datasource = HttpRequestUtil.getParam(request, "datasource");
-            if (yanagishimaConfig.isCheckDatasource()) {
-                if (!AccessControlUtil.validateDatasource(request, datasource)) {
-                    try {
-                        response.sendError(SC_FORBIDDEN);
-                        return;
-                    } catch (IOException e) {
-                        throw new RuntimeException(e);
-                    }
-                }
+            String datasource = getRequiredParameter(request, "datasource");
+            if (config.isCheckDatasource() && !validateDatasource(request, datasource)) {
+                sendForbiddenError(response);
+                return;
             }
 
-            String engine = HttpRequestUtil.getParam(request, "engine");
-            String queryid = HttpRequestUtil.getParam(request, "queryid");
-            String labelName = HttpRequestUtil.getParam(request, "labelName");
+            String engine = getRequiredParameter(request, "engine");
+            String queryId = getRequiredParameter(request, "queryid");
+            String labelName = getRequiredParameter(request, "labelName");
 
             int count = db.insert(Label.class).value("datasource", datasource)
-                    .value("engine", engine)
-                    .value("query_id", queryid)
-                    .value("label_name", labelName)
-                    .execute();
+                          .value("engine", engine)
+                          .value("query_id", queryId)
+                          .value("label_name", labelName)
+                          .execute();
 
-            retVal.put("datasource", datasource);
-            retVal.put("engine", engine);
-            retVal.put("queryid", queryid);
-            retVal.put("labelName", labelName);
-            retVal.put("count", count);
+            responseBody.put("datasource", datasource);
+            responseBody.put("engine", engine);
+            responseBody.put("queryid", queryId);
+            responseBody.put("labelName", labelName);
+            responseBody.put("count", count);
 
         } catch (Throwable e) {
-            LOGGER.error(e.getMessage(), e);
-            retVal.put("error", e.getMessage());
+            LOG.error(e.getMessage(), e);
+            responseBody.put("error", e.getMessage());
         }
-
-        JsonUtil.writeJSON(response, retVal);
-
+        writeJSON(response, responseBody);
     }
 
     @Override
-    protected void doGet(HttpServletRequest request,
-                         HttpServletResponse response) throws ServletException, IOException {
-
-        HashMap<String, Object> retVal = new HashMap<>();
+    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        Map<String, Object> responseBody = new HashMap<>();
 
         try {
-            String datasource = HttpRequestUtil.getParam(request, "datasource");
-            if (yanagishimaConfig.isCheckDatasource()) {
-                if (!AccessControlUtil.validateDatasource(request, datasource)) {
-                    try {
-                        response.sendError(SC_FORBIDDEN);
-                        return;
-                    } catch (IOException e) {
-                        throw new RuntimeException(e);
-                    }
-                }
+            String datasource = getRequiredParameter(request, "datasource");
+            if (config.isCheckDatasource() && !validateDatasource(request, datasource)) {
+                sendForbiddenError(response);
+                return;
             }
 
-            String engine = HttpRequestUtil.getParam(request, "engine");
-            String queryid = HttpRequestUtil.getParam(request, "queryid");
-            Optional<Label> optionalLabel = db.single(Label.class).where("datasource = ? and engine = ? and query_id = ?", datasource, engine, queryid).execute();
-            if(optionalLabel.isPresent()) {
-                retVal.put("label", optionalLabel.get().getLabelName());
+            String engine = getRequiredParameter(request, "engine");
+            String queryId = getRequiredParameter(request, "queryid");
+            Optional<Label> optionalLabel = db.single(Label.class).where("datasource = ? and engine = ? and query_id = ?", datasource, engine, queryId).execute();
+            if (optionalLabel.isPresent()) {
+                responseBody.put("label", optionalLabel.get().getLabelName());
             }
         } catch (Throwable e) {
-            LOGGER.error(e.getMessage(), e);
-            retVal.put("error", e.getMessage());
+            LOG.error(e.getMessage(), e);
+            responseBody.put("error", e.getMessage());
         }
-
-        JsonUtil.writeJSON(response, retVal);
-
+        writeJSON(response, responseBody);
     }
-
 
     @Override
-    protected void doDelete(HttpServletRequest request,
-                            HttpServletResponse response) throws ServletException, IOException {
-
-        HashMap<String, Object> retVal = new HashMap<>();
-
+    protected void doDelete(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        Map<String, Object> responseBody = new HashMap<>();
         try {
-            String datasource = HttpRequestUtil.getParam(request, "datasource");
-            if (yanagishimaConfig.isCheckDatasource()) {
-                if (!AccessControlUtil.validateDatasource(request, datasource)) {
-                    try {
-                        response.sendError(SC_FORBIDDEN);
-                        return;
-                    } catch (IOException e) {
-                        throw new RuntimeException(e);
-                    }
-                }
+            String datasource = getRequiredParameter(request, "datasource");
+            if (config.isCheckDatasource() && !validateDatasource(request, datasource)) {
+                sendForbiddenError(response);
+                return;
             }
 
-            String engine = HttpRequestUtil.getParam(request, "engine");
-            String queryid = HttpRequestUtil.getParam(request, "queryid");
-            Optional<Label> optionaldeletedLabel = db.single(Label.class).where("datasource = ? and engine = ? and query_id = ?", datasource, engine, queryid).execute();
-            if(optionaldeletedLabel.isPresent()) {
-                optionaldeletedLabel.get().delete();;
-            }
-            retVal.put("datasource", datasource);
-            retVal.put("engine", engine);
-            retVal.put("queryid", queryid);
+            String engine = getRequiredParameter(request, "engine");
+            String queryId = getRequiredParameter(request, "queryid");
+            db.single(Label.class).where("datasource = ? and engine = ? and query_id = ?", datasource, engine, queryId).execute().ifPresent(Label::delete);
+            responseBody.put("datasource", datasource);
+            responseBody.put("engine", engine);
+            responseBody.put("queryid", queryId);
         } catch (Throwable e) {
-            LOGGER.error(e.getMessage(), e);
-            retVal.put("error", e.getMessage());
+            LOG.error(e.getMessage(), e);
+            responseBody.put("error", e.getMessage());
         }
-
-        JsonUtil.writeJSON(response, retVal);
-
+        writeJSON(response, responseBody);
     }
-
 }
