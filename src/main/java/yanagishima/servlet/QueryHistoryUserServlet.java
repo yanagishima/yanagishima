@@ -29,7 +29,6 @@ import io.airlift.units.DataSize;
 import me.geso.tinyorm.TinyORM;
 import yanagishima.config.YanagishimaConfig;
 import yanagishima.row.Query;
-import yanagishima.util.Status;
 
 @Singleton
 public class QueryHistoryUserServlet extends HttpServlet {
@@ -59,7 +58,7 @@ public class QueryHistoryUserServlet extends HttpServlet {
             String userName = request.getHeader(config.getAuditHttpHeaderName());
             String search = request.getParameter("search");
 
-            responseBody.put("headers", Arrays.asList("Id", "Query", "Time", "rawDataSize", "engine", "finishedTime", "linenumber", "labelName"));
+            responseBody.put("headers", Arrays.asList("Id", "Query", "Time", "rawDataSize", "engine", "finishedTime", "linenumber", "labelName", "status"));
 
             String limit = getOrDefaultParameter(request, "limit", "100");
             String label = request.getParameter("label");
@@ -69,7 +68,6 @@ public class QueryHistoryUserServlet extends HttpServlet {
                                    + "WHERE a.datasource=\'" + datasource + "\' "
                                    + "and a.engine=\'" + engine + "\' and "
                                    + "a.user=\'" + userName + "\' "
-                                   + "and a.status != 'FAILED' "
                                    + "and a.query_string LIKE '%" + Optional.ofNullable(search).orElse("") + "%' ORDER BY a.query_id DESC LIMIT " + limit;
                 String countSql = "SELECT count(*) FROM query a " + joinWhere;
                 String fetchSql = "SELECT "
@@ -97,7 +95,7 @@ public class QueryHistoryUserServlet extends HttpServlet {
                                            + "a.linenumber, "
                                            + "b.label_name AS label_name "
                                            + "FROM query a LEFT OUTER JOIN label b on a.datasource = b.datasource AND a.engine = b.engine AND a.query_id = b.query_id "
-                                           + "WHERE a.status != 'FAILED' and b.label_name = \'" + label
+                                           + "WHERE b.label_name = \'" + label
                                            + "\' and a.datasource=\'" + datasource + "\' and a.engine=\'" + engine + "\' and a.user=\'" + userName + "\' LIMIT " + limit);
                 responseBody.put("hit", queryList.size());
             }
@@ -118,6 +116,7 @@ public class QueryHistoryUserServlet extends HttpServlet {
                 row.add(query.getFetchResultTimeString());
                 row.add(query.getLinenumber());
                 row.add(query.getExtraColumn("label_name"));
+                row.add(query.getStatus());
                 queryHistoryList.add(row);
             }
 
@@ -131,7 +130,6 @@ public class QueryHistoryUserServlet extends HttpServlet {
                                 .where("datasource=?", datasource)
                                 .where("engine=?", engine)
                                 .where("user=?", userName)
-                                .where("status=?", Status.SUCCEED.name())
                                 .execute();
             responseBody.put("total", totalCount);
 

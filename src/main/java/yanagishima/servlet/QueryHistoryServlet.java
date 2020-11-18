@@ -6,7 +6,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import yanagishima.config.YanagishimaConfig;
 import yanagishima.row.Query;
-import yanagishima.util.Status;
 
 import javax.annotation.Nullable;
 import javax.inject.Inject;
@@ -58,7 +57,7 @@ public class QueryHistoryServlet extends HttpServlet {
             String[] queryIds = request.getParameter("queryids").split(",");
             String label = request.getParameter("label");
 
-            responseBody.put("headers", Arrays.asList("Id", "Query", "Time", "rawDataSize", "engine", "finishedTime", "linenumber", "labelName"));
+            responseBody.put("headers", Arrays.asList("Id", "Query", "Time", "rawDataSize", "engine", "finishedTime", "linenumber", "labelName", "status"));
             responseBody.put("results", getHistories(label, datasource, queryIds));
 
         } catch (Throwable e) {
@@ -71,9 +70,6 @@ public class QueryHistoryServlet extends HttpServlet {
     private List<List<Object>> getHistories(String label, String datasource, String[] queryIds) {
         List<List<Object>> queryHistories = new ArrayList<>();
         for (Query query : getQueries(label, datasource, queryIds)) {
-            if (query.getStatus().equals(Status.FAILED.name())) {
-                continue;
-            }
             queryHistories.add(toQueryHistory(query));
         }
         return queryHistories;
@@ -128,6 +124,7 @@ public class QueryHistoryServlet extends HttpServlet {
         row.add(query.getFetchResultTimeString());
         row.add(query.getLinenumber());
         row.add(query.getExtraColumn("label_name"));
+        row.add(query.getStatus());
         return row;
     }
 
