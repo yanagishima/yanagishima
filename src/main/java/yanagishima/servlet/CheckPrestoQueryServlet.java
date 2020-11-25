@@ -85,7 +85,7 @@ public class CheckPrestoQueryServlet extends HttpServlet {
             String user = getUsername(request);
             Optional<String> prestoUser = Optional.ofNullable(request.getParameter("user"));
             Optional<String> prestoPassword = Optional.ofNullable(request.getParameter("password"));
-            String explainQuery = format("%sEXPLAIN (TYPE VALIDATE)\n%s", YANAGISHIMA_COMMENT, query);
+            String explainQuery = format("%sEXPLAIN ANALYZE\n%s", YANAGISHIMA_COMMENT, query);
             String queryId = null;
             try {
                 PrestoQueryResult prestoQueryResult = prestoService.doQuery(datasource, explainQuery, user, prestoUser, prestoPassword, false, Integer.MAX_VALUE);
@@ -118,6 +118,12 @@ public class CheckPrestoQueryServlet extends HttpServlet {
                                 responseBody.put("errorColumnNumber", columnNumber);
                             }
                         }
+                    } else if (state.equals("FINISHED")) {
+                        Map queryStats = (Map) status.get("queryStats");
+                        responseBody.put("physicalInputDataSize", queryStats.get("physicalInputDataSize"));
+                        responseBody.put("physicalInputPositions", queryStats.get("physicalInputPositions"));
+                    } else {
+                        throw new IllegalArgumentException("Illegal state: " + state);
                     }
                 }
             }
