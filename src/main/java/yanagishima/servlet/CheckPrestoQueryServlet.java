@@ -96,7 +96,12 @@ public class CheckPrestoQueryServlet extends HttpServlet {
             }
 
             String coordinatorServer = config.getPrestoCoordinatorServer(datasource);
-            Request prestoRequest = new Request.Builder().url(coordinatorServer + "/v1/query/" + queryId).build();
+            Request prestoRequest;
+            if (user == null) {
+                prestoRequest = new Request.Builder().url(coordinatorServer + "/v1/query/" + queryId).build();
+            } else {
+                prestoRequest = new Request.Builder().url(coordinatorServer + "/v1/query/" + queryId).addHeader("X-Presto-User", user).build();
+            }
             try (Response prestoResponse = buildClient(request).newCall(prestoRequest).execute()) {
                 if (prestoResponse.isSuccessful() && prestoResponse.body() != null) {
                     String json = prestoResponse.body().string();
