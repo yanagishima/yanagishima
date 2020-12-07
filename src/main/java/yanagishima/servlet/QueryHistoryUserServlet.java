@@ -22,17 +22,15 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import io.airlift.units.DataSize;
+import lombok.extern.slf4j.Slf4j;
 import me.geso.tinyorm.TinyORM;
 import yanagishima.config.YanagishimaConfig;
 import yanagishima.row.Query;
 
+@Slf4j
 @Singleton
 public class QueryHistoryUserServlet extends HttpServlet {
-    private static final Logger LOGGER = LoggerFactory.getLogger(QueryHistoryUserServlet.class);
     private static final long serialVersionUID = 1L;
 
     private final YanagishimaConfig config;
@@ -134,7 +132,7 @@ public class QueryHistoryUserServlet extends HttpServlet {
             responseBody.put("total", totalCount);
 
         } catch (Throwable e) {
-            LOGGER.error(e.getMessage(), e);
+            log.error(e.getMessage(), e);
             responseBody.put("error", e.getMessage());
         }
         writeJSON(response, responseBody);

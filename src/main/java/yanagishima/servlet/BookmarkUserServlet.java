@@ -1,8 +1,7 @@
 package yanagishima.servlet;
 
+import lombok.extern.slf4j.Slf4j;
 import me.geso.tinyorm.TinyORM;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import yanagishima.config.YanagishimaConfig;
 import yanagishima.row.Bookmark;
 import yanagishima.model.HttpRequestContext;
@@ -20,9 +19,9 @@ import static yanagishima.util.AccessControlUtil.sendForbiddenError;
 import static yanagishima.util.AccessControlUtil.validateDatasource;
 import static yanagishima.util.JsonUtil.writeJSON;
 
+@Slf4j
 @Singleton
 public class BookmarkUserServlet extends HttpServlet {
-    private static final Logger LOGGER = LoggerFactory.getLogger(BookmarkUserServlet.class);
     private static final long serialVersionUID = 1L;
 
     private final YanagishimaConfig config;
@@ -54,7 +53,7 @@ public class BookmarkUserServlet extends HttpServlet {
             }
             writeJSON(response, Map.of("bookmarkList", bookmarks));
         } catch (Throwable e) {
-            LOGGER.error(e.getMessage(), e);
+            log.error(e.getMessage(), e);
             writeJSON(response, Map.of("error", e.getMessage()));
         }
     }

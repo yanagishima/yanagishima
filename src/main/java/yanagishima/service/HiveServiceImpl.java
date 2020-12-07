@@ -2,12 +2,11 @@ package yanagishima.service;
 
 import io.airlift.units.DataSize;
 import io.airlift.units.Duration;
+import lombok.extern.slf4j.Slf4j;
 import me.geso.tinyorm.TinyORM;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
 import org.komamitsu.fluency.Fluency;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import yanagishima.config.YanagishimaConfig;
 import yanagishima.exception.HiveQueryErrorException;
 import yanagishima.pool.StatementPool;
@@ -37,9 +36,8 @@ import static yanagishima.util.QueryEngine.spark;
 import static yanagishima.util.TimeoutUtil.checkTimeout;
 import static yanagishima.util.TypeCoerceUtil.objectToString;
 
+@Slf4j
 public class HiveServiceImpl implements HiveService {
-    private static final Logger LOGGER = LoggerFactory.getLogger(HiveServiceImpl.class);
-
     private final YanagishimaConfig config;
     private final ExecutorService executorService = Executors.newFixedThreadPool(10);
     private final TinyORM db;
@@ -86,9 +84,9 @@ public class HiveServiceImpl implements HiveService {
                 int limit = config.getSelectLimit();
                 getHiveQueryResult(queryId, engine, datasource, query, true, limit, userName, hiveUser, hivePassword, true);
             } catch (HiveQueryErrorException e) {
-                LOGGER.warn(e.getCause().getMessage());
+                log.warn(e.getCause().getMessage());
             } catch (Throwable e) {
-                LOGGER.error(e.getMessage(), e);
+                log.error(e.getMessage(), e);
             }
         }
     }
@@ -299,7 +297,7 @@ public class HiveServiceImpl implements HiveService {
         try {
             fluency.emit(config.getFluentdExecutedTag().get(), event);
         } catch (IOException e) {
-            LOGGER.error(e.getMessage(), e);
+            log.error(e.getMessage(), e);
         }
     }
 

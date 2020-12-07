@@ -23,16 +23,14 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
+import lombok.extern.slf4j.Slf4j;
 import yanagishima.config.YanagishimaConfig;
 import yanagishima.result.HiveQueryResult;
 import yanagishima.service.HiveService;
 
+@Slf4j
 @Singleton
 public class HivePartitionServlet extends HttpServlet {
-    private static final Logger LOG = LoggerFactory.getLogger(HivePartitionServlet.class);
     private static final long serialVersionUID = 1L;
 
     private final HiveService hiveService;
@@ -67,7 +65,7 @@ public class HivePartitionServlet extends HttpServlet {
             if (partitionColumn == null || partitionValue == null) {
                 String query = format("SHOW PARTITIONS %s.`%s`", schema, table);
                 if (user != null) {
-                    LOG.info(format("%s executed %s in %s", user, query, datasource));
+                    log.info(format("%s executed %s in %s", user, query, datasource));
                 }
                 HiveQueryResult hiveQueryResult = hiveService.doQuery(engine, datasource, query, user, hiveUser, hivePassword, false, Integer.MAX_VALUE);
                 Set<String> partitions = new TreeSet<>();
@@ -97,7 +95,7 @@ public class HivePartitionServlet extends HttpServlet {
                 }
                 String query = format("SHOW PARTITIONS %s.`%s` PARTITION(%s)", schema, table, join(", ", whereList));
                 if (user != null) {
-                    LOG.info(format("%s executed %s in %s", user, query, datasource));
+                    log.info(format("%s executed %s in %s", user, query, datasource));
                 }
                 HiveQueryResult hiveQueryResult = hiveService.doQuery(engine, datasource, query, user, hiveUser, hivePassword, false, Integer.MAX_VALUE);
                 List<List<String>> records = hiveQueryResult.getRecords();
@@ -118,7 +116,7 @@ public class HivePartitionServlet extends HttpServlet {
                 responseBody.put("partitions", partitions);
             }
         } catch (Throwable e) {
-            LOG.error(e.getMessage(), e);
+            log.error(e.getMessage(), e);
             responseBody.put("error", e.getMessage());
         }
         writeJSON(response, responseBody);

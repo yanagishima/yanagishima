@@ -1,8 +1,7 @@
 package yanagishima.servlet;
 
+import lombok.extern.slf4j.Slf4j;
 import me.geso.tinyorm.TinyORM;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import yanagishima.config.YanagishimaConfig;
 import yanagishima.row.Comment;
 import yanagishima.model.HttpRequestContext;
@@ -28,10 +27,10 @@ import static yanagishima.util.AccessControlUtil.sendForbiddenError;
 import static yanagishima.util.AccessControlUtil.validateDatasource;
 import static yanagishima.util.JsonUtil.writeJSON;
 
+@Slf4j
 @Singleton
 public class CommentServlet extends HttpServlet {
     private static final long serialVersionUID = 1L;
-    private static final Logger LOGGER = LoggerFactory.getLogger(CommentServlet.class);
 
     private final YanagishimaConfig config;
     private final TinyORM db;
@@ -103,7 +102,7 @@ public class CommentServlet extends HttpServlet {
                 responseBody.put("likeCount", likeCount);
             }
         } catch (Throwable e) {
-            LOGGER.error(e.getMessage(), e);
+            log.error(e.getMessage(), e);
             responseBody.put("error", e.getMessage());
         }
         writeJSON(response, responseBody);
@@ -136,7 +135,7 @@ public class CommentServlet extends HttpServlet {
             }
             responseBody.put("comments", comments);
         } catch (Throwable e) {
-            LOGGER.error(e.getMessage(), e);
+            log.error(e.getMessage(), e);
             responseBody.put("error", e.getMessage());
         }
         writeJSON(response, responseBody);
@@ -162,7 +161,7 @@ public class CommentServlet extends HttpServlet {
             responseBody.put("engine", context.getEngine());
             responseBody.put("queryid", context.getQueryId());
         } catch (Throwable e) {
-            LOGGER.error(e.getMessage(), e);
+            log.error(e.getMessage(), e);
             responseBody.put("error", e.getMessage());
         }
         writeJSON(response, responseBody);

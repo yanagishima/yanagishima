@@ -15,16 +15,14 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
+import lombok.extern.slf4j.Slf4j;
 import me.geso.tinyorm.TinyORM;
 import yanagishima.config.YanagishimaConfig;
 import yanagishima.row.Query;
 
+@Slf4j
 @Singleton
 public class HistoryStatusServlet extends HttpServlet {
-    private static final Logger LOGGER = LoggerFactory.getLogger(HistoryStatusServlet.class);
     private static final long serialVersionUID = 1L;
 
     private YanagishimaConfig config;
@@ -55,7 +53,7 @@ public class HistoryStatusServlet extends HttpServlet {
             }
             findQuery(datasource, engine, queryId).ifPresent(query -> responseBody.put("status", "ok"));
         } catch (Throwable e) {
-            LOGGER.error(e.getMessage(), e);
+            log.error(e.getMessage(), e);
             responseBody.put("error", e.getMessage());
         }
         writeJSON(response, responseBody);

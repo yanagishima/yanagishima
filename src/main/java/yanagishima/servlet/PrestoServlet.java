@@ -2,8 +2,7 @@ package yanagishima.servlet;
 
 import io.prestosql.client.ClientException;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import yanagishima.config.YanagishimaConfig;
 import yanagishima.exception.QueryErrorException;
 import yanagishima.result.PrestoQueryResult;
@@ -28,9 +27,9 @@ import static yanagishima.util.Constants.YANAGISHIMA_COMMENT;
 import static yanagishima.util.HttpRequestUtil.getRequiredParameter;
 import static yanagishima.util.JsonUtil.writeJSON;
 
+@Slf4j
 @Singleton
 public class PrestoServlet extends HttpServlet {
-	private static final Logger LOGGER = LoggerFactory.getLogger(PrestoServlet.class);
 	private static final long serialVersionUID = 1L;
 
 	private final PrestoService prestoService;
@@ -68,7 +67,7 @@ public class PrestoServlet extends HttpServlet {
 						return;
 					}
 					if (userName != null) {
-						LOGGER.info(format("%s executed %s in %s", userName, query, datasource));
+						log.info(format("%s executed %s in %s", userName, query, datasource));
 					}
 					boolean storeFlag = Boolean.parseBoolean(Optional.ofNullable(request.getParameter("store")).orElse("false"));
 					if (prestoUser.isPresent() && prestoPassword.isPresent()) {
@@ -111,22 +110,22 @@ public class PrestoServlet extends HttpServlet {
 						}
 					}
 				} catch (QueryErrorException e) {
-					LOGGER.warn(e.getCause().getMessage());
+					log.warn(e.getCause().getMessage());
 					responseBody.put("error", e.getCause().getMessage());
 					responseBody.put("queryid", e.getQueryId());
 				} catch (ClientException e) {
 					if (prestoUser.isPresent()) {
-						LOGGER.error(format("%s failed to be authenticated", prestoUser.get()));
+						log.error(format("%s failed to be authenticated", prestoUser.get()));
 					}
-					LOGGER.error(e.getMessage(), e);
+					log.error(e.getMessage(), e);
 					responseBody.put("error", e.getMessage());
 				} catch (Throwable e) {
-					LOGGER.error(e.getMessage(), e);
+					log.error(e.getMessage(), e);
 					responseBody.put("error", e.getMessage());
 				}
 			});
 		} catch (Throwable e) {
-			LOGGER.error(e.getMessage(), e);
+			log.error(e.getMessage(), e);
 			responseBody.put("error", e.getMessage());
 		}
 		writeJSON(response, responseBody);

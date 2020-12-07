@@ -22,16 +22,14 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import io.prestosql.client.ClientException;
+import lombok.extern.slf4j.Slf4j;
 import yanagishima.config.YanagishimaConfig;
 import yanagishima.service.PrestoService;
 
+@Slf4j
 @Singleton
 public class TableListServlet extends HttpServlet {
-    private static final Logger LOGGER = LoggerFactory.getLogger(TableListServlet.class);
     private static final long serialVersionUID = 1L;
 
     private final PrestoService prestoService;
@@ -80,17 +78,17 @@ public class TableListServlet extends HttpServlet {
                 responseBody.put("tableList", tables);
             } catch (ClientException e) {
                 if (prestoUser.isPresent()) {
-                    LOGGER.error(format("%s failed to be authenticated", prestoUser.get()));
+                    log.error(format("%s failed to be authenticated", prestoUser.get()));
                 }
-                LOGGER.error(e.getMessage(), e);
+                log.error(e.getMessage(), e);
                 responseBody.put("error", e.getMessage());
             } catch (Throwable e) {
-                LOGGER.error(e.getMessage(), e);
+                log.error(e.getMessage(), e);
                 responseBody.put("error", e.getMessage());
             }
 
         } catch (Throwable e) {
-            LOGGER.error(e.getMessage(), e);
+            log.error(e.getMessage(), e);
             responseBody.put("error", e.getMessage());
         }
         writeJSON(response, responseBody);

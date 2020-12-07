@@ -28,11 +28,9 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import lombok.extern.slf4j.Slf4j;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
@@ -40,9 +38,9 @@ import yanagishima.config.YanagishimaConfig;
 import yanagishima.result.PrestoQueryResult;
 import yanagishima.service.PrestoService;
 
+@Slf4j
 @Singleton
 public class PrestoPartitionServlet extends HttpServlet {
-    private static final Logger LOGGER = LoggerFactory.getLogger(PrestoPartitionServlet.class);
     private static final long serialVersionUID = 1L;
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
@@ -88,7 +86,7 @@ public class PrestoPartitionServlet extends HttpServlet {
                 } else {
                     String query = buildGetPartitionsQuery(datasource, catalog, schema, table);
                     if (user != null) {
-                        LOGGER.info(format("%s executed %s in %s", user, query, datasource));
+                        log.info(format("%s executed %s in %s", user, query, datasource));
                     }
                     PrestoQueryResult prestoQueryResult = prestoService.doQuery(datasource, query, user, prestoUser, prestoPassword, false, Integer.MAX_VALUE);
                     responseBody.put("column", prestoQueryResult.getColumns().get(0));
@@ -134,7 +132,7 @@ public class PrestoPartitionServlet extends HttpServlet {
                     }
                     String query = buildGetPartitionsQuery(datasource, catalog, schema, table, whereList);
                     if (user != null) {
-                        LOGGER.info(format("%s executed %s in %s", user, query, datasource));
+                        log.info(format("%s executed %s in %s", user, query, datasource));
                     }
                     PrestoQueryResult prestoQueryResult = prestoService.doQuery(datasource, query, user, prestoUser, prestoPassword, false, Integer.MAX_VALUE);
                     List<String> columns = prestoQueryResult.getColumns();
@@ -158,7 +156,7 @@ public class PrestoPartitionServlet extends HttpServlet {
                 }
             }
         } catch (Throwable e) {
-            LOGGER.error(e.getMessage(), e);
+            log.error(e.getMessage(), e);
             responseBody.put("error", e.getMessage());
         }
         writeJSON(response, responseBody);

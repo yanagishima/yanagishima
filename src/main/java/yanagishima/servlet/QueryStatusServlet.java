@@ -18,20 +18,18 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import lombok.extern.slf4j.Slf4j;
 import okhttp3.OkHttpClient;
 import okhttp3.OkHttpClient.Builder;
 import okhttp3.Request;
 import okhttp3.Response;
 import yanagishima.config.YanagishimaConfig;
 
+@Slf4j
 @Singleton
 public class QueryStatusServlet extends HttpServlet {
-	private static final Logger LOGGER = LoggerFactory.getLogger(QueryStatusServlet.class);
 	private static final long serialVersionUID = 1L;
 	private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
@@ -73,7 +71,7 @@ public class QueryStatusServlet extends HttpServlet {
 		try {
 			status = OBJECT_MAPPER.readValue(json, Map.class);
 		} catch (IOException e) {
-			LOGGER.error(e.getMessage(), e);
+			log.error(e.getMessage(), e);
 			status.put("state", "FAILED");
 			status.put("failureInfo", "");
 		}

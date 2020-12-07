@@ -5,11 +5,10 @@ import com.google.common.base.Splitter;
 import io.prestosql.sql.parser.ParsingException;
 import io.prestosql.sql.parser.ParsingOptions;
 import io.prestosql.sql.parser.SqlParser;
+import lombok.extern.slf4j.Slf4j;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import yanagishima.config.YanagishimaConfig;
 import yanagishima.exception.QueryErrorException;
 import yanagishima.result.PrestoQueryResult;
@@ -36,9 +35,9 @@ import static yanagishima.util.Constants.YANAGISHIMA_COMMENT;
 import static yanagishima.util.HttpRequestUtil.getRequiredParameter;
 import static yanagishima.util.JsonUtil.writeJSON;
 
+@Slf4j
 @Singleton
 public class CheckPrestoQueryServlet extends HttpServlet {
-    private static final Logger LOGGER = LoggerFactory.getLogger(CheckPrestoQueryServlet.class);
     private static final long serialVersionUID = 1L;
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
@@ -76,7 +75,7 @@ public class CheckPrestoQueryServlet extends HttpServlet {
             writeJSON(response, responseBody);
             return;
         } catch (Throwable e) {
-            LOGGER.error(e.getMessage(), e);
+            log.error(e.getMessage(), e);
             responseBody.put("error", e.getMessage());
             return;
         }
@@ -91,7 +90,7 @@ public class CheckPrestoQueryServlet extends HttpServlet {
                 PrestoQueryResult prestoQueryResult = prestoService.doQuery(datasource, explainQuery, user, prestoUser, prestoPassword, false, Integer.MAX_VALUE);
                 queryId = prestoQueryResult.getQueryId();
             } catch (QueryErrorException e) {
-                LOGGER.error(e.getMessage(), e);
+                log.error(e.getMessage(), e);
                 queryId = e.getQueryId();
             }
 
@@ -133,7 +132,7 @@ public class CheckPrestoQueryServlet extends HttpServlet {
                 }
             }
         } catch (Throwable e) {
-            LOGGER.error(e.getMessage(), e);
+            log.error(e.getMessage(), e);
             responseBody.put("error", e.getMessage());
         }
         writeJSON(response, responseBody);

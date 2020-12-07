@@ -1,9 +1,9 @@
 package yanagishima.servlet;
 
 import com.google.common.base.Splitter;
+
+import lombok.extern.slf4j.Slf4j;
 import me.geso.tinyorm.TinyORM;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import yanagishima.config.YanagishimaConfig;
 import yanagishima.row.Bookmark;
 import yanagishima.model.HttpRequestContext;
@@ -26,9 +26,9 @@ import static yanagishima.util.AccessControlUtil.sendForbiddenError;
 import static yanagishima.util.AccessControlUtil.validateDatasource;
 import static yanagishima.util.JsonUtil.writeJSON;
 
+@Slf4j
 @Singleton
 public class BookmarkServlet extends HttpServlet {
-    private static final Logger LOGGER = LoggerFactory.getLogger(BookmarkServlet.class);
     private static final long serialVersionUID = 1L;
     private static final Splitter SPLITTER = Splitter.on(',').trimResults().omitEmptyStrings();
 
@@ -75,7 +75,7 @@ public class BookmarkServlet extends HttpServlet {
             checkState(bookmarks.size() == 1, "Too many bookmarks: " + bookmarks.size());
             writeJSON(response, Map.of("bookmark_id", bookmarks.get(0).getBookmarkId()));
         } catch (Throwable e) {
-            LOGGER.error(e.getMessage(), e);
+            log.error(e.getMessage(), e);
             writeJSON(response, Map.of("error", e.getMessage()));
         }
     }
@@ -102,7 +102,7 @@ public class BookmarkServlet extends HttpServlet {
                                                                       + "WHERE datasource=\'" + context.getDatasource() + "\' AND bookmark_id IN (" + placeholder + ")", bookmarkParameters);
             writeJSON(response, Map.of("bookmarkList", bookmarks));
         } catch (Throwable e) {
-            LOGGER.error(e.getMessage(), e);
+            log.error(e.getMessage(), e);
             writeJSON(response, Map.of("error", e.getMessage()));
         }
     }
@@ -126,7 +126,7 @@ public class BookmarkServlet extends HttpServlet {
             List<Bookmark> bookmarks = db.search(Bookmark.class).where("datasource = ? AND engine = ? AND user = ?", context.getDatasource(), context.getEngine(), userName).execute();
             writeJSON(response, Map.of("bookmarkList", bookmarks));
         } catch (Throwable e) {
-            LOGGER.error(e.getMessage(), e);
+            log.error(e.getMessage(), e);
             writeJSON(response, Map.of("bookmarkList", Map.of("error", e.getMessage())));
         }
     }

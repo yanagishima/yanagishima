@@ -16,16 +16,14 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.google.common.base.Splitter;
 
+import lombok.extern.slf4j.Slf4j;
 import yanagishima.config.YanagishimaConfig;
 
+@Slf4j
 @Singleton
 public class ToValuesQueryServlet extends HttpServlet {
-    private static final Logger LOGGER = LoggerFactory.getLogger(ToValuesQueryServlet.class);
     private static final long serialVersionUID = 1L;
     private static final Splitter SPLITTER = Splitter.on('\n');
 
@@ -42,11 +40,11 @@ public class ToValuesQueryServlet extends HttpServlet {
             Optional.ofNullable(request.getParameter("csv")).ifPresent(csv -> {
                 List<String> lines = SPLITTER.splitToList(csv);
                 String valuesQuery = listToValues(lines, config.getToValuesQueryLimit());
-                LOGGER.info(format("query=%s", valuesQuery));
+                log.info(format("query=%s", valuesQuery));
                 writeJSON(response, Map.of("query", valuesQuery));
             });
         } catch (Throwable e) {
-            LOGGER.error(e.getMessage(), e);
+            log.error(e.getMessage(), e);
             writeJSON(response, Map.of("error", e.getMessage()));
         }
     }

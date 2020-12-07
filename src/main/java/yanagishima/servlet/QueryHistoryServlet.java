@@ -1,9 +1,8 @@
 package yanagishima.servlet;
 
 import io.airlift.units.DataSize;
+import lombok.extern.slf4j.Slf4j;
 import me.geso.tinyorm.TinyORM;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import yanagishima.config.YanagishimaConfig;
 import yanagishima.row.Query;
 
@@ -26,9 +25,9 @@ import static yanagishima.util.AccessControlUtil.validateDatasource;
 import static yanagishima.util.HttpRequestUtil.getRequiredParameter;
 import static yanagishima.util.JsonUtil.writeJSON;
 
+@Slf4j
 @Singleton
 public class QueryHistoryServlet extends HttpServlet {
-    private static final Logger LOGGER = LoggerFactory.getLogger(QueryHistoryServlet.class);
     private static final long serialVersionUID = 1L;
 
     private final YanagishimaConfig config;
@@ -61,7 +60,7 @@ public class QueryHistoryServlet extends HttpServlet {
             responseBody.put("results", getHistories(label, datasource, queryIds));
 
         } catch (Throwable e) {
-            LOGGER.error(e.getMessage(), e);
+            log.error(e.getMessage(), e);
             responseBody.put("error", e.getMessage());
         }
         writeJSON(response, responseBody);
