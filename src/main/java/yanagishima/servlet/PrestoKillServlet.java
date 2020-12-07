@@ -1,9 +1,8 @@
 package yanagishima.servlet;
 
+import lombok.extern.slf4j.Slf4j;
 import okhttp3.OkHttpClient;
 import okhttp3.Response;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import yanagishima.config.YanagishimaConfig;
 
 import javax.inject.Inject;
@@ -22,9 +21,9 @@ import static yanagishima.util.AccessControlUtil.validateDatasource;
 import static yanagishima.util.HttpRequestUtil.getRequiredParameter;
 import static yanagishima.util.JsonUtil.writeJSON;
 
+@Slf4j
 @Singleton
 public class PrestoKillServlet extends HttpServlet {
-	private static final Logger LOGGER = LoggerFactory.getLogger(PrestoKillServlet.class);
 	private static final long serialVersionUID = 1L;
 
 	private final YanagishimaConfig config;
@@ -57,7 +56,7 @@ public class PrestoKillServlet extends HttpServlet {
 			Response killResponse = getKillResponse(coordinatorUrl, queryIdOptinal.get(), userName, user, password);
 			writeJSON(response, Map.of("code", killResponse.code(), "message", killResponse.message(), "url", killResponse.request().url()));
 		} catch (Throwable e) {
-			LOGGER.error(e.getMessage(), e);
+			log.error(e.getMessage(), e);
 			writeJSON(response, Map.of("error", e.getMessage()));
 		}
 	}

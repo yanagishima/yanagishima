@@ -19,15 +19,13 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
+import lombok.extern.slf4j.Slf4j;
 import yanagishima.config.YanagishimaConfig;
 import yanagishima.service.HiveService;
 
+@Slf4j
 @Singleton
 public class HiveAsyncServlet extends HttpServlet {
-    private static final Logger LOGGER = LoggerFactory.getLogger(HiveAsyncServlet.class);
     private static final long serialVersionUID = 1L;
 
     private final YanagishimaConfig config;
@@ -62,7 +60,7 @@ public class HiveAsyncServlet extends HttpServlet {
             }
             String engine = getRequiredParameter(request, "engine");
             if (userName != null) {
-                LOGGER.info(format("%s executed %s in datasource=%s, engine=%s", userName, query, datasource, engine));
+                log.info(format("%s executed %s in datasource=%s, engine=%s", userName, query, datasource, engine));
             }
 
             Optional<String> hiveUser = Optional.ofNullable(request.getParameter("user"));
@@ -70,7 +68,7 @@ public class HiveAsyncServlet extends HttpServlet {
             String queryId = hiveService.doQueryAsync(engine, datasource, query, userName, hiveUser, hivePassword);
             responseBody.put("queryid", queryId);
         } catch (Throwable e) {
-            LOGGER.error(e.getMessage(), e);
+            log.error(e.getMessage(), e);
             responseBody.put("error", e.getMessage());
         }
         writeJSON(response, responseBody);

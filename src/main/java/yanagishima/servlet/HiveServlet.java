@@ -20,17 +20,15 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
+import lombok.extern.slf4j.Slf4j;
 import yanagishima.config.YanagishimaConfig;
 import yanagishima.exception.HiveQueryErrorException;
 import yanagishima.result.HiveQueryResult;
 import yanagishima.service.HiveService;
 
+@Slf4j
 @Singleton
 public class HiveServlet extends HttpServlet {
-    private static final Logger LOGGER = LoggerFactory.getLogger(HiveServlet.class);
     private static final long serialVersionUID = 1L;
 
     private final YanagishimaConfig config;
@@ -65,7 +63,7 @@ public class HiveServlet extends HttpServlet {
             }
             String engine = getRequiredParameter(request, "engine");
             if (user != null) {
-                LOGGER.info(format("%s executed %s in datasource=%s, engine=%s", user, query, datasource, engine));
+                log.info(format("%s executed %s in datasource=%s, engine=%s", user, query, datasource, engine));
             }
 
             Optional<String> hiveUser = Optional.ofNullable(request.getParameter("user"));
@@ -92,7 +90,7 @@ public class HiveServlet extends HttpServlet {
                 reponseBody.put("queryid", ((HiveQueryErrorException) e).getQueryId());
             }
 
-            LOGGER.error(e.getMessage(), e);
+            log.error(e.getMessage(), e);
             reponseBody.put("error", e.getMessage());
         }
         writeJSON(response, reponseBody);

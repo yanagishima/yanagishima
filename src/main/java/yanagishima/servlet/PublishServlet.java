@@ -1,8 +1,7 @@
 package yanagishima.servlet;
 
+import lombok.extern.slf4j.Slf4j;
 import me.geso.tinyorm.TinyORM;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import yanagishima.config.YanagishimaConfig;
 import yanagishima.row.Publish;
 import yanagishima.row.Query;
@@ -25,9 +24,9 @@ import static yanagishima.util.AccessControlUtil.validateDatasource;
 import static yanagishima.util.HttpRequestUtil.getRequiredParameter;
 import static yanagishima.util.JsonUtil.writeJSON;
 
+@Slf4j
 @Singleton
 public class PublishServlet extends HttpServlet {
-    private static final Logger LOGGER = LoggerFactory.getLogger(PublishServlet.class);
     private static final long serialVersionUID = 1L;
 
     private final YanagishimaConfig config;
@@ -60,7 +59,7 @@ public class PublishServlet extends HttpServlet {
                     .orElseThrow(() -> new RuntimeException(format("Cannot find query id (%s) for publish", queryid)));
             writeJSON(response, Map.of("publish_id", publishQuery(datasource, userName, engine, queryid)));
         } catch (Throwable e) {
-            LOGGER.error(e.getMessage(), e);
+            log.error(e.getMessage(), e);
             writeJSON(response, Map.of("error", e.getMessage()));
         }
     }

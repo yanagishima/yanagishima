@@ -1,8 +1,6 @@
 package yanagishima.servlet;
 
 import me.geso.tinyorm.TinyORM;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
@@ -15,7 +13,6 @@ import java.io.IOException;
 @Singleton
 public class HealthCheckServlet extends HttpServlet {
     private static final long serialVersionUID = 1L;
-    private static final Logger LOG = LoggerFactory.getLogger(HealthCheckServlet.class);
 
     private final TinyORM db;
 

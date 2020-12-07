@@ -6,13 +6,12 @@ import com.google.inject.servlet.GuiceFilter;
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
+import lombok.extern.slf4j.Slf4j;
 import me.geso.tinyorm.TinyORM;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.servlet.DefaultServlet;
 import org.eclipse.jetty.servlet.FilterHolder;
 import org.eclipse.jetty.servlet.ServletContextHandler;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import yanagishima.config.YanagishimaConfig;
 import yanagishima.filter.YanagishimaFilter;
 import yanagishima.module.*;
@@ -26,8 +25,8 @@ import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.Properties;
 
+@Slf4j
 public class YanagishimaServer {
-    private static final Logger LOGGER = LoggerFactory.getLogger(YanagishimaServer.class);
     private static final String PROPERTY_FILENAME = "yanagishima.properties";
 
     public static void main(String[] args) throws Exception {
@@ -47,22 +46,22 @@ public class YanagishimaServer {
         servletContextHandler.addServlet(DefaultServlet.class, "/");
         servletContextHandler.setResourceBase(properties.getProperty("web.resource.dir", "web"));
 
-        LOGGER.info("Yanagishima Server started...");
+        log.info("Yanagishima Server started...");
         server.start();
 
         Runtime.getRuntime().addShutdownHook(new Thread() {
             @Override
             public void run() {
-                LOGGER.info("Shutting down Yanagishima Server...");
+                log.info("Shutting down Yanagishima Server...");
                 try {
                     server.stop();
                     server.destroy();
                 } catch (Exception e) {
-                    LOGGER.error("Error while shutting down Yanagishima Server", e);
+                    log.error("Error while shutting down Yanagishima Server", e);
                 }
             }
         });
-        LOGGER.info("Yanagishima Server running port " + config.getServerPort());
+        log.info("Yanagishima Server running port " + config.getServerPort());
     }
 
     private static Injector createInjector(Properties properties) {
@@ -228,7 +227,7 @@ public class YanagishimaServer {
         }
 
         String path = options.valueOf(configDirectory);
-        LOGGER.info("Loading yanagishima settings file from " + path);
+        log.info("Loading yanagishima settings file from " + path);
         File directory = new File(path);
         return loadConfiguration(directory);
     }
@@ -239,7 +238,7 @@ public class YanagishimaServer {
             throw new FileNotFoundException(propertyFile.getPath());
         }
 
-        LOGGER.info("Loading yanagishima properties file");
+        log.info("Loading yanagishima properties file");
         try (InputStream inputStream = new BufferedInputStream(new FileInputStream(propertyFile))) {
             Properties properties = new Properties();
             properties.load(inputStream);

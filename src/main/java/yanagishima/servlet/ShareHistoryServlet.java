@@ -1,8 +1,7 @@
 package yanagishima.servlet;
 
+import lombok.extern.slf4j.Slf4j;
 import me.geso.tinyorm.TinyORM;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import yanagishima.config.YanagishimaConfig;
 import yanagishima.row.Comment;
 import yanagishima.row.Publish;
@@ -23,9 +22,9 @@ import static yanagishima.util.HistoryUtil.createHistoryResult;
 import static yanagishima.util.HttpRequestUtil.getRequiredParameter;
 import static yanagishima.util.JsonUtil.writeJSON;
 
+@Slf4j
 @Singleton
 public class ShareHistoryServlet extends HttpServlet {
-    private static final Logger LOGGER = LoggerFactory.getLogger(ShareHistoryServlet.class);
     private static final long serialVersionUID = 1L;
 
     private final YanagishimaConfig config;
@@ -55,7 +54,7 @@ public class ShareHistoryServlet extends HttpServlet {
                 body.put("comment", comment.orElse(null));
             });
         } catch (Throwable e) {
-            LOGGER.error(e.getMessage(), e);
+            log.error(e.getMessage(), e);
             body.put("error", e.getMessage());
         }
         writeJSON(response, body);

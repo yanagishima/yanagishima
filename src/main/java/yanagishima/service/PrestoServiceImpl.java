@@ -6,13 +6,12 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import io.airlift.units.DataSize;
 import io.airlift.units.Duration;
+import lombok.extern.slf4j.Slf4j;
 import me.geso.tinyorm.TinyORM;
 import okhttp3.OkHttpClient;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
 import org.komamitsu.fluency.Fluency;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import yanagishima.config.YanagishimaConfig;
 import yanagishima.exception.QueryErrorException;
 import yanagishima.result.PrestoQueryResult;
@@ -53,8 +52,8 @@ import static yanagishima.util.PathUtil.getResultFilePath;
 import static yanagishima.util.QueryEngine.presto;
 import static yanagishima.util.TimeoutUtil.checkTimeout;
 
+@Slf4j
 public class PrestoServiceImpl implements PrestoService {
-    private static final Logger LOGGER = LoggerFactory.getLogger(PrestoServiceImpl.class);
     private static final CSVFormat CSV_FORMAT = CSVFormat.EXCEL
             .withDelimiter('\t')
             .withNullString("\\N")
@@ -88,7 +87,7 @@ public class PrestoServiceImpl implements PrestoService {
             try {
                 properties = OBJECT_MAPPER.readValue(sessionProperty, Map.class);
             } catch (IOException e) {
-                LOGGER.error(e.getMessage(), e);
+                log.error(e.getMessage(), e);
                 throw new RuntimeException(e);
             }
         });
@@ -116,9 +115,9 @@ public class PrestoServiceImpl implements PrestoService {
             try {
                 getPrestoQueryResult(this.datasource, this.query, this.client, true, config.getSelectLimit(), this.userName);
             } catch (QueryErrorException e) {
-                LOGGER.error(e.getMessage(), e);
+                log.error(e.getMessage(), e);
             } catch (Throwable e) {
-                LOGGER.error(e.getMessage(), e);
+                log.error(e.getMessage(), e);
             } finally {
                 if (this.client != null) {
                     this.client.close();
@@ -293,7 +292,7 @@ public class PrestoServiceImpl implements PrestoService {
         try {
             fluency.emit(config.getFluentdExecutedTag().get(), event);
         } catch (IOException e) {
-            LOGGER.error(e.getMessage(), e);
+            log.error(e.getMessage(), e);
         }
     }
 
@@ -315,7 +314,7 @@ public class PrestoServiceImpl implements PrestoService {
         try {
             fluency.emit(config.getFluentdFaliedTag().get(), event);
         } catch (IOException e) {
-            LOGGER.error(e.getMessage(), e);
+            log.error(e.getMessage(), e);
         }
     }
 

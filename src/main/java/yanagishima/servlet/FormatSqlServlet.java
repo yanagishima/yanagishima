@@ -14,18 +14,16 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import io.prestosql.sql.SqlFormatter;
 import io.prestosql.sql.parser.ParsingException;
 import io.prestosql.sql.parser.ParsingOptions;
 import io.prestosql.sql.parser.SqlParser;
 import io.prestosql.sql.tree.Statement;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Singleton
 public class FormatSqlServlet extends HttpServlet {
-	private static final Logger LOGGER = LoggerFactory.getLogger(FormatSqlServlet.class);
 	private static final long serialVersionUID = 1L;
 
 	@Override
@@ -37,7 +35,7 @@ public class FormatSqlServlet extends HttpServlet {
 				responseBody.put("formattedQuery", formatQuery(query));
 			}
 		} catch (Throwable e) {
-			LOGGER.error(e.getMessage(), e);
+			log.error(e.getMessage(), e);
 			if (e instanceof ParsingException) {
 				responseBody.put("errorLineNumber", ((ParsingException) e).getLineNumber());
 				responseBody.put("errorColumnNumber", ((ParsingException) e).getColumnNumber());

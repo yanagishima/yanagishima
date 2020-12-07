@@ -1,8 +1,7 @@
 package yanagishima.servlet;
 
+import lombok.extern.slf4j.Slf4j;
 import me.geso.tinyorm.TinyORM;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import yanagishima.config.YanagishimaConfig;
 import yanagishima.row.StarredSchema;
 
@@ -22,9 +21,9 @@ import static yanagishima.util.AccessControlUtil.validateDatasource;
 import static yanagishima.util.HttpRequestUtil.getRequiredParameter;
 import static yanagishima.util.JsonUtil.writeJSON;
 
+@Slf4j
 @Singleton
 public class StarredSchemaServlet extends HttpServlet {
-    private static final Logger LOGGER = LoggerFactory.getLogger(StarredSchemaServlet.class);
     private static final long serialVersionUID = 1L;
 
     private final YanagishimaConfig config;
@@ -65,7 +64,7 @@ public class StarredSchemaServlet extends HttpServlet {
             checkState(starredSchemas.size() == 1, "Too many starred schemas: " + starredSchemas);
             writeJSON(response, Map.of("starred_schema_id", starredSchemas.get(0).getStarredSchemaId()));
         } catch (Throwable e) {
-            LOGGER.error(e.getMessage(), e);
+            log.error(e.getMessage(), e);
             writeJSON(response, Map.of("error", e.getMessage()));
         }
     }
@@ -89,7 +88,7 @@ public class StarredSchemaServlet extends HttpServlet {
             List<StarredSchema> starredSchemas = db.search(StarredSchema.class).where("datasource = ? AND engine = ? AND catalog = ? AND user = ?", datasource, engine, catalog, userName).execute();
             writeJSON(response, Map.of("starredSchemaList", starredSchemas));
         } catch (Throwable e) {
-            LOGGER.error(e.getMessage(), e);
+            log.error(e.getMessage(), e);
             writeJSON(response, Map.of("error", e.getMessage()));
         }
     }
@@ -109,7 +108,7 @@ public class StarredSchemaServlet extends HttpServlet {
             List<StarredSchema> starredSchemas = db.search(StarredSchema.class).where("datasource = ? AND engine = ? AND catalog = ? AND user = ?", datasource, engine, catalog, userName).execute();
             writeJSON(response, Map.of("starredSchemaList", starredSchemas));
         } catch (Throwable e) {
-            LOGGER.error(e.getMessage(), e);
+            log.error(e.getMessage(), e);
             writeJSON(response, Map.of("error", e.getMessage()));
         }
     }

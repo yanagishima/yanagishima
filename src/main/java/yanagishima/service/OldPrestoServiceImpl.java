@@ -6,13 +6,13 @@ import com.google.common.collect.Lists;
 import io.airlift.units.DataSize;
 import io.airlift.units.Duration;
 import com.facebook.presto.client.*;
+
+import lombok.extern.slf4j.Slf4j;
 import me.geso.tinyorm.TinyORM;
 import okhttp3.OkHttpClient;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
 import org.komamitsu.fluency.Fluency;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import yanagishima.config.YanagishimaConfig;
 import yanagishima.exception.QueryErrorException;
 import yanagishima.result.PrestoQueryResult;
@@ -49,8 +49,8 @@ import static yanagishima.util.PathUtil.getResultFilePath;
 import static yanagishima.util.QueryEngine.presto;
 import static yanagishima.util.TimeoutUtil.checkTimeout;
 
+@Slf4j
 public class OldPrestoServiceImpl implements OldPrestoService {
-    private static final Logger LOGGER = LoggerFactory.getLogger(OldPrestoServiceImpl.class);
     private static final CSVFormat CSV_FORMAT = CSVFormat.EXCEL.withDelimiter('\t').withNullString("\\N").withRecordSeparator(System.getProperty("line.separator"));
 
     private final YanagishimaConfig config;
@@ -95,9 +95,9 @@ public class OldPrestoServiceImpl implements OldPrestoService {
                 int limit = config.getSelectLimit();
                 getPrestoQueryResult(datasource, query, client, true, limit, userName);
             } catch (QueryErrorException e) {
-                LOGGER.warn(e.getCause().getMessage());
+                log.warn(e.getCause().getMessage());
             } catch (Throwable e) {
-                LOGGER.error(e.getMessage(), e);
+                log.error(e.getMessage(), e);
             } finally {
                 if (client != null) {
                     client.close();
@@ -277,7 +277,7 @@ public class OldPrestoServiceImpl implements OldPrestoService {
         try {
             fluency.emit(config.getFluentdExecutedTag().get(), event);
         } catch (IOException e) {
-            LOGGER.error(e.getMessage(), e);
+            log.error(e.getMessage(), e);
         }
     }
 
@@ -299,7 +299,7 @@ public class OldPrestoServiceImpl implements OldPrestoService {
         try {
             fluency.emit(config.getFluentdFaliedTag().get(), event);
         } catch (IOException e) {
-            LOGGER.error(e.getMessage(), e);
+            log.error(e.getMessage(), e);
         }
     }
 

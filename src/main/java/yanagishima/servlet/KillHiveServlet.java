@@ -17,16 +17,14 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
+import lombok.extern.slf4j.Slf4j;
 import yanagishima.config.YanagishimaConfig;
 import yanagishima.pool.StatementPool;
 import yanagishima.util.YarnUtil;
 
+@Slf4j
 @Singleton
 public class KillHiveServlet extends HttpServlet {
-    private static final Logger LOG = LoggerFactory.getLogger(KillHiveServlet.class);
     private static final long serialVersionUID = 1L;
 
     private final StatementPool statements;
@@ -57,10 +55,10 @@ public class KillHiveServlet extends HttpServlet {
             return;
         }
         if (config.isUseJdbcCancel(datasource)) {
-            LOG.info(format("killing %s in %s by Statement#cancel", id, datasource));
+            log.info(format("killing %s in %s by Statement#cancel", id, datasource));
             try (Statement statement = statements.getStatement(datasource, id)) {
                 if (statement == null) {
-                    LOG.error("statement is null");
+                    log.error("statement is null");
                 } else {
                     statement.cancel();
                 }

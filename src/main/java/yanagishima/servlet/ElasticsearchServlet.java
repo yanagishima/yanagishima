@@ -1,8 +1,7 @@
 package yanagishima.servlet;
 
+import lombok.extern.slf4j.Slf4j;
 import me.geso.tinyorm.TinyORM;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import yanagishima.config.YanagishimaConfig;
 import yanagishima.exception.ElasticsearchQueryErrorException;
 import yanagishima.result.ElasticsearchQueryResult;
@@ -32,9 +31,9 @@ import static yanagishima.util.Constants.YANAGISHIMA_COMMENT;
 import static yanagishima.util.HttpRequestUtil.getRequiredParameter;
 import static yanagishima.util.JsonUtil.writeJSON;
 
+@Slf4j
 @Singleton
 public class ElasticsearchServlet extends HttpServlet {
-    private static final Logger LOGGER = LoggerFactory.getLogger(ElasticsearchServlet.class);
     private static final long serialVersionUID = 1L;
 
     private final ElasticsearchService elasticsearchService;
@@ -70,7 +69,7 @@ public class ElasticsearchServlet extends HttpServlet {
                     return;
                 }
                 if (user != null) {
-                    LOGGER.info(format("%s executed %s in %s", user, query, datasource));
+                    log.info(format("%s executed %s in %s", user, query, datasource));
                 }
                 ElasticsearchQueryResult queryResult = executeQuery(request, query, datasource, user);
 
@@ -87,15 +86,15 @@ public class ElasticsearchServlet extends HttpServlet {
                     resnponseBody.put("elapsedTimeMillis", toElapsedTimeMillis(queryResult.getQueryId(), queryData))
                 );
             } catch (ElasticsearchQueryErrorException e) {
-                LOGGER.error(e.getMessage(), e);
+                log.error(e.getMessage(), e);
                 resnponseBody.put("queryid", e.getQueryId());
                 resnponseBody.put("error", e.getCause().getMessage());
             } catch (Throwable e) {
-                LOGGER.error(e.getMessage(), e);
+                log.error(e.getMessage(), e);
                 resnponseBody.put("error", e.getMessage());
             }
         } catch (Throwable e) {
-            LOGGER.error(e.getMessage(), e);
+            log.error(e.getMessage(), e);
             resnponseBody.put("error", e.getMessage());
         }
         writeJSON(response, resnponseBody);

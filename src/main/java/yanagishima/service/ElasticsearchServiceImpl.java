@@ -3,12 +3,11 @@ package yanagishima.service;
 import com.github.wyukawa.elasticsearch.unofficial.jdbc.driver.ElasticsearchTranslateClient;
 import io.airlift.units.DataSize;
 import io.airlift.units.Duration;
+import lombok.extern.slf4j.Slf4j;
 import me.geso.tinyorm.TinyORM;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
 import org.komamitsu.fluency.Fluency;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import yanagishima.config.YanagishimaConfig;
 import yanagishima.exception.ElasticsearchQueryErrorException;
 import yanagishima.result.ElasticsearchQueryResult;
@@ -36,8 +35,8 @@ import static yanagishima.util.TimeoutUtil.checkTimeout;
 import static yanagishima.util.QueryEngine.elasticsearch;
 import static yanagishima.util.TypeCoerceUtil.objectToString;
 
+@Slf4j
 public class ElasticsearchServiceImpl implements ElasticsearchService {
-    private static final Logger LOGGER = LoggerFactory.getLogger(ElasticsearchServiceImpl.class);
     private static final CSVFormat CSV_FORMAT = CSVFormat.EXCEL.withDelimiter('\t').withNullString("\\N").withRecordSeparator(System.getProperty("line.separator"));
 
     private final YanagishimaConfig config;
@@ -254,7 +253,7 @@ public class ElasticsearchServiceImpl implements ElasticsearchService {
         try {
             fluency.emit(config.getFluentdExecutedTag().get(), event);
         } catch (IOException e) {
-            LOGGER.error(e.getMessage(), e);
+            log.error(e.getMessage(), e);
         }
     }
 }
