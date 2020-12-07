@@ -1,28 +1,18 @@
 package yanagishima.servlet;
 
-import yanagishima.repository.TinyOrm;
+import lombok.RequiredArgsConstructor;
+import yanagishima.client.JdbcClient;
 
-import javax.inject.Inject;
-import javax.inject.Singleton;
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServlet;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import java.io.IOException;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RestController;
 
-@Singleton
-public class HealthCheckServlet extends HttpServlet {
-    private static final long serialVersionUID = 1L;
+@RestController
+@RequiredArgsConstructor
+public class HealthCheckServlet {
+    private final JdbcClient jdbcClient;
 
-    private final TinyOrm db;
-
-    @Inject
-    public HealthCheckServlet(TinyOrm db) {
-        this.db = db;
-    }
-
-    @Override
-    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        db.executeQuery("select 1");
+    @GetMapping("healthCheck")
+    public void get() {
+        jdbcClient.executeQuery("select 1");
     }
 }

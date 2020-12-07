@@ -1,5 +1,10 @@
 package yanagishima.server;
 
+import org.springframework.web.context.ContextLoaderListener;
+import org.springframework.web.context.WebApplicationContext;
+import org.springframework.web.context.support.AnnotationConfigWebApplicationContext;
+import org.springframework.web.servlet.DispatcherServlet;
+
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.servlet.GuiceFilter;
@@ -13,6 +18,7 @@ import org.eclipse.jetty.servlet.FilterHolder;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.msgpack.core.annotations.VisibleForTesting;
 
+import org.eclipse.jetty.servlet.ServletHolder;
 import yanagishima.config.YanagishimaConfig;
 import yanagishima.filter.YanagishimaFilter;
 import yanagishima.module.*;
@@ -31,22 +37,39 @@ import java.util.Properties;
 public class YanagishimaServer {
     private static final String PROPERTY_FILENAME = "yanagishima.properties";
 
+    private static final String CONFIG_LOCATION_PACKAGE = "yanagishima.config";
+
+    // Expose to JVM singleton value for sharing with Spring DI
+    public static Injector injector;
+
     public static void main(String[] args) throws Exception {
         Properties properties = loadProperties(args, new OptionParser());
         YanagishimaConfig config = new YanagishimaConfig(properties);
 
-        Injector injector = createInjector(properties);
+        injector = createInjector(properties);
 
         createTables(injector.getInstance(TinyOrm.class), config.getDatabaseType());
 
         Server server = new Server(config.getServerPort());
         server.setAttribute("org.eclipse.jetty.server.Request.maxFormContentSize", -1);
 
+        // Original
         ServletContextHandler servletContextHandler = new ServletContextHandler(server, "/", ServletContextHandler.SESSIONS);
         servletContextHandler.addFilter(new FilterHolder(new YanagishimaFilter(config.corsEnabled(), config.getAuditHttpHeaderName())), "/*", EnumSet.of(DispatcherType.REQUEST));
         servletContextHandler.addFilter(GuiceFilter.class, "/*", EnumSet.allOf(DispatcherType.class));
-        servletContextHandler.addServlet(DefaultServlet.class, "/");
         servletContextHandler.setResourceBase(properties.getProperty("web.resource.dir", "web"));
+
+        // Spring
+        WebApplicationContext webAppContext = getWebApplicationContext();
+        DispatcherServlet dispatcherServlet = new DispatcherServlet(webAppContext);
+        ServletHolder springServletHolder = new ServletHolder("mvc-dispatcher", dispatcherServlet);
+        servletContextHandler.addServlet(springServletHolder, "/*");
+        servletContextHandler.addEventListener(new ContextLoaderListener(webAppContext));
+
+        // Default servlet
+        ServletHolder defaultServlet = new ServletHolder("default", DefaultServlet.class);
+        defaultServlet.setInitParameter("dirAllowed", "true");
+        servletContextHandler.addServlet(defaultServlet, "/");
 
         log.info("Yanagishima Server started...");
         server.start();
@@ -64,6 +87,12 @@ public class YanagishimaServer {
             }
         });
         log.info("Yanagishima Server running port " + config.getServerPort());
+    }
+
+    private static WebApplicationContext getWebApplicationContext() {
+        AnnotationConfigWebApplicationContext context = new AnnotationConfigWebApplicationContext();
+        context.setConfigLocation(CONFIG_LOCATION_PACKAGE);
+        return context;
     }
 
     private static Injector createInjector(Properties properties) {
