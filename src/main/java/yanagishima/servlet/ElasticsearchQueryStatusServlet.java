@@ -17,8 +17,8 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import me.geso.tinyorm.TinyORM;
 import yanagishima.config.YanagishimaConfig;
+import yanagishima.repository.TinyOrm;
 import yanagishima.row.Query;
 import yanagishima.util.Status;
 
@@ -27,10 +27,10 @@ public class ElasticsearchQueryStatusServlet extends HttpServlet {
     private static final long serialVersionUID = 1L;
 
     private final YanagishimaConfig config;
-    private final TinyORM db;
+    private final TinyOrm db;
 
     @Inject
-    public ElasticsearchQueryStatusServlet(YanagishimaConfig config, TinyORM db) {
+    public ElasticsearchQueryStatusServlet(YanagishimaConfig config, TinyOrm db) {
         this.config = config;
         this.db = db;
     }
@@ -43,7 +43,7 @@ public class ElasticsearchQueryStatusServlet extends HttpServlet {
         }
 
         String queryId = getRequiredParameter(request, "queryid");
-        Optional<Query> query = db.single(Query.class).where("query_id=? and datasource=? and engine=?", queryId, datasource, "elasticsearch").execute();
+        Optional<Query> query = db.singleQuery("query_id=? and datasource=? and engine=?", queryId, datasource, "elasticsearch");
         String status = getStatus(query);
         writeJSON(response, Map.of("state", status));
     }

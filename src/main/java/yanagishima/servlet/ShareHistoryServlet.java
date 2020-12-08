@@ -1,10 +1,9 @@
 package yanagishima.servlet;
 
 import lombok.extern.slf4j.Slf4j;
-import me.geso.tinyorm.TinyORM;
 import yanagishima.config.YanagishimaConfig;
+import yanagishima.repository.TinyOrm;
 import yanagishima.row.Comment;
-import yanagishima.row.Publish;
 import yanagishima.row.Query;
 import yanagishima.row.SessionProperty;
 
@@ -28,10 +27,10 @@ public class ShareHistoryServlet extends HttpServlet {
     private static final long serialVersionUID = 1L;
 
     private final YanagishimaConfig config;
-    private final TinyORM db;
+    private final TinyOrm db;
 
     @Inject
-    public ShareHistoryServlet(YanagishimaConfig config, TinyORM db) {
+    public ShareHistoryServlet(YanagishimaConfig config, TinyOrm db) {
         this.config = config;
         this.db = db;
     }
@@ -41,16 +40,16 @@ public class ShareHistoryServlet extends HttpServlet {
         Map<String, Object> body = new HashMap<>();
         try {
             String publishId = getRequiredParameter(request, "publish_id");
-            db.single(Publish.class).where("publish_id = ?", publishId).execute().ifPresent(publish -> {
+            db.singlePublish("publish_id = ?", publishId).ifPresent(publish -> {
                 String datasource = publish.getDatasource();
                 body.put("datasource", datasource);
                 String queryId = publish.getQueryId();
                 body.put("queryid", queryId);
-                Query query = db.single(Query.class).where("query_id = ? AND datasource = ?", queryId, datasource).execute().get();
+                Query query = db.singleQuery("query_id = ? AND datasource = ?", queryId, datasource).get();
                 body.put("engine", query.getEngine());
-                List<SessionProperty> sessionPropertyList = db.search(SessionProperty.class).where("datasource = ? AND engine = ? AND query_id = ?", datasource, query.getEngine(), queryId).execute();
+                List<SessionProperty> sessionPropertyList = db.searchSessionProperties("datasource = ? AND engine = ? AND query_id = ?", datasource, query.getEngine(), queryId);
                 createHistoryResult(body, config.getSelectLimit(), datasource, query, true, sessionPropertyList);
-                Optional<Comment> comment = db.single(Comment.class).where("datasource = ? AND engine = ? AND query_id = ?", datasource, query.getEngine(), queryId).execute();
+                Optional<Comment> comment = db.singleComment("datasource = ? AND engine = ? AND query_id = ?", datasource, query.getEngine(), queryId);
                 body.put("comment", comment.orElse(null));
             });
         } catch (Throwable e) {

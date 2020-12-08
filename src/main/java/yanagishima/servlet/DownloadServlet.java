@@ -1,7 +1,7 @@
 package yanagishima.servlet;
 
-import me.geso.tinyorm.TinyORM;
 import yanagishima.config.YanagishimaConfig;
+import yanagishima.repository.TinyOrm;
 import yanagishima.row.Query;
 import yanagishima.model.HttpRequestContext;
 
@@ -22,10 +22,10 @@ public class DownloadServlet extends HttpServlet {
     private static final long serialVersionUID = 1L;
 
     private final YanagishimaConfig config;
-    private final TinyORM db;
+    private final TinyOrm db;
 
     @Inject
-    public DownloadServlet(YanagishimaConfig config, TinyORM db) {
+    public DownloadServlet(YanagishimaConfig config, TinyOrm db) {
         this.config = config;
         this.db = db;
     }
@@ -50,7 +50,7 @@ public class DownloadServlet extends HttpServlet {
         }
         String user = request.getHeader(config.getAuditHttpHeaderName());
         requireNonNull(user, "Username must exist when auditing header name is enabled");
-        Optional<Query> query = db.single(Query.class).where("query_id = ? AND datasource = ? AND user = ?", context.getQueryId(), context.getDatasource(), user).execute();
+        Optional<Query> query = db.singleQuery("query_id = ? AND datasource = ? AND user = ?", context.getQueryId(), context.getDatasource(), user);
         if (query.isPresent()) {
             downloadTsv(response, fileName, context.getDatasource(), context.getQueryId(), context.getEncode(), context.isShowHeader(), context.isShowBom());
         }

@@ -1,7 +1,6 @@
 package yanagishima.servlet;
 
-import me.geso.tinyorm.TinyORM;
-import yanagishima.row.Publish;
+import yanagishima.repository.TinyOrm;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
@@ -17,10 +16,10 @@ import static yanagishima.util.HttpRequestUtil.getOrDefaultParameter;
 public class ShareCsvDownloadServlet extends HttpServlet {
     private static final long serialVersionUID = 1L;
 
-    private final TinyORM db;
+    private final TinyOrm db;
 
     @Inject
-    public ShareCsvDownloadServlet(TinyORM db) {
+    public ShareCsvDownloadServlet(TinyOrm db) {
         this.db = db;
     }
 
@@ -32,7 +31,7 @@ public class ShareCsvDownloadServlet extends HttpServlet {
         }
 
         String publishId = publishIdOptional.get();
-        db.single(Publish.class).where("publish_id=?", publishId).execute().ifPresent(publish -> {
+        db.singlePublish("publish_id=?", publishId).ifPresent(publish -> {
             String fileName = publishId + ".csv";
             String encode = getOrDefaultParameter(request, "encode", "UTF-8");
             boolean showHeader = getOrDefaultParameter(request, "header", true);

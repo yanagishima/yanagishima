@@ -7,13 +7,13 @@ import com.google.common.collect.ImmutableSet;
 import io.airlift.units.DataSize;
 import io.airlift.units.Duration;
 import lombok.extern.slf4j.Slf4j;
-import me.geso.tinyorm.TinyORM;
 import okhttp3.OkHttpClient;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
 import org.komamitsu.fluency.Fluency;
 import yanagishima.config.YanagishimaConfig;
 import yanagishima.exception.QueryErrorException;
+import yanagishima.repository.TinyOrm;
 import yanagishima.result.PrestoQueryResult;
 import yanagishima.util.Constants;
 import yanagishima.util.TypeCoerceUtil;
@@ -63,7 +63,7 @@ public class PrestoServiceImpl implements PrestoService {
     private final OkHttpClient httpClient;
     private final ExecutorService executorService = Executors.newFixedThreadPool(10);
     private final Fluency fluency;
-    private final TinyORM db;
+    private final TinyOrm db;
 
     private final int maxResultFileByteSize;
 
@@ -71,7 +71,7 @@ public class PrestoServiceImpl implements PrestoService {
     private Map<String, String> properties = ImmutableMap.of();
 
     @Inject
-    public PrestoServiceImpl(YanagishimaConfig config, TinyORM db) {
+    public PrestoServiceImpl(YanagishimaConfig config, TinyOrm db) {
         this.config = config;
         this.db = db;
         OkHttpClient.Builder builder = new OkHttpClient.Builder();

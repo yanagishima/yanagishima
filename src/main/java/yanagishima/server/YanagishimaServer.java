@@ -7,14 +7,16 @@ import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
 import lombok.extern.slf4j.Slf4j;
-import me.geso.tinyorm.TinyORM;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.servlet.DefaultServlet;
 import org.eclipse.jetty.servlet.FilterHolder;
 import org.eclipse.jetty.servlet.ServletContextHandler;
+import org.msgpack.core.annotations.VisibleForTesting;
+
 import yanagishima.config.YanagishimaConfig;
 import yanagishima.filter.YanagishimaFilter;
 import yanagishima.module.*;
+import yanagishima.repository.TinyOrm;
 
 import javax.servlet.DispatcherType;
 import java.io.*;
@@ -35,7 +37,7 @@ public class YanagishimaServer {
 
         Injector injector = createInjector(properties);
 
-        createTables(injector.getInstance(TinyORM.class), config.getDatabaseType());
+        createTables(injector.getInstance(TinyOrm.class), config.getDatabaseType());
 
         Server server = new Server(config.getServerPort());
         server.setAttribute("org.eclipse.jetty.server.Request.maxFormContentSize", -1);
@@ -76,7 +78,8 @@ public class YanagishimaServer {
                 new ElasticsearchServletModule());
     }
 
-    private static void createTables(TinyORM db, YanagishimaConfig.DatabaseType databaseType) throws SQLException {
+    @VisibleForTesting
+    public static void createTables(TinyOrm db, YanagishimaConfig.DatabaseType databaseType) throws SQLException {
         try (Connection connection = db.getConnection();
              Statement statement = connection.createStatement()) {
             switch (databaseType) {

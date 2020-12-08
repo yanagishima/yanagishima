@@ -1,8 +1,8 @@
 package yanagishima.servlet;
 
 import lombok.extern.slf4j.Slf4j;
-import me.geso.tinyorm.TinyORM;
 import yanagishima.config.YanagishimaConfig;
+import yanagishima.repository.TinyOrm;
 import yanagishima.row.StarredSchema;
 
 import javax.inject.Inject;
@@ -16,6 +16,7 @@ import java.util.List;
 import java.util.Map;
 
 import static com.google.common.base.Preconditions.checkState;
+import static yanagishima.repository.TinyOrm.value;
 import static yanagishima.util.AccessControlUtil.sendForbiddenError;
 import static yanagishima.util.AccessControlUtil.validateDatasource;
 import static yanagishima.util.HttpRequestUtil.getRequiredParameter;
@@ -27,10 +28,10 @@ public class StarredSchemaServlet extends HttpServlet {
     private static final long serialVersionUID = 1L;
 
     private final YanagishimaConfig config;
-    private final TinyORM db;
+    private final TinyOrm db;
 
     @Inject
-    public StarredSchemaServlet(YanagishimaConfig config, TinyORM db) {
+    public StarredSchemaServlet(YanagishimaConfig config, TinyOrm db) {
         this.config = config;
         this.db = db;
     }
@@ -47,7 +48,7 @@ public class StarredSchemaServlet extends HttpServlet {
             String catalog = getRequiredParameter(request, "catalog");
             String engine = getRequiredParameter(request, "engine");
             String schema = getRequiredParameter(request, "schema");
-            db.insert(StarredSchema.class).value("datasource", datasource).value("engine", engine).value("catalog", catalog).value("schema", schema).value("user", userName).execute();
+            db.insert(StarredSchema.class, value("datasource", datasource), value("engine", engine), value("catalog", catalog), value("schema", schema), value("user", userName));
             List<StarredSchema> starredSchemas;
             switch (config.getDatabaseType()) {
                 case MYSQL:
@@ -79,13 +80,13 @@ public class StarredSchemaServlet extends HttpServlet {
             }
 
             String starredSchemaId = getRequiredParameter(request, "starred_schema_id");
-            StarredSchema deletedStarredSchema = db.single(StarredSchema.class).where("starred_schema_id=?", starredSchemaId).execute().get();
+            StarredSchema deletedStarredSchema = db.singleStarredSchema("starred_schema_id=?", starredSchemaId).get();
             deletedStarredSchema.delete();
 
             String engine = getRequiredParameter(request, "engine");
             String catalog = getRequiredParameter(request, "catalog");
             String userName = request.getHeader(config.getAuditHttpHeaderName());
-            List<StarredSchema> starredSchemas = db.search(StarredSchema.class).where("datasource = ? AND engine = ? AND catalog = ? AND user = ?", datasource, engine, catalog, userName).execute();
+            List<StarredSchema> starredSchemas = db.searchStarredSchemas("datasource = ? AND engine = ? AND catalog = ? AND user = ?", datasource, engine, catalog, userName);
             writeJSON(response, Map.of("starredSchemaList", starredSchemas));
         } catch (Throwable e) {
             log.error(e.getMessage(), e);
@@ -105,7 +106,7 @@ public class StarredSchemaServlet extends HttpServlet {
             String engine = getRequiredParameter(request, "engine");
             String catalog = getRequiredParameter(request, "catalog");
             String userName = request.getHeader(config.getAuditHttpHeaderName());
-            List<StarredSchema> starredSchemas = db.search(StarredSchema.class).where("datasource = ? AND engine = ? AND catalog = ? AND user = ?", datasource, engine, catalog, userName).execute();
+            List<StarredSchema> starredSchemas = db.searchStarredSchemas("datasource = ? AND engine = ? AND catalog = ? AND user = ?", datasource, engine, catalog, userName);
             writeJSON(response, Map.of("starredSchemaList", starredSchemas));
         } catch (Throwable e) {
             log.error(e.getMessage(), e);

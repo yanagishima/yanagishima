@@ -1,9 +1,9 @@
 package yanagishima.servlet;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import me.geso.tinyorm.TinyORM;
 import yanagishima.bean.SparkSqlJob;
 import yanagishima.config.YanagishimaConfig;
+import yanagishima.repository.TinyOrm;
 import yanagishima.row.Query;
 import yanagishima.util.*;
 
@@ -37,7 +37,7 @@ public class HiveQueryStatusServlet extends HttpServlet {
 	private YanagishimaConfig yanagishimaConfig;
 
 	@Inject
-	private TinyORM db;
+	private TinyOrm db;
 
 	@Inject
 	public HiveQueryStatusServlet(YanagishimaConfig yanagishimaConfig) {
@@ -66,7 +66,7 @@ public class HiveQueryStatusServlet extends HttpServlet {
 		}
 
 		String engine = getRequiredParameter(request, "engine");
-		Optional<Query> queryOptional = db.single(Query.class).where("query_id=? and datasource=? and engine=?", queryid, datasource, engine).execute();
+		Optional<Query> queryOptional = db.singleQuery("query_id=? and datasource=? and engine=?", queryid, datasource, engine);
 		if (engine.equals("hive")) {
 			Optional<Map> applicationOptional = YarnUtil.getApplication(resourceManagerUrl, queryid, userName, yanagishimaConfig.getResourceManagerBegin(datasource));
 			if (applicationOptional.isPresent()) {

@@ -2,8 +2,8 @@ package yanagishima.servlet;
 
 import io.airlift.units.DataSize;
 import lombok.extern.slf4j.Slf4j;
-import me.geso.tinyorm.TinyORM;
 import yanagishima.config.YanagishimaConfig;
+import yanagishima.repository.TinyOrm;
 import yanagishima.row.Query;
 
 import javax.annotation.Nullable;
@@ -31,10 +31,10 @@ public class QueryHistoryServlet extends HttpServlet {
     private static final long serialVersionUID = 1L;
 
     private final YanagishimaConfig config;
-    private final TinyORM db;
+    private final TinyOrm db;
 
     @Inject
-    public QueryHistoryServlet(YanagishimaConfig config, TinyORM db) {
+    public QueryHistoryServlet(YanagishimaConfig config, TinyOrm db) {
         this.config = config;
         this.db = db;
     }
