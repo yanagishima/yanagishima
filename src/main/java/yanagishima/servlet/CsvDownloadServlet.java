@@ -15,7 +15,7 @@ import javax.servlet.http.HttpServletResponse;
 
 import yanagishima.config.YanagishimaConfig;
 import yanagishima.repository.TinyOrm;
-import yanagishima.row.Query;
+import yanagishima.model.db.Query;
 import yanagishima.model.HttpRequestContext;
 
 @Singleton

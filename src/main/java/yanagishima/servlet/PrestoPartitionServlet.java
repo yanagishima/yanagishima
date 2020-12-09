@@ -35,7 +35,7 @@ import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
 import yanagishima.config.YanagishimaConfig;
-import yanagishima.result.PrestoQueryResult;
+import yanagishima.model.presto.PrestoQueryResult;
 import yanagishima.service.PrestoService;
 
 @Slf4j

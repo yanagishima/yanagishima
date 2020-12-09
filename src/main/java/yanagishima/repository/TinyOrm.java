@@ -21,13 +21,13 @@ import lombok.NonNull;
 import me.geso.tinyorm.Row;
 import me.geso.tinyorm.TinyORM;
 import yanagishima.config.YanagishimaConfig;
-import yanagishima.row.Bookmark;
-import yanagishima.row.Comment;
-import yanagishima.row.Label;
-import yanagishima.row.Publish;
-import yanagishima.row.Query;
-import yanagishima.row.SessionProperty;
-import yanagishima.row.StarredSchema;
+import yanagishima.model.db.Bookmark;
+import yanagishima.model.db.Comment;
+import yanagishima.model.db.Label;
+import yanagishima.model.db.Publish;
+import yanagishima.model.db.Query;
+import yanagishima.model.db.SessionProperty;
+import yanagishima.model.db.StarredSchema;
 
 public class TinyOrm {
   private final HikariDataSource dataSource;

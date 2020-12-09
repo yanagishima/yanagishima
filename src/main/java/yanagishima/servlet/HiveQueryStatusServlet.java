@@ -1,10 +1,10 @@
 package yanagishima.servlet;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import yanagishima.bean.SparkSqlJob;
 import yanagishima.config.YanagishimaConfig;
 import yanagishima.repository.TinyOrm;
-import yanagishima.row.Query;
+import yanagishima.model.spark.SparkSqlJob;
+import yanagishima.model.db.Query;
 import yanagishima.util.*;
 
 import javax.inject.Inject;

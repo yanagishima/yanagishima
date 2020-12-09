@@ -3,7 +3,7 @@ package yanagishima.servlet;
 import lombok.extern.slf4j.Slf4j;
 import yanagishima.config.YanagishimaConfig;
 import yanagishima.repository.TinyOrm;
-import yanagishima.row.StarredSchema;
+import yanagishima.model.db.StarredSchema;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;

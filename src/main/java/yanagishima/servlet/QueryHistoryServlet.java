@@ -4,7 +4,7 @@ import io.airlift.units.DataSize;
 import lombok.extern.slf4j.Slf4j;
 import yanagishima.config.YanagishimaConfig;
 import yanagishima.repository.TinyOrm;
-import yanagishima.row.Query;
+import yanagishima.model.db.Query;
 
 import javax.annotation.Nullable;
 import javax.inject.Inject;

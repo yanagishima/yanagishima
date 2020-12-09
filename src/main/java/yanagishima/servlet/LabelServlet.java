@@ -21,7 +21,7 @@ import javax.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 import yanagishima.config.YanagishimaConfig;
 import yanagishima.repository.TinyOrm;
-import yanagishima.row.Label;
+import yanagishima.model.db.Label;
 
 @Slf4j
 @Singleton

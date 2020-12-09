@@ -4,8 +4,8 @@ import lombok.extern.slf4j.Slf4j;
 import yanagishima.config.YanagishimaConfig;
 import yanagishima.exception.ElasticsearchQueryErrorException;
 import yanagishima.repository.TinyOrm;
-import yanagishima.result.ElasticsearchQueryResult;
-import yanagishima.row.Query;
+import yanagishima.model.db.Query;
+import yanagishima.model.elasticsearch.ElasticsearchQueryResult;
 import yanagishima.service.ElasticsearchService;
 
 import javax.inject.Inject;
@@ -23,7 +23,6 @@ import java.time.temporal.ChronoUnit;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
-
 import static java.lang.String.format;
 import static yanagishima.util.AccessControlUtil.sendForbiddenError;
 import static yanagishima.util.AccessControlUtil.validateDatasource;

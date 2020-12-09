@@ -24,7 +24,7 @@ import javax.servlet.http.HttpServletResponse;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import yanagishima.bean.SparkSqlJob;
+import yanagishima.model.spark.SparkSqlJob;
 import yanagishima.config.YanagishimaConfig;
 
 @Singleton

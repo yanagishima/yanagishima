@@ -3,9 +3,9 @@ package yanagishima.servlet;
 import lombok.extern.slf4j.Slf4j;
 import yanagishima.config.YanagishimaConfig;
 import yanagishima.repository.TinyOrm;
-import yanagishima.row.Comment;
-import yanagishima.row.Query;
-import yanagishima.row.SessionProperty;
+import yanagishima.model.db.Comment;
+import yanagishima.model.db.Query;
+import yanagishima.model.db.SessionProperty;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;

@@ -1,4 +1,4 @@
-package yanagishima.result;
+package yanagishima.model.hive;
 
 import io.airlift.units.DataSize;
 import lombok.Getter;
