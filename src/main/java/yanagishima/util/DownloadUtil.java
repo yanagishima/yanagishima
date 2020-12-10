@@ -12,10 +12,11 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 
+import lombok.experimental.UtilityClass;
+
+@UtilityClass
 public final class DownloadUtil {
     private static final byte[] BOM = new byte[]{(byte) 0xef, (byte) 0xbb, (byte) 0xbf};
-
-    private DownloadUtil() { }
 
     public static void downloadTsv(HttpServletResponse response, String fileName, String datasource, String queryid, String encode, boolean showHeader, boolean showBOM) {
         Path filePath = PathUtil.getResultFilePath(datasource, queryid, false);

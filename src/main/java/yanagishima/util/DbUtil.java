@@ -1,5 +1,6 @@
 package yanagishima.util;
 
+import lombok.experimental.UtilityClass;
 import yanagishima.repository.TinyOrm;
 import yanagishima.row.Query;
 import yanagishima.row.SessionProperty;
@@ -19,9 +20,8 @@ import java.util.Map;
 import static yanagishima.repository.TinyOrm.value;
 import static yanagishima.util.PathUtil.getResultFilePath;
 
+@UtilityClass
 public final class DbUtil {
-    private DbUtil() { }
-
     public static void storeError(TinyOrm db, String datasource, String engine, String queryId, String query, String user, String errorMessage) {
         try {
             LocalDateTime submitTimeLdt = LocalDateTime.parse(queryId.substring(0, "yyyyMMdd_HHmmss".length()), DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss"));
