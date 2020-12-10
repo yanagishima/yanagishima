@@ -65,7 +65,7 @@ public class PrestoServiceImpl implements PrestoService {
     private final Fluency fluency;
     private final TinyOrm db;
 
-    private final int maxResultFileByteSize;
+    private final long maxResultFileByteSize;
 
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
     private Map<String, String> properties = ImmutableMap.of();
@@ -236,7 +236,7 @@ public class PrestoServiceImpl implements PrestoService {
         Path resultPath = getResultFilePath(datasource, queryId, false);
 
         int rowNumber = 0;
-        int resultBytes = 0;
+        long resultBytes = 0;
         try (BufferedWriter writer = Files.newBufferedWriter(resultPath, UTF_8);
              CSVPrinter printer = new CSVPrinter(writer, CSV_FORMAT)) {
 

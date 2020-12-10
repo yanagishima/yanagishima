@@ -195,8 +195,8 @@ public class HiveServiceImpl implements HiveService {
 
                 Path dst = getResultFilePath(datasource, queryId, false);
                 int lineNumber = 0;
-                int maxResultFileByteSize = config.getHiveMaxResultFileByteSize();
-                int resultBytes = 0;
+                long maxResultFileByteSize = config.getHiveMaxResultFileByteSize();
+                long resultBytes = 0;
                 try (BufferedWriter bw = Files.newBufferedWriter(dst, StandardCharsets.UTF_8);
                      CSVPrinter printer = new CSVPrinter(bw, CSVFormat.EXCEL.withDelimiter('\t').withNullString("\\N").withRecordSeparator(System.getProperty("line.separator")))) {
                     printer.printRecord(columnNameList);

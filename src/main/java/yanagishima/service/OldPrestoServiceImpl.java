@@ -218,8 +218,8 @@ public class OldPrestoServiceImpl implements OldPrestoService {
         Duration queryMaxRunTime = new Duration(config.getQueryMaxRunTimeSeconds(datasource), SECONDS);
         Path dst = getResultFilePath(datasource, queryId, false);
         int lineNumber = 0;
-        int maxResultFileByteSize = config.getMaxResultFileByteSize();
-        int resultBytes = 0;
+        long maxResultFileByteSize = config.getMaxResultFileByteSize();
+        long resultBytes = 0;
         try (BufferedWriter writer = Files.newBufferedWriter(dst, StandardCharsets.UTF_8);
              CSVPrinter printer = new CSVPrinter(writer, CSV_FORMAT)) {
             printer.printRecord(columns);
