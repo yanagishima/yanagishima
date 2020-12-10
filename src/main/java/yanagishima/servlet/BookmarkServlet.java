@@ -120,7 +120,7 @@ public class BookmarkServlet extends HttpServlet {
                 return;
             }
 
-            db.singleBookmark("bookmark_id = ?", context.getBookmarkId()).ifPresent(Bookmark::delete);
+            db.deleteBookmark("bookmark_id = ?", context.getBookmarkId());
 
             requireNonNull(context.getEngine(), "engine is null");
             String userName = request.getHeader(config.getAuditHttpHeaderName());

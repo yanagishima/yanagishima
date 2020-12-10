@@ -151,9 +151,8 @@ public class CommentServlet extends HttpServlet {
                 sendForbiddenError(response);
             }
 
-            Comment comment = db.singleComment("datasource = ? and engine = ? and query_id = ?",
-                                                             context.getDatasource(), context.getEngine(), context.getQueryId()).get();
-            comment.delete();
+            db.deleteComment("datasource = ? and engine = ? and query_id = ?",
+                             context.getDatasource(), context.getEngine(), context.getQueryId());
             responseBody.put("datasource", context.getDatasource());
             responseBody.put("engine", context.getEngine());
             responseBody.put("queryid", context.getQueryId());

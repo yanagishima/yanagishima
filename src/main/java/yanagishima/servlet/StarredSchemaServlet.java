@@ -80,8 +80,7 @@ public class StarredSchemaServlet extends HttpServlet {
             }
 
             String starredSchemaId = getRequiredParameter(request, "starred_schema_id");
-            StarredSchema deletedStarredSchema = db.singleStarredSchema("starred_schema_id=?", starredSchemaId).get();
-            deletedStarredSchema.delete();
+            db.deleteStarredSchema("starred_schema_id=?", starredSchemaId);
 
             String engine = getRequiredParameter(request, "engine");
             String catalog = getRequiredParameter(request, "catalog");

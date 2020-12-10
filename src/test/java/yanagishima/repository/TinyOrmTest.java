@@ -18,6 +18,7 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import me.geso.tinyorm.TinyORM;
 import yanagishima.config.YanagishimaConfig;
 import yanagishima.config.YanagishimaConfig.DatabaseType;
 import yanagishima.row.Bookmark;
@@ -76,11 +77,20 @@ public class TinyOrmTest {
   }
 
   @Test
-  public void testSingleBookmark() {
-    assertThat(tinyOrm.singleBookmark("bookmark_id = ?", 1)).isEmpty();
+  public void testDeleteBookmark() {
+    assertThat(tinyOrm.searchBookmarks("1 = 1")).isEmpty();
 
     assertEquals(1, tinyOrm.insert(Bookmark.class, value("bookmark_id", "1")));
-    assertThat(tinyOrm.singleBookmark("bookmark_id = ?", 1)).isPresent();
+    assertEquals(1, tinyOrm.insert(Bookmark.class, value("bookmark_id", "2")));
+    assertThat(tinyOrm.searchBookmarks("1 = 1")).hasSize(2);
+
+    tinyOrm.deleteBookmark("bookmark_id = ?", 1);
+    assertThat(tinyOrm.searchBookmarks("1 = 1")).hasSize(1);
+    assertThat(tinyOrm.searchBookmarks("bookmark_id = 1")).isEmpty();
+    assertThat(tinyOrm.searchBookmarks("bookmark_id = 2")).hasSize(1);
+
+    tinyOrm.deleteBookmark("bookmark_id = ?", 2);
+    assertThat(tinyOrm.searchBookmarks("1 = 1")).isEmpty();
   }
 
   @Test
@@ -93,6 +103,34 @@ public class TinyOrmTest {
                                    value("like_count", "1")
                                    ));
     assertThat(tinyOrm.singleComment("datasource = ? and engine = ?", "test_datasource", "test_engine")).isPresent();
+  }
+
+  @Test
+  public void testDeleteComment() {
+    String orderBy = "1";
+    assertThat(tinyOrm.searchComments(orderBy, "1 = 1")).isEmpty();
+
+    assertEquals(1, tinyOrm.insert(Comment.class,
+                                   value("datasource", "test_datasource"),
+                                   value("engine", "test_engine"),
+                                   value("query_id", "1"),
+                                   value("like_count", "1")
+                                   ));
+    assertEquals(1, tinyOrm.insert(Comment.class,
+                                   value("datasource", "test_datasource2"),
+                                   value("engine", "test_engine2"),
+                                   value("query_id", "2"),
+                                   value("like_count", "2")
+                                   ));
+    assertThat(tinyOrm.searchComments(orderBy, "1 = 1")).hasSize(2);
+
+    tinyOrm.deleteComment("datasource = ? and engine = ? and query_id = ?", "test_datasource", "test_engine", "1");
+    assertThat(tinyOrm.searchComments(orderBy, "1 = 1")).hasSize(1);
+    assertThat(tinyOrm.searchComments(orderBy, "datasource = ?", "test_datasource")).hasSize(0);
+    assertThat(tinyOrm.searchComments(orderBy, "datasource = ?", "test_datasource2")).hasSize(1);
+
+    tinyOrm.deleteComment("datasource = ? and engine = ? and query_id = ?", "test_datasource2", "test_engine2", "2");
+    assertThat(tinyOrm.searchComments(orderBy, "1 = 1")).hasSize(0);
   }
 
   @Test
@@ -120,8 +158,8 @@ public class TinyOrmTest {
   }
 
   @Test
-  public void testSingleStarredSchema() {
-    assertThat(tinyOrm.singleStarredSchema("starred_schema_id = ?", 1)).isEmpty();
+  public void testDeleteStarredSchema() {
+    assertEquals(OptionalLong.of(0L), tinyOrm.queryForLong("SELECT count(*) FROM starred_schema"));
 
     assertEquals(1, tinyOrm.insert(StarredSchema.class,
                                    value("starred_schema_id", 1),
@@ -130,7 +168,23 @@ public class TinyOrmTest {
                                    value("catalog", "test_catalog"),
                                    value("schema", "test_schema")
                                    ));
-    assertThat(tinyOrm.singleStarredSchema("starred_schema_id = ?", 1)).isPresent();
+    assertEquals(1, tinyOrm.insert(StarredSchema.class,
+                                   value("starred_schema_id", 2),
+                                   value("datasource", "test_datasource"),
+                                   value("engine", "test_engine"),
+                                   value("catalog", "test_catalog"),
+                                   value("schema", "test_schema")
+                                   ));
+
+    assertEquals(OptionalLong.of(2L), tinyOrm.queryForLong("SELECT count(*) FROM starred_schema"));
+
+    tinyOrm.deleteStarredSchema("starred_schema_id = ?", 1);
+    assertEquals(OptionalLong.of(1L), tinyOrm.queryForLong("SELECT count(*) FROM starred_schema"));
+    assertEquals(OptionalLong.of(1L), tinyOrm.queryForLong("SELECT count(*) FROM starred_schema "
+                                                           + "WHERE starred_schema_id = 2"));
+
+    tinyOrm.deleteStarredSchema("starred_schema_id = ?", 2);
+    assertEquals(OptionalLong.of(0L), tinyOrm.queryForLong("SELECT count(*) FROM starred_schema"));
   }
 
   @Test

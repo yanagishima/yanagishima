@@ -12,6 +12,8 @@ import java.util.OptionalLong;
 import javax.annotation.Nullable;
 import javax.inject.Inject;
 
+import org.msgpack.core.annotations.VisibleForTesting;
+
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 
@@ -56,15 +58,21 @@ public class TinyOrm {
     }
   }
 
-  public Optional<Bookmark> singleBookmark(String query, Object... params) {
+  public void deleteBookmark(String query, Object... params) {
     try (TinyORM tinyOrm = getTinyOrm()) {
-      return tinyOrm.single(Bookmark.class).where(query, params).execute();
+      tinyOrm.single(Bookmark.class).where(query, params).execute().ifPresent(tinyOrm::delete);
     }
   }
 
   public Optional<Comment> singleComment(String query, Object... params) {
     try (TinyORM tinyOrm = getTinyOrm()) {
       return tinyOrm.single(Comment.class).where(query, params).execute();
+    }
+  }
+
+  public void deleteComment(String query, Object... params) {
+    try (TinyORM tinyOrm = getTinyOrm()) {
+      tinyOrm.single(Comment.class).where(query, params).execute().ifPresent(tinyOrm::delete);
     }
   }
 
@@ -86,9 +94,9 @@ public class TinyOrm {
     }
   }
 
-  public Optional<StarredSchema> singleStarredSchema(String query, Object... params) {
+  public void deleteStarredSchema(String query, Object... params) {
     try (TinyORM tinyOrm = getTinyOrm()) {
-      return tinyOrm.single(StarredSchema.class).where(query, params).execute();
+      tinyOrm.single(StarredSchema.class).where(query, params).execute().ifPresent(tinyOrm::delete);
     }
   }
 
