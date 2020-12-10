@@ -18,7 +18,6 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import me.geso.tinyorm.TinyORM;
 import yanagishima.config.YanagishimaConfig;
 import yanagishima.config.YanagishimaConfig.DatabaseType;
 import yanagishima.row.Bookmark;

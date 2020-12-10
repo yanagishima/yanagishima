@@ -12,8 +12,6 @@ import java.util.OptionalLong;
 import javax.annotation.Nullable;
 import javax.inject.Inject;
 
-import org.msgpack.core.annotations.VisibleForTesting;
-
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 
