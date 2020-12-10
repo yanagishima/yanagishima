@@ -18,8 +18,8 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import lombok.extern.slf4j.Slf4j;
-import me.geso.tinyorm.TinyORM;
 import yanagishima.config.YanagishimaConfig;
+import yanagishima.repository.TinyOrm;
 import yanagishima.row.Query;
 import yanagishima.row.SessionProperty;
 
@@ -29,10 +29,10 @@ public class HistoryServlet extends HttpServlet {
     private static final long serialVersionUID = 1L;
 
     private final YanagishimaConfig config;
-    private final TinyORM db;
+    private final TinyOrm db;
 
     @Inject
-    public HistoryServlet(YanagishimaConfig config, TinyORM db) {
+    public HistoryServlet(YanagishimaConfig config, TinyOrm db) {
         this.config = config;
         this.db = db;
     }
@@ -55,13 +55,13 @@ public class HistoryServlet extends HttpServlet {
             String engine = request.getParameter("engine");
             Optional<Query> queryOptional;
             if (engine == null) {
-                queryOptional = db.single(Query.class).where("query_id=? and datasource=?", queryId, datasource).execute();
+                queryOptional = db.singleQuery("query_id=? and datasource=?", queryId, datasource);
             } else {
-                queryOptional = db.single(Query.class).where("query_id=? and datasource=? and engine=?", queryId, datasource, engine).execute();
+                queryOptional = db.singleQuery("query_id=? and datasource=? and engine=?", queryId, datasource, engine);
             }
 
             String user = request.getHeader(config.getAuditHttpHeaderName());
-            Optional<Query> userQueryOptional = db.single(Query.class).where("query_id=? and datasource=? and user=?", queryId, datasource, user).execute();
+            Optional<Query> userQueryOptional = db.singleQuery("query_id=? and datasource=? and user=?", queryId, datasource, user);
             responseBody.put("editLabel", userQueryOptional.isPresent());
 
             queryOptional.ifPresent(query -> {
@@ -72,7 +72,7 @@ public class HistoryServlet extends HttpServlet {
                 } else {
                     resultVisible = userQueryOptional.isPresent();
                 }
-                List<SessionProperty> sessionPropertyList = db.search(SessionProperty.class).where("datasource = ? AND engine = ? AND query_id = ?", datasource, engine, queryId).execute();
+                List<SessionProperty> sessionPropertyList = db.searchSessionProperties("datasource = ? AND engine = ? AND query_id = ?", datasource, engine, queryId);
                 createHistoryResult(responseBody, config.getSelectLimit(), datasource, query, resultVisible, sessionPropertyList);
             });
         } catch (Throwable e) {

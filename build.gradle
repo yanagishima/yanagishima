@@ -126,10 +126,12 @@ dependencies {
     compile 'com.github.wyukawa.elasticsearch.unofficial.jdbc.driver:elasticsearch-jdbc-driver:0.0.9'
     compile 'org.jsoup:jsoup:1.11.3'
     compile 'mysql:mysql-connector-java:5.1.47'
+    compile 'com.zaxxer:HikariCP:3.4.5'
 
     errorprone 'com.google.errorprone:error_prone_core:2.3.4'
 
     // For tests
     testCompile 'junit:junit:4.11'
     testCompile 'org.mockito:mockito-core:2.23.4'
+    testCompile 'org.assertj:assertj-core:3.18.1'
 }

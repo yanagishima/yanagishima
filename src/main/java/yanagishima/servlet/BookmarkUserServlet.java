@@ -1,8 +1,8 @@
 package yanagishima.servlet;
 
 import lombok.extern.slf4j.Slf4j;
-import me.geso.tinyorm.TinyORM;
 import yanagishima.config.YanagishimaConfig;
+import yanagishima.repository.TinyOrm;
 import yanagishima.row.Bookmark;
 import yanagishima.model.HttpRequestContext;
 
@@ -25,10 +25,10 @@ public class BookmarkUserServlet extends HttpServlet {
     private static final long serialVersionUID = 1L;
 
     private final YanagishimaConfig config;
-    private final TinyORM db;
+    private final TinyOrm db;
 
     @Inject
-    public BookmarkUserServlet(YanagishimaConfig config, TinyORM db) {
+    public BookmarkUserServlet(YanagishimaConfig config, TinyOrm db) {
         this.config = config;
         this.db = db;
     }
@@ -47,9 +47,9 @@ public class BookmarkUserServlet extends HttpServlet {
             String userName = request.getHeader(config.getAuditHttpHeaderName());
             List<Bookmark> bookmarks;
             if (context.isShowBookmarkAll()) {
-                bookmarks = db.search(Bookmark.class).where("engine = ? AND user = ?", context.getEngine(), userName).execute();
+                bookmarks = db.searchBookmarks("engine = ? AND user = ?", context.getEngine(), userName);
             } else {
-                bookmarks = db.search(Bookmark.class).where("datasource = ? AND engine = ? AND user = ?", context.getDatasource(), context.getEngine(), userName).execute();
+                bookmarks = db.searchBookmarks("datasource = ? AND engine = ? AND user = ?", context.getDatasource(), context.getEngine(), userName);
             }
             writeJSON(response, Map.of("bookmarkList", bookmarks));
         } catch (Throwable e) {

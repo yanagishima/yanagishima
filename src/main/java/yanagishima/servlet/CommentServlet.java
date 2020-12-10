@@ -1,8 +1,8 @@
 package yanagishima.servlet;
 
 import lombok.extern.slf4j.Slf4j;
-import me.geso.tinyorm.TinyORM;
 import yanagishima.config.YanagishimaConfig;
+import yanagishima.repository.TinyOrm;
 import yanagishima.row.Comment;
 import yanagishima.model.HttpRequestContext;
 
@@ -23,6 +23,7 @@ import java.util.Optional;
 import static com.google.common.base.Strings.nullToEmpty;
 import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
+import static yanagishima.repository.TinyOrm.value;
 import static yanagishima.util.AccessControlUtil.sendForbiddenError;
 import static yanagishima.util.AccessControlUtil.validateDatasource;
 import static yanagishima.util.JsonUtil.writeJSON;
@@ -33,10 +34,10 @@ public class CommentServlet extends HttpServlet {
     private static final long serialVersionUID = 1L;
 
     private final YanagishimaConfig config;
-    private final TinyORM db;
+    private final TinyOrm db;
 
     @Inject
-    public CommentServlet(YanagishimaConfig config, TinyORM db) {
+    public CommentServlet(YanagishimaConfig config, TinyOrm db) {
         this.config = config;
         this.db = db;
     }
@@ -66,8 +67,8 @@ public class CommentServlet extends HttpServlet {
 
             if (context.getLike() == null) {
                 requireNonNull(context.getContent(), "content is null");
-                Optional<Comment> comment = db.single(Comment.class).where("datasource = ? and engine = ? and query_id = ?",
-                                                                           context.getDatasource(), context.getEngine(), context.getQueryId()).execute();
+                Optional<Comment> comment = db.singleComment("datasource = ? and engine = ? and query_id = ?",
+                                                                           context.getDatasource(), context.getEngine(), context.getQueryId());
                 if (comment.isPresent()) {
                     String updateSql = format("UPDATE comment SET user = '%s', content = '%s', update_time_string = '%s' "
                                               + "WHERE datasource = '%s' and engine = '%s' and query_id = '%s'",
@@ -76,20 +77,19 @@ public class CommentServlet extends HttpServlet {
                     responseBody.put("content", context.getContent());
                     responseBody.put("likeCount", comment.get().getLikeCount());
                 } else {
-                    db.insert(Comment.class).value("datasource", context.getDatasource())
-                      .value("engine", context.getEngine())
-                      .value("query_id", context.getQueryId())
-                      .value("user", user)
-                      .value("content", context.getContent())
-                      .value("like_count", 0)
-                      .value("update_time_string", updateTimeString)
-                      .execute();
+                    db.insert(Comment.class, value("datasource", context.getDatasource()),
+                       value("engine", context.getEngine()),
+                       value("query_id", context.getQueryId()),
+                       value("user", user),
+                       value("content", context.getContent()),
+                       value("like_count", 0),
+                       value("update_time_string", updateTimeString));
                     responseBody.put("content", context.getContent());
                     responseBody.put("likeCount", 0);
                 }
             } else {
-                Comment likedComment = db.single(Comment.class).where("datasource = ? and engine = ? and query_id = ?",
-                                                                      context.getDatasource(), context.getEngine(), context.getQueryId()).execute().get();
+                Comment likedComment = db.singleComment("datasource = ? and engine = ? and query_id = ?",
+                                                                      context.getDatasource(), context.getEngine(), context.getQueryId()).get();
                 int likeCount = 0;
                 if (context.getLike().length() == 0) {
                     likeCount = likedComment.getLikeCount() + 1;
@@ -122,16 +122,13 @@ public class CommentServlet extends HttpServlet {
 
             List<Comment> comments = new ArrayList<>();
             if (context.getQueryId() != null) {
-                Optional<Comment> comment = db.single(Comment.class)
-                                              .where("datasource = ? and engine = ? and query_id = ?",
-                                                     context.getDatasource(), context.getEngine(), context.getQueryId()).execute();
+                Optional<Comment> comment = db.singleComment("datasource = ? and engine = ? and query_id = ?",
+                                                             context.getDatasource(), context.getEngine(), context.getQueryId());
                 comment.ifPresent(comments::add);
             } else {
                 String sort = context.getSort() != null ? context.getSort() : "update_time_string";
-                comments = db.search(Comment.class)
-                             .where("datasource = ? and engine = ? and content LIKE '%" + nullToEmpty(context.getSearch()) + "%'", context.getDatasource(), context.getEngine())
-                             .orderBy(sort + " DESC")
-                             .execute();
+                comments = db.searchComments(sort + " DESC",
+                                             "datasource = ? and engine = ? and content LIKE '%" + nullToEmpty(context.getSearch()) + "%'", context.getDatasource(), context.getEngine());
             }
             responseBody.put("comments", comments);
         } catch (Throwable e) {
@@ -154,9 +151,8 @@ public class CommentServlet extends HttpServlet {
                 sendForbiddenError(response);
             }
 
-            Comment comment = db.single(Comment.class).where("datasource = ? and engine = ? and query_id = ?",
-                                                             context.getDatasource(), context.getEngine(), context.getQueryId()).execute().get();
-            comment.delete();
+            db.deleteComment("datasource = ? and engine = ? and query_id = ?",
+                             context.getDatasource(), context.getEngine(), context.getQueryId());
             responseBody.put("datasource", context.getDatasource());
             responseBody.put("engine", context.getEngine());
             responseBody.put("queryid", context.getQueryId());

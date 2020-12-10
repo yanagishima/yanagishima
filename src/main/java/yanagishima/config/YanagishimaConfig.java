@@ -389,6 +389,14 @@ public class YanagishimaConfig {
 		return properties.getProperty("database.password");
 	}
 
+	public int getConnectionMaxPoolSize() {
+		return Integer.parseInt(properties.getProperty("database.max-pool-size", "10"));
+	}
+
+	public long getConnectionMaxLifetime() {
+		return Long.parseLong(properties.getProperty("database.max-lifetime", "1800000"));
+	}
+
 	public boolean isDatatimePartitionHasHyphen(String datasource) {
 		String property = properties.getProperty("datetime.partition.has.hyphen." + datasource);
 		if (property == null) {

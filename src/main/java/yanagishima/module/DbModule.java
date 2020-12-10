@@ -1,16 +1,13 @@
 package yanagishima.module;
 
 import com.google.inject.AbstractModule;
-import me.geso.tinyorm.TinyORM;
-import yanagishima.provider.ConnectionProvider;
-import yanagishima.provider.TinyORMProvider;
+import com.google.inject.Scopes;
 
-import java.sql.Connection;
+import yanagishima.repository.TinyOrm;
 
 public class DbModule extends AbstractModule {
     @Override
     protected void configure() {
-        bind(Connection.class).toProvider(ConnectionProvider.class);
-        bind(TinyORM.class).toProvider(TinyORMProvider.class);
+        bind(TinyOrm.class).in(Scopes.SINGLETON);
     }
 }

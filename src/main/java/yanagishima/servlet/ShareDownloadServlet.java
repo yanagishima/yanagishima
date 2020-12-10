@@ -1,7 +1,6 @@
 package yanagishima.servlet;
 
-import me.geso.tinyorm.TinyORM;
-import yanagishima.row.Publish;
+import yanagishima.repository.TinyOrm;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
@@ -17,10 +16,10 @@ import static yanagishima.util.HttpRequestUtil.getOrDefaultParameter;
 public class ShareDownloadServlet extends HttpServlet {
     private static final long serialVersionUID = 1L;
 
-    private final TinyORM db;
+    private final TinyOrm db;
 
     @Inject
-    public ShareDownloadServlet(TinyORM db) {
+    public ShareDownloadServlet(TinyOrm db) {
         this.db = db;
     }
 
@@ -31,7 +30,7 @@ public class ShareDownloadServlet extends HttpServlet {
             return;
         }
 
-        db.single(Publish.class).where("publish_id=?", publishId.get()).execute().ifPresent(publish -> {
+        db.singlePublish("publish_id=?", publishId.get()).ifPresent(publish -> {
             String encode = getOrDefaultParameter(request, "encode", "UTF-8");
             boolean showHeader = getOrDefaultParameter(request, "header", true);
             boolean showBOM = getOrDefaultParameter(request, "bom", true);
