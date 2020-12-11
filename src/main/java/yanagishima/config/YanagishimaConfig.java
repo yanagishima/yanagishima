@@ -113,14 +113,14 @@ public class YanagishimaConfig {
 		return Double.parseDouble(property);
 	}
 
-	public int getMaxResultFileByteSize() {
+	public long getMaxResultFileByteSize() {
 		String sizeStr = properties.getProperty("presto.max-result-file-byte-size");
-		return Integer.parseInt(firstNonNull(sizeStr, "1073741824"));
+		return Long.parseLong(firstNonNull(sizeStr, "1073741824"));
 	}
 
-	public int getHiveMaxResultFileByteSize() {
+	public long getHiveMaxResultFileByteSize() {
 		String sizeStr = properties.getProperty("hive.max-result-file-byte-size");
-		return Integer.parseInt(firstNonNull(sizeStr, "1073741824"));
+		return Long.parseLong(firstNonNull(sizeStr, "1073741824"));
 	}
 
 	public int getToValuesQueryLimit() {
@@ -323,9 +323,9 @@ public class YanagishimaConfig {
 		return SPLITTER.splitToList(property);
 	}
 
-	public int getElasticsearchMaxResultFileByteSize() {
+	public long getElasticsearchMaxResultFileByteSize() {
 		String sizeStr = properties.getProperty("elasticsearch.max-result-file-byte-size");
-		return Integer.parseInt(firstNonNull(sizeStr, "1073741824"));
+		return Long.parseLong(firstNonNull(sizeStr, "1073741824"));
 	}
 
 	public double getElasticsearchQueryMaxRunTimeSeconds() {

@@ -71,8 +71,8 @@ public class ElasticsearchServiceImpl implements ElasticsearchService {
             columnNameList.add("lucene_query");
             Path dst = getResultFilePath(datasource, queryId, false);
             int lineNumber = 0;
-            int maxResultFileByteSize = config.getElasticsearchMaxResultFileByteSize();
-            int resultBytes = 0;
+            long maxResultFileByteSize = config.getElasticsearchMaxResultFileByteSize();
+            long resultBytes = 0;
             try (BufferedWriter writer = Files.newBufferedWriter(dst, StandardCharsets.UTF_8);
                  CSVPrinter printer = new CSVPrinter(writer, CSV_FORMAT)) {
                 printer.printRecord(columnNameList);
@@ -153,8 +153,8 @@ public class ElasticsearchServiceImpl implements ElasticsearchService {
 
                 Path dst = getResultFilePath(datasource, queryId, false);
                 int lineNumber = 0;
-                int maxResultFileByteSize = config.getElasticsearchMaxResultFileByteSize();
-                int resultBytes = 0;
+                long maxResultFileByteSize = config.getElasticsearchMaxResultFileByteSize();
+                long resultBytes = 0;
                 try (BufferedWriter writer = Files.newBufferedWriter(dst, StandardCharsets.UTF_8);
                      CSVPrinter printer = new CSVPrinter(writer, CSV_FORMAT)) {
                     printer.printRecord(columnNameList);
