@@ -1,6 +1,6 @@
 package yanagishima.util;
 
-import me.geso.tinyorm.TinyORM;
+import yanagishima.repository.TinyOrm;
 import yanagishima.row.Query;
 import yanagishima.row.SessionProperty;
 
@@ -16,12 +16,13 @@ import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.Map;
 
+import static yanagishima.repository.TinyOrm.value;
 import static yanagishima.util.PathUtil.getResultFilePath;
 
 public final class DbUtil {
     private DbUtil() { }
 
-    public static void storeError(TinyORM db, String datasource, String engine, String queryId, String query, String user, String errorMessage) {
+    public static void storeError(TinyOrm db, String datasource, String engine, String queryId, String query, String user, String errorMessage) {
         try {
             LocalDateTime submitTimeLdt = LocalDateTime.parse(queryId.substring(0, "yyyyMMdd_HHmmss".length()), DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss"));
             ZonedDateTime submitTimeZdt = submitTimeLdt.atZone(ZoneId.of("GMT", ZoneId.SHORT_IDS));
@@ -36,23 +37,22 @@ public final class DbUtil {
                 throw new RuntimeException(e);
             }
             long resultFileSize = Files.size(dst);
-            db.insert(Query.class)
-                    .value("datasource", datasource)
-                    .value("engine", engine)
-                    .value("query_id", queryId)
-                    .value("fetch_result_time_string", fetchResultTimeString)
-                    .value("query_string", query)
-                    .value("user", user)
-                    .value("status", Status.FAILED.name())
-                    .value("elapsed_time_millis", elapsedTimeMillis)
-                    .value("result_file_size", resultFileSize)
-                    .execute();
+            db.insert(Query.class,
+                    value("datasource", datasource),
+                    value("engine", engine),
+                    value("query_id", queryId),
+                    value("fetch_result_time_string", fetchResultTimeString),
+                    value("query_string", query),
+                    value("user", user),
+                    value("status", Status.FAILED.name()),
+                    value("elapsed_time_millis", elapsedTimeMillis),
+                    value("result_file_size", resultFileSize));
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
     }
 
-    public static void insertQueryHistory(TinyORM db, String datasource, String engine, String query, String user, String queryId, int linenumber) {
+    public static void insertQueryHistory(TinyOrm db, String datasource, String engine, String query, String user, String queryId, int linenumber) {
         try {
             LocalDateTime submitTimeLdt = LocalDateTime.parse(queryId.substring(0, "yyyyMMdd_HHmmss".length()), DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss"));
             ZonedDateTime submitTimeZdt = submitTimeLdt.atZone(ZoneId.of("GMT", ZoneId.SHORT_IDS));
@@ -62,32 +62,29 @@ public final class DbUtil {
 
             Path resultFilePath = PathUtil.getResultFilePath(datasource, queryId, false);
             long resultFileSize = Files.size(resultFilePath);
-            db.insert(Query.class)
-                    .value("datasource", datasource)
-                    .value("engine", engine)
-                    .value("query_id", queryId)
-                    .value("fetch_result_time_string", fetchResultTimeString)
-                    .value("query_string", query)
-                    .value("user", user)
-                    .value("status", Status.SUCCEED.name())
-                    .value("elapsed_time_millis", elapsedTimeMillis)
-                    .value("result_file_size", resultFileSize)
-                    .value("linenumber", linenumber)
-                    .execute();
+            db.insert(Query.class,
+                     value("datasource", datasource),
+                     value("engine", engine),
+                     value("query_id", queryId),
+                     value("fetch_result_time_string", fetchResultTimeString),
+                     value("query_string", query),
+                     value("user", user),
+                     value("status", Status.SUCCEED.name()),
+                     value("elapsed_time_millis", elapsedTimeMillis),
+                     value("result_file_size", resultFileSize),
+                     value("linenumber", linenumber));
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
     }
 
-    public static void insertSessionProperty(TinyORM db, String datasource, String engine, String queryId, Map<String, String> properties) {
+    public static void insertSessionProperty(TinyOrm db, String datasource, String engine, String queryId, Map<String, String> properties) {
         properties.forEach((key, value) ->
-                db.insert(SessionProperty.class)
-                .value("datasource", datasource)
-                .value("engine", engine)
-                .value("query_id", queryId)
-                .value("session_key", key)
-                .value("session_value", value)
-                .execute()
-        );
+                db.insert(SessionProperty.class,
+                 value("datasource", datasource),
+                 value("engine", engine),
+                 value("query_id", queryId),
+                 value("session_key", key),
+                 value("session_value", value)));
     }
 }

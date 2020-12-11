@@ -16,8 +16,8 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import lombok.extern.slf4j.Slf4j;
-import me.geso.tinyorm.TinyORM;
 import yanagishima.config.YanagishimaConfig;
+import yanagishima.repository.TinyOrm;
 import yanagishima.row.Query;
 
 @Slf4j
@@ -26,10 +26,10 @@ public class HistoryStatusServlet extends HttpServlet {
     private static final long serialVersionUID = 1L;
 
     private YanagishimaConfig config;
-    private TinyORM db;
+    private TinyOrm db;
 
     @Inject
-    public HistoryStatusServlet(YanagishimaConfig config, TinyORM db) {
+    public HistoryStatusServlet(YanagishimaConfig config, TinyOrm db) {
         this.config = config;
         this.db = db;
     }
@@ -61,8 +61,8 @@ public class HistoryStatusServlet extends HttpServlet {
 
     private Optional<Query> findQuery(String datasource, String engine, String queryId) {
         if (engine == null) {
-            return db.single(Query.class).where("query_id=? and datasource=?", queryId, datasource).execute();
+            return db.singleQuery("query_id=? and datasource=?", queryId, datasource);
         }
-        return db.single(Query.class).where("query_id=? and datasource=? and engine=?", queryId, datasource, engine).execute();
+        return db.singleQuery("query_id=? and datasource=? and engine=?", queryId, datasource, engine);
     }
 }

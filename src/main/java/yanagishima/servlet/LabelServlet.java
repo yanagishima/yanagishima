@@ -1,5 +1,6 @@
 package yanagishima.servlet;
 
+import static yanagishima.repository.TinyOrm.value;
 import static yanagishima.util.AccessControlUtil.sendForbiddenError;
 import static yanagishima.util.AccessControlUtil.validateDatasource;
 import static yanagishima.util.HttpRequestUtil.getRequiredParameter;
@@ -18,8 +19,8 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import lombok.extern.slf4j.Slf4j;
-import me.geso.tinyorm.TinyORM;
 import yanagishima.config.YanagishimaConfig;
+import yanagishima.repository.TinyOrm;
 import yanagishima.row.Label;
 
 @Slf4j
@@ -27,11 +28,11 @@ import yanagishima.row.Label;
 public class LabelServlet extends HttpServlet {
     private static final long serialVersionUID = 1L;
 
-    private final TinyORM db;
+    private final TinyOrm db;
     private final YanagishimaConfig config;
 
     @Inject
-    public LabelServlet(TinyORM db, YanagishimaConfig config) {
+    public LabelServlet(TinyOrm db, YanagishimaConfig config) {
         this.db = db;
         this.config = config;
     }
@@ -50,11 +51,10 @@ public class LabelServlet extends HttpServlet {
             String queryId = getRequiredParameter(request, "queryid");
             String labelName = getRequiredParameter(request, "labelName");
 
-            int count = db.insert(Label.class).value("datasource", datasource)
-                          .value("engine", engine)
-                          .value("query_id", queryId)
-                          .value("label_name", labelName)
-                          .execute();
+            int count = db.insert(Label.class, value("datasource", datasource),
+                                  value("engine", engine),
+                                  value("query_id", queryId),
+                                  value("label_name", labelName));
 
             responseBody.put("datasource", datasource);
             responseBody.put("engine", engine);
@@ -82,7 +82,7 @@ public class LabelServlet extends HttpServlet {
 
             String engine = getRequiredParameter(request, "engine");
             String queryId = getRequiredParameter(request, "queryid");
-            Optional<Label> optionalLabel = db.single(Label.class).where("datasource = ? and engine = ? and query_id = ?", datasource, engine, queryId).execute();
+            Optional<Label> optionalLabel = db.singleLabel("datasource = ? and engine = ? and query_id = ?", datasource, engine, queryId);
             if (optionalLabel.isPresent()) {
                 responseBody.put("label", optionalLabel.get().getLabelName());
             }
@@ -105,7 +105,7 @@ public class LabelServlet extends HttpServlet {
 
             String engine = getRequiredParameter(request, "engine");
             String queryId = getRequiredParameter(request, "queryid");
-            db.single(Label.class).where("datasource = ? and engine = ? and query_id = ?", datasource, engine, queryId).execute().ifPresent(Label::delete);
+            db.singleLabel("datasource = ? and engine = ? and query_id = ?", datasource, engine, queryId).ifPresent(Label::delete);
             responseBody.put("datasource", datasource);
             responseBody.put("engine", engine);
             responseBody.put("queryid", queryId);

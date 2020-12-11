@@ -26,7 +26,6 @@ public class PrestoServletModule extends ServletModule {
 		bind(QueryStatusServlet.class);
 		bind(BookmarkServlet.class);
 		bind(BookmarkUserServlet.class);
-		bind(ToValuesQueryServlet.class);
 		bind(PrestoPartitionServlet.class);
 		bind(CommentServlet.class);
 		bind(ConvertPrestoServlet.class);
@@ -55,7 +54,6 @@ public class PrestoServletModule extends ServletModule {
 		serve("/queryStatus").with(QueryStatusServlet.class);
 		serve("/bookmark").with(BookmarkServlet.class);
 		serve("/bookmarkUser").with(BookmarkUserServlet.class);
-		serve("/toValuesQuery").with(ToValuesQueryServlet.class);
 		serve("/prestoPartition").with(PrestoPartitionServlet.class);
 		serve("/comment").with(CommentServlet.class);
 		serve("/convertPresto").with(ConvertPrestoServlet.class);

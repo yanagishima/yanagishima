@@ -13,8 +13,8 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import me.geso.tinyorm.TinyORM;
 import yanagishima.config.YanagishimaConfig;
+import yanagishima.repository.TinyOrm;
 import yanagishima.row.Query;
 import yanagishima.model.HttpRequestContext;
 
@@ -22,10 +22,10 @@ import yanagishima.model.HttpRequestContext;
 public class CsvDownloadServlet extends HttpServlet {
     private static final long serialVersionUID = 1L;
     private final YanagishimaConfig config;
-    private TinyORM db;
+    private TinyOrm db;
 
     @Inject
-    public CsvDownloadServlet(YanagishimaConfig config, TinyORM db) {
+    public CsvDownloadServlet(YanagishimaConfig config, TinyOrm db) {
         this.config = config;
         this.db = db;
     }
@@ -51,7 +51,7 @@ public class CsvDownloadServlet extends HttpServlet {
         }
         String user = request.getHeader(config.getAuditHttpHeaderName());
         requireNonNull(user, "user is null");
-        Optional<Query> userQuery = db.single(Query.class).where("query_id=? and datasource=? and user=?", context.getQueryId(), context.getDatasource(), user).execute();
+        Optional<Query> userQuery = db.singleQuery("query_id=? and datasource=? and user=?", context.getQueryId(), context.getDatasource(), user);
         if (userQuery.isPresent()) {
             downloadCsv(response, fileName, context.getDatasource(), context.getQueryId(), context.getEncode(), context.isShowHeader(), context.isShowBom());
         }

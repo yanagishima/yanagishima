@@ -24,8 +24,8 @@ import javax.servlet.http.HttpServletResponse;
 
 import io.airlift.units.DataSize;
 import lombok.extern.slf4j.Slf4j;
-import me.geso.tinyorm.TinyORM;
 import yanagishima.config.YanagishimaConfig;
+import yanagishima.repository.TinyOrm;
 import yanagishima.row.Query;
 
 @Slf4j
@@ -34,10 +34,10 @@ public class QueryHistoryUserServlet extends HttpServlet {
     private static final long serialVersionUID = 1L;
 
     private final YanagishimaConfig config;
-    private final TinyORM db;
+    private final TinyOrm db;
 
     @Inject
-    public QueryHistoryUserServlet(YanagishimaConfig config, TinyORM db) {
+    public QueryHistoryUserServlet(YanagishimaConfig config, TinyOrm db) {
         this.config = config;
         this.db = db;
     }
@@ -124,11 +124,7 @@ public class QueryHistoryUserServlet extends HttpServlet {
                 responseBody.put("results", queryHistoryList);
             }
 
-            long totalCount = db.count(Query.class)
-                                .where("datasource=?", datasource)
-                                .where("engine=?", engine)
-                                .where("user=?", userName)
-                                .execute();
+            long totalCount = db.countQuery("datasource=? and engine=? and user=?", datasource, engine, userName);
             responseBody.put("total", totalCount);
 
         } catch (Throwable e) {

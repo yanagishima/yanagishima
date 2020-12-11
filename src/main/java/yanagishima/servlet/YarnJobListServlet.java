@@ -24,8 +24,8 @@ import javax.ws.rs.core.MediaType;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import me.geso.tinyorm.TinyORM;
 import yanagishima.config.YanagishimaConfig;
+import yanagishima.repository.TinyOrm;
 import yanagishima.row.Query;
 import yanagishima.util.YarnUtil;
 
@@ -36,10 +36,10 @@ public class YarnJobListServlet extends HttpServlet {
 	private static final int LIMIT = 100;
 
 	private final YanagishimaConfig config;
-	private final TinyORM db;
+	private final TinyOrm db;
 
 	@Inject
-	public YarnJobListServlet(YanagishimaConfig config, TinyORM db) {
+	public YarnJobListServlet(YanagishimaConfig config, TinyOrm db) {
 		this.config = config;
 		this.db = db;
 	}

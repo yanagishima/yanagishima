@@ -1,9 +1,9 @@
 package yanagishima.servlet;
 
 import lombok.extern.slf4j.Slf4j;
-import me.geso.tinyorm.TinyORM;
 import yanagishima.config.YanagishimaConfig;
 import yanagishima.exception.ElasticsearchQueryErrorException;
+import yanagishima.repository.TinyOrm;
 import yanagishima.result.ElasticsearchQueryResult;
 import yanagishima.row.Query;
 import yanagishima.service.ElasticsearchService;
@@ -38,10 +38,10 @@ public class ElasticsearchServlet extends HttpServlet {
 
     private final ElasticsearchService elasticsearchService;
     private final YanagishimaConfig config;
-    private final TinyORM db;
+    private final TinyOrm db;
 
     @Inject
-    public ElasticsearchServlet(ElasticsearchService elasticsearchService, YanagishimaConfig config, TinyORM db) {
+    public ElasticsearchServlet(ElasticsearchService elasticsearchService, YanagishimaConfig config, TinyOrm db) {
         this.elasticsearchService = elasticsearchService;
         this.config = config;
         this.db = db;
@@ -82,7 +82,7 @@ public class ElasticsearchServlet extends HttpServlet {
                 Optional.ofNullable(queryResult.getWarningMessage()).ifPresent(warningMessage ->
                     resnponseBody.put("warn", warningMessage)
                 );
-                db.single(Query.class).where("query_id=? and datasource=? and engine=?", queryResult.getQueryId(), datasource, "elasticsearch").execute().ifPresent(queryData ->
+                db.singleQuery("query_id=? and datasource=? and engine=?", queryResult.getQueryId(), datasource, "elasticsearch").ifPresent(queryData ->
                     resnponseBody.put("elapsedTimeMillis", toElapsedTimeMillis(queryResult.getQueryId(), queryData))
                 );
             } catch (ElasticsearchQueryErrorException e) {

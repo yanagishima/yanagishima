@@ -1,6 +1,6 @@
 package yanagishima.servlet;
 
-import me.geso.tinyorm.TinyORM;
+import yanagishima.repository.TinyOrm;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
@@ -14,10 +14,10 @@ import java.io.IOException;
 public class HealthCheckServlet extends HttpServlet {
     private static final long serialVersionUID = 1L;
 
-    private final TinyORM db;
+    private final TinyOrm db;
 
     @Inject
-    public HealthCheckServlet(TinyORM db) {
+    public HealthCheckServlet(TinyOrm db) {
         this.db = db;
     }
 
@@ -25,5 +25,4 @@ public class HealthCheckServlet extends HttpServlet {
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         db.executeQuery("select 1");
     }
-
 }

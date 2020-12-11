@@ -3,8 +3,8 @@ package yanagishima.servlet;
 import com.google.common.base.Splitter;
 
 import lombok.extern.slf4j.Slf4j;
-import me.geso.tinyorm.TinyORM;
 import yanagishima.config.YanagishimaConfig;
+import yanagishima.repository.TinyOrm;
 import yanagishima.row.Bookmark;
 import yanagishima.model.HttpRequestContext;
 
@@ -22,6 +22,7 @@ import static com.google.common.base.Preconditions.checkState;
 import static java.util.Objects.requireNonNull;
 import static java.lang.String.join;
 import static java.util.Collections.nCopies;
+import static yanagishima.repository.TinyOrm.value;
 import static yanagishima.util.AccessControlUtil.sendForbiddenError;
 import static yanagishima.util.AccessControlUtil.validateDatasource;
 import static yanagishima.util.JsonUtil.writeJSON;
@@ -33,10 +34,10 @@ public class BookmarkServlet extends HttpServlet {
     private static final Splitter SPLITTER = Splitter.on(',').trimResults().omitEmptyStrings();
 
     private final YanagishimaConfig config;
-    private final TinyORM db;
+    private final TinyOrm db;
 
     @Inject
-    public BookmarkServlet(YanagishimaConfig config, TinyORM db) {
+    public BookmarkServlet(YanagishimaConfig config, TinyOrm db) {
         this.config = config;
         this.db = db;
     }
@@ -55,12 +56,12 @@ public class BookmarkServlet extends HttpServlet {
             }
             String userName = request.getHeader(config.getAuditHttpHeaderName());
 
-            db.insert(Bookmark.class).value("datasource", context.getDatasource())
-              .value("query", context.getQuery())
-              .value("title", context.getTitle())
-              .value("engine", context.getEngine())
-              .value("user", userName)
-              .value("snippet", context.getSnippet()).execute();
+            db.insert(Bookmark.class, value("datasource", context.getDatasource()),
+                                      value("query", context.getQuery()),
+                                      value("title", context.getTitle()),
+                                      value("engine", context.getEngine()),
+                                      value("user", userName),
+                                      value("snippet", context.getSnippet()));
             List<Bookmark> bookmarks;
             switch (config.getDatabaseType()) {
                 case MYSQL:
@@ -119,11 +120,11 @@ public class BookmarkServlet extends HttpServlet {
                 return;
             }
 
-            db.single(Bookmark.class).where("bookmark_id = ?", context.getBookmarkId()).execute().ifPresent(Bookmark::delete);
+            db.deleteBookmark("bookmark_id = ?", context.getBookmarkId());
 
             requireNonNull(context.getEngine(), "engine is null");
             String userName = request.getHeader(config.getAuditHttpHeaderName());
-            List<Bookmark> bookmarks = db.search(Bookmark.class).where("datasource = ? AND engine = ? AND user = ?", context.getDatasource(), context.getEngine(), userName).execute();
+            List<Bookmark> bookmarks = db.searchBookmarks("datasource = ? AND engine = ? AND user = ?", context.getDatasource(), context.getEngine(), userName);
             writeJSON(response, Map.of("bookmarkList", bookmarks));
         } catch (Throwable e) {
             log.error(e.getMessage(), e);

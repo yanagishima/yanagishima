@@ -26,11 +26,11 @@ import javax.servlet.http.HttpServletResponse;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import me.geso.tinyorm.TinyORM;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
 import yanagishima.config.YanagishimaConfig;
+import yanagishima.repository.TinyOrm;
 import yanagishima.row.Query;
 
 @Singleton
@@ -40,12 +40,12 @@ public class QueryServlet extends HttpServlet {
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
     private final YanagishimaConfig config;
-    private final TinyORM db;
+    private final TinyOrm db;
 
     private final OkHttpClient httpClient = new OkHttpClient();
 
     @Inject
-    public QueryServlet(YanagishimaConfig config, TinyORM db) {
+    public QueryServlet(YanagishimaConfig config, TinyOrm db) {
         this.config = config;
         this.db = db;
     }

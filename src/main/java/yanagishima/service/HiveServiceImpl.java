@@ -3,13 +3,13 @@ package yanagishima.service;
 import io.airlift.units.DataSize;
 import io.airlift.units.Duration;
 import lombok.extern.slf4j.Slf4j;
-import me.geso.tinyorm.TinyORM;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
 import org.komamitsu.fluency.Fluency;
 import yanagishima.config.YanagishimaConfig;
 import yanagishima.exception.HiveQueryErrorException;
 import yanagishima.pool.StatementPool;
+import yanagishima.repository.TinyOrm;
 import yanagishima.result.HiveQueryResult;
 import yanagishima.util.QueryIdUtil;
 
@@ -40,12 +40,12 @@ import static yanagishima.util.TypeCoerceUtil.objectToString;
 public class HiveServiceImpl implements HiveService {
     private final YanagishimaConfig config;
     private final ExecutorService executorService = Executors.newFixedThreadPool(10);
-    private final TinyORM db;
+    private final TinyOrm db;
     private final Fluency fluency;
     private final StatementPool statementPool;
 
     @Inject
-    public HiveServiceImpl(YanagishimaConfig config, TinyORM db, StatementPool statementPool) {
+    public HiveServiceImpl(YanagishimaConfig config, TinyOrm db, StatementPool statementPool) {
         this.config = config;
         this.db = db;
         this.fluency = buildStaticFluency(config);

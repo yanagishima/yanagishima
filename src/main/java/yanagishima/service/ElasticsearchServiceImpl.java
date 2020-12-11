@@ -4,12 +4,12 @@ import com.github.wyukawa.elasticsearch.unofficial.jdbc.driver.ElasticsearchTran
 import io.airlift.units.DataSize;
 import io.airlift.units.Duration;
 import lombok.extern.slf4j.Slf4j;
-import me.geso.tinyorm.TinyORM;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
 import org.komamitsu.fluency.Fluency;
 import yanagishima.config.YanagishimaConfig;
 import yanagishima.exception.ElasticsearchQueryErrorException;
+import yanagishima.repository.TinyOrm;
 import yanagishima.result.ElasticsearchQueryResult;
 import yanagishima.util.QueryIdUtil;
 
@@ -40,11 +40,11 @@ public class ElasticsearchServiceImpl implements ElasticsearchService {
     private static final CSVFormat CSV_FORMAT = CSVFormat.EXCEL.withDelimiter('\t').withNullString("\\N").withRecordSeparator(System.getProperty("line.separator"));
 
     private final YanagishimaConfig config;
-    private final TinyORM db;
+    private final TinyOrm db;
     private final Fluency fluency;
 
     @Inject
-    public ElasticsearchServiceImpl(YanagishimaConfig config, TinyORM db) {
+    public ElasticsearchServiceImpl(YanagishimaConfig config, TinyOrm db) {
         this.config = config;
         this.db = db;
         this.fluency = buildStaticFluency(config);
