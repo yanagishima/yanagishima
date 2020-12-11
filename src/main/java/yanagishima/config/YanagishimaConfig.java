@@ -3,6 +3,8 @@ package yanagishima.config;
 import static com.google.common.base.MoreObjects.firstNonNull;
 
 import com.google.common.base.Splitter;
+import com.google.common.collect.ImmutableList;
+
 import yanagishima.util.PropertiesUtil;
 
 import javax.annotation.Nullable;
@@ -231,7 +233,7 @@ public class YanagishimaConfig {
 			} catch (IOException e) {
 				throw new RuntimeException(e);
 			}
-			return hiveSetupQueryList;
+			return ImmutableList.copyOf(hiveSetupQueryList);
 		}
 	}
 

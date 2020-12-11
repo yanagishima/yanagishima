@@ -22,7 +22,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.OkHttpClient;
-import okhttp3.OkHttpClient.Builder;
 import okhttp3.Request;
 import okhttp3.Response;
 import yanagishima.config.YanagishimaConfig;
@@ -84,7 +83,7 @@ public class QueryStatusServlet extends HttpServlet {
 		String user = request.getParameter("user");
 		String password = request.getParameter("password");
 		if (user != null && password != null) {
-			Builder builder = httpClient.newBuilder();
+			OkHttpClient.Builder builder = httpClient.newBuilder();
 			builder.addInterceptor(basicAuth(user, password));
 			return builder.build();
 		}

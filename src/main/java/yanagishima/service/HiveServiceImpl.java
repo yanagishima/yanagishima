@@ -321,7 +321,7 @@ public class HiveServiceImpl implements HiveService {
         return YANAGISHIAM_HIVE_JOB_PREFIX + userName + "-" + queryId;
     }
 
-    class Credential {
+    static class Credential {
         private final String user;
         private final String password;
 
