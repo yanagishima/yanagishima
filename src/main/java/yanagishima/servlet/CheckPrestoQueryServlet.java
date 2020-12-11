@@ -11,7 +11,7 @@ import okhttp3.Request;
 import okhttp3.Response;
 import yanagishima.config.YanagishimaConfig;
 import yanagishima.exception.QueryErrorException;
-import yanagishima.result.PrestoQueryResult;
+import yanagishima.model.presto.PrestoQueryResult;
 import yanagishima.service.PrestoService;
 
 import javax.annotation.Nullable;

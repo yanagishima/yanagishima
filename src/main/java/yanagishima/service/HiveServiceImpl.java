@@ -10,7 +10,7 @@ import yanagishima.config.YanagishimaConfig;
 import yanagishima.exception.HiveQueryErrorException;
 import yanagishima.pool.StatementPool;
 import yanagishima.repository.TinyOrm;
-import yanagishima.result.HiveQueryResult;
+import yanagishima.model.hive.HiveQueryResult;
 import yanagishima.util.QueryIdUtil;
 
 import javax.inject.Inject;

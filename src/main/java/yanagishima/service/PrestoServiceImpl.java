@@ -14,7 +14,7 @@ import org.komamitsu.fluency.Fluency;
 import yanagishima.config.YanagishimaConfig;
 import yanagishima.exception.QueryErrorException;
 import yanagishima.repository.TinyOrm;
-import yanagishima.result.PrestoQueryResult;
+import yanagishima.model.presto.PrestoQueryResult;
 import yanagishima.util.Constants;
 import yanagishima.util.TypeCoerceUtil;
 

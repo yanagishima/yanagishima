@@ -1,4 +1,4 @@
-package yanagishima.row;
+package yanagishima.model.db;
 
 import lombok.Data;
 import lombok.EqualsAndHashCode;

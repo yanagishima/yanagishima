@@ -20,8 +20,8 @@ import javax.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 import yanagishima.config.YanagishimaConfig;
 import yanagishima.repository.TinyOrm;
-import yanagishima.row.Query;
-import yanagishima.row.SessionProperty;
+import yanagishima.model.db.Query;
+import yanagishima.model.db.SessionProperty;
 
 @Slf4j
 @Singleton

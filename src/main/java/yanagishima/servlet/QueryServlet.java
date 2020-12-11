@@ -31,7 +31,7 @@ import okhttp3.Request;
 import okhttp3.Response;
 import yanagishima.config.YanagishimaConfig;
 import yanagishima.repository.TinyOrm;
-import yanagishima.row.Query;
+import yanagishima.model.db.Query;
 
 @Singleton
 public class QueryServlet extends HttpServlet {

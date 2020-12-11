@@ -1,7 +1,7 @@
 package yanagishima.service;
 
 import yanagishima.exception.QueryErrorException;
-import yanagishima.result.PrestoQueryResult;
+import yanagishima.model.presto.PrestoQueryResult;
 
 import java.util.Optional;
 

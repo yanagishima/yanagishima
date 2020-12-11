@@ -18,8 +18,8 @@ import org.apache.commons.csv.CSVRecord;
 
 import io.airlift.units.DataSize;
 import lombok.experimental.UtilityClass;
-import yanagishima.row.Query;
-import yanagishima.row.SessionProperty;
+import yanagishima.model.db.Query;
+import yanagishima.model.db.SessionProperty;
 
 @UtilityClass
 public final class HistoryUtil {

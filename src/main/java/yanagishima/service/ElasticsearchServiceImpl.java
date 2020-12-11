@@ -10,7 +10,7 @@ import org.komamitsu.fluency.Fluency;
 import yanagishima.config.YanagishimaConfig;
 import yanagishima.exception.ElasticsearchQueryErrorException;
 import yanagishima.repository.TinyOrm;
-import yanagishima.result.ElasticsearchQueryResult;
+import yanagishima.model.elasticsearch.ElasticsearchQueryResult;
 import yanagishima.util.QueryIdUtil;
 
 import javax.inject.Inject;

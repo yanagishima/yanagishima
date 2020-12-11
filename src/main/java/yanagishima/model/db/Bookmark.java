@@ -1,4 +1,4 @@
-package yanagishima.row;
+package yanagishima.model.db;
 
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -8,15 +8,14 @@ import me.geso.tinyorm.annotations.PrimaryKey;
 import me.geso.tinyorm.annotations.Table;
 import org.codehaus.jackson.annotate.JsonProperty;
 
-@Table("starred_schema")
+@Table("bookmark")
 @Data
 @EqualsAndHashCode(callSuper = false)
-public class StarredSchema extends Row<StarredSchema> {
-
+public class Bookmark extends Row<Bookmark> {
     @PrimaryKey
-    @Column("starred_schema_id")
-    @JsonProperty("starred_schema_id")
-    private int starredSchemaId;
+    @Column("bookmark_id")
+    @JsonProperty("bookmark_id")
+    private int bookmarkId;
 
     @Column("datasource")
     private String datasource;
@@ -24,12 +23,15 @@ public class StarredSchema extends Row<StarredSchema> {
     @Column("engine")
     private String engine;
 
-    @Column("catalog")
-    private String catalog;
+    @Column("query")
+    private String query;
 
-    @Column("schema")
-    private String schema;
+    @Column("title")
+    private String title;
 
     @Column("user")
     private String user;
+
+    @Column("snippet")
+    private String snippet;
 }

@@ -4,8 +4,8 @@ import me.geso.tinyorm.TinyORM;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
-import yanagishima.row.Query;
-import yanagishima.row.QueryV14;
+import yanagishima.model.db.Query;
+import yanagishima.model.db.QueryV14;
 import yanagishima.util.Status;
 
 import java.io.BufferedReader;

@@ -5,7 +5,7 @@ import com.google.common.base.Splitter;
 import lombok.extern.slf4j.Slf4j;
 import yanagishima.config.YanagishimaConfig;
 import yanagishima.repository.TinyOrm;
-import yanagishima.row.Bookmark;
+import yanagishima.model.db.Bookmark;
 import yanagishima.model.HttpRequestContext;
 
 import javax.inject.Inject;

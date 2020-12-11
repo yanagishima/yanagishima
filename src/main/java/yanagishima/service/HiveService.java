@@ -1,7 +1,7 @@
 package yanagishima.service;
 
 import yanagishima.exception.HiveQueryErrorException;
-import yanagishima.result.HiveQueryResult;
+import yanagishima.model.hive.HiveQueryResult;
 
 import java.util.Optional;
 

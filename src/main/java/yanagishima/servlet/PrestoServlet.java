@@ -5,7 +5,7 @@ import io.prestosql.client.ClientException;
 import lombok.extern.slf4j.Slf4j;
 import yanagishima.config.YanagishimaConfig;
 import yanagishima.exception.QueryErrorException;
-import yanagishima.result.PrestoQueryResult;
+import yanagishima.model.presto.PrestoQueryResult;
 import yanagishima.service.PrestoService;
 import yanagishima.util.MetadataUtil;
 

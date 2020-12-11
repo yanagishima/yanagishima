@@ -1,4 +1,4 @@
-package yanagishima.result;
+package yanagishima.model.elasticsearch;
 
 import io.airlift.units.DataSize;
 import lombok.Getter;
@@ -8,8 +8,7 @@ import java.util.List;
 
 @Getter
 @Setter
-public class PrestoQueryResult {
-    private String updateType;
+public class ElasticsearchQueryResult {
     private List<String> columns;
     private List<List<String>> records;
     private String warningMessage;

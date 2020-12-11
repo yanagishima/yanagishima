@@ -1,4 +1,4 @@
-package yanagishima.row;
+package yanagishima.model.db;
 
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -7,10 +7,10 @@ import me.geso.tinyorm.annotations.Column;
 import me.geso.tinyorm.annotations.PrimaryKey;
 import me.geso.tinyorm.annotations.Table;
 
-@Table("label")
+@Table("comment")
 @Data
 @EqualsAndHashCode(callSuper = false)
-public class Label extends Row<Label> {
+public class Comment extends Row<Comment> {
 
     @PrimaryKey
     @Column("datasource")
@@ -24,7 +24,15 @@ public class Label extends Row<Label> {
     @Column("query_id")
     private String queryid;
 
-    @Column("label_name")
-    private String labelName;
+    @Column("update_time_string")
+    private String updateTimeString;
 
+    @Column("content")
+    private String content;
+
+    @Column("user")
+    private String user;
+
+    @Column("like_count")
+    private int likeCount;
 }

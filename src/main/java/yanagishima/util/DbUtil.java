@@ -2,8 +2,8 @@ package yanagishima.util;
 
 import lombok.experimental.UtilityClass;
 import yanagishima.repository.TinyOrm;
-import yanagishima.row.Query;
-import yanagishima.row.SessionProperty;
+import yanagishima.model.db.Query;
+import yanagishima.model.db.SessionProperty;
 
 import java.io.BufferedWriter;
 import java.io.IOException;

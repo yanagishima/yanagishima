@@ -25,7 +25,7 @@ import javax.servlet.http.HttpServletResponse;
 
 import lombok.extern.slf4j.Slf4j;
 import yanagishima.config.YanagishimaConfig;
-import yanagishima.result.HiveQueryResult;
+import yanagishima.model.hive.HiveQueryResult;
 import yanagishima.service.HiveService;
 
 @Slf4j

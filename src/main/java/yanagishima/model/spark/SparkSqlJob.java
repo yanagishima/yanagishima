@@ -1,4 +1,4 @@
-package yanagishima.bean;
+package yanagishima.model.spark;
 
 import lombok.Data;
 
