@@ -11,13 +11,13 @@ import java.util.Map;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 
+import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
+@UtilityClass
 public final class MetadataUtil {
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
-
-    private MetadataUtil() { }
 
     public static void setMetadata(String metadataServiceUrl, Map<String, Object> retVal, String catalog, String schema, String table, List<List<String>> records) {
         try {

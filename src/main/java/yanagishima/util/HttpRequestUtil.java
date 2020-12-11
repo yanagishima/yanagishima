@@ -4,9 +4,10 @@ import javax.servlet.http.HttpServletRequest;
 
 import static java.lang.String.format;
 
-public final class HttpRequestUtil {
-    private HttpRequestUtil() { }
+import lombok.experimental.UtilityClass;
 
+@UtilityClass
+public final class HttpRequestUtil {
     public static String getOrDefaultParameter(HttpServletRequest request, String key, String defaultValue) {
         String value = request.getParameter(key);
         return value == null ? defaultValue : value;

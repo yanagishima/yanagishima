@@ -1,8 +1,9 @@
 package yanagishima.util;
 
-public final class Constants {
-    private Constants() { }
+import lombok.experimental.UtilityClass;
 
+@UtilityClass
+public final class Constants {
     public static final String DATASOURCE_HEADER = "X-yanagishima-datasources";
 
     public static final String YANAGISHIMA_COMMENT = "/* yanagishima */";

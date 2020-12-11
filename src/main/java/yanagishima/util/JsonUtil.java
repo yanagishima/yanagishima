@@ -8,10 +8,11 @@ import javax.servlet.http.HttpServletResponse;
 import org.apache.http.entity.ContentType;
 import org.codehaus.jackson.map.ObjectMapper;
 
+import lombok.experimental.UtilityClass;
+
+@UtilityClass
 public final class JsonUtil {
 	private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
-
-	private JsonUtil() { }
 
 	public static void writeJSON(HttpServletResponse response, Object obj) {
 		response.setContentType(ContentType.APPLICATION_JSON.getMimeType());

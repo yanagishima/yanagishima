@@ -3,6 +3,7 @@ package yanagishima.util;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.annotations.VisibleForTesting;
 
+import lombok.experimental.UtilityClass;
 import okhttp3.HttpUrl;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
@@ -22,10 +23,9 @@ import java.util.stream.Collectors;
 import static com.google.common.base.Preconditions.checkArgument;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
+@UtilityClass
 public final class SparkUtil {
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
-
-    private SparkUtil() { }
 
     public static String getSparkJdbcApplicationId(String sparkWebUrl) {
         OkHttpClient client = new OkHttpClient();

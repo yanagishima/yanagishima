@@ -6,10 +6,11 @@ import java.io.File;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
+import lombok.experimental.UtilityClass;
+
+@UtilityClass
 public final class PathUtil {
 	private static final String CURRENT_PATH = new File(".").getAbsolutePath();
-
-	private PathUtil() { }
 
 	public static Path getResultFilePath(String datasource, String queryId, boolean error) {
 		String date = queryId.substring(0, 8);

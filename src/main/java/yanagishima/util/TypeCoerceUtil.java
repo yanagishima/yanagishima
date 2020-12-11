@@ -2,9 +2,10 @@ package yanagishima.util;
 
 import java.math.BigDecimal;
 
-public final class TypeCoerceUtil {
-    private TypeCoerceUtil() { }
+import lombok.experimental.UtilityClass;
 
+@UtilityClass
+public final class TypeCoerceUtil {
     public static String objectToString(Object object) {
         if (object == null) {
             return null;

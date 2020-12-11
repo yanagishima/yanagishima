@@ -16,10 +16,11 @@ import org.apache.http.message.BasicHeader;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.annotations.VisibleForTesting;
 
+import lombok.experimental.UtilityClass;
+
+@UtilityClass
 public final class YarnUtil {
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
-
-    private YarnUtil() { }
 
     public static String kill(String resourceManagerUrl, String applicationId) {
         try {

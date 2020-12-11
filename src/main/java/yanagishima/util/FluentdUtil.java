@@ -6,11 +6,11 @@ import javax.annotation.Nullable;
 
 import org.komamitsu.fluency.Fluency;
 
+import lombok.experimental.UtilityClass;
 import yanagishima.config.YanagishimaConfig;
 
+@UtilityClass
 public final class FluentdUtil {
-    private FluentdUtil() { }
-
     @Nullable
     public static Fluency buildStaticFluency(YanagishimaConfig config) {
         if (config.getFluentdExecutedTag().isPresent() || config.getFluentdFaliedTag().isPresent()) {

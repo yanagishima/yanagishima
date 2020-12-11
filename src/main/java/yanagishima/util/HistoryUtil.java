@@ -17,12 +17,12 @@ import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
 
 import io.airlift.units.DataSize;
+import lombok.experimental.UtilityClass;
 import yanagishima.row.Query;
 import yanagishima.row.SessionProperty;
 
+@UtilityClass
 public final class HistoryUtil {
-    private HistoryUtil() { }
-
     public static void createHistoryResult(Map<String, Object> responseBody, int limit, String datasource, Query query, boolean resultVisible, List<SessionProperty> sessionPropertyList) {
         String queryId = query.getQueryId();
         String queryString = query.getQueryString();
