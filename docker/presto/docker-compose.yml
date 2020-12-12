@@ -2,6 +2,6 @@ version: '2'
 services:
   presto:
     hostname: presto
-    image: 'prestosql/presto:327'
+    image: 'prestosql/presto:347'
     ports:
       - '18080:8080'

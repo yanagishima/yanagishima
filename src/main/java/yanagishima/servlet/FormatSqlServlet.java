@@ -6,7 +6,6 @@ import static yanagishima.util.JsonUtil.writeJSON;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Optional;
 
 import javax.inject.Singleton;
 import javax.servlet.ServletException;
@@ -48,6 +47,6 @@ public class FormatSqlServlet extends HttpServlet {
 	private String formatQuery(String query) {
 		SqlParser sqlParser = new SqlParser();
 		Statement statement = sqlParser.createStatement(query, new ParsingOptions(AS_DOUBLE));
-		return SqlFormatter.formatSql(statement, Optional.empty());
+		return SqlFormatter.formatSql(statement);
 	}
 }
