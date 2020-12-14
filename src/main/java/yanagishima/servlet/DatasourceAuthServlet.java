@@ -58,7 +58,7 @@ public class DatasourceAuthServlet extends HttpServlet {
             Map<String, Object> context = Map.of(
                     "engines", engines,
                     "auth", config.isAuth(datasource),
-                    "metadataService", config.isMetadataService(datasource),
+                    "metadataService", false, // Deprecated
                     "datetimePartitionHasHyphen", config.isDatatimePartitionHasHyphen(datasource));
 
             datasourceEngines.add(Map.of(datasource, context));
