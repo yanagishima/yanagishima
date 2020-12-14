@@ -368,8 +368,8 @@ public class PrestoServiceImpl implements PrestoService {
 
     private static ClientSession buildClientSession(String server, String user, String source, String catalog, String schema, Map<String, String> properties) {
         return new ClientSession(URI.create(server), user, source, Optional.empty(), ImmutableSet.of(), null, catalog,
-                                 schema, null, ZoneId.systemDefault(), false, Locale.getDefault(),
-                                 ImmutableMap.of(), properties, emptyMap(), emptyMap(), ImmutableMap.of(), null, new Duration(2, MINUTES));
+                                 schema, null, ZoneId.systemDefault(), Locale.getDefault(),
+                                 ImmutableMap.of(), properties, emptyMap(), emptyMap(), ImmutableMap.of(), null, new Duration(2, MINUTES), false);
     }
 
     private static QueryErrorException resultsException(QueryStatusInfo results, String datasource) {
