@@ -7,7 +7,6 @@ import yanagishima.config.YanagishimaConfig;
 import yanagishima.exception.QueryErrorException;
 import yanagishima.model.presto.PrestoQueryResult;
 import yanagishima.service.PrestoService;
-import yanagishima.util.MetadataUtil;
 
 import javax.annotation.Nullable;
 import javax.inject.Inject;
@@ -101,13 +100,6 @@ public class PrestoServlet extends HttpServlet {
 						warningMessageOptinal.ifPresent(warningMessage -> {
 							responseBody.put("warn", warningMessage);
 						});
-						if (query.startsWith(YANAGISHIMA_COMMENT + "DESCRIBE") && config.getMetadataServiceUrl(datasource).isPresent()) {
-							String[] strings = query.substring(YANAGISHIMA_COMMENT.length() + "DESCRIBE ".length()).split("\\.");
-							String catalog = strings[0];
-							String schema = strings[1];
-							String table = strings[2].substring(1, strings[2].length() - 1);
-							MetadataUtil.setMetadata(config.getMetadataServiceUrl(datasource).get(), responseBody, catalog, schema, table, prestoQueryResult.getRecords());
-						}
 					}
 				} catch (QueryErrorException e) {
 					log.warn(e.getCause().getMessage());

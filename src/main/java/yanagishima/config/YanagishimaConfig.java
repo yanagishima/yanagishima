@@ -343,18 +343,6 @@ public class YanagishimaConfig {
 		return Double.parseDouble(property);
 	}
 
-	public Optional<String> getMetadataServiceUrl(String datasource) {
-		return Optional.ofNullable(properties.getProperty(String.format("metadata.service.url.%s", datasource)));
-	}
-
-	public boolean isMetadataService(String datasource) {
-		String property = properties.getProperty(String.format("metadata.service.url.%s", datasource));
-		if (property == null) {
-			return false;
-		}
-		return true;
-	}
-
 	public boolean isHiveImpersonation(String datasource) {
 		return Boolean.parseBoolean(properties.getProperty("hive.jdbc.impersonation." + datasource));
 	}
