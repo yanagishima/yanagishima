@@ -88,6 +88,13 @@ distributions {
   }
 }
 
+tasks.withType(JavaCompile).configureEach {
+    options.errorprone {
+        error('MissingOverride', 'ClassCanBeStatic', 'ArrayToString', 'RemoveUnusedImports')
+        disable('JavaTimeDefaultTimeZone', 'UnusedVariable', 'UnusedMethod', 'FutureReturnValueIgnored', 'StringSplitter')
+    }
+}
+
 distZip.dependsOn 'copy'
 
 

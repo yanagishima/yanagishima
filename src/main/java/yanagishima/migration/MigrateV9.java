@@ -9,6 +9,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
@@ -74,10 +75,12 @@ public class MigrateV9 {
     }
 
     private static List<File> findFile(String absolutePath) throws IOException {
-        return Files.walk(Paths.get(absolutePath))
+        try (Stream<Path> stream = Files.walk(Paths.get(absolutePath))) {
+            return stream
                 .map(Path::toFile)
                 .filter(File::isFile)
                 .filter(file -> file.getName().endsWith(".json") || file.getName().endsWith(".err"))
                 .collect(Collectors.toList());
+        }
     }
 }

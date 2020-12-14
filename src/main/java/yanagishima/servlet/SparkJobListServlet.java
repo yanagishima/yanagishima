@@ -43,7 +43,7 @@ public class SparkJobListServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         String datasource = getRequiredParameter(request, "datasource");
-        if (config.isCheckDatasource() & !validateDatasource(request, datasource)) {
+        if (config.isCheckDatasource() && !validateDatasource(request, datasource)) {
             sendForbiddenError(response);
             return;
         }
