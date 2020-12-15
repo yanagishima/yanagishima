@@ -6,14 +6,12 @@ import yanagishima.servlet.*;
 public class PrestoServletModule extends ServletModule {
 	@Override
 	protected void configureServlets() {
-		bind(FormatSqlServlet.class);
 		bind(QueryHistoryServlet.class);
 		bind(QueryHistoryUserServlet.class);
 		bind(DatasourceAuthServlet.class);
 		bind(QueryStatusServlet.class);
 		bind(LabelServlet.class);
 
-		serve("/format").with(FormatSqlServlet.class);
 		serve("/queryHistory").with(QueryHistoryServlet.class);
 		serve("/queryHistoryUser").with(QueryHistoryUserServlet.class);
 		serve("/datasourceAuth").with(DatasourceAuthServlet.class);
