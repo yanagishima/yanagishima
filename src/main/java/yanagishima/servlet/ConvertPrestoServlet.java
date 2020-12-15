@@ -1,35 +1,20 @@
 package yanagishima.servlet;
 
-import static yanagishima.util.JsonUtil.writeJSON;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
-import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
+import yanagishima.model.dto.PrestoQueryDto;
 
-import javax.inject.Singleton;
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServlet;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+@RestController
+public class ConvertPrestoServlet {
+  @PostMapping("convertPresto")
+  public PrestoQueryDto post(@RequestParam String query) {
+    return new PrestoQueryDto(toPrestoQuery(query));
+  }
 
-import yanagishima.model.HttpRequestContext;
-
-@Singleton
-public class ConvertPrestoServlet extends HttpServlet {
-	private static final long serialVersionUID = 1L;
-
-	@Override
-	protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-		HttpRequestContext context = new HttpRequestContext(request);
-		Map<String, Object> responseBody = new HashMap<>();
-		if (context.getQuery() != null) {
-			responseBody.put("prestoQuery", toPrestoQuery(context.getQuery()));
-		}
-		writeJSON(response, responseBody);
-	}
-
-	private static String toPrestoQuery(String hiveQuery) {
-		return hiveQuery.replace("get_json_object", "json_extract_scalar")
-						.replace("lateral view explode", "cross join unnest");
-	}
+  private static String toPrestoQuery(String hiveQuery) {
+    return hiveQuery.replace("get_json_object", "json_extract_scalar")
+                    .replace("lateral view explode", "cross join unnest");
+  }
 }
