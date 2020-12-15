@@ -138,6 +138,9 @@ dependencies {
     compile 'org.jsoup:jsoup:1.11.3'
     compile 'mysql:mysql-connector-java:5.1.47'
     compile 'com.zaxxer:HikariCP:3.4.5'
+    compile 'org.springframework:spring-core:5.2.11.RELEASE'
+    compile 'org.springframework:spring-webmvc:5.2.11.RELEASE'
+    compile 'org.springframework:spring-context-support:5.2.11.RELEASE'
 
     errorprone 'com.google.errorprone:error_prone_core:2.3.4'
 
