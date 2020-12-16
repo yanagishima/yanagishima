@@ -40,7 +40,6 @@
 * Convert Hive/Presto query
 * Support graphviz to visualize Presto explain result
 * Support Elasticsearch SQL
-* Label
 * Pivot
 * Support Spark SQL
 * Show stats for Presto

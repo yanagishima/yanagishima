@@ -59,44 +59,25 @@ public class QueryHistoryUserServlet extends HttpServlet {
             responseBody.put("headers", Arrays.asList("Id", "Query", "Time", "rawDataSize", "engine", "finishedTime", "linenumber", "labelName", "status"));
 
             String limit = getOrDefaultParameter(request, "limit", "100");
-            String label = request.getParameter("label");
             List<Query> queryList;
-            if (label == null || label.isEmpty()) {
-                String joinWhere = "LEFT OUTER JOIN label b on a.datasource = b.datasource AND a.engine = b.engine AND a.query_id = b.query_id "
-                                   + "WHERE a.datasource=\'" + datasource + "\' "
-                                   + "and a.engine=\'" + engine + "\' and "
-                                   + "a.user=\'" + userName + "\' "
-                                   + "and a.query_string LIKE '%" + Optional.ofNullable(search).orElse("") + "%' ORDER BY a.query_id DESC LIMIT " + limit;
-                String countSql = "SELECT count(*) FROM query a " + joinWhere;
-                String fetchSql = "SELECT "
-                                  + "a.engine, "
-                                  + "a.query_id, "
-                                  + "a.fetch_result_time_string, "
-                                  + "a.query_string, "
-                                  + "a.status, "
-                                  + "a.elapsed_time_millis, "
-                                  + "a.result_file_size, "
-                                  + "a.linenumber, "
-                                  + "b.label_name AS label_name "
-                                  + "FROM query a " + joinWhere;
-                responseBody.put("hit", db.queryForLong(countSql).getAsLong());
-                queryList = db.searchBySQL(Query.class, fetchSql);
-            } else {
-                queryList = db.searchBySQL(Query.class,
-                                           "SELECT a.engine, "
-                                           + "a.query_id, "
-                                           + "a.fetch_result_time_string, "
-                                           + "a.query_string, "
-                                           + "a.status, "
-                                           + "a.elapsed_time_millis, "
-                                           + "a.result_file_size, "
-                                           + "a.linenumber, "
-                                           + "b.label_name AS label_name "
-                                           + "FROM query a LEFT OUTER JOIN label b on a.datasource = b.datasource AND a.engine = b.engine AND a.query_id = b.query_id "
-                                           + "WHERE b.label_name = \'" + label
-                                           + "\' and a.datasource=\'" + datasource + "\' and a.engine=\'" + engine + "\' and a.user=\'" + userName + "\' LIMIT " + limit);
-                responseBody.put("hit", queryList.size());
-            }
+            String where = "WHERE a.datasource=\'" + datasource + "\' "
+                               + "and a.engine=\'" + engine + "\' and "
+                               + "a.user=\'" + userName + "\' "
+                               + "and a.query_string LIKE '%" + Optional.ofNullable(search).orElse("") + "%' ORDER BY a.query_id DESC LIMIT " + limit;
+            String countSql = "SELECT count(*) FROM query a " + where;
+            String fetchSql = "SELECT "
+                              + "a.engine, "
+                              + "a.query_id, "
+                              + "a.fetch_result_time_string, "
+                              + "a.query_string, "
+                              + "a.status, "
+                              + "a.elapsed_time_millis, "
+                              + "a.result_file_size, "
+                              + "a.linenumber, "
+                              + "null AS label_name " // Deprecated
+                              + "FROM query a " + where;
+            responseBody.put("hit", db.queryForLong(countSql).getAsLong());
+            queryList = db.searchBySQL(Query.class, fetchSql);
 
             List<List<Object>> queryHistoryList = new ArrayList<>();
             for (Query query : queryList) {

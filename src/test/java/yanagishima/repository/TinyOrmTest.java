@@ -22,7 +22,6 @@ import yanagishima.config.YanagishimaConfig;
 import yanagishima.config.YanagishimaConfig.DatabaseType;
 import yanagishima.model.db.Bookmark;
 import yanagishima.model.db.Comment;
-import yanagishima.model.db.Label;
 import yanagishima.model.db.Publish;
 import yanagishima.model.db.Query;
 import yanagishima.model.db.SessionProperty;
@@ -52,7 +51,6 @@ public class TinyOrmTest {
   private void dropTables() {
     dropTable("bookmark");
     dropTable("comment");
-    dropTable("label");
     dropTable("publish");
     dropTable("starred_schema");
     dropTable("session_property");
@@ -66,13 +64,13 @@ public class TinyOrmTest {
 
   @Test
   public void testInsert() {
-    assertThat(tinyOrm.singleLabel("datasource = ?", 1)).isEmpty();
+    assertThat(tinyOrm.singleQuery("datasource = ?", 1)).isEmpty();
 
-    assertEquals(1, tinyOrm.insert(Label.class, value("datasource", "1")));
-    assertThat(tinyOrm.singleLabel("datasource = ?", 1)).isPresent();
+    assertEquals(1, tinyOrm.insert(Query.class, value("datasource", "1")));
+    assertThat(tinyOrm.singleQuery("datasource = ?", 1)).isPresent();
 
-    assertEquals(1, tinyOrm.insert(Label.class, value("datasource", "2"), value("label_name", null)));
-    assertThat(tinyOrm.singleLabel("datasource = ?", 2)).isPresent();
+    assertEquals(1, tinyOrm.insert(Query.class, value("datasource", "2"), value("user", null)));
+    assertThat(tinyOrm.singleQuery("datasource = ?", 2)).isPresent();
   }
 
   @Test
@@ -138,14 +136,6 @@ public class TinyOrmTest {
 
     tinyOrm.insert(Query.class, value("datasource", "test_a"));
     assertThat(tinyOrm.singleQuery("datasource = 'test_a'")).isPresent();
-  }
-
-  @Test
-  public void testSingleLabel() {
-    assertThat(tinyOrm.singleLabel("datasource = ?", 1)).isEmpty();
-
-    assertEquals(1, tinyOrm.insert(Label.class, value("datasource", "1")));
-    assertThat(tinyOrm.singleLabel("datasource = ?", 1)).isPresent();
   }
 
   @Test

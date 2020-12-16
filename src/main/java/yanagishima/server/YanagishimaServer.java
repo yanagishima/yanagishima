@@ -154,13 +154,6 @@ public class YanagishimaServer {
                                             + "like_count integer, "
                                             + "primary key(datasource, engine, query_id))");
                     statement.executeUpdate(""
-                                            + "CREATE TABLE IF NOT EXISTS label ("
-                                            + "datasource text, "
-                                            + "engine text, "
-                                            + "query_id text, "
-                                            + "label_name text, "
-                                            + "primary key(datasource, engine, query_id))");
-                    statement.executeUpdate(""
                                             + "CREATE TABLE IF NOT EXISTS starred_schema ("
                                             + "starred_schema_id integer primary key autoincrement, "
                                             + "datasource text not null, "
@@ -217,13 +210,6 @@ public class YanagishimaServer {
                                             + "update_time_string varchar(256), "
                                             + "user varchar(256), "
                                             + "like_count integer, "
-                                            + "primary key(datasource, engine, query_id))");
-                    statement.executeUpdate(""
-                                            + "CREATE TABLE IF NOT EXISTS label ("
-                                            + "datasource varchar(256), "
-                                            + "engine varchar(256), "
-                                            + "query_id varchar(256), "
-                                            + "label_name varchar(256), "
                                             + "primary key(datasource, engine, query_id))");
                     statement.executeUpdate(""
                                             + "CREATE TABLE IF NOT EXISTS starred_schema ("

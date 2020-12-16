@@ -226,7 +226,6 @@ const actions = {
     }
 
     dispatch('getComment')
-    dispatch('getLabel')
 
     commit('setLoading', {data: true})
     commit('setError', {data: null})
