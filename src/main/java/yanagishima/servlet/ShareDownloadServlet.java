@@ -1,41 +1,40 @@
 package yanagishima.servlet;
 
-import yanagishima.repository.TinyOrm;
+import static yanagishima.util.DownloadUtil.downloadTsv;
 
 import javax.inject.Inject;
-import javax.inject.Singleton;
-import javax.servlet.http.HttpServlet;
-import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.util.Optional;
 
-import static yanagishima.util.DownloadUtil.downloadTsv;
-import static yanagishima.util.HttpRequestUtil.getOrDefaultParameter;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
-@Singleton
-public class ShareDownloadServlet extends HttpServlet {
-    private static final long serialVersionUID = 1L;
+import com.google.inject.Injector;
 
-    private final TinyOrm db;
+import yanagishima.repository.TinyOrm;
 
-    @Inject
-    public ShareDownloadServlet(TinyOrm db) {
-        this.db = db;
+@RestController
+public class ShareDownloadServlet {
+  private final TinyOrm db;
+
+  @Inject
+  public ShareDownloadServlet(Injector injector) {
+    this.db = injector.getInstance(TinyOrm.class);
+  }
+
+  @GetMapping("share/download")
+  public void get(@RequestParam(name = "publish_id", required = false) String publishId,
+                  @RequestParam(defaultValue = "UTF-8") String encode,
+                  @RequestParam(defaultValue = "true") boolean header,
+                  @RequestParam(defaultValue = "true") boolean bom,
+                  HttpServletResponse response) {
+    if (publishId == null) {
+      return;
     }
 
-    @Override
-    protected void doGet(HttpServletRequest request, HttpServletResponse response) {
-        Optional<String> publishId = Optional.ofNullable(request.getParameter("publish_id"));
-        if (publishId.isEmpty()) {
-            return;
-        }
-
-        db.singlePublish("publish_id=?", publishId.get()).ifPresent(publish -> {
-            String encode = getOrDefaultParameter(request, "encode", "UTF-8");
-            boolean showHeader = getOrDefaultParameter(request, "header", true);
-            boolean showBOM = getOrDefaultParameter(request, "bom", true);
-            String fileName = publishId.get() + ".tsv";
-            downloadTsv(response, fileName, publish.getDatasource(), publish.getQueryId(), encode, showHeader, showBOM);
-        });
-    }
+    db.singlePublish("publish_id=?", publishId).ifPresent(publish -> {
+      String fileName = publishId + ".tsv";
+      downloadTsv(response, fileName, publish.getDatasource(), publish.getQueryId(), encode, header, bom);
+    });
+  }
 }
