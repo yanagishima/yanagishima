@@ -15,7 +15,6 @@ public class PrestoServletModule extends ServletModule {
 		bind(HistoryStatusServlet.class);
 		bind(ShareHistoryServlet.class);
 		bind(PublishServlet.class);
-		bind(QueryDetailServlet.class);
 		bind(DownloadServlet.class);
 		bind(ShareDownloadServlet.class);
 		bind(CsvDownloadServlet.class);
@@ -41,7 +40,6 @@ public class PrestoServletModule extends ServletModule {
 		serve("/historyStatus").with(HistoryStatusServlet.class);
 		serve("/share/shareHistory").with(ShareHistoryServlet.class);
 		serve("/publish").with(PublishServlet.class);
-		serve("/queryDetail").with(QueryDetailServlet.class);
 		serve("/download").with(DownloadServlet.class);
 		serve("/share/download").with(ShareDownloadServlet.class);
 		serve("/csvdownload").with(CsvDownloadServlet.class);
