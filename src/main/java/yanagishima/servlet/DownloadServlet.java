@@ -1,36 +1,29 @@
 package yanagishima.servlet;
 
-import yanagishima.config.YanagishimaConfig;
-import yanagishima.repository.TinyOrm;
-import yanagishima.model.db.Query;
-
-import javax.inject.Inject;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
-import java.util.Optional;
-
 import static java.util.Objects.requireNonNull;
 import static yanagishima.util.AccessControlUtil.sendForbiddenError;
 import static yanagishima.util.AccessControlUtil.validateDatasource;
 import static yanagishima.util.DownloadUtil.downloadTsv;
 
+import java.util.Optional;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.google.inject.Injector;
+import lombok.RequiredArgsConstructor;
+import yanagishima.config.YanagishimaConfig;
+import yanagishima.model.db.Query;
+import yanagishima.repository.TinyOrm;
 
 @RestController
+@RequiredArgsConstructor
 public class DownloadServlet {
   private final YanagishimaConfig config;
   private final TinyOrm db;
-
-  @Inject
-  public DownloadServlet(Injector injector) {
-    this.config = injector.getInstance(YanagishimaConfig.class);
-    this.db = injector.getInstance(TinyOrm.class);
-  }
 
   @GetMapping("download")
   public void get(@RequestParam String datasource,
