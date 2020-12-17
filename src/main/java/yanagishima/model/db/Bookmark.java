@@ -1,12 +1,13 @@
 package yanagishima.model.db;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import me.geso.tinyorm.Row;
 import me.geso.tinyorm.annotations.Column;
 import me.geso.tinyorm.annotations.PrimaryKey;
 import me.geso.tinyorm.annotations.Table;
-import org.codehaus.jackson.annotate.JsonProperty;
 
 @Table("bookmark")
 @Data

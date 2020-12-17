@@ -1,134 +1,146 @@
 package yanagishima.servlet;
 
-import com.google.common.base.Splitter;
-
-import lombok.extern.slf4j.Slf4j;
-import yanagishima.config.YanagishimaConfig;
-import yanagishima.repository.TinyOrm;
-import yanagishima.model.db.Bookmark;
-import yanagishima.model.HttpRequestContext;
-
-import javax.inject.Inject;
-import javax.inject.Singleton;
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServlet;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import java.io.IOException;
-import java.util.*;
-import java.util.stream.Collectors;
-
 import static com.google.common.base.Preconditions.checkState;
-import static java.util.Objects.requireNonNull;
 import static java.lang.String.join;
 import static java.util.Collections.nCopies;
 import static yanagishima.repository.TinyOrm.value;
 import static yanagishima.util.AccessControlUtil.sendForbiddenError;
 import static yanagishima.util.AccessControlUtil.validateDatasource;
-import static yanagishima.util.JsonUtil.writeJSON;
+
+import java.util.List;
+import java.util.stream.Collectors;
+
+import javax.inject.Inject;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.google.common.base.Splitter;
+import com.google.inject.Injector;
+
+import lombok.extern.slf4j.Slf4j;
+import yanagishima.config.YanagishimaConfig;
+import yanagishima.model.HttpRequestContext;
+import yanagishima.model.db.Bookmark;
+import yanagishima.model.dto.BookmarkCreateDto;
+import yanagishima.model.dto.BookmarkDto;
+import yanagishima.repository.TinyOrm;
 
 @Slf4j
-@Singleton
-public class BookmarkServlet extends HttpServlet {
-    private static final long serialVersionUID = 1L;
-    private static final Splitter SPLITTER = Splitter.on(',').trimResults().omitEmptyStrings();
+@RestController
+public class BookmarkServlet {
+  private static final Splitter SPLITTER = Splitter.on(',').trimResults().omitEmptyStrings();
 
-    private final YanagishimaConfig config;
-    private final TinyOrm db;
+  private final YanagishimaConfig config;
+  private final TinyOrm db;
 
-    @Inject
-    public BookmarkServlet(YanagishimaConfig config, TinyOrm db) {
-        this.config = config;
-        this.db = db;
+  @Inject
+  public BookmarkServlet(Injector injector) {
+    this.config = injector.getInstance(YanagishimaConfig.class);
+    this.db = injector.getInstance(TinyOrm.class);
+  }
+
+  @PostMapping("bookmark")
+  public BookmarkCreateDto post(@RequestParam String datasource,
+                                @RequestParam String query,
+                                @RequestParam String engine,
+                                @RequestParam(required = false) String title,
+                                @RequestParam(required = false) String snippet,
+                                HttpServletRequest request, HttpServletResponse response) {
+    BookmarkCreateDto bookmarkCreateDto = new BookmarkCreateDto();
+    if (config.isCheckDatasource() && !validateDatasource(request, datasource)) {
+      sendForbiddenError(response);
+      return bookmarkCreateDto;
     }
-
-    @Override
-    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        HttpRequestContext context = new HttpRequestContext(request);
-        try {
-            requireNonNull(context.getDatasource(), "datasource is null");
-            requireNonNull(context.getQuery(), "query is null");
-            requireNonNull(context.getEngine(), "engine is null");
-
-            if (config.isCheckDatasource() && !validateDatasource(request, context.getDatasource())) {
-                sendForbiddenError(response);
-                return;
-            }
-            String userName = request.getHeader(config.getAuditHttpHeaderName());
-
-            db.insert(Bookmark.class, value("datasource", context.getDatasource()),
-                                      value("query", context.getQuery()),
-                                      value("title", context.getTitle()),
-                                      value("engine", context.getEngine()),
-                                      value("user", userName),
-                                      value("snippet", context.getSnippet()));
-            List<Bookmark> bookmarks;
-            switch (config.getDatabaseType()) {
-                case MYSQL:
-                    bookmarks = db.searchBySQL(Bookmark.class, "select bookmark_id, datasource, engine, query, title, user, snippet from bookmark where bookmark_id = last_insert_id()");
-                    break;
-                case SQLITE:
-                    bookmarks = db.searchBySQL(Bookmark.class, "select bookmark_id, datasource, engine, query, title, user, snippet from bookmark where rowid = last_insert_rowid()");
-                    break;
-                default:
-                    throw new IllegalArgumentException("Illegal database type: " + config.getDatabaseType());
-            }
-            checkState(bookmarks.size() == 1, "Too many bookmarks: " + bookmarks.size());
-            writeJSON(response, Map.of("bookmark_id", bookmarks.get(0).getBookmarkId()));
-        } catch (Throwable e) {
-            log.error(e.getMessage(), e);
-            writeJSON(response, Map.of("error", e.getMessage()));
-        }
+    try {
+      String userName = request.getHeader(config.getAuditHttpHeaderName());
+      db.insert(Bookmark.class, value("datasource", datasource),
+                value("query", query),
+                value("title", title),
+                value("engine", engine),
+                value("user", userName),
+                value("snippet", snippet));
+      List<Bookmark> bookmarks;
+      switch (config.getDatabaseType()) {
+        case MYSQL:
+          bookmarks = db.searchBySQL(Bookmark.class,
+                                     "select bookmark_id, datasource, engine, query, title, user, snippet from bookmark where bookmark_id = last_insert_id()");
+          break;
+        case SQLITE:
+          bookmarks = db.searchBySQL(Bookmark.class,
+                                     "select bookmark_id, datasource, engine, query, title, user, snippet from bookmark where rowid = last_insert_rowid()");
+          break;
+        default:
+          throw new IllegalArgumentException("Illegal database type: " + config.getDatabaseType());
+      }
+      checkState(bookmarks.size() == 1, "Too many bookmarks: " + bookmarks.size());
+      bookmarkCreateDto.setBookmarkId(bookmarks.get(0).getBookmarkId());
+    } catch (Throwable e) {
+      log.error(e.getMessage(), e);
+      bookmarkCreateDto.setError(e.getMessage());
     }
+    return bookmarkCreateDto;
+  }
 
-    @Override
-    protected void doGet(HttpServletRequest request, HttpServletResponse response) {
-        HttpRequestContext context = new HttpRequestContext(request);
-        try {
-            requireNonNull(context.getDatasource(), "datasource is null");
-            if (config.isCheckDatasource() && !validateDatasource(request, context.getDatasource())) {
-                sendForbiddenError(response);
-                return;
-            }
-            List<String> bookmarkIds = SPLITTER.splitToList(requireNonNull(context.getBookmarkId(), "bookmark_id is null"));
-            if (bookmarkIds.isEmpty()) {
-                writeJSON(response, Map.of("bookmarkList", List.of()));
-                return;
-            }
-
-            String placeholder = join(", ", nCopies(bookmarkIds.size(), "?"));
-            List<Object> bookmarkParameters = bookmarkIds.stream().map(Integer::parseInt).collect(Collectors.toList());
-            List<Bookmark> bookmarks = db.searchBySQL(Bookmark.class, "SELECT bookmark_id, datasource, engine, query, title, snippet "
-                                                                      + "FROM bookmark "
-                                                                      + "WHERE datasource=\'" + context.getDatasource() + "\' AND bookmark_id IN (" + placeholder + ")", bookmarkParameters);
-            writeJSON(response, Map.of("bookmarkList", bookmarks));
-        } catch (Throwable e) {
-            log.error(e.getMessage(), e);
-            writeJSON(response, Map.of("error", e.getMessage()));
-        }
+  @GetMapping("bookmark")
+  public BookmarkDto get(@RequestParam String datasource, @RequestParam(name = "bookmark_id") String bookmarkId,
+                         HttpServletRequest request, HttpServletResponse response) {
+    HttpRequestContext context = new HttpRequestContext(request);
+    BookmarkDto bookmarkDto = new BookmarkDto();
+    if (config.isCheckDatasource() && !validateDatasource(request, datasource)) {
+      sendForbiddenError(response);
+      return bookmarkDto;
     }
+    try {
+      List<String> bookmarkIds = SPLITTER.splitToList(bookmarkId);
+      if (bookmarkIds.isEmpty()) {
+        bookmarkDto.setBookmarks(List.of());
+        return bookmarkDto;
+      }
 
-    @Override
-    protected void doDelete(HttpServletRequest request, HttpServletResponse response) {
-        HttpRequestContext context = new HttpRequestContext(request);
-        try {
-            requireNonNull(context.getDatasource(), "datasource is null");
-            requireNonNull(context.getBookmarkId(), "bookmark_id is null");
-
-            if (config.isCheckDatasource() && !validateDatasource(request, context.getDatasource())) {
-                sendForbiddenError(response);
-                return;
-            }
-
-            db.deleteBookmark("bookmark_id = ?", context.getBookmarkId());
-
-            requireNonNull(context.getEngine(), "engine is null");
-            String userName = request.getHeader(config.getAuditHttpHeaderName());
-            List<Bookmark> bookmarks = db.searchBookmarks("datasource = ? AND engine = ? AND user = ?", context.getDatasource(), context.getEngine(), userName);
-            writeJSON(response, Map.of("bookmarkList", bookmarks));
-        } catch (Throwable e) {
-            log.error(e.getMessage(), e);
-            writeJSON(response, Map.of("bookmarkList", Map.of("error", e.getMessage())));
-        }
+      String placeholder = join(", ", nCopies(bookmarkIds.size(), "?"));
+      List<Object> bookmarkParameters = bookmarkIds.stream().map(Integer::parseInt).collect(
+          Collectors.toList());
+      List<Bookmark> bookmarks = db.searchBySQL(Bookmark.class,
+                                                "SELECT bookmark_id, datasource, engine, query, title, snippet "
+                                                + "FROM bookmark "
+                                                + "WHERE datasource=\'" + context.getDatasource()
+                                                + "\' AND bookmark_id IN (" + placeholder + ")",
+                                                bookmarkParameters);
+      bookmarkDto.setBookmarks(bookmarks);
+    } catch (Throwable e) {
+      log.error(e.getMessage(), e);
+      bookmarkDto.setError(e.getMessage());
     }
+    return bookmarkDto;
+  }
+
+  @DeleteMapping("bookmark")
+  public BookmarkDto delete(@RequestParam String datasource,
+                            @RequestParam String engine,
+                            @RequestParam(name = "bookmark_id") String bookmarkId,
+                            HttpServletRequest request, HttpServletResponse response) {
+    BookmarkDto bookmarkDto = new BookmarkDto();
+    if (config.isCheckDatasource() && !validateDatasource(request, datasource)) {
+      sendForbiddenError(response);
+      return bookmarkDto;
+    }
+    try {
+      db.deleteBookmark("bookmark_id = ?", bookmarkId);
+
+      String userName = request.getHeader(config.getAuditHttpHeaderName());
+      List<Bookmark> bookmarks = db.searchBookmarks("datasource = ? AND engine = ? AND user = ?",
+                                                    datasource, engine, userName);
+      bookmarkDto.setBookmarks(bookmarks);
+    } catch (Throwable e) {
+      log.error(e.getMessage(), e);
+      bookmarkDto.setError(e.getMessage());
+    }
+    return bookmarkDto;
+  }
 }
