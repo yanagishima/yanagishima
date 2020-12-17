@@ -1,45 +1,35 @@
 package yanagishima.servlet;
 
-import lombok.extern.slf4j.Slf4j;
-import yanagishima.config.YanagishimaConfig;
-import yanagishima.repository.TinyOrm;
-import yanagishima.model.db.Comment;
-import yanagishima.model.db.Query;
-import yanagishima.model.db.SessionProperty;
+import static yanagishima.util.HistoryUtil.createHistoryResult;
 
-import javax.inject.Inject;
-import javax.inject.Singleton;
-import javax.servlet.http.HttpServlet;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-import static yanagishima.util.HistoryUtil.createHistoryResult;
-import static yanagishima.util.HttpRequestUtil.getRequiredParameter;
-import static yanagishima.util.JsonUtil.writeJSON;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import yanagishima.config.YanagishimaConfig;
+import yanagishima.model.db.Comment;
+import yanagishima.model.db.Query;
+import yanagishima.model.db.SessionProperty;
+import yanagishima.repository.TinyOrm;
 
 @Slf4j
-@Singleton
-public class ShareHistoryServlet extends HttpServlet {
-    private static final long serialVersionUID = 1L;
-
+@RestController
+@RequiredArgsConstructor
+public class ShareHistoryServlet {
     private final YanagishimaConfig config;
     private final TinyOrm db;
 
-    @Inject
-    public ShareHistoryServlet(YanagishimaConfig config, TinyOrm db) {
-        this.config = config;
-        this.db = db;
-    }
-
-    @Override
-    protected void doGet(HttpServletRequest request, HttpServletResponse response) {
+    @GetMapping("share/shareHistory")
+    public Map<String, Object> get(@RequestParam(name = "publish_id") String publishId) {
         Map<String, Object> body = new HashMap<>();
         try {
-            String publishId = getRequiredParameter(request, "publish_id");
             db.singlePublish("publish_id = ?", publishId).ifPresent(publish -> {
                 String datasource = publish.getDatasource();
                 body.put("datasource", datasource);
@@ -56,6 +46,6 @@ public class ShareHistoryServlet extends HttpServlet {
             log.error(e.getMessage(), e);
             body.put("error", e.getMessage());
         }
-        writeJSON(response, body);
+        return body;
     }
 }
