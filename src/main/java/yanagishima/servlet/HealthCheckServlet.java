@@ -1,18 +1,18 @@
 package yanagishima.servlet;
 
-import lombok.RequiredArgsConstructor;
-import yanagishima.client.JdbcClient;
-
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
+
+import lombok.RequiredArgsConstructor;
+import yanagishima.repository.TinyOrm;
 
 @RestController
 @RequiredArgsConstructor
 public class HealthCheckServlet {
-    private final JdbcClient jdbcClient;
+    private final TinyOrm db;
 
     @GetMapping("healthCheck")
     public void get() {
-        jdbcClient.executeQuery("select 1");
+        db.executeQuery("select 1");
     }
 }
