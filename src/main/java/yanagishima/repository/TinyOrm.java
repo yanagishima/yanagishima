@@ -21,7 +21,6 @@ import lombok.NonNull;
 import me.geso.tinyorm.Row;
 import me.geso.tinyorm.TinyORM;
 import yanagishima.config.YanagishimaConfig;
-import yanagishima.model.db.Bookmark;
 import yanagishima.model.db.Comment;
 import yanagishima.model.db.Label;
 import yanagishima.model.db.Publish;
@@ -38,7 +37,7 @@ public class TinyOrm {
     hikariConfig.setJdbcUrl(config.getConnectionUrl());
     hikariConfig.setUsername(config.getConnectionUsername());
     hikariConfig.setPassword(config.getConnectionPassword());
-    hikariConfig.setMaximumPoolSize(config.getConnectionMaxPoolSize());
+    hikariConfig.setMaximumPoolSize(config.getConnectionMaxPoolSize() / 2); // Share with Spring Data JPA
     hikariConfig.setMaxLifetime(config.getConnectionMaxLifetime());
 
     dataSource = new HikariDataSource(hikariConfig);
@@ -53,12 +52,6 @@ public class TinyOrm {
   public int insert(Class klass, Value... values) {
     try (TinyORM tinyOrm = getTinyOrm()) {
       return tinyOrm.insert(klass).value(toMap(values)).execute();
-    }
-  }
-
-  public void deleteBookmark(String query, Object... params) {
-    try (TinyORM tinyOrm = getTinyOrm()) {
-      tinyOrm.single(Bookmark.class).where(query, params).execute().ifPresent(tinyOrm::delete);
     }
   }
 
@@ -95,12 +88,6 @@ public class TinyOrm {
   public void deleteStarredSchema(String query, Object... params) {
     try (TinyORM tinyOrm = getTinyOrm()) {
       tinyOrm.single(StarredSchema.class).where(query, params).execute().ifPresent(tinyOrm::delete);
-    }
-  }
-
-  public List<Bookmark> searchBookmarks(String query, Object... params) {
-    try (TinyORM tinyOrm = getTinyOrm()) {
-      return tinyOrm.search(Bookmark.class).where(query, params).execute();
     }
   }
 
