@@ -20,7 +20,6 @@ import org.junit.Test;
 
 import yanagishima.config.YanagishimaConfig;
 import yanagishima.config.YanagishimaConfig.DatabaseType;
-import yanagishima.model.db.Bookmark;
 import yanagishima.model.db.Comment;
 import yanagishima.model.db.Label;
 import yanagishima.model.db.Publish;
@@ -73,23 +72,6 @@ public class TinyOrmTest {
 
     assertEquals(1, tinyOrm.insert(Label.class, value("datasource", "2"), value("label_name", null)));
     assertThat(tinyOrm.singleLabel("datasource = ?", 2)).isPresent();
-  }
-
-  @Test
-  public void testDeleteBookmark() {
-    assertThat(tinyOrm.searchBookmarks("1 = 1")).isEmpty();
-
-    assertEquals(1, tinyOrm.insert(Bookmark.class, value("bookmark_id", "1")));
-    assertEquals(1, tinyOrm.insert(Bookmark.class, value("bookmark_id", "2")));
-    assertThat(tinyOrm.searchBookmarks("1 = 1")).hasSize(2);
-
-    tinyOrm.deleteBookmark("bookmark_id = ?", 1);
-    assertThat(tinyOrm.searchBookmarks("1 = 1")).hasSize(1);
-    assertThat(tinyOrm.searchBookmarks("bookmark_id = 1")).isEmpty();
-    assertThat(tinyOrm.searchBookmarks("bookmark_id = 2")).hasSize(1);
-
-    tinyOrm.deleteBookmark("bookmark_id = ?", 2);
-    assertThat(tinyOrm.searchBookmarks("1 = 1")).isEmpty();
   }
 
   @Test
@@ -184,18 +166,6 @@ public class TinyOrmTest {
 
     tinyOrm.deleteStarredSchema("starred_schema_id = ?", 2);
     assertEquals(OptionalLong.of(0L), tinyOrm.queryForLong("SELECT count(*) FROM starred_schema"));
-  }
-
-  @Test
-  public void testSearchBookmarks() {
-    assertThat(tinyOrm.searchBookmarks("bookmark_id = ?", 1)).isEmpty();
-
-    assertEquals(1, tinyOrm.insert(Bookmark.class, value("bookmark_id", "1")));
-    assertEquals(1, tinyOrm.insert(Bookmark.class, value("bookmark_id", "2")));
-
-    assertThat(tinyOrm.searchBookmarks("1 = 1")).hasSize(2);
-    assertThat(tinyOrm.searchBookmarks("bookmark_id = ?", 1)).hasSize(1);
-    assertThat(tinyOrm.searchBookmarks("bookmark_id = ?", 2)).hasSize(1);
   }
 
   @Test

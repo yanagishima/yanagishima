@@ -5,7 +5,6 @@ import static yanagishima.util.AccessControlUtil.validateDatasource;
 
 import java.util.List;
 
-import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -13,25 +12,19 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.google.inject.Injector;
-
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import yanagishima.config.YanagishimaConfig;
 import yanagishima.model.db.Bookmark;
 import yanagishima.model.dto.BookmarkDto;
-import yanagishima.repository.TinyOrm;
+import yanagishima.service.BookmarkService;
 
 @Slf4j
 @RestController
+@RequiredArgsConstructor
 public class BookmarkUserServlet {
   private final YanagishimaConfig config;
-  private final TinyOrm db;
-
-  @Inject
-  public BookmarkUserServlet(Injector injector) {
-    this.config = injector.getInstance(YanagishimaConfig.class);
-    this.db = injector.getInstance(TinyOrm.class);
-  }
+  private final BookmarkService bookmarkService;
 
   @GetMapping("bookmarkUser")
   protected BookmarkDto get(@RequestParam String datasource, @RequestParam String engine,
@@ -44,14 +37,8 @@ public class BookmarkUserServlet {
     }
 
     try {
-      String userName = request.getHeader(config.getAuditHttpHeaderName());
-      List<Bookmark> bookmarks;
-      if (showAll) {
-        bookmarks = db.searchBookmarks("engine = ? AND user = ?", engine, userName);
-      } else {
-        bookmarks = db.searchBookmarks("datasource = ? AND engine = ? AND user = ?",
-                                       datasource, engine, userName);
-      }
+      String user = request.getHeader(config.getAuditHttpHeaderName());
+      List<Bookmark> bookmarks = bookmarkService.getAll(showAll, datasource, engine, user);
       bookmarkDto.setBookmarks(bookmarks);
     } catch (Throwable e) {
       log.error(e.getMessage(), e);

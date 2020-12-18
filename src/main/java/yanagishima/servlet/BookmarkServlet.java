@@ -1,16 +1,11 @@
 package yanagishima.servlet;
 
-import static com.google.common.base.Preconditions.checkState;
-import static java.lang.String.join;
-import static java.util.Collections.nCopies;
-import static yanagishima.repository.TinyOrm.value;
 import static yanagishima.util.AccessControlUtil.sendForbiddenError;
 import static yanagishima.util.AccessControlUtil.validateDatasource;
 
 import java.util.List;
 import java.util.stream.Collectors;
 
-import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -21,29 +16,23 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.google.common.base.Splitter;
-import com.google.inject.Injector;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import yanagishima.config.YanagishimaConfig;
-import yanagishima.model.HttpRequestContext;
 import yanagishima.model.db.Bookmark;
 import yanagishima.model.dto.BookmarkCreateDto;
 import yanagishima.model.dto.BookmarkDto;
-import yanagishima.repository.TinyOrm;
+import yanagishima.service.BookmarkService;
 
 @Slf4j
 @RestController
+@RequiredArgsConstructor
 public class BookmarkServlet {
   private static final Splitter SPLITTER = Splitter.on(',').trimResults().omitEmptyStrings();
 
   private final YanagishimaConfig config;
-  private final TinyOrm db;
-
-  @Inject
-  public BookmarkServlet(Injector injector) {
-    this.config = injector.getInstance(YanagishimaConfig.class);
-    this.db = injector.getInstance(TinyOrm.class);
-  }
+  private final BookmarkService bookmarkService;
 
   @PostMapping("bookmark")
   public BookmarkCreateDto post(@RequestParam String datasource,
@@ -59,27 +48,8 @@ public class BookmarkServlet {
     }
     try {
       String userName = request.getHeader(config.getAuditHttpHeaderName());
-      db.insert(Bookmark.class, value("datasource", datasource),
-                value("query", query),
-                value("title", title),
-                value("engine", engine),
-                value("user", userName),
-                value("snippet", snippet));
-      List<Bookmark> bookmarks;
-      switch (config.getDatabaseType()) {
-        case MYSQL:
-          bookmarks = db.searchBySQL(Bookmark.class,
-                                     "select bookmark_id, datasource, engine, query, title, user, snippet from bookmark where bookmark_id = last_insert_id()");
-          break;
-        case SQLITE:
-          bookmarks = db.searchBySQL(Bookmark.class,
-                                     "select bookmark_id, datasource, engine, query, title, user, snippet from bookmark where rowid = last_insert_rowid()");
-          break;
-        default:
-          throw new IllegalArgumentException("Illegal database type: " + config.getDatabaseType());
-      }
-      checkState(bookmarks.size() == 1, "Too many bookmarks: " + bookmarks.size());
-      bookmarkCreateDto.setBookmarkId(bookmarks.get(0).getBookmarkId());
+      Bookmark bookmark = bookmarkService.insert(datasource, query, title, engine, userName, snippet);
+      bookmarkCreateDto.setBookmarkId(bookmark.getBookmarkId());
     } catch (Throwable e) {
       log.error(e.getMessage(), e);
       bookmarkCreateDto.setError(e.getMessage());
@@ -90,7 +60,6 @@ public class BookmarkServlet {
   @GetMapping("bookmark")
   public BookmarkDto get(@RequestParam String datasource, @RequestParam(name = "bookmark_id") String bookmarkId,
                          HttpServletRequest request, HttpServletResponse response) {
-    HttpRequestContext context = new HttpRequestContext(request);
     BookmarkDto bookmarkDto = new BookmarkDto();
     if (config.isCheckDatasource() && !validateDatasource(request, datasource)) {
       sendForbiddenError(response);
@@ -103,15 +72,8 @@ public class BookmarkServlet {
         return bookmarkDto;
       }
 
-      String placeholder = join(", ", nCopies(bookmarkIds.size(), "?"));
-      List<Object> bookmarkParameters = bookmarkIds.stream().map(Integer::parseInt).collect(
-          Collectors.toList());
-      List<Bookmark> bookmarks = db.searchBySQL(Bookmark.class,
-                                                "SELECT bookmark_id, datasource, engine, query, title, snippet "
-                                                + "FROM bookmark "
-                                                + "WHERE datasource=\'" + context.getDatasource()
-                                                + "\' AND bookmark_id IN (" + placeholder + ")",
-                                                bookmarkParameters);
+      List<Integer> params = bookmarkIds.stream().map(Integer::parseInt).collect(Collectors.toList());
+      List<Bookmark> bookmarks = bookmarkService.getAll(datasource, params);
       bookmarkDto.setBookmarks(bookmarks);
     } catch (Throwable e) {
       log.error(e.getMessage(), e);
@@ -123,7 +85,7 @@ public class BookmarkServlet {
   @DeleteMapping("bookmark")
   public BookmarkDto delete(@RequestParam String datasource,
                             @RequestParam String engine,
-                            @RequestParam(name = "bookmark_id") String bookmarkId,
+                            @RequestParam(name = "bookmark_id") int bookmarkId,
                             HttpServletRequest request, HttpServletResponse response) {
     BookmarkDto bookmarkDto = new BookmarkDto();
     if (config.isCheckDatasource() && !validateDatasource(request, datasource)) {
@@ -131,11 +93,10 @@ public class BookmarkServlet {
       return bookmarkDto;
     }
     try {
-      db.deleteBookmark("bookmark_id = ?", bookmarkId);
+      bookmarkService.delete(bookmarkId);
 
-      String userName = request.getHeader(config.getAuditHttpHeaderName());
-      List<Bookmark> bookmarks = db.searchBookmarks("datasource = ? AND engine = ? AND user = ?",
-                                                    datasource, engine, userName);
+      String user = request.getHeader(config.getAuditHttpHeaderName());
+      List<Bookmark> bookmarks = bookmarkService.getAll(false, datasource, engine, user);
       bookmarkDto.setBookmarks(bookmarks);
     } catch (Throwable e) {
       log.error(e.getMessage(), e);
