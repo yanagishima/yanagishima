@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.google.common.base.Splitter;
 
+import io.swagger.annotations.Api;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import yanagishima.config.YanagishimaConfig;
@@ -26,6 +27,7 @@ import yanagishima.model.dto.BookmarkDto;
 import yanagishima.service.BookmarkService;
 
 @Slf4j
+@Api(tags = "bookmark")
 @RestController
 @RequiredArgsConstructor
 public class BookmarkServlet {

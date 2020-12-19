@@ -4,8 +4,10 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import io.swagger.annotations.Api;
 import yanagishima.model.dto.HiveQueryDto;
 
+@Api(tags = "convert")
 @RestController
 public class ConvertHiveServlet {
   @PostMapping("convertHive")

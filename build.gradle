@@ -142,6 +142,8 @@ dependencies {
     compile 'org.springframework:spring-webmvc:5.2.11.RELEASE'
     compile 'org.springframework:spring-context-support:5.2.11.RELEASE'
     compile 'org.springframework.data:spring-data-jpa:2.3.6.RELEASE'
+    compile 'io.springfox:springfox-swagger2:2.9.2'
+    compile 'io.springfox:springfox-swagger-ui:2.9.2'
     compile 'org.hibernate:hibernate-entitymanager:5.4.26.Final'
 
     errorprone 'com.google.errorprone:error_prone_core:2.3.4'

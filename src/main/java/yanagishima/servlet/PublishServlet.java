@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import io.swagger.annotations.Api;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import yanagishima.config.YanagishimaConfig;
@@ -25,6 +26,7 @@ import yanagishima.model.dto.PublishDto;
 import yanagishima.repository.TinyOrm;
 
 @Slf4j
+@Api(tags = "publish")
 @RestController
 @RequiredArgsConstructor
 public class PublishServlet extends HttpServlet {
