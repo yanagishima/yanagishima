@@ -1,53 +1,47 @@
 package yanagishima.servlet;
 
-import lombok.extern.slf4j.Slf4j;
-import yanagishima.config.YanagishimaConfig;
-import yanagishima.repository.TinyOrm;
-import yanagishima.model.db.StarredSchema;
-
-import javax.inject.Inject;
-import javax.inject.Singleton;
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServlet;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import java.io.IOException;
-import java.util.List;
-import java.util.Map;
-
 import static com.google.common.base.Preconditions.checkState;
 import static yanagishima.repository.TinyOrm.value;
 import static yanagishima.util.AccessControlUtil.sendForbiddenError;
 import static yanagishima.util.AccessControlUtil.validateDatasource;
-import static yanagishima.util.HttpRequestUtil.getRequiredParameter;
-import static yanagishima.util.JsonUtil.writeJSON;
+
+import java.util.List;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import yanagishima.config.YanagishimaConfig;
+import yanagishima.model.db.StarredSchema;
+import yanagishima.model.dto.StarredSchemaCreateDto;
+import yanagishima.model.dto.StarredSchemaDto;
+import yanagishima.repository.TinyOrm;
 
 @Slf4j
-@Singleton
-public class StarredSchemaServlet extends HttpServlet {
-    private static final long serialVersionUID = 1L;
-
+@RestController
+@RequiredArgsConstructor
+public class StarredSchemaServlet {
     private final YanagishimaConfig config;
     private final TinyOrm db;
 
-    @Inject
-    public StarredSchemaServlet(YanagishimaConfig config, TinyOrm db) {
-        this.config = config;
-        this.db = db;
-    }
-
-    @Override
-    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+    @PostMapping("starredSchema")
+    public StarredSchemaCreateDto post(@RequestParam String datasource, @RequestParam String engine,
+                                       @RequestParam String catalog, @RequestParam String schema,
+                                       HttpServletRequest request, HttpServletResponse response) {
+        StarredSchemaCreateDto starredSchemaCreateDto = new StarredSchemaCreateDto();
         try {
-            String datasource = getRequiredParameter(request, "datasource");
             if (config.isCheckDatasource() && !validateDatasource(request, datasource)) {
                 sendForbiddenError(response);
-                return;
+                return starredSchemaCreateDto;
             }
             String userName = request.getHeader(config.getAuditHttpHeaderName());
-            String catalog = getRequiredParameter(request, "catalog");
-            String engine = getRequiredParameter(request, "engine");
-            String schema = getRequiredParameter(request, "schema");
             db.insert(StarredSchema.class, value("datasource", datasource), value("engine", engine), value("catalog", catalog), value("schema", schema), value("user", userName));
             List<StarredSchema> starredSchemas;
             switch (config.getDatabaseType()) {
@@ -63,53 +57,58 @@ public class StarredSchemaServlet extends HttpServlet {
                     throw new IllegalArgumentException("Illegal database type: " + config.getDatabaseType());
             }
             checkState(starredSchemas.size() == 1, "Too many starred schemas: " + starredSchemas);
-            writeJSON(response, Map.of("starred_schema_id", starredSchemas.get(0).getStarredSchemaId()));
+            starredSchemaCreateDto.setStarredSchemaId(starredSchemas.get(0).getStarredSchemaId());
         } catch (Throwable e) {
             log.error(e.getMessage(), e);
-            writeJSON(response, Map.of("error", e.getMessage()));
+            starredSchemaCreateDto.setError(e.getMessage());
         }
+        return starredSchemaCreateDto;
     }
 
-    @Override
-    protected void doDelete(HttpServletRequest request, HttpServletResponse response) {
+    @DeleteMapping("starredSchema")
+    public StarredSchemaDto delete(@RequestParam String datasource,
+                                   @RequestParam String engine,
+                                   @RequestParam String catalog,
+                                   @RequestParam(name = "starred_schema_id") String starredSchemaId,
+                                   HttpServletRequest request, HttpServletResponse response) {
+        StarredSchemaDto starredSchemaDto = new StarredSchemaDto();
         try {
-            String datasource = getRequiredParameter(request, "datasource");
             if (config.isCheckDatasource() && !validateDatasource(request, datasource)) {
                 sendForbiddenError(response);
-                return;
+                return starredSchemaDto;
             }
 
-            String starredSchemaId = getRequiredParameter(request, "starred_schema_id");
             db.deleteStarredSchema("starred_schema_id=?", starredSchemaId);
 
-            String engine = getRequiredParameter(request, "engine");
-            String catalog = getRequiredParameter(request, "catalog");
             String userName = request.getHeader(config.getAuditHttpHeaderName());
             List<StarredSchema> starredSchemas = db.searchStarredSchemas("datasource = ? AND engine = ? AND catalog = ? AND user = ?", datasource, engine, catalog, userName);
-            writeJSON(response, Map.of("starredSchemaList", starredSchemas));
+            starredSchemaDto.setStarredSchemaList(starredSchemas);
         } catch (Throwable e) {
             log.error(e.getMessage(), e);
-            writeJSON(response, Map.of("error", e.getMessage()));
+            starredSchemaDto.setError(e.getMessage());
         }
+        return starredSchemaDto;
     }
 
-    @Override
-    protected void doGet(HttpServletRequest request, HttpServletResponse response) {
+    @GetMapping("starredSchema")
+    public StarredSchemaDto get(@RequestParam String datasource,
+                                @RequestParam String engine,
+                                @RequestParam String catalog,
+                                HttpServletRequest request, HttpServletResponse response) {
+        StarredSchemaDto starredSchemaDto = new StarredSchemaDto();
         try {
-            String datasource = getRequiredParameter(request, "datasource");
             if (config.isCheckDatasource() && !validateDatasource(request, datasource)) {
                 sendForbiddenError(response);
-                return;
+                return starredSchemaDto;
             }
 
-            String engine = getRequiredParameter(request, "engine");
-            String catalog = getRequiredParameter(request, "catalog");
             String userName = request.getHeader(config.getAuditHttpHeaderName());
             List<StarredSchema> starredSchemas = db.searchStarredSchemas("datasource = ? AND engine = ? AND catalog = ? AND user = ?", datasource, engine, catalog, userName);
-            writeJSON(response, Map.of("starredSchemaList", starredSchemas));
+            starredSchemaDto.setStarredSchemaList(starredSchemas);
         } catch (Throwable e) {
             log.error(e.getMessage(), e);
-            writeJSON(response, Map.of("error", e.getMessage()));
+            starredSchemaDto.setError(e.getMessage());
         }
+        return starredSchemaDto;
     }
 }
