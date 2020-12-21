@@ -13,9 +13,11 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import io.swagger.annotations.Api;
 import lombok.RequiredArgsConstructor;
 import yanagishima.config.YanagishimaConfig;
 
+@Api(tags = "query")
 @RestController
 @RequiredArgsConstructor
 public class QueryDetailServlet {
