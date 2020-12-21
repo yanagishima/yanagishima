@@ -3,56 +3,48 @@ package yanagishima.servlet;
 import static yanagishima.util.AccessControlUtil.sendForbiddenError;
 import static yanagishima.util.AccessControlUtil.validateDatasource;
 import static yanagishima.util.HistoryUtil.createHistoryResult;
-import static yanagishima.util.HttpRequestUtil.getRequiredParameter;
-import static yanagishima.util.JsonUtil.writeJSON;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-import javax.inject.Inject;
-import javax.inject.Singleton;
-import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import yanagishima.config.YanagishimaConfig;
-import yanagishima.repository.TinyOrm;
 import yanagishima.model.db.Query;
 import yanagishima.model.db.SessionProperty;
+import yanagishima.repository.TinyOrm;
 
 @Slf4j
-@Singleton
-public class HistoryServlet extends HttpServlet {
-    private static final long serialVersionUID = 1L;
-
+@RestController
+@RequiredArgsConstructor
+public class HistoryServlet {
     private final YanagishimaConfig config;
     private final TinyOrm db;
 
-    @Inject
-    public HistoryServlet(YanagishimaConfig config, TinyOrm db) {
-        this.config = config;
-        this.db = db;
-    }
-
-    @Override
-    protected void doGet(HttpServletRequest request, HttpServletResponse response) {
+    @GetMapping("history")
+    public Map<String, Object> get(@RequestParam String datasource,
+                                   @RequestParam(required = false) String engine,
+                                   @RequestParam(name = "queryid", required = false) String queryId,
+                                   HttpServletRequest request, HttpServletResponse response) {
         Map<String, Object> responseBody = new HashMap<>();
-        String queryId = request.getParameter("queryid");
         if (queryId == null) {
-            writeJSON(response, responseBody);
-            return;
+            return responseBody;
         }
 
         try {
-            String datasource = getRequiredParameter(request, "datasource");
             if (config.isCheckDatasource() && !validateDatasource(request, datasource)) {
                 sendForbiddenError(response);
-                return;
+                return responseBody;
             }
-            String engine = request.getParameter("engine");
             Optional<Query> queryOptional;
             if (engine == null) {
                 queryOptional = db.singleQuery("query_id=? and datasource=?", queryId, datasource);
@@ -79,6 +71,6 @@ public class HistoryServlet extends HttpServlet {
             log.error(e.getMessage(), e);
             responseBody.put("error", e.getMessage());
         }
-        writeJSON(response, responseBody);
+        return responseBody;
     }
 }
