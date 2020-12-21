@@ -8,16 +8,24 @@ import com.google.inject.Injector;
 
 import yanagishima.config.YanagishimaConfig;
 import yanagishima.repository.TinyOrm;
+import yanagishima.service.ElasticsearchService;
 
 @Component
 public class BeanProvider {
+  private final ElasticsearchService elasticsearchService;
   private final YanagishimaConfig config;
   private final TinyOrm db;
 
   @Autowired
   public BeanProvider(Injector injector) {
+    this.elasticsearchService = injector.getInstance(ElasticsearchService.class);
     this.config = injector.getInstance(YanagishimaConfig.class);
     this.db = injector.getInstance(TinyOrm.class);
+  }
+
+  @Bean
+  public ElasticsearchService elasticsearchService() {
+    return elasticsearchService;
   }
 
   @Bean
