@@ -18,11 +18,13 @@ import yanagishima.model.db.Comment;
 import yanagishima.model.db.Query;
 import yanagishima.model.db.SessionProperty;
 import yanagishima.repository.TinyOrm;
+import yanagishima.service.PublishService;
 
 @Slf4j
 @RestController
 @RequiredArgsConstructor
 public class ShareHistoryServlet {
+    private final PublishService publishService;
     private final YanagishimaConfig config;
     private final TinyOrm db;
 
@@ -30,7 +32,7 @@ public class ShareHistoryServlet {
     public Map<String, Object> get(@RequestParam(name = "publish_id") String publishId) {
         Map<String, Object> body = new HashMap<>();
         try {
-            db.singlePublish("publish_id = ?", publishId).ifPresent(publish -> {
+            publishService.get(publishId).ifPresent(publish -> {
                 String datasource = publish.getDatasource();
                 body.put("datasource", datasource);
                 String queryId = publish.getQueryId();
