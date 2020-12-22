@@ -6,7 +6,6 @@ import yanagishima.servlet.*;
 public class PrestoServletModule extends ServletModule {
 	@Override
 	protected void configureServlets() {
-		bind(PrestoKillServlet.class);
 		bind(FormatSqlServlet.class);
 		bind(HistoryStatusServlet.class);
 		bind(CsvDownloadServlet.class);
@@ -17,7 +16,6 @@ public class PrestoServletModule extends ServletModule {
 		bind(CommentServlet.class);
 		bind(LabelServlet.class);
 
-		serve("/kill").with(PrestoKillServlet.class);
 		serve("/format").with(FormatSqlServlet.class);
 		serve("/historyStatus").with(HistoryStatusServlet.class);
 		serve("/csvdownload").with(CsvDownloadServlet.class);
