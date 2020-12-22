@@ -3,49 +3,44 @@ package yanagishima.servlet;
 import static java.lang.String.format;
 import static yanagishima.util.AccessControlUtil.sendForbiddenError;
 import static yanagishima.util.AccessControlUtil.validateDatasource;
-import static yanagishima.util.HttpRequestUtil.getRequiredParameter;
-import static yanagishima.util.JsonUtil.writeJSON;
 
-import java.io.IOException;
-import java.util.Map;
 import java.util.Optional;
 
-import javax.inject.Inject;
-import javax.inject.Singleton;
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
+import io.swagger.annotations.Api;
+import lombok.RequiredArgsConstructor;
 import yanagishima.config.YanagishimaConfig;
-import yanagishima.repository.TinyOrm;
 import yanagishima.model.db.Query;
+import yanagishima.model.dto.ElasticsearchQueryStatusDto;
+import yanagishima.repository.TinyOrm;
 import yanagishima.util.Status;
 
-@Singleton
-public class ElasticsearchQueryStatusServlet extends HttpServlet {
-    private static final long serialVersionUID = 1L;
-
+@Api(tags = "elasticsearch")
+@RestController
+@RequiredArgsConstructor
+public class ElasticsearchQueryStatusServlet {
     private final YanagishimaConfig config;
     private final TinyOrm db;
 
-    @Inject
-    public ElasticsearchQueryStatusServlet(YanagishimaConfig config, TinyOrm db) {
-        this.config = config;
-        this.db = db;
-    }
-
-    @Override
-    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        String datasource = getRequiredParameter(request, "datasource");
+    @PostMapping("elasticsearchQueryStatus")
+    public ElasticsearchQueryStatusDto post(@RequestParam String datasource,
+                                            @RequestParam(name = "queryid") String queryId,
+                                            HttpServletRequest request, HttpServletResponse response) {
+        ElasticsearchQueryStatusDto elasticsearchQueryStatusDto = new ElasticsearchQueryStatusDto();
         if (config.isCheckDatasource() && !validateDatasource(request, datasource)) {
             sendForbiddenError(response);
+            return elasticsearchQueryStatusDto;
         }
 
-        String queryId = getRequiredParameter(request, "queryid");
         Optional<Query> query = db.singleQuery("query_id=? and datasource=? and engine=?", queryId, datasource, "elasticsearch");
-        String status = getStatus(query);
-        writeJSON(response, Map.of("state", status));
+        elasticsearchQueryStatusDto.setState(getStatus(query));
+        return elasticsearchQueryStatusDto;
     }
 
     private static String getStatus(Optional<Query> query) {

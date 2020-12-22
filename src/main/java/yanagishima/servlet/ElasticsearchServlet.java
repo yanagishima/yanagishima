@@ -1,20 +1,11 @@
 package yanagishima.servlet;
 
-import lombok.extern.slf4j.Slf4j;
-import yanagishima.config.YanagishimaConfig;
-import yanagishima.exception.ElasticsearchQueryErrorException;
-import yanagishima.repository.TinyOrm;
-import yanagishima.model.db.Query;
-import yanagishima.model.elasticsearch.ElasticsearchQueryResult;
-import yanagishima.service.ElasticsearchService;
+import static java.lang.String.format;
+import static yanagishima.util.AccessControlUtil.sendForbiddenError;
+import static yanagishima.util.AccessControlUtil.validateDatasource;
+import static yanagishima.util.Constants.YANAGISHIMA_COMMENT;
+import static yanagishima.util.JsonUtil.writeJSON;
 
-import javax.inject.Inject;
-import javax.inject.Singleton;
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServlet;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
@@ -23,80 +14,83 @@ import java.time.temporal.ChronoUnit;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
-import static java.lang.String.format;
-import static yanagishima.util.AccessControlUtil.sendForbiddenError;
-import static yanagishima.util.AccessControlUtil.validateDatasource;
-import static yanagishima.util.Constants.YANAGISHIMA_COMMENT;
-import static yanagishima.util.HttpRequestUtil.getRequiredParameter;
-import static yanagishima.util.JsonUtil.writeJSON;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
+import io.swagger.annotations.Api;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import yanagishima.config.YanagishimaConfig;
+import yanagishima.exception.ElasticsearchQueryErrorException;
+import yanagishima.model.db.Query;
+import yanagishima.model.elasticsearch.ElasticsearchQueryResult;
+import yanagishima.repository.TinyOrm;
+import yanagishima.service.ElasticsearchService;
 
 @Slf4j
-@Singleton
-public class ElasticsearchServlet extends HttpServlet {
-    private static final long serialVersionUID = 1L;
-
+@Api(tags = "elasticsearch")
+@RestController
+@RequiredArgsConstructor
+public class ElasticsearchServlet {
     private final ElasticsearchService elasticsearchService;
     private final YanagishimaConfig config;
     private final TinyOrm db;
 
-    @Inject
-    public ElasticsearchServlet(ElasticsearchService elasticsearchService, YanagishimaConfig config, TinyOrm db) {
-        this.elasticsearchService = elasticsearchService;
-        this.config = config;
-        this.db = db;
-    }
-
-    @Override
-    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        Map<String, Object> resnponseBody = new HashMap<>();
+    @PostMapping("elasticsearch")
+    public Map<String, Object> post(@RequestParam String datasource, HttpServletRequest request, HttpServletResponse response) {
+        Map<String, Object> responseBody = new HashMap<>();
         String query = request.getParameter("query");
         if (query == null) {
-            writeJSON(response, resnponseBody);
-            return;
+            writeJSON(response, responseBody);
+            return responseBody;
         }
 
         try {
             String user = config.isUseAuditHttpHeaderName() ? request.getHeader(config.getAuditHttpHeaderName()) : null;
             if (config.isUserRequired() && user == null) {
                 sendForbiddenError(response);
-                return;
+                return responseBody;
             }
             try {
-                String datasource = getRequiredParameter(request, "datasource");
                 if (config.isCheckDatasource() && !validateDatasource(request, datasource)) {
                     sendForbiddenError(response);
-                    return;
+                    return responseBody;
                 }
                 if (user != null) {
                     log.info(format("%s executed %s in %s", user, query, datasource));
                 }
                 ElasticsearchQueryResult queryResult = executeQuery(request, query, datasource, user);
 
-                resnponseBody.put("queryid", queryResult.getQueryId());
-                resnponseBody.put("headers", queryResult.getColumns());
-                resnponseBody.put("results", queryResult.getRecords());
-                resnponseBody.put("lineNumber", Integer.toString(queryResult.getLineNumber()));
-                resnponseBody.put("rawDataSize", queryResult.getRawDataSize().toString());
+                responseBody.put("queryid", queryResult.getQueryId());
+                responseBody.put("headers", queryResult.getColumns());
+                responseBody.put("results", queryResult.getRecords());
+                responseBody.put("lineNumber", Integer.toString(queryResult.getLineNumber()));
+                responseBody.put("rawDataSize", queryResult.getRawDataSize().toString());
                 // TODO: Make ElasticsearchQueryResult.warningMessage Optional<String>
                 Optional.ofNullable(queryResult.getWarningMessage()).ifPresent(warningMessage ->
-                    resnponseBody.put("warn", warningMessage)
+                    responseBody.put("warn", warningMessage)
                 );
                 db.singleQuery("query_id=? and datasource=? and engine=?", queryResult.getQueryId(), datasource, "elasticsearch").ifPresent(queryData ->
-                    resnponseBody.put("elapsedTimeMillis", toElapsedTimeMillis(queryResult.getQueryId(), queryData))
+                    responseBody.put("elapsedTimeMillis", toElapsedTimeMillis(queryResult.getQueryId(), queryData))
                 );
             } catch (ElasticsearchQueryErrorException e) {
                 log.error(e.getMessage(), e);
-                resnponseBody.put("queryid", e.getQueryId());
-                resnponseBody.put("error", e.getCause().getMessage());
+                responseBody.put("queryid", e.getQueryId());
+                responseBody.put("error", e.getCause().getMessage());
             } catch (Throwable e) {
                 log.error(e.getMessage(), e);
-                resnponseBody.put("error", e.getMessage());
+                responseBody.put("error", e.getMessage());
             }
         } catch (Throwable e) {
             log.error(e.getMessage(), e);
-            resnponseBody.put("error", e.getMessage());
+            responseBody.put("error", e.getMessage());
         }
-        writeJSON(response, resnponseBody);
+        return responseBody;
     }
 
     private ElasticsearchQueryResult executeQuery(HttpServletRequest request, String query, String datasource, String userName) throws ElasticsearchQueryErrorException {
