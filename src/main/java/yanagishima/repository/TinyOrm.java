@@ -24,7 +24,6 @@ import yanagishima.config.YanagishimaConfig;
 import yanagishima.model.db.Comment;
 import yanagishima.model.db.Label;
 import yanagishima.model.db.Query;
-import yanagishima.model.db.SessionProperty;
 
 public class TinyOrm {
   private final HikariDataSource dataSource;
@@ -80,12 +79,6 @@ public class TinyOrm {
   public List<Comment> searchComments(String orderBy, String query, Object... params) {
     try (TinyORM tinyOrm = getTinyOrm()) {
       return tinyOrm.search(Comment.class).where(query, params).orderBy(orderBy).execute();
-    }
-  }
-
-  public List<SessionProperty> searchSessionProperties(String query, Object... params) {
-    try (TinyORM tinyOrm = getTinyOrm()) {
-      return tinyOrm.search(SessionProperty.class).where(query, params).execute();
     }
   }
 

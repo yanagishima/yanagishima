@@ -3,7 +3,6 @@ package yanagishima.util;
 import lombok.experimental.UtilityClass;
 import yanagishima.repository.TinyOrm;
 import yanagishima.model.db.Query;
-import yanagishima.model.db.SessionProperty;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -15,7 +14,6 @@ import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
-import java.util.Map;
 
 import static yanagishima.repository.TinyOrm.value;
 import static yanagishima.util.PathUtil.getResultFilePath;
@@ -76,15 +74,5 @@ public final class DbUtil {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-    }
-
-    public static void insertSessionProperty(TinyOrm db, String datasource, String engine, String queryId, Map<String, String> properties) {
-        properties.forEach((key, value) ->
-                db.insert(SessionProperty.class,
-                 value("datasource", datasource),
-                 value("engine", engine),
-                 value("query_id", queryId),
-                 value("session_key", key),
-                 value("session_value", value)));
     }
 }

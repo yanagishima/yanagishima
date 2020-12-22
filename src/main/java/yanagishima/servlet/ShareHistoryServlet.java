@@ -19,12 +19,14 @@ import yanagishima.model.db.Query;
 import yanagishima.model.db.SessionProperty;
 import yanagishima.repository.TinyOrm;
 import yanagishima.service.PublishService;
+import yanagishima.service.SessionPropertyService;
 
 @Slf4j
 @RestController
 @RequiredArgsConstructor
 public class ShareHistoryServlet {
     private final PublishService publishService;
+    private final SessionPropertyService sessionPropertyService;
     private final YanagishimaConfig config;
     private final TinyOrm db;
 
@@ -39,7 +41,7 @@ public class ShareHistoryServlet {
                 body.put("queryid", queryId);
                 Query query = db.singleQuery("query_id = ? AND datasource = ?", queryId, datasource).get();
                 body.put("engine", query.getEngine());
-                List<SessionProperty> sessionPropertyList = db.searchSessionProperties("datasource = ? AND engine = ? AND query_id = ?", datasource, query.getEngine(), queryId);
+                List<SessionProperty> sessionPropertyList = sessionPropertyService.getAll(datasource, query.getEngine(), queryId);
                 createHistoryResult(body, config.getSelectLimit(), datasource, query, true, sessionPropertyList);
                 Optional<Comment> comment = db.singleComment("datasource = ? AND engine = ? AND query_id = ?", datasource, query.getEngine(), queryId);
                 body.put("comment", comment.orElse(null));

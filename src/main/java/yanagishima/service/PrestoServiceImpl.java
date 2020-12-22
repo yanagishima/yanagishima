@@ -47,7 +47,6 @@ import static java.util.Collections.emptyMap;
 import static java.util.concurrent.TimeUnit.MINUTES;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static yanagishima.util.DbUtil.insertQueryHistory;
-import static yanagishima.util.DbUtil.insertSessionProperty;
 import static yanagishima.util.DbUtil.storeError;
 import static yanagishima.util.FluentdUtil.buildStaticFluency;
 import static yanagishima.util.PathUtil.getResultFilePath;
@@ -64,6 +63,7 @@ public class PrestoServiceImpl {
 
     private final YanagishimaConfig config;
     private final OkHttpClient httpClient;
+    private final SessionPropertyService sessionPropertyService;
     private final ExecutorService executorService = Executors.newFixedThreadPool(10);
     private final Fluency fluency;
     private final TinyOrm db;
@@ -74,7 +74,7 @@ public class PrestoServiceImpl {
     private Map<String, String> properties = ImmutableMap.of();
 
     @Inject
-    public PrestoServiceImpl(YanagishimaConfig config, TinyOrm db) {
+    public PrestoServiceImpl(YanagishimaConfig config, TinyOrm db, SessionPropertyService sessionPropertyService) {
         this.config = config;
         this.db = db;
         OkHttpClient.Builder builder = new OkHttpClient.Builder();
@@ -82,6 +82,7 @@ public class PrestoServiceImpl {
         httpClient = builder.build();
         this.fluency = buildStaticFluency(config);
         this.maxResultFileByteSize = config.getMaxResultFileByteSize();
+        this.sessionPropertyService = sessionPropertyService;
     }
 
     public String doQueryAsync(String datasource, String query, Optional<String> sessionPropertyOptional, String userName, Optional<String> prestoUser, Optional<String> prestoPassword) {
@@ -179,7 +180,7 @@ public class PrestoServiceImpl {
             queryResult.setRecords(rows);
             if (storeQueryHistory) {
                 insertQueryHistory(db, datasource, presto.name(), query, userName, results.getId(), queryResult.getLineNumber());
-                insertSessionProperty(db, datasource, presto.name(), results.getId(), properties);
+                sessionPropertyService.insert(datasource, presto.name(), results.getId(), properties);
             }
             emitExecutedEvent(userName, query, results.getId(), datasource, System.currentTimeMillis() - start);
         }

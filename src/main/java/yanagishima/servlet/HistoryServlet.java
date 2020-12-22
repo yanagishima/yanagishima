@@ -22,11 +22,13 @@ import yanagishima.config.YanagishimaConfig;
 import yanagishima.model.db.Query;
 import yanagishima.model.db.SessionProperty;
 import yanagishima.repository.TinyOrm;
+import yanagishima.service.SessionPropertyService;
 
 @Slf4j
 @RestController
 @RequiredArgsConstructor
 public class HistoryServlet {
+    private final SessionPropertyService sessionPropertyService;
     private final YanagishimaConfig config;
     private final TinyOrm db;
 
@@ -64,7 +66,7 @@ public class HistoryServlet {
                 } else {
                     resultVisible = userQueryOptional.isPresent();
                 }
-                List<SessionProperty> sessionPropertyList = db.searchSessionProperties("datasource = ? AND engine = ? AND query_id = ?", datasource, engine, queryId);
+                List<SessionProperty> sessionPropertyList = sessionPropertyService.getAll(datasource, engine, queryId);
                 createHistoryResult(responseBody, config.getSelectLimit(), datasource, query, resultVisible, sessionPropertyList);
             });
         } catch (Throwable e) {

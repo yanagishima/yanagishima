@@ -23,7 +23,6 @@ import yanagishima.config.YanagishimaConfig.DatabaseType;
 import yanagishima.model.db.Comment;
 import yanagishima.model.db.Label;
 import yanagishima.model.db.Query;
-import yanagishima.model.db.SessionProperty;
 
 class TinyOrmTest {
   private static TinyOrm tinyOrm;
@@ -150,31 +149,7 @@ class TinyOrmTest {
   }
 
   @Test
-  void testSearchSessionProperties() {
-    assertThat(tinyOrm.searchSessionProperties("session_property_id = ?", 1)).isEmpty();
-
-    assertEquals(1, tinyOrm.insert(SessionProperty.class,
-                                   value("session_property_id", "1"),
-                                   value("datasource", "test_datasource"),
-                                   value("engine", "test_engine"),
-                                   value("query_id", "test_query_id"),
-                                   value("session_key", "session_key"),
-                                   value("session_value", "session_session_value")));
-    assertEquals(1, tinyOrm.insert(SessionProperty.class,
-                                   value("session_property_id", "2"),
-                                   value("datasource", "test_datasource"),
-                                   value("engine", "test_engine"),
-                                   value("query_id", "test_query_id"),
-                                   value("session_key", "test_session_key"),
-                                   value("session_value", "test_session_value")));
-
-    assertThat(tinyOrm.searchSessionProperties("1 = 1")).hasSize(2);
-    assertThat(tinyOrm.searchSessionProperties("session_property_id = ?", 1)).hasSize(1);
-    assertThat(tinyOrm.searchSessionProperties("session_property_id = ?", 2)).hasSize(1);
-  }
-
-  @Test
-  void testSearchBySQL() {
+  public void testSearchBySQL() {
     tinyOrm.insert(Query.class, value("datasource", "test_a"));
     tinyOrm.insert(Query.class, value("datasource", "test_b"));
 
