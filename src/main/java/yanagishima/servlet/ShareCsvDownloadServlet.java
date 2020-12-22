@@ -1,42 +1,36 @@
 package yanagishima.servlet;
 
+import static yanagishima.util.DownloadUtil.downloadCsv;
+
+import javax.servlet.http.HttpServletResponse;
+
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
+import io.swagger.annotations.Api;
+import lombok.RequiredArgsConstructor;
 import yanagishima.repository.TinyOrm;
 
-import javax.inject.Inject;
-import javax.inject.Singleton;
-import javax.servlet.http.HttpServlet;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import java.util.Optional;
+@Api(tags = "download")
+@RestController
+@RequiredArgsConstructor
+public class ShareCsvDownloadServlet {
+  private final TinyOrm db;
 
-import static yanagishima.util.DownloadUtil.downloadCsv;
-import static yanagishima.util.HttpRequestUtil.getOrDefaultParameter;
-
-@Singleton
-public class ShareCsvDownloadServlet extends HttpServlet {
-    private static final long serialVersionUID = 1L;
-
-    private final TinyOrm db;
-
-    @Inject
-    public ShareCsvDownloadServlet(TinyOrm db) {
-        this.db = db;
+  @GetMapping("share/csvdownload")
+  public void get(@RequestParam(name = "publish_id", required = false) String publishId,
+                  @RequestParam(defaultValue = "UTF-8") String encode,
+                  @RequestParam(defaultValue = "true") boolean header,
+                  @RequestParam(defaultValue = "true") boolean bom,
+                  HttpServletResponse response) {
+    if (publishId == null) {
+      return;
     }
 
-    @Override
-    protected void doGet(HttpServletRequest request, HttpServletResponse response) {
-        Optional<String> publishIdOptional = Optional.ofNullable(request.getParameter("publish_id"));
-        if (publishIdOptional.isEmpty()) {
-            return;
-        }
-
-        String publishId = publishIdOptional.get();
-        db.singlePublish("publish_id=?", publishId).ifPresent(publish -> {
-            String fileName = publishId + ".csv";
-            String encode = getOrDefaultParameter(request, "encode", "UTF-8");
-            boolean showHeader = getOrDefaultParameter(request, "header", true);
-            boolean showBOM = getOrDefaultParameter(request, "bom", true);
-            downloadCsv(response, fileName, publish.getDatasource(), publish.getQueryId(), encode, showHeader, showBOM);
-        });
-    }
+    db.singlePublish("publish_id=?", publishId).ifPresent(publish -> {
+      String fileName = publishId + ".csv";
+      downloadCsv(response, fileName, publish.getDatasource(), publish.getQueryId(), encode, header, bom);
+    });
+  }
 }

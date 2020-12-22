@@ -1,18 +1,18 @@
 package yanagishima.util;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static yanagishima.util.YarnUtil.jsonToMaps;
 
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-public class YarnUtilTest {
+class YarnUtilTest {
     @Test
-    public void testJsonToMaps() throws IOException {
+    void testJsonToMaps() throws IOException {
         //language=JSON
         String json = "{"
                       + "\"apps\": {\n"
