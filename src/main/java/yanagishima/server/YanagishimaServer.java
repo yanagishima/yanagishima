@@ -103,8 +103,7 @@ public class YanagishimaServer {
                 new HiveServletModule(),
                 new DbModule(),
                 new PoolModule(),
-                new ElasticsearchServiceModule(),
-                new ElasticsearchServletModule());
+                new ElasticsearchServiceModule());
     }
 
     @VisibleForTesting

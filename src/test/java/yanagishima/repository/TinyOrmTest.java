@@ -1,7 +1,7 @@
 package yanagishima.repository;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static yanagishima.repository.TinyOrm.value;
 import static yanagishima.server.YanagishimaServer.createTables;
 
@@ -13,10 +13,10 @@ import java.util.Optional;
 import java.util.OptionalLong;
 import java.util.Properties;
 
-import org.junit.After;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import yanagishima.config.YanagishimaConfig;
 import yanagishima.config.YanagishimaConfig.DatabaseType;
@@ -25,26 +25,25 @@ import yanagishima.model.db.Label;
 import yanagishima.model.db.Publish;
 import yanagishima.model.db.Query;
 import yanagishima.model.db.SessionProperty;
-import yanagishima.model.db.StarredSchema;
 
-public class TinyOrmTest {
+class TinyOrmTest {
   private static TinyOrm tinyOrm;
 
-  @BeforeClass
-  public static void beforeClass() {
+  @BeforeAll
+  static void beforeClass() {
     Properties properties = new Properties();
     YanagishimaConfig config = new YanagishimaConfig(properties);
     tinyOrm = new TinyOrm(config);
   }
 
-  @Before
-  public void setUp() throws Exception {
+  @BeforeEach
+  void setUp() throws Exception {
     dropTables();
     createTables(tinyOrm, DatabaseType.SQLITE);
   }
 
-  @After
-  public void tearDown() {
+  @AfterEach
+  void tearDown() {
     dropTables();
   }
 
@@ -59,12 +58,12 @@ public class TinyOrmTest {
   }
 
   @Test
-  public void testExecuteQuery() {
+  void testExecuteQuery() {
     tinyOrm.executeQuery("SELECT 1");
   }
 
   @Test
-  public void testInsert() {
+  void testInsert() {
     assertThat(tinyOrm.singleLabel("datasource = ?", 1)).isEmpty();
 
     assertEquals(1, tinyOrm.insert(Label.class, value("datasource", "1")));
@@ -75,7 +74,7 @@ public class TinyOrmTest {
   }
 
   @Test
-  public void testSingleComment() {
+  void testSingleComment() {
     assertEquals(Optional.empty(), tinyOrm.singleComment("1 = 2"));
 
     assertEquals(1, tinyOrm.insert(Comment.class,
@@ -87,7 +86,7 @@ public class TinyOrmTest {
   }
 
   @Test
-  public void testDeleteComment() {
+  void testDeleteComment() {
     String orderBy = "1";
     assertThat(tinyOrm.searchComments(orderBy, "1 = 1")).isEmpty();
 
@@ -115,7 +114,7 @@ public class TinyOrmTest {
   }
 
   @Test
-  public void testSingleQuery() {
+  void testSingleQuery() {
     assertEquals(Optional.empty(), tinyOrm.singleQuery("datasource = 'test_a'"));
 
     tinyOrm.insert(Query.class, value("datasource", "test_a"));
@@ -123,7 +122,7 @@ public class TinyOrmTest {
   }
 
   @Test
-  public void testSingleLabel() {
+  void testSingleLabel() {
     assertThat(tinyOrm.singleLabel("datasource = ?", 1)).isEmpty();
 
     assertEquals(1, tinyOrm.insert(Label.class, value("datasource", "1")));
@@ -131,7 +130,7 @@ public class TinyOrmTest {
   }
 
   @Test
-  public void testSinglePublish() {
+  void testSinglePublish() {
     assertThat(tinyOrm.singlePublish("publish_id = ?", 1)).isEmpty();
 
     assertEquals(1, tinyOrm.insert(Publish.class, value("publish_id", "1")));
@@ -139,37 +138,7 @@ public class TinyOrmTest {
   }
 
   @Test
-  public void testDeleteStarredSchema() {
-    assertEquals(OptionalLong.of(0L), tinyOrm.queryForLong("SELECT count(*) FROM starred_schema"));
-
-    assertEquals(1, tinyOrm.insert(StarredSchema.class,
-                                   value("starred_schema_id", 1),
-                                   value("datasource", "test_datasource"),
-                                   value("engine", "test_engine"),
-                                   value("catalog", "test_catalog"),
-                                   value("schema", "test_schema")
-                                   ));
-    assertEquals(1, tinyOrm.insert(StarredSchema.class,
-                                   value("starred_schema_id", 2),
-                                   value("datasource", "test_datasource"),
-                                   value("engine", "test_engine"),
-                                   value("catalog", "test_catalog"),
-                                   value("schema", "test_schema")
-                                   ));
-
-    assertEquals(OptionalLong.of(2L), tinyOrm.queryForLong("SELECT count(*) FROM starred_schema"));
-
-    tinyOrm.deleteStarredSchema("starred_schema_id = ?", 1);
-    assertEquals(OptionalLong.of(1L), tinyOrm.queryForLong("SELECT count(*) FROM starred_schema"));
-    assertEquals(OptionalLong.of(1L), tinyOrm.queryForLong("SELECT count(*) FROM starred_schema "
-                                                           + "WHERE starred_schema_id = 2"));
-
-    tinyOrm.deleteStarredSchema("starred_schema_id = ?", 2);
-    assertEquals(OptionalLong.of(0L), tinyOrm.queryForLong("SELECT count(*) FROM starred_schema"));
-  }
-
-  @Test
-  public void testSearchComments() {
+  void testSearchComments() {
     String orderBy = "update_time_string DESC";
     assertThat(tinyOrm.searchComments(orderBy, "datasource = ?", 1)).isEmpty();
 
@@ -190,7 +159,7 @@ public class TinyOrmTest {
   }
 
   @Test
-  public void testSearchSessionProperties() {
+  void testSearchSessionProperties() {
     assertThat(tinyOrm.searchSessionProperties("session_property_id = ?", 1)).isEmpty();
 
     assertEquals(1, tinyOrm.insert(SessionProperty.class,
@@ -214,29 +183,7 @@ public class TinyOrmTest {
   }
 
   @Test
-  public void testSearchStarredSchemas() {
-    assertThat(tinyOrm.searchStarredSchemas("starred_schema_id = ?", 1)).isEmpty();
-
-    assertEquals(1, tinyOrm.insert(StarredSchema.class,
-                                   value("starred_schema_id", 1),
-                                   value("datasource", "test_datasource"),
-                                   value("engine", "test_engine"),
-                                   value("catalog", "test_catalog"),
-                                   value("schema", "test_schema")));
-    assertEquals(1, tinyOrm.insert(StarredSchema.class,
-                                   value("starred_schema_id", 2),
-                                   value("datasource", "test_datasource"),
-                                   value("engine", "test_engine"),
-                                   value("catalog", "test_catalog"),
-                                   value("schema", "test_schema")));
-
-    assertThat(tinyOrm.searchStarredSchemas("1 = 1")).hasSize(2);
-    assertThat(tinyOrm.searchStarredSchemas("starred_schema_id = ?", 1)).hasSize(1);
-    assertThat(tinyOrm.searchStarredSchemas("starred_schema_id = ?", 2)).hasSize(1);
-  }
-
-  @Test
-  public void testSearchBySQL() {
+  void testSearchBySQL() {
     tinyOrm.insert(Query.class, value("datasource", "test_a"));
     tinyOrm.insert(Query.class, value("datasource", "test_b"));
 
@@ -246,7 +193,7 @@ public class TinyOrmTest {
   }
 
   @Test
-  public void testSearchBySQLWithParams() {
+  void testSearchBySQLWithParams() {
     tinyOrm.insert(Query.class, value("datasource", "test_a"));
     tinyOrm.insert(Query.class, value("datasource", "test_b"));
 
@@ -257,7 +204,7 @@ public class TinyOrmTest {
   }
 
   @Test
-  public void testUpdateBySQL() {
+  void testUpdateBySQL() {
     assertThat(tinyOrm.singleQuery("1 = 1")).isEmpty();
 
     tinyOrm.insert(Query.class, value("datasource", "test_a"), value("user",  "alice"));
@@ -269,7 +216,7 @@ public class TinyOrmTest {
   }
 
   @Test
-  public void testQueryForLong() {
+  void testQueryForLong() {
     assertEquals(OptionalLong.of(0L), tinyOrm.queryForLong("SELECT count(*) FROM query"));
 
     tinyOrm.insert(Query.class, value("datasource", "test_a"));
@@ -277,7 +224,7 @@ public class TinyOrmTest {
   }
 
   @Test
-  public void testCount() {
+  void testCount() {
     assertEquals(0, tinyOrm.countQuery("1 = 1"));
 
     tinyOrm.insert(Query.class, value("datasource", "test_a"));
