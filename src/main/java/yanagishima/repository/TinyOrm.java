@@ -26,7 +26,6 @@ import yanagishima.model.db.Label;
 import yanagishima.model.db.Publish;
 import yanagishima.model.db.Query;
 import yanagishima.model.db.SessionProperty;
-import yanagishima.model.db.StarredSchema;
 
 public class TinyOrm {
   private final HikariDataSource dataSource;
@@ -85,12 +84,6 @@ public class TinyOrm {
     }
   }
 
-  public void deleteStarredSchema(String query, Object... params) {
-    try (TinyORM tinyOrm = getTinyOrm()) {
-      tinyOrm.single(StarredSchema.class).where(query, params).execute().ifPresent(tinyOrm::delete);
-    }
-  }
-
   public List<Comment> searchComments(String orderBy, String query, Object... params) {
     try (TinyORM tinyOrm = getTinyOrm()) {
       return tinyOrm.search(Comment.class).where(query, params).orderBy(orderBy).execute();
@@ -100,12 +93,6 @@ public class TinyOrm {
   public List<SessionProperty> searchSessionProperties(String query, Object... params) {
     try (TinyORM tinyOrm = getTinyOrm()) {
       return tinyOrm.search(SessionProperty.class).where(query, params).execute();
-    }
-  }
-
-  public List<StarredSchema> searchStarredSchemas(String query, Object... params) {
-    try (TinyORM tinyOrm = getTinyOrm()) {
-      return tinyOrm.search(StarredSchema.class).where(query, params).execute();
     }
   }
 

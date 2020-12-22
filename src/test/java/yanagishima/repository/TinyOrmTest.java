@@ -25,7 +25,6 @@ import yanagishima.model.db.Label;
 import yanagishima.model.db.Publish;
 import yanagishima.model.db.Query;
 import yanagishima.model.db.SessionProperty;
-import yanagishima.model.db.StarredSchema;
 
 class TinyOrmTest {
   private static TinyOrm tinyOrm;
@@ -139,36 +138,6 @@ class TinyOrmTest {
   }
 
   @Test
-  void testDeleteStarredSchema() {
-    assertEquals(OptionalLong.of(0L), tinyOrm.queryForLong("SELECT count(*) FROM starred_schema"));
-
-    assertEquals(1, tinyOrm.insert(StarredSchema.class,
-                                   value("starred_schema_id", 1),
-                                   value("datasource", "test_datasource"),
-                                   value("engine", "test_engine"),
-                                   value("catalog", "test_catalog"),
-                                   value("schema", "test_schema")
-                                   ));
-    assertEquals(1, tinyOrm.insert(StarredSchema.class,
-                                   value("starred_schema_id", 2),
-                                   value("datasource", "test_datasource"),
-                                   value("engine", "test_engine"),
-                                   value("catalog", "test_catalog"),
-                                   value("schema", "test_schema")
-                                   ));
-
-    assertEquals(OptionalLong.of(2L), tinyOrm.queryForLong("SELECT count(*) FROM starred_schema"));
-
-    tinyOrm.deleteStarredSchema("starred_schema_id = ?", 1);
-    assertEquals(OptionalLong.of(1L), tinyOrm.queryForLong("SELECT count(*) FROM starred_schema"));
-    assertEquals(OptionalLong.of(1L), tinyOrm.queryForLong("SELECT count(*) FROM starred_schema "
-                                                           + "WHERE starred_schema_id = 2"));
-
-    tinyOrm.deleteStarredSchema("starred_schema_id = ?", 2);
-    assertEquals(OptionalLong.of(0L), tinyOrm.queryForLong("SELECT count(*) FROM starred_schema"));
-  }
-
-  @Test
   void testSearchComments() {
     String orderBy = "update_time_string DESC";
     assertThat(tinyOrm.searchComments(orderBy, "datasource = ?", 1)).isEmpty();
@@ -211,28 +180,6 @@ class TinyOrmTest {
     assertThat(tinyOrm.searchSessionProperties("1 = 1")).hasSize(2);
     assertThat(tinyOrm.searchSessionProperties("session_property_id = ?", 1)).hasSize(1);
     assertThat(tinyOrm.searchSessionProperties("session_property_id = ?", 2)).hasSize(1);
-  }
-
-  @Test
-  void testSearchStarredSchemas() {
-    assertThat(tinyOrm.searchStarredSchemas("starred_schema_id = ?", 1)).isEmpty();
-
-    assertEquals(1, tinyOrm.insert(StarredSchema.class,
-                                   value("starred_schema_id", 1),
-                                   value("datasource", "test_datasource"),
-                                   value("engine", "test_engine"),
-                                   value("catalog", "test_catalog"),
-                                   value("schema", "test_schema")));
-    assertEquals(1, tinyOrm.insert(StarredSchema.class,
-                                   value("starred_schema_id", 2),
-                                   value("datasource", "test_datasource"),
-                                   value("engine", "test_engine"),
-                                   value("catalog", "test_catalog"),
-                                   value("schema", "test_schema")));
-
-    assertThat(tinyOrm.searchStarredSchemas("1 = 1")).hasSize(2);
-    assertThat(tinyOrm.searchStarredSchemas("starred_schema_id = ?", 1)).hasSize(1);
-    assertThat(tinyOrm.searchStarredSchemas("starred_schema_id = ?", 2)).hasSize(1);
   }
 
   @Test

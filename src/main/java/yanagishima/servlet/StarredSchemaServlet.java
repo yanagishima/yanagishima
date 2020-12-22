@@ -1,7 +1,5 @@
 package yanagishima.servlet;
 
-import static com.google.common.base.Preconditions.checkState;
-import static yanagishima.repository.TinyOrm.value;
 import static yanagishima.util.AccessControlUtil.sendForbiddenError;
 import static yanagishima.util.AccessControlUtil.validateDatasource;
 
@@ -22,14 +20,14 @@ import yanagishima.config.YanagishimaConfig;
 import yanagishima.model.db.StarredSchema;
 import yanagishima.model.dto.StarredSchemaCreateDto;
 import yanagishima.model.dto.StarredSchemaDto;
-import yanagishima.repository.TinyOrm;
+import yanagishima.service.StarredSchemaService;
 
 @Slf4j
 @RestController
 @RequiredArgsConstructor
 public class StarredSchemaServlet {
+    private final StarredSchemaService starredSchemaService;
     private final YanagishimaConfig config;
-    private final TinyOrm db;
 
     @PostMapping("starredSchema")
     public StarredSchemaCreateDto post(@RequestParam String datasource, @RequestParam String engine,
@@ -42,22 +40,8 @@ public class StarredSchemaServlet {
                 return starredSchemaCreateDto;
             }
             String userName = request.getHeader(config.getAuditHttpHeaderName());
-            db.insert(StarredSchema.class, value("datasource", datasource), value("engine", engine), value("catalog", catalog), value("schema", schema), value("user", userName));
-            List<StarredSchema> starredSchemas;
-            switch (config.getDatabaseType()) {
-                case MYSQL:
-                    starredSchemas = db.searchBySQL(StarredSchema.class, "SELECT starred_schema_id, datasource, engine, catalog, `schema` FROM starred_schema "
-                            + "WHERE starred_schema_id = last_insert_id()");
-                    break;
-                case SQLITE:
-                    starredSchemas = db.searchBySQL(StarredSchema.class, "SELECT starred_schema_id, datasource, engine, catalog, schema FROM starred_schema "
-                            + "WHERE rowid = last_insert_rowid()");
-                    break;
-                default:
-                    throw new IllegalArgumentException("Illegal database type: " + config.getDatabaseType());
-            }
-            checkState(starredSchemas.size() == 1, "Too many starred schemas: " + starredSchemas);
-            starredSchemaCreateDto.setStarredSchemaId(starredSchemas.get(0).getStarredSchemaId());
+            StarredSchema starredSchema = starredSchemaService.insert(datasource, engine, catalog, schema, userName);
+            starredSchemaCreateDto.setStarredSchemaId(starredSchema.getStarredSchemaId());
         } catch (Throwable e) {
             log.error(e.getMessage(), e);
             starredSchemaCreateDto.setError(e.getMessage());
@@ -69,7 +53,7 @@ public class StarredSchemaServlet {
     public StarredSchemaDto delete(@RequestParam String datasource,
                                    @RequestParam String engine,
                                    @RequestParam String catalog,
-                                   @RequestParam(name = "starred_schema_id") String starredSchemaId,
+                                   @RequestParam(name = "starred_schema_id") int starredSchemaId,
                                    HttpServletRequest request, HttpServletResponse response) {
         StarredSchemaDto starredSchemaDto = new StarredSchemaDto();
         try {
@@ -78,10 +62,10 @@ public class StarredSchemaServlet {
                 return starredSchemaDto;
             }
 
-            db.deleteStarredSchema("starred_schema_id=?", starredSchemaId);
+            starredSchemaService.delete(starredSchemaId);
 
             String userName = request.getHeader(config.getAuditHttpHeaderName());
-            List<StarredSchema> starredSchemas = db.searchStarredSchemas("datasource = ? AND engine = ? AND catalog = ? AND user = ?", datasource, engine, catalog, userName);
+            List<StarredSchema> starredSchemas = starredSchemaService.getAll(datasource, engine, catalog, userName);
             starredSchemaDto.setStarredSchemaList(starredSchemas);
         } catch (Throwable e) {
             log.error(e.getMessage(), e);
@@ -103,7 +87,7 @@ public class StarredSchemaServlet {
             }
 
             String userName = request.getHeader(config.getAuditHttpHeaderName());
-            List<StarredSchema> starredSchemas = db.searchStarredSchemas("datasource = ? AND engine = ? AND catalog = ? AND user = ?", datasource, engine, catalog, userName);
+            List<StarredSchema> starredSchemas = starredSchemaService.getAll(datasource, engine, catalog, userName);
             starredSchemaDto.setStarredSchemaList(starredSchemas);
         } catch (Throwable e) {
             log.error(e.getMessage(), e);
