@@ -30,7 +30,7 @@ public class StarredSchema {
     @Column(name = "catalog")
     private String catalog;
 
-    @Column(name = "schema")
+    @Column(name = "`schema`")
     private String schema;
 
     @Column(name = "user")
