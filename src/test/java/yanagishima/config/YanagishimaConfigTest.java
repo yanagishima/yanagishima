@@ -1,17 +1,17 @@
 package yanagishima.config;
 
-import org.junit.Test;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.List;
 import java.util.Properties;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import org.junit.jupiter.api.Test;
 
-public class YanagishimaConfigTest {
+class YanagishimaConfigTest {
     @Test
-    public void testDefaultConfig() {
+    void testDefaultConfig() {
         YanagishimaConfig config = new YanagishimaConfig(new Properties());
         assertEquals(List.of(), config.getInvisibleSchemas("datasource", "catalog"));
         assertEquals(List.of(), config.getInvisibleDatabases("datasource"));
@@ -28,7 +28,7 @@ public class YanagishimaConfigTest {
     }
 
     @Test
-    public void testExplicitPropertyMappings() {
+    void testExplicitPropertyMappings() {
         Properties properties = new Properties();
         properties.setProperty("invisible.schema.datasource.catalog", "_hidden_schema1, _hidden_schema2");
         properties.setProperty("invisible.database.datasource", "_hidden_database1, _hidden_database2");

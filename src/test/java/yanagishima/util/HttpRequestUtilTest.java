@@ -1,21 +1,22 @@
 package yanagishima.util;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import javax.servlet.http.HttpServletRequest;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static yanagishima.util.HttpRequestUtil.getOrDefaultParameter;
 import static yanagishima.util.HttpRequestUtil.getRequiredHeader;
 import static yanagishima.util.HttpRequestUtil.getRequiredParameter;
 
-public class HttpRequestUtilTest {
+class HttpRequestUtilTest {
     @Test
-    public void testGetOrDefaultParameter() {
+    void testGetOrDefaultParameter() {
         HttpServletRequest request = mock(HttpServletRequest.class);
         when(request.getParameter("key1")).thenReturn("false");
         assertFalse(getOrDefaultParameter(request, "key1", true));
@@ -23,30 +24,32 @@ public class HttpRequestUtilTest {
     }
 
     @Test
-    public void testGetRequiredParameter() {
+    void testGetRequiredParameter() {
         HttpServletRequest request = mock(HttpServletRequest.class);
         when(request.getParameter("key1")).thenReturn("value1");
         assertEquals("value1", getRequiredParameter(request, "key1"));
     }
 
-    @Test(expected = IllegalArgumentException.class)
-    public void testGetRequiredParameterNotExist() {
+    @Test
+    void testGetRequiredParameterNotExist() {
         HttpServletRequest request = mock(HttpServletRequest.class);
         when(request.getParameter("key1")).thenReturn("value1");
-        getRequiredParameter(request, "unknown");
+        assertThatThrownBy(() -> getRequiredParameter(request, "unknown"))
+            .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
-    public void testGetRequiredHeader() {
+    void testGetRequiredHeader() {
         HttpServletRequest request = mock(HttpServletRequest.class);
         when(request.getHeader("key1")).thenReturn("value1");
         assertEquals("value1", getRequiredHeader(request, "key1"));
     }
 
-    @Test(expected = IllegalArgumentException.class)
-    public void testGetRequiredHeaderNotExist() {
+    @Test
+    void testGetRequiredHeaderNotExist() {
         HttpServletRequest request = mock(HttpServletRequest.class);
         when(request.getHeader("key1")).thenReturn("value1");
-        getRequiredParameter(request, "unknown");
+        assertThatThrownBy(() -> getRequiredParameter(request, "unknown"))
+            .isInstanceOf(IllegalArgumentException.class);
     }
 }
