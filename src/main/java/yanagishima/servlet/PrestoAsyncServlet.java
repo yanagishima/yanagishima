@@ -3,76 +3,64 @@ package yanagishima.servlet;
 import static java.lang.String.format;
 import static yanagishima.util.AccessControlUtil.sendForbiddenError;
 import static yanagishima.util.AccessControlUtil.validateDatasource;
-import static yanagishima.util.HttpRequestUtil.getRequiredParameter;
-import static yanagishima.util.JsonUtil.writeJSON;
 
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
-import javax.inject.Inject;
-import javax.inject.Singleton;
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
 import io.prestosql.client.ClientException;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import yanagishima.config.YanagishimaConfig;
 import yanagishima.service.OldPrestoService;
 import yanagishima.service.PrestoService;
 
 @Slf4j
-@Singleton
-public class PrestoAsyncServlet extends HttpServlet {
-    private static final long serialVersionUID = 1L;
-
+@RestController
+@RequiredArgsConstructor
+public class PrestoAsyncServlet {
     private final PrestoService prestoService;
     private final OldPrestoService oldPrestoService;
     private final YanagishimaConfig config;
 
-    @Inject
-    public PrestoAsyncServlet(PrestoService prestoService, OldPrestoService oldPrestoService, YanagishimaConfig config) {
-        this.prestoService = prestoService;
-        this.oldPrestoService = oldPrestoService;
-        this.config = config;
-    }
-
-    @Override
-    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+    @PostMapping("prestoAsync")
+    public Map<String, Object> post(@RequestParam String datasource,
+                                    @RequestParam(required = false) String query,
+                                    @RequestParam(name = "user") Optional<String> prestoUser,
+                                    @RequestParam(name = "password") Optional<String> prestoPassword,
+                                    @RequestParam(name = "session_property") Optional<String> sessionProperty,
+                                    HttpServletRequest request, HttpServletResponse response) {
         Map<String, Object> responseBody = new HashMap<>();
-        String query = request.getParameter("query");
         if (query == null) {
-            writeJSON(response, responseBody);
-            return;
+            return responseBody;
         }
 
         try {
             String user = getUsername(request);
-            Optional<String> prestoUser = Optional.ofNullable(request.getParameter("user"));
-            Optional<String> prestoPassword = Optional.ofNullable(request.getParameter("password"));
             if (config.isUserRequired() && user == null) {
                 sendForbiddenError(response);
-                return;
+                return responseBody;
             }
-            String datasource = getRequiredParameter(request, "datasource");
             if (config.isCheckDatasource() && !validateDatasource(request, datasource)) {
                 sendForbiddenError(response);
-                return;
+                return responseBody;
             }
             if (user != null) {
                 log.info(format("%s executed %s in %s", user, query, datasource));
             }
             if (prestoUser.isPresent() && prestoPassword.isPresent() && prestoUser.get().isEmpty()) {
                 responseBody.put("error", "user is empty");
-                writeJSON(response, responseBody);
-                return;
+                return responseBody;
             }
             try {
-                Optional<String> sessionPropertyOptional = Optional.ofNullable(request.getParameter("session_property"));
-                String queryId = executeQuery(datasource, query, sessionPropertyOptional, user, prestoUser, prestoPassword);
+                String queryId = executeQuery(datasource, query, sessionProperty, user, prestoUser, prestoPassword);
                 responseBody.put("queryid", queryId);
             } catch (ClientException e) {
                 if (prestoUser.isPresent()) {
@@ -88,7 +76,7 @@ public class PrestoAsyncServlet extends HttpServlet {
             log.error(e.getMessage(), e);
             responseBody.put("error", e.getMessage());
         }
-        writeJSON(response, responseBody);
+        return responseBody;
     }
 
     private String executeQuery(String datasource, String query, Optional<String> sessionPropertyOptional, String user, Optional<String> prestoUser, Optional<String> prestoPassword) {
