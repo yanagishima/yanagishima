@@ -5,6 +5,7 @@ import com.google.common.base.Splitter;
 import io.prestosql.sql.parser.ParsingException;
 import io.prestosql.sql.parser.ParsingOptions;
 import io.prestosql.sql.parser.SqlParser;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
@@ -15,13 +16,8 @@ import yanagishima.model.presto.PrestoQueryResult;
 import yanagishima.service.PrestoService;
 
 import javax.annotation.Nullable;
-import javax.inject.Inject;
-import javax.inject.Singleton;
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -32,38 +28,35 @@ import static java.lang.String.format;
 import static yanagishima.util.AccessControlUtil.sendForbiddenError;
 import static yanagishima.util.AccessControlUtil.validateDatasource;
 import static yanagishima.util.Constants.YANAGISHIMA_COMMENT;
-import static yanagishima.util.HttpRequestUtil.getRequiredParameter;
-import static yanagishima.util.JsonUtil.writeJSON;
+
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 @Slf4j
-@Singleton
-public class CheckPrestoQueryServlet extends HttpServlet {
-    private static final long serialVersionUID = 1L;
+@RestController
+@RequiredArgsConstructor
+public class CheckPrestoQueryServlet {
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
     private final PrestoService prestoService;
     private final YanagishimaConfig config;
     private final OkHttpClient httpClient = new OkHttpClient();
 
-    @Inject
-    public CheckPrestoQueryServlet(PrestoService prestoService, YanagishimaConfig config) {
-        this.prestoService = prestoService;
-        this.config = config;
-    }
-
-    @Override
-    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+    @PostMapping("checkPrestoQuery")
+    public Map<String, Object> post(@RequestParam String datasource,
+                                    @RequestParam(required = false) String query,
+                                    @RequestParam(name = "user", required = false) Optional<String> prestoUser,
+                                    @RequestParam(name = "password", required = false) Optional<String> prestoPassword,
+                                    HttpServletRequest request, HttpServletResponse response) {
         Map<String, Object> responseBody = new HashMap<>();
-        String query = request.getParameter("query");
         if (query == null) {
-            writeJSON(response, responseBody);
-            return;
+            return responseBody;
         }
 
-        String datasource = getRequiredParameter(request, "datasource");
         if (config.isCheckDatasource() && !validateDatasource(request, datasource)) {
             sendForbiddenError(response);
-            return;
+            return responseBody;
         }
 
         try {
@@ -72,18 +65,15 @@ public class CheckPrestoQueryServlet extends HttpServlet {
             responseBody.put("error", e.getMessage());
             responseBody.put("errorLineNumber", e.getLineNumber());
             responseBody.put("errorColumnNumber", e.getColumnNumber());
-            writeJSON(response, responseBody);
-            return;
+            return responseBody;
         } catch (Throwable e) {
             log.error(e.getMessage(), e);
             responseBody.put("error", e.getMessage());
-            return;
+            return responseBody;
         }
 
         try {
             String user = getUsername(request);
-            Optional<String> prestoUser = Optional.ofNullable(request.getParameter("user"));
-            Optional<String> prestoPassword = Optional.ofNullable(request.getParameter("password"));
             String explainQuery = format("%sEXPLAIN ANALYZE\n%s", YANAGISHIMA_COMMENT, query);
             String queryId = null;
             try {
@@ -135,7 +125,7 @@ public class CheckPrestoQueryServlet extends HttpServlet {
             log.error(e.getMessage(), e);
             responseBody.put("error", e.getMessage());
         }
-        writeJSON(response, responseBody);
+        return responseBody;
     }
 
     private OkHttpClient buildClient(HttpServletRequest request) {

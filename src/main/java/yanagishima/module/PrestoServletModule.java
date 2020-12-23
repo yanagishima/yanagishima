@@ -19,7 +19,6 @@ public class PrestoServletModule extends ServletModule {
 		bind(PrestoPartitionServlet.class);
 		bind(CommentServlet.class);
 		bind(LabelServlet.class);
-		bind(CheckPrestoQueryServlet.class);
 
 		serve("/presto").with(PrestoServlet.class);
 		serve("/query").with(QueryServlet.class);
@@ -34,6 +33,5 @@ public class PrestoServletModule extends ServletModule {
 		serve("/prestoPartition").with(PrestoPartitionServlet.class);
 		serve("/comment").with(CommentServlet.class);
 		serve("/label").with(LabelServlet.class);
-		serve("/checkPrestoQuery").with(CheckPrestoQueryServlet.class);
 	}
 }
