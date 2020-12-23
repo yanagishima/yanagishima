@@ -3,46 +3,41 @@ package yanagishima.servlet;
 import static java.lang.String.format;
 import static yanagishima.util.AccessControlUtil.sendForbiddenError;
 import static yanagishima.util.AccessControlUtil.validateDatasource;
-import static yanagishima.util.HttpRequestUtil.getRequiredParameter;
-import static yanagishima.util.JsonUtil.writeJSON;
 
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
 import javax.annotation.Nullable;
-import javax.inject.Inject;
-import javax.inject.Singleton;
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import yanagishima.config.YanagishimaConfig;
 import yanagishima.service.HiveService;
 
 @Slf4j
-@Singleton
-public class HiveAsyncServlet extends HttpServlet {
-    private static final long serialVersionUID = 1L;
-
+@RestController
+@RequiredArgsConstructor
+public class HiveAsyncServlet {
     private final YanagishimaConfig config;
     private final HiveService hiveService;
 
-    @Inject
-    public HiveAsyncServlet(YanagishimaConfig config, HiveService hiveService) {
-        this.config = config;
-        this.hiveService = hiveService;
-    }
-
-    @Override
-    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        String query = request.getParameter("query");
+    @PostMapping(path = {"hiveAsync", "sparkAsync"})
+    public Map<String, Object> post(@RequestParam String datasource,
+                                    @RequestParam String engine,
+                                    @RequestParam(name = "user", required = false) Optional<String> hiveUser,
+                                    @RequestParam(name = "password", required = false) Optional<String> hivePassword,
+                                    @RequestParam(required = false) String query,
+                                    HttpServletRequest request,
+                                    HttpServletResponse response) {
         if (query == null) {
-            writeJSON(response, Map.of());
-            return;
+            return Map.of();
         }
 
         Map<String, Object> responseBody = new HashMap<>();
@@ -50,28 +45,24 @@ public class HiveAsyncServlet extends HttpServlet {
             String userName = getUsername(request);
             if (config.isUserRequired() && userName == null) {
                 sendForbiddenError(response);
-                return;
+                return responseBody;
             }
 
-            String datasource = getRequiredParameter(request, "datasource");
             if (config.isCheckDatasource() && !validateDatasource(request, datasource)) {
                 sendForbiddenError(response);
-                return;
+                return responseBody;
             }
-            String engine = getRequiredParameter(request, "engine");
             if (userName != null) {
                 log.info(format("%s executed %s in datasource=%s, engine=%s", userName, query, datasource, engine));
             }
 
-            Optional<String> hiveUser = Optional.ofNullable(request.getParameter("user"));
-            Optional<String> hivePassword = Optional.ofNullable(request.getParameter("password"));
             String queryId = hiveService.doQueryAsync(engine, datasource, query, userName, hiveUser, hivePassword);
             responseBody.put("queryid", queryId);
         } catch (Throwable e) {
             log.error(e.getMessage(), e);
             responseBody.put("error", e.getMessage());
         }
-        writeJSON(response, responseBody);
+        return responseBody;
     }
 
     @Nullable

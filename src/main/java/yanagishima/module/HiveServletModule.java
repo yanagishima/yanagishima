@@ -6,8 +6,6 @@ import yanagishima.servlet.*;
 public class HiveServletModule extends ServletModule {
 	@Override
 	protected void configureServlets() {
-		bind(HiveServlet.class);
-		bind(HiveAsyncServlet.class);
 		bind(YarnJobListServlet.class);
 		bind(SparkJobListServlet.class);
 		bind(KillHiveServlet.class);
@@ -15,10 +13,6 @@ public class HiveServletModule extends ServletModule {
 		bind(HiveQueryDetailServlet.class);
 		bind(HivePartitionServlet.class);
 
-		serve("/hive").with(HiveServlet.class);
-		serve("/spark").with(HiveServlet.class);
-		serve("/hiveAsync").with(HiveAsyncServlet.class);
-		serve("/sparkAsync").with(HiveAsyncServlet.class);
 		serve("/yarnJobList").with(YarnJobListServlet.class);
 		serve("/sparkJobList").with(SparkJobListServlet.class);
 		serve("/killHive").with(KillHiveServlet.class);
