@@ -3,17 +3,20 @@ package yanagishima.service;
 import com.github.wyukawa.elasticsearch.unofficial.jdbc.driver.ElasticsearchTranslateClient;
 import io.airlift.units.DataSize;
 import io.airlift.units.Duration;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
 import org.komamitsu.fluency.Fluency;
+import org.springframework.stereotype.Service;
+
 import yanagishima.config.YanagishimaConfig;
 import yanagishima.exception.ElasticsearchQueryErrorException;
 import yanagishima.repository.TinyOrm;
 import yanagishima.model.elasticsearch.ElasticsearchQueryResult;
 import yanagishima.util.QueryIdUtil;
 
-import javax.inject.Inject;
+import javax.annotation.PostConstruct;
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -36,27 +39,25 @@ import static yanagishima.util.QueryEngine.elasticsearch;
 import static yanagishima.util.TypeCoerceUtil.objectToString;
 
 @Slf4j
-public class ElasticsearchServiceImpl implements ElasticsearchService {
+@Service
+@RequiredArgsConstructor
+public class ElasticsearchServiceImpl {
     private static final CSVFormat CSV_FORMAT = CSVFormat.EXCEL.withDelimiter('\t').withNullString("\\N").withRecordSeparator(System.getProperty("line.separator"));
 
     private final YanagishimaConfig config;
     private final TinyOrm db;
-    private final Fluency fluency;
+    private Fluency fluency;
 
-    @Inject
-    public ElasticsearchServiceImpl(YanagishimaConfig config, TinyOrm db) {
-        this.config = config;
-        this.db = db;
+    @PostConstruct
+    public void postConstruct() {
         this.fluency = buildStaticFluency(config);
     }
 
-    @Override
     public ElasticsearchQueryResult doQuery(String datasource, String query, String userName, boolean storeFlag, int limit) throws ElasticsearchQueryErrorException {
         String queryId = QueryIdUtil.generate(datasource, query, elasticsearch.name());
         return getElasticsearchQueryResult(queryId, datasource, query, storeFlag, limit, userName);
     }
 
-    @Override
     public ElasticsearchQueryResult doTranslate(String datasource, String query, String userName, boolean storeFlag, int limit) throws ElasticsearchQueryErrorException {
         String queryId = QueryIdUtil.generate(datasource, query, elasticsearch.name());
         String jdbcUrl = config.getElasticsearchJdbcUrl(datasource);

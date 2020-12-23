@@ -30,14 +30,14 @@ import yanagishima.exception.ElasticsearchQueryErrorException;
 import yanagishima.model.db.Query;
 import yanagishima.model.elasticsearch.ElasticsearchQueryResult;
 import yanagishima.repository.TinyOrm;
-import yanagishima.service.ElasticsearchService;
+import yanagishima.service.ElasticsearchServiceImpl;
 
 @Slf4j
 @Api(tags = "elasticsearch")
 @RestController
 @RequiredArgsConstructor
 public class ElasticsearchServlet {
-    private final ElasticsearchService elasticsearchService;
+    private final ElasticsearchServiceImpl elasticsearchServiceImpl;
     private final YanagishimaConfig config;
     private final TinyOrm db;
 
@@ -97,12 +97,12 @@ public class ElasticsearchServlet {
         int limit = query.startsWith(YANAGISHIMA_COMMENT) ? Integer.MAX_VALUE : config.getSelectLimit();
 
         if (request.getParameter("translate") != null) {
-            return elasticsearchService.doTranslate(datasource, query, userName, true, limit);
+            return elasticsearchServiceImpl.doTranslate(datasource, query, userName, true, limit);
         }
         if (query.startsWith(YANAGISHIMA_COMMENT)) {
-            return elasticsearchService.doQuery(datasource, query, userName, false, limit);
+            return elasticsearchServiceImpl.doQuery(datasource, query, userName, false, limit);
         }
-        return elasticsearchService.doQuery(datasource, query, userName, true, limit);
+        return elasticsearchServiceImpl.doQuery(datasource, query, userName, true, limit);
     }
 
     private static long toElapsedTimeMillis(String queryId, Query query) {
