@@ -7,7 +7,6 @@ public class PrestoServletModule extends ServletModule {
 	@Override
 	protected void configureServlets() {
 		bind(PrestoServlet.class);
-		bind(QueryServlet.class);
 		bind(PrestoKillServlet.class);
 		bind(FormatSqlServlet.class);
 		bind(HistoryStatusServlet.class);
@@ -20,7 +19,6 @@ public class PrestoServletModule extends ServletModule {
 		bind(LabelServlet.class);
 
 		serve("/presto").with(PrestoServlet.class);
-		serve("/query").with(QueryServlet.class);
 		serve("/kill").with(PrestoKillServlet.class);
 		serve("/format").with(FormatSqlServlet.class);
 		serve("/historyStatus").with(HistoryStatusServlet.class);
