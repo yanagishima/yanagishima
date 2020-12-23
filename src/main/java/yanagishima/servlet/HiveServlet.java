@@ -35,10 +35,10 @@ public class HiveServlet {
                                     @RequestParam String engine,
                                     @RequestParam(name = "user", required = false) Optional<String> hiveUser,
                                     @RequestParam(name = "password", required = false) Optional<String> hivePassword,
+                                    @RequestParam(defaultValue = "false") String query,
                                     @RequestParam(defaultValue = "false") boolean store,
                                     HttpServletRequest request, HttpServletResponse response) {
         Map<String, Object> responseBody = new HashMap<>();
-        String query = request.getParameter("query");
         if (query == null) {
             return responseBody;
         }
