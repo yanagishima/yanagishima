@@ -23,7 +23,6 @@ import me.geso.tinyorm.TinyORM;
 import yanagishima.config.YanagishimaConfig;
 import yanagishima.model.db.Comment;
 import yanagishima.model.db.Label;
-import yanagishima.model.db.Publish;
 import yanagishima.model.db.Query;
 import yanagishima.model.db.SessionProperty;
 
@@ -75,12 +74,6 @@ public class TinyOrm {
   public Optional<Label> singleLabel(String query, Object... params) {
     try (TinyORM tinyOrm = getTinyOrm()) {
       return tinyOrm.single(Label.class).where(query, params).execute();
-    }
-  }
-
-  public Optional<Publish> singlePublish(String query, Object... params) {
-    try (TinyORM tinyOrm = getTinyOrm()) {
-      return tinyOrm.single(Publish.class).where(query, params).execute();
     }
   }
 

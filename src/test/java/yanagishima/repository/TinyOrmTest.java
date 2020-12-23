@@ -22,7 +22,6 @@ import yanagishima.config.YanagishimaConfig;
 import yanagishima.config.YanagishimaConfig.DatabaseType;
 import yanagishima.model.db.Comment;
 import yanagishima.model.db.Label;
-import yanagishima.model.db.Publish;
 import yanagishima.model.db.Query;
 import yanagishima.model.db.SessionProperty;
 
@@ -127,14 +126,6 @@ class TinyOrmTest {
 
     assertEquals(1, tinyOrm.insert(Label.class, value("datasource", "1")));
     assertThat(tinyOrm.singleLabel("datasource = ?", 1)).isPresent();
-  }
-
-  @Test
-  void testSinglePublish() {
-    assertThat(tinyOrm.singlePublish("publish_id = ?", 1)).isEmpty();
-
-    assertEquals(1, tinyOrm.insert(Publish.class, value("publish_id", "1")));
-    assertThat(tinyOrm.singlePublish("publish_id = ?", 1)).isPresent();
   }
 
   @Test

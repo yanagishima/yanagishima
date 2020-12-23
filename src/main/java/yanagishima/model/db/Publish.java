@@ -1,31 +1,30 @@
 package yanagishima.model.db;
 
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.Id;
+import javax.persistence.Table;
+
 import lombok.Data;
-import lombok.EqualsAndHashCode;
-import me.geso.tinyorm.Row;
-import me.geso.tinyorm.annotations.Column;
-import me.geso.tinyorm.annotations.PrimaryKey;
-import me.geso.tinyorm.annotations.Table;
 
-@Table("publish")
 @Data
-@EqualsAndHashCode(callSuper = false)
-public class Publish extends Row<Publish> {
-
-    @PrimaryKey
-    @Column("publish_id")
+@Entity
+@Table(name = "publish")
+public class Publish {
+    @Id
+    @Column(name = "publish_id")
     private String publishId;
 
-    @Column("datasource")
+    @Column(name = "datasource")
     private String datasource;
 
-    @Column("engine")
+    @Column(name = "engine")
     private String engine;
 
-    @Column("query_id")
+    @Column(name = "query_id")
     private String queryId;
 
-    @Column("user")
+    @Column(name = "user")
     private String user;
 
 }

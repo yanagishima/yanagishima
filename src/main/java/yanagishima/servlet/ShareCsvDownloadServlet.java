@@ -10,13 +10,13 @@ import org.springframework.web.bind.annotation.RestController;
 
 import io.swagger.annotations.Api;
 import lombok.RequiredArgsConstructor;
-import yanagishima.repository.TinyOrm;
+import yanagishima.service.PublishService;
 
 @Api(tags = "download")
 @RestController
 @RequiredArgsConstructor
 public class ShareCsvDownloadServlet {
-  private final TinyOrm db;
+  private final PublishService publishService;
 
   @GetMapping("share/csvdownload")
   public void get(@RequestParam(name = "publish_id", required = false) String publishId,
@@ -28,7 +28,7 @@ public class ShareCsvDownloadServlet {
       return;
     }
 
-    db.singlePublish("publish_id=?", publishId).ifPresent(publish -> {
+    publishService.get(publishId).ifPresent(publish -> {
       String fileName = publishId + ".csv";
       downloadCsv(response, fileName, publish.getDatasource(), publish.getQueryId(), encode, header, bom);
     });
