@@ -7,25 +7,24 @@ import static java.util.Collections.nCopies;
 import static javax.servlet.http.HttpServletResponse.SC_OK;
 import static yanagishima.util.AccessControlUtil.sendForbiddenError;
 import static yanagishima.util.AccessControlUtil.validateDatasource;
-import static yanagishima.util.HttpRequestUtil.getRequiredParameter;
 
 import java.io.IOException;
-import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-import javax.inject.Inject;
-import javax.inject.Singleton;
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import lombok.RequiredArgsConstructor;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
@@ -33,9 +32,9 @@ import yanagishima.config.YanagishimaConfig;
 import yanagishima.repository.TinyOrm;
 import yanagishima.model.db.Query;
 
-@Singleton
-public class QueryServlet extends HttpServlet {
-    private static final long serialVersionUID = 1L;
+@RestController
+@RequiredArgsConstructor
+public class QueryServlet {
     private static final int LIMIT = 100;
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
@@ -44,34 +43,24 @@ public class QueryServlet extends HttpServlet {
 
     private final OkHttpClient httpClient = new OkHttpClient();
 
-    @Inject
-    public QueryServlet(YanagishimaConfig config, TinyOrm db) {
-        this.config = config;
-        this.db = db;
-    }
-
-    @Override
-    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        response.setContentType("application/json");
-        PrintWriter writer = response.getWriter();
-        String datasource = getRequiredParameter(request, "datasource");
+    @PostMapping("query")
+    public Object post(@RequestParam String datasource,
+                       @RequestParam Optional<String> user,
+                       @RequestParam Optional<String> password,
+                       HttpServletRequest request, HttpServletResponse response) throws IOException {
         if (config.isCheckDatasource() && !validateDatasource(request, datasource)) {
             sendForbiddenError(response);
-            return;
+            return Map.of();
         }
         String coordinatorServer = config.getPrestoCoordinatorServerOrNull(datasource);
         if (coordinatorServer == null) {
-            writer.println("[]");
-            return;
+            return List.of();
         }
 
-        Optional<String> user = Optional.ofNullable(request.getParameter("user"));
-        Optional<String> password = Optional.ofNullable(request.getParameter("password"));
         OkHttpClient client = httpClient;
         if (user.isPresent() && password.isPresent()) {
             if (user.get().isEmpty()) {
-                writer.println(OBJECT_MAPPER.writeValueAsString(Map.of("error", "user is empty")));
-                return;
+                return Map.of("error", "user is empty");
             }
             OkHttpClient.Builder clientBuilder = httpClient.newBuilder();
             clientBuilder.addInterceptor(basicAuth(user.get(), password.get()));
@@ -90,8 +79,7 @@ public class QueryServlet extends HttpServlet {
             originalJson = prestoResponse.body().string();
             int code = prestoResponse.code();
             if (code != SC_OK) {
-                writer.println(OBJECT_MAPPER.writeValueAsString(Map.of("code", code, "error", prestoResponse.message())));
-                return;
+                return Map.of("code", code, "error", prestoResponse.message());
             }
         }
 
@@ -123,7 +111,6 @@ public class QueryServlet extends HttpServlet {
             String queryId = (String) query.get("queryId");
             query.put("existdb", existDbQueryIds.contains(queryId));
         }
-        String json = OBJECT_MAPPER.writeValueAsString(limitedList);
-        writer.println(json);
+        return limitedList;
     }
 }
