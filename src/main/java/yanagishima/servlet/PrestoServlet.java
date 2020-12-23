@@ -2,6 +2,7 @@ package yanagishima.servlet;
 
 import io.prestosql.client.ClientException;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import yanagishima.config.YanagishimaConfig;
 import yanagishima.exception.QueryErrorException;
@@ -9,13 +10,8 @@ import yanagishima.model.presto.PrestoQueryResult;
 import yanagishima.service.PrestoService;
 
 import javax.annotation.Nullable;
-import javax.inject.Inject;
-import javax.inject.Singleton;
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.io.IOException;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -23,64 +19,61 @@ import static java.lang.String.format;
 import static yanagishima.util.AccessControlUtil.sendForbiddenError;
 import static yanagishima.util.AccessControlUtil.validateDatasource;
 import static yanagishima.util.Constants.YANAGISHIMA_COMMENT;
-import static yanagishima.util.HttpRequestUtil.getRequiredParameter;
-import static yanagishima.util.JsonUtil.writeJSON;
+
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 @Slf4j
-@Singleton
-public class PrestoServlet extends HttpServlet {
-	private static final long serialVersionUID = 1L;
-
+@RestController
+@RequiredArgsConstructor
+public class PrestoServlet {
 	private final PrestoService prestoService;
 	private final YanagishimaConfig config;
 
-	@Inject
-	public PrestoServlet(PrestoService prestoService, YanagishimaConfig config) {
-		this.prestoService = prestoService;
-		this.config = config;
-	}
-
-	@Override
-	protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+	@PostMapping("presto")
+	public Map<String, Object> post(@RequestParam String datasource,
+									@RequestParam(name = "query") Optional<String> queryOptional,
+									@RequestParam(name = "user", required = false) Optional<String> prestoUser,
+									@RequestParam(name = "password", required = false) Optional<String> prestoPassword,
+									@RequestParam(defaultValue = "false") boolean store,
+									HttpServletRequest request, HttpServletResponse response) {
 		Map<String, Object> responseBody = new HashMap<>();
 
 		try {
-			Optional<String> queryOptional = Optional.ofNullable(request.getParameter("query"));
-			queryOptional.ifPresent(query -> {
+			if (queryOptional.isEmpty()) {
+				return responseBody;
+			}
+
+			String query = queryOptional.get();
 				String userName = getUsername(request);
-				Optional<String> prestoUser = Optional.ofNullable(request.getParameter("user"));
-				Optional<String> prestoPassword = Optional.ofNullable(request.getParameter("password"));
 				if (config.isUserRequired() && userName == null) {
 					sendForbiddenError(response);
-					return;
+					return responseBody;
 				}
 				try {
-					String datasource = getRequiredParameter(request, "datasource");
 					String coordinatorServer = config.getPrestoCoordinatorServerOrNull(datasource);
 					if (coordinatorServer == null) {
-						writeJSON(response, responseBody);
-						return;
+						return responseBody;
 					}
 					if (config.isCheckDatasource() && !validateDatasource(request, datasource)) {
 						sendForbiddenError(response);
-						return;
+						return responseBody;
 					}
 					if (userName != null) {
 						log.info(format("%s executed %s in %s", userName, query, datasource));
 					}
-					boolean storeFlag = Boolean.parseBoolean(Optional.ofNullable(request.getParameter("store")).orElse("false"));
 					if (prestoUser.isPresent() && prestoPassword.isPresent()) {
 						if (prestoUser.get().length() == 0) {
 							responseBody.put("error", "user is empty");
-							writeJSON(response, responseBody);
-							return;
+							return responseBody;
 						}
 					}
 					PrestoQueryResult prestoQueryResult;
 					if (query.startsWith(YANAGISHIMA_COMMENT)) {
-						prestoQueryResult = prestoService.doQuery(datasource, query, userName, prestoUser, prestoPassword, storeFlag, Integer.MAX_VALUE);
+						prestoQueryResult = prestoService.doQuery(datasource, query, userName, prestoUser, prestoPassword, store, Integer.MAX_VALUE);
 					} else {
-						prestoQueryResult = prestoService.doQuery(datasource, query, userName, prestoUser, prestoPassword, storeFlag, config.getSelectLimit());
+						prestoQueryResult = prestoService.doQuery(datasource, query, userName, prestoUser, prestoPassword, store, config.getSelectLimit());
 					}
 					String queryId = prestoQueryResult.getQueryId();
 					responseBody.put("queryid", queryId);
@@ -115,12 +108,11 @@ public class PrestoServlet extends HttpServlet {
 					log.error(e.getMessage(), e);
 					responseBody.put("error", e.getMessage());
 				}
-			});
 		} catch (Throwable e) {
 			log.error(e.getMessage(), e);
 			responseBody.put("error", e.getMessage());
 		}
-		writeJSON(response, responseBody);
+		return responseBody;
 	}
 
 	@Nullable
