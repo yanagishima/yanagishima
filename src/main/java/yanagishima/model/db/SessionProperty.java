@@ -1,38 +1,42 @@
 package yanagishima.model.db;
 
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.Table;
+
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 import lombok.Data;
-import lombok.EqualsAndHashCode;
-import me.geso.tinyorm.Row;
-import me.geso.tinyorm.annotations.Column;
-import me.geso.tinyorm.annotations.PrimaryKey;
-import me.geso.tinyorm.annotations.Table;
-import org.codehaus.jackson.annotate.JsonProperty;
 
-@Table("session_property")
+
 @Data
-@EqualsAndHashCode(callSuper = false)
-public class SessionProperty extends Row<SessionProperty> {
-
-    @PrimaryKey
-    @Column("session_property_id")
+@Entity
+@Table(name = "session_property")
+public class SessionProperty {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "session_property_id")
     @JsonProperty("session_property_id")
     private int sessionPropertyId;
 
-    @Column("datasource")
+    @Column(name = "datasource")
     private String datasource;
 
-    @Column("engine")
+    @Column(name = "engine")
     private String engine;
 
-    @Column("query_id")
+    @Column(name = "query_id")
     @JsonProperty("query_id")
     private String queryId;
 
-    @Column("session_key")
+    @Column(name = "session_key")
     @JsonProperty("session_key")
     private String sessionKey;
 
-    @Column("session_value")
+    @Column(name = "session_value")
     @JsonProperty("session_value")
     private String sessionValue;
 }
