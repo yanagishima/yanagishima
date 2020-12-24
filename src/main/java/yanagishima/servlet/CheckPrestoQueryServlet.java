@@ -13,7 +13,7 @@ import okhttp3.Response;
 import yanagishima.config.YanagishimaConfig;
 import yanagishima.exception.QueryErrorException;
 import yanagishima.model.presto.PrestoQueryResult;
-import yanagishima.service.PrestoService;
+import yanagishima.service.PrestoServiceImpl;
 
 import javax.annotation.Nullable;
 import javax.servlet.http.HttpServletRequest;
@@ -39,7 +39,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class CheckPrestoQueryServlet {
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
-    private final PrestoService prestoService;
+    private final PrestoServiceImpl prestoService;
     private final YanagishimaConfig config;
     private final OkHttpClient httpClient = new OkHttpClient();
 

@@ -7,7 +7,7 @@ import lombok.extern.slf4j.Slf4j;
 import yanagishima.config.YanagishimaConfig;
 import yanagishima.exception.QueryErrorException;
 import yanagishima.model.presto.PrestoQueryResult;
-import yanagishima.service.PrestoService;
+import yanagishima.service.PrestoServiceImpl;
 
 import javax.annotation.Nullable;
 import javax.servlet.http.HttpServletRequest;
@@ -28,7 +28,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequiredArgsConstructor
 public class PrestoServlet {
-	private final PrestoService prestoService;
+	private final PrestoServiceImpl prestoService;
 	private final YanagishimaConfig config;
 
 	@PostMapping("presto")
