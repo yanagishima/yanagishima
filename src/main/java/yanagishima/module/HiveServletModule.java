@@ -8,14 +8,12 @@ public class HiveServletModule extends ServletModule {
 	protected void configureServlets() {
 		bind(YarnJobListServlet.class);
 		bind(SparkJobListServlet.class);
-		bind(KillHiveServlet.class);
 		bind(HiveQueryStatusServlet.class);
 		bind(HiveQueryDetailServlet.class);
 		bind(HivePartitionServlet.class);
 
 		serve("/yarnJobList").with(YarnJobListServlet.class);
 		serve("/sparkJobList").with(SparkJobListServlet.class);
-		serve("/killHive").with(KillHiveServlet.class);
 		serve("/hiveQueryStatus").with(HiveQueryStatusServlet.class);
 		serve("/sparkQueryStatus").with(HiveQueryStatusServlet.class);
 		serve("/hiveQueryDetail").with(HiveQueryDetailServlet.class);
