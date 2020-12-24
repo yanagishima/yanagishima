@@ -100,7 +100,6 @@ public class YanagishimaServer {
                 new PrestoServiceModule(properties),
                 new PrestoServletModule(),
                 new HiveServiceModule(),
-                new HiveServletModule(),
                 new DbModule(),
                 new PoolModule());
     }

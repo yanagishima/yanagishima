@@ -1,16 +1,14 @@
 package yanagishima.servlet;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+
+import lombok.RequiredArgsConstructor;
 import yanagishima.config.YanagishimaConfig;
 import yanagishima.repository.TinyOrm;
 import yanagishima.model.spark.SparkSqlJob;
 import yanagishima.model.db.Query;
 import yanagishima.util.*;
 
-import javax.inject.Inject;
-import javax.inject.Singleton;
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
@@ -27,36 +25,29 @@ import java.util.Optional;
 
 import static yanagishima.util.AccessControlUtil.sendForbiddenError;
 import static yanagishima.util.AccessControlUtil.validateDatasource;
-import static yanagishima.util.HttpRequestUtil.getRequiredParameter;
 
-@Singleton
-public class HiveQueryStatusServlet extends HttpServlet {
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
-	private static final long serialVersionUID = 1L;
+@RestController
+@RequiredArgsConstructor
+public class HiveQueryStatusServlet {
+    private final YanagishimaConfig yanagishimaConfig;
+    private final TinyOrm db;
 
-	private YanagishimaConfig yanagishimaConfig;
-
-	@Inject
-	private TinyOrm db;
-
-	@Inject
-	public HiveQueryStatusServlet(YanagishimaConfig yanagishimaConfig) {
-		this.yanagishimaConfig = yanagishimaConfig;
-	}
-
-	@Override
-	protected void doPost(HttpServletRequest request,
-			HttpServletResponse response) throws ServletException, IOException {
-
-		String datasource = getRequiredParameter(request, "datasource");
+    @PostMapping(path = { "hiveQueryStatus", "sparkQueryStatus" })
+    public void post(@RequestParam String datasource,
+                     @RequestParam String engine,
+                     @RequestParam String queryid,
+                     @RequestParam(name = "user") Optional<String> hiveUser,
+                     HttpServletRequest request, HttpServletResponse response) {
 		if (yanagishimaConfig.isCheckDatasource() && !validateDatasource(request, datasource)) {
 			sendForbiddenError(response);
 			return;
 		}
-		String queryid = getRequiredParameter(request, "queryid");
 		String resourceManagerUrl = yanagishimaConfig.getResourceManagerUrl(datasource);
 		String userName = null;
-		Optional<String> hiveUser = Optional.ofNullable(request.getParameter("user"));
 		if (yanagishimaConfig.isUseAuditHttpHeaderName()) {
 			userName = request.getHeader(yanagishimaConfig.getAuditHttpHeaderName());
 		} else {
@@ -65,7 +56,6 @@ public class HiveQueryStatusServlet extends HttpServlet {
 			}
 		}
 
-		String engine = getRequiredParameter(request, "engine");
 		Optional<Query> queryOptional = db.singleQuery("query_id=? and datasource=? and engine=?", queryid, datasource, engine);
 		if (engine.equals("hive")) {
 			Optional<Map> applicationOptional = YarnUtil.getApplication(resourceManagerUrl, queryid, userName, yanagishimaConfig.getResourceManagerBegin(datasource));
@@ -130,8 +120,5 @@ public class HiveQueryStatusServlet extends HttpServlet {
 		} else {
 			throw new IllegalArgumentException(engine + " is illegal");
 		}
-
-
 	}
-
 }
