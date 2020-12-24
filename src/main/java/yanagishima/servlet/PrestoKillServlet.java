@@ -1,14 +1,11 @@
 package yanagishima.servlet;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.OkHttpClient;
 import okhttp3.Response;
 import yanagishima.config.YanagishimaConfig;
 
-import javax.inject.Inject;
-import javax.inject.Singleton;
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
@@ -18,46 +15,41 @@ import java.util.Optional;
 import static io.prestosql.client.OkHttpUtil.basicAuth;
 import static yanagishima.util.AccessControlUtil.sendForbiddenError;
 import static yanagishima.util.AccessControlUtil.validateDatasource;
-import static yanagishima.util.HttpRequestUtil.getRequiredParameter;
-import static yanagishima.util.JsonUtil.writeJSON;
+
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 @Slf4j
-@Singleton
-public class PrestoKillServlet extends HttpServlet {
-	private static final long serialVersionUID = 1L;
+@RestController
+@RequiredArgsConstructor
+public class PrestoKillServlet {
+    private final YanagishimaConfig config;
+    private final OkHttpClient httpClient = new OkHttpClient();
 
-	private final YanagishimaConfig config;
-	private final OkHttpClient httpClient = new OkHttpClient();
-
-	@Inject
-	public PrestoKillServlet(YanagishimaConfig config) {
-		this.config = config;
-	}
-
-	@Override
-	protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-		Optional<String> queryIdOptinal = Optional.ofNullable(request.getParameter("queryid"));
-		if (queryIdOptinal.isEmpty()) {
-			writeJSON(response, Map.of());
-			return;
+    @PostMapping("kill")
+    public Map<String, Object> post(@RequestParam String datasource,
+                                    @RequestParam(name = "queryid", required = false) String queryId,
+                                    @RequestParam Optional<String> user,
+                                    @RequestParam Optional<String> password,
+                                    HttpServletRequest request, HttpServletResponse response) {
+		if (queryId == null) {
+			return Map.of();
 		}
 
 		try {
-			String datasource = getRequiredParameter(request, "datasource");
 			if (config.isCheckDatasource() && !validateDatasource(request, datasource)) {
 				sendForbiddenError(response);
-				return;
+				return Map.of();
 			}
 
 			String coordinatorUrl = config.getPrestoCoordinatorServer(datasource);
-			Optional<String> user = Optional.ofNullable(request.getParameter("user"));
-			Optional<String> password = Optional.ofNullable(request.getParameter("password"));
 			String userName = request.getHeader(config.getAuditHttpHeaderName());
-			Response killResponse = getKillResponse(coordinatorUrl, queryIdOptinal.get(), userName, user, password);
-			writeJSON(response, Map.of("code", killResponse.code(), "message", killResponse.message(), "url", killResponse.request().url()));
+			Response killResponse = getKillResponse(coordinatorUrl, queryId, userName, user, password);
+			return Map.of("code", killResponse.code(), "message", killResponse.message(), "url", killResponse.request().url());
 		} catch (Throwable e) {
 			log.error(e.getMessage(), e);
-			writeJSON(response, Map.of("error", e.getMessage()));
+			return Map.of("error", e.getMessage());
 		}
 	}
 
