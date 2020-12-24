@@ -1,13 +1,10 @@
 package yanagishima.servlet;
 
+import lombok.RequiredArgsConstructor;
 import yanagishima.config.YanagishimaConfig;
 import yanagishima.util.SparkUtil;
 import yanagishima.util.YarnUtil;
 
-import javax.inject.Inject;
-import javax.inject.Singleton;
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
@@ -16,34 +13,29 @@ import java.util.Optional;
 
 import static yanagishima.util.AccessControlUtil.sendForbiddenError;
 import static yanagishima.util.AccessControlUtil.validateDatasource;
-import static yanagishima.util.HttpRequestUtil.getRequiredParameter;
 
-@Singleton
-public class HiveQueryDetailServlet extends HttpServlet {
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
-    private static final long serialVersionUID = 1L;
+@RestController
+@RequiredArgsConstructor
+public class HiveQueryDetailServlet {
+    private final YanagishimaConfig yanagishimaConfig;
 
-    private YanagishimaConfig yanagishimaConfig;
-
-    @Inject
-    public HiveQueryDetailServlet(YanagishimaConfig yanagishimaConfig) {
-        this.yanagishimaConfig = yanagishimaConfig;
-    }
-
-    @Override
-    protected void doGet(HttpServletRequest request,
-                         HttpServletResponse response) throws ServletException, IOException {
-
-        String datasource = getRequiredParameter(request, "datasource");
+    @GetMapping(path = {"hiveQueryDetail", "sparkQueryDetail"})
+    public void get(@RequestParam String datasource,
+                    @RequestParam String engine,
+                    @RequestParam(name = "id") Optional<String> idOptional,
+                    @RequestParam(name = "user") Optional<String> hiveUser,
+                    HttpServletRequest request, HttpServletResponse response) throws IOException {
         if (yanagishimaConfig.isCheckDatasource() && !validateDatasource(request, datasource)) {
             sendForbiddenError(response);
             return;
         }
-        String engine = getRequiredParameter(request, "engine");
         String resourceManagerUrl = yanagishimaConfig.getResourceManagerUrl(datasource);
-        Optional<String> idOptinal = Optional.ofNullable(request.getParameter("id"));
         if (engine.equals("hive")) {
-            idOptinal.ifPresent(id -> {
+            idOptional.ifPresent(id -> {
                 if (id.startsWith("application_")) {
                     try {
                         response.sendRedirect(resourceManagerUrl + "/cluster/app/" + id);
@@ -52,7 +44,6 @@ public class HiveQueryDetailServlet extends HttpServlet {
                     }
                 } else {
                     String userName = null;
-                    Optional<String> hiveUser = Optional.ofNullable(request.getParameter("user"));
                     if (yanagishimaConfig.isUseAuditHttpHeaderName()) {
                         userName = request.getHeader(yanagishimaConfig.getAuditHttpHeaderName());
                     } else {
@@ -73,8 +64,8 @@ public class HiveQueryDetailServlet extends HttpServlet {
             });
         } else if (engine.equals("spark")) {
             String sparkWebUrl = yanagishimaConfig.getSparkWebUrl(datasource);
-            if (idOptinal.isPresent()) {
-                String jobId = idOptinal.get();
+            if (idOptional.isPresent()) {
+                String jobId = idOptional.get();
                 try {
                     Integer.parseInt(jobId);
                     String sparkJdbcApplicationId = SparkUtil.getSparkJdbcApplicationId(sparkWebUrl);
@@ -89,7 +80,5 @@ public class HiveQueryDetailServlet extends HttpServlet {
         } else {
             throw new IllegalArgumentException(engine + " is illegal");
         }
-
     }
-
 }
