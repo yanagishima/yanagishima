@@ -17,14 +17,14 @@ import lombok.RequiredArgsConstructor;
 import yanagishima.annotation.DatasourceAuth;
 import yanagishima.config.YanagishimaConfig;
 import yanagishima.model.db.Query;
-import yanagishima.repository.TinyOrm;
+import yanagishima.service.QueryService;
 
 @Api(tags = "download")
 @RestController
 @RequiredArgsConstructor
 public class DownloadServlet {
+  private final QueryService queryService;
   private final YanagishimaConfig config;
-  private final TinyOrm db;
 
   @DatasourceAuth
   @GetMapping("download")
@@ -45,8 +45,7 @@ public class DownloadServlet {
     }
     String user = request.getHeader(config.getAuditHttpHeaderName());
     requireNonNull(user, "Username must exist when auditing header name is enabled");
-    Optional<Query> query = db.singleQuery("query_id = ? AND datasource = ? AND user = ?",
-                                           queryid, datasource, user);
+    Optional<Query> query = queryService.get(queryid, datasource, user);
     if (query.isPresent()) {
       downloadTsv(response, fileName, datasource, queryid, encode, header, bom);
     }

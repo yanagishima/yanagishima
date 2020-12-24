@@ -2,26 +2,14 @@ package yanagishima.repository;
 
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.OptionalLong;
 
-import javax.annotation.Nullable;
 import javax.inject.Inject;
 
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NonNull;
-import me.geso.tinyorm.Row;
 import me.geso.tinyorm.TinyORM;
 import yanagishima.config.YanagishimaConfig;
-import yanagishima.model.db.Query;
 
 public class TinyOrm {
   private final HikariDataSource dataSource;
@@ -44,42 +32,6 @@ public class TinyOrm {
     }
   }
 
-  public int insert(Class klass, Value... values) {
-    try (TinyORM tinyOrm = getTinyOrm()) {
-      return tinyOrm.insert(klass).value(toMap(values)).execute();
-    }
-  }
-
-  public Optional<Query> singleQuery(String query, Object... params) {
-    try (TinyORM tinyOrm = getTinyOrm()) {
-      return tinyOrm.single(Query.class).where(query, params).execute();
-    }
-  }
-
-  public <T extends Row<?>> List<T> searchBySQL(Class<T> klass, String sql, List<Object> params) {
-    try (TinyORM tinyOrm = getTinyOrm()) {
-      return tinyOrm.searchBySQL(klass, sql, params);
-    }
-  }
-
-  public <T extends Row<?>> List<T> searchBySQL(Class<T> klass, String sql) {
-    try (TinyORM tinyOrm = getTinyOrm()) {
-      return tinyOrm.searchBySQL(klass, sql, Collections.emptyList());
-    }
-  }
-
-  public OptionalLong queryForLong(@NonNull final String sql) {
-    try (TinyORM tinyOrm = getTinyOrm()) {
-      return tinyOrm.queryForLong(sql);
-    }
-  }
-
-  public long countQuery(String query, Object... params) {
-    try (TinyORM tinyOrm = getTinyOrm()) {
-      return tinyOrm.count(Query.class).where(query, params).execute();
-    }
-  }
-
   public Connection getConnection() {
     return getTinyOrm().getConnection();
   }
@@ -92,24 +44,5 @@ public class TinyOrm {
     } catch (SQLException e) {
       throw new RuntimeException(e);
     }
-  }
-
-  @Getter
-  @AllArgsConstructor
-  public static class Value {
-    private final String key;
-    private final Object value;
-  }
-
-  public static Value value(String key, @Nullable Object value) {
-    return new Value(key, value);
-  }
-
-  private static Map<String, Object> toMap(Value... values) {
-    Map<String, Object> map = new HashMap<>();
-    for (Value value : values) {
-      map.put(value.getKey(), value.getValue());
-    }
-    return map;
   }
 }

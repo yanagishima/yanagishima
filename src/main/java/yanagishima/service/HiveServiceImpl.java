@@ -12,7 +12,6 @@ import yanagishima.client.fluentd.FluencyClient;
 import yanagishima.config.YanagishimaConfig;
 import yanagishima.exception.HiveQueryErrorException;
 import yanagishima.pool.StatementPool;
-import yanagishima.repository.TinyOrm;
 import yanagishima.model.hive.HiveQueryResult;
 import yanagishima.util.QueryIdUtil;
 
@@ -29,21 +28,18 @@ import java.util.concurrent.TimeUnit;
 
 import static java.lang.String.format;
 import static yanagishima.util.Constants.YANAGISHIAM_HIVE_JOB_PREFIX;
-import static yanagishima.util.DbUtil.insertQueryHistory;
-import static yanagishima.util.DbUtil.storeError;
 import static yanagishima.util.PathUtil.getResultFilePath;
 import static yanagishima.util.QueryEngine.hive;
 import static yanagishima.util.QueryEngine.spark;
-import static yanagishima.util.TimeoutUtil.checkTimeout;
 import static yanagishima.util.TypeCoerceUtil.objectToString;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class HiveServiceImpl {
+    private final QueryService queryService;
     private final YanagishimaConfig config;
     private final ExecutorService executorService = Executors.newFixedThreadPool(10);
-    private final TinyOrm db;
     private final FluencyClient fluencyClient;
     private final StatementPool statementPool;
 
@@ -126,13 +122,13 @@ public class HiveServiceImpl {
             hiveQueryResult.setQueryId(queryId);
             processData(engine, datasource, query, limit, userName, connection, queryId, start, hiveQueryResult, async);
             if (storeFlag) {
-                insertQueryHistory(db, datasource, engine, query, userName, queryId, hiveQueryResult.getLineNumber());
+                queryService.save(datasource, engine, query, userName, queryId, hiveQueryResult.getLineNumber());
             }
             emitExecutedEvent(userName, query, queryId, datasource, engine, System.currentTimeMillis() - start);
             return hiveQueryResult;
 
         } catch (SQLException e) {
-            storeError(db, datasource, engine, queryId, query, userName, e.getMessage());
+            queryService.saveError(datasource, engine, queryId, query, userName, e.getMessage());
             throw new HiveQueryErrorException(queryId, e);
         }
     }
@@ -208,7 +204,7 @@ public class HiveServiceImpl {
                         resultBytes += row.toString().getBytes(StandardCharsets.UTF_8).length;
                         if (resultBytes > maxResultFileByteSize) {
                             String message = format("Result file size exceeded %s bytes. queryId=%s, datasource=%s", maxResultFileByteSize, queryId, datasource);
-                            storeError(db, datasource, engine, queryId, query, userName, message);
+                            queryService.saveError(datasource, engine, queryId, query, userName, message);
                             throw new RuntimeException(message);
                         }
 
@@ -218,7 +214,7 @@ public class HiveServiceImpl {
                             queryResult.setWarningMessage(format("now fetch size is %d. This is more than %d. So, fetch operation stopped.", rows.size(), limit));
                         }
 
-                        checkTimeout(db, queryMaxRunTime, start, datasource, engine, queryId, query, userName);
+                        queryService.saveTimeout(queryMaxRunTime, start, datasource, engine, queryId, query, userName);
                     }
                     queryResult.setLineNumber(lineNumber);
                     queryResult.setRecords(rows);
@@ -239,7 +235,7 @@ public class HiveServiceImpl {
         for (String keyword : config.getHiveDisallowedKeywords(datasource)) {
             if (query.trim().toLowerCase().startsWith(keyword)) {
                 String message = format("query contains %s. This is the disallowed keywords in %s", keyword, datasource);
-                storeError(db, datasource, engine, queryId, query, userName, message);
+                queryService.saveError(datasource, engine, queryId, query, userName, message);
                 throw new RuntimeException(message);
             }
         }
@@ -249,7 +245,7 @@ public class HiveServiceImpl {
         for (String keyword : config.getHiveSecretKeywords(datasource)) {
             if (query.contains(keyword)) {
                 String message = "query error occurs";
-                storeError(db, datasource, engine, queryId, query, userName, message);
+                queryService.saveError(datasource, engine, queryId, query, userName, message);
                 throw new RuntimeException(message);
             }
         }
@@ -265,7 +261,7 @@ public class HiveServiceImpl {
                     for (String partitionKey : partitionKeys) {
                         if (!query.contains(partitionKey)) {
                             String message = format("If you query %s, you must specify %s in where clause", table, partitionKey);
-                            storeError(db, datasource, engine, queryId, query, userName, message);
+                            queryService.saveError(datasource, engine, queryId, query, userName, message);
                             throw new RuntimeException(message);
                         }
                     }

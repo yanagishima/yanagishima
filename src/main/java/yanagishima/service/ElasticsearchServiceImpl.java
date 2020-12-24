@@ -12,7 +12,6 @@ import org.springframework.stereotype.Service;
 import yanagishima.client.fluentd.FluencyClient;
 import yanagishima.config.YanagishimaConfig;
 import yanagishima.exception.ElasticsearchQueryErrorException;
-import yanagishima.repository.TinyOrm;
 import yanagishima.model.elasticsearch.ElasticsearchQueryResult;
 import yanagishima.util.QueryIdUtil;
 
@@ -29,10 +28,7 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import static com.github.wyukawa.elasticsearch.unofficial.jdbc.driver.ElasticsearchDriver.DRIVER_URL_START;
-import static yanagishima.util.DbUtil.insertQueryHistory;
-import static yanagishima.util.DbUtil.storeError;
 import static yanagishima.util.PathUtil.getResultFilePath;
-import static yanagishima.util.TimeoutUtil.checkTimeout;
 import static yanagishima.util.QueryEngine.elasticsearch;
 import static yanagishima.util.TypeCoerceUtil.objectToString;
 
@@ -42,8 +38,8 @@ import static yanagishima.util.TypeCoerceUtil.objectToString;
 public class ElasticsearchServiceImpl {
     private static final CSVFormat CSV_FORMAT = CSVFormat.EXCEL.withDelimiter('\t').withNullString("\\N").withRecordSeparator(System.getProperty("line.separator"));
 
+    private final QueryService queryService;
     private final YanagishimaConfig config;
-    private final TinyOrm db;
     private final FluencyClient fluencyClient;
 
     public ElasticsearchQueryResult doQuery(String datasource, String query, String userName, boolean storeFlag, int limit) throws ElasticsearchQueryErrorException {
@@ -80,7 +76,7 @@ public class ElasticsearchServiceImpl {
                 resultBytes += columnDataList.toString().getBytes(StandardCharsets.UTF_8).length;
                 if (resultBytes > maxResultFileByteSize) {
                     String message = String.format("Result file size exceeded %s bytes. queryId=%s, datasource=%s", maxResultFileByteSize, queryId, datasource);
-                    storeError(db, datasource, "elasticsearch", queryId, query, userName, message);
+                    queryService.saveError(datasource, "elasticsearch", queryId, query, userName, message);
                     throw new RuntimeException(message);
                 }
                 rowDataList.add(columnDataList);
@@ -95,12 +91,12 @@ public class ElasticsearchServiceImpl {
             }
 
             if (storeFlag) {
-                insertQueryHistory(db, datasource, elasticsearch.name(), query, userName, queryId, result.getLineNumber());
+                queryService.save(datasource, elasticsearch.name(), query, userName, queryId, result.getLineNumber());
             }
             emitExecutedEvent(userName, query, queryId, datasource, System.currentTimeMillis() - start);
             return result;
         } catch (SQLException e) {
-            storeError(db, datasource, elasticsearch.name(), queryId, query, userName, e.getMessage());
+            queryService.saveError(datasource, elasticsearch.name(), queryId, query, userName, e.getMessage());
             throw new ElasticsearchQueryErrorException(queryId, e);
         }
     }
@@ -123,13 +119,13 @@ public class ElasticsearchServiceImpl {
             result.setQueryId(queryId);
             processData(datasource, query, limit, userName, connection, queryId, start, result);
             if (storeFlag) {
-                insertQueryHistory(db, datasource, "elasticsearch", query, userName, queryId, result.getLineNumber());
+                queryService.save(datasource, "elasticsearch", query, userName, queryId, result.getLineNumber());
             }
             emitExecutedEvent(userName, query, queryId, datasource, System.currentTimeMillis() - start);
             return result;
 
         } catch (SQLException e) {
-            storeError(db, datasource, elasticsearch.name(), queryId, query, userName, e.getMessage());
+            queryService.saveError(datasource, elasticsearch.name(), queryId, query, userName, e.getMessage());
             throw new ElasticsearchQueryErrorException(queryId, e);
         }
     }
@@ -166,7 +162,7 @@ public class ElasticsearchServiceImpl {
                         resultBytes += row.toString().getBytes(StandardCharsets.UTF_8).length;
                         if (resultBytes > maxResultFileByteSize) {
                             String message = String.format("Result file size exceeded %s bytes. queryId=%s, datasource=%s", maxResultFileByteSize, queryId, datasource);
-                            storeError(db, datasource, elasticsearch.name(), queryId, query, userName, message);
+                            queryService.saveError(datasource, elasticsearch.name(), queryId, query, userName, message);
                             throw new RuntimeException(message);
                         }
 
@@ -176,7 +172,7 @@ public class ElasticsearchServiceImpl {
                             result.setWarningMessage(String.format("now fetch size is %d. This is more than %d. So, fetch operation stopped.", rows.size(), limit));
                         }
 
-                        checkTimeout(db, queryMaxRunTime, start, datasource, elasticsearch.name(), queryId, query, userName);
+                        queryService.saveTimeout(queryMaxRunTime, start, datasource, elasticsearch.name(), queryId, query, userName);
                     }
                     result.setLineNumber(lineNumber);
                     result.setRecords(rows);
@@ -195,7 +191,7 @@ public class ElasticsearchServiceImpl {
         for (String keyword : config.getElasticsearchDisallowedKeywords(datasource)) {
             if (query.trim().toLowerCase().startsWith(keyword)) {
                 String message = String.format("query contains %s. This is the disallowed keywords in %s", keyword, datasource);
-                storeError(db, datasource, elasticsearch.name(), queryId, query, username, message);
+                queryService.saveError(datasource, elasticsearch.name(), queryId, query, username, message);
                 throw new RuntimeException(message);
             }
         }
@@ -205,7 +201,7 @@ public class ElasticsearchServiceImpl {
         for (String keyword : config.getElasticsearchSecretKeywords(datasource)) {
             if (query.contains(keyword)) {
                 String message = "query error occurs";
-                storeError(db, datasource, elasticsearch.name(), queryId, query, username, message);
+                queryService.saveError(datasource, elasticsearch.name(), queryId, query, username, message);
                 throw new RuntimeException(message);
             }
         }
@@ -222,7 +218,7 @@ public class ElasticsearchServiceImpl {
                     for (String partitionKey : partitionKeys) {
                         if (!query.contains(partitionKey)) {
                             String message = String.format("If you query %s, you must specify %s in where clause", table, partitionKey);
-                            storeError(db, datasource, elasticsearch.name(), queryId, query, username, message);
+                            queryService.saveError(datasource, elasticsearch.name(), queryId, query, username, message);
                             throw new RuntimeException(message);
                         }
                     }

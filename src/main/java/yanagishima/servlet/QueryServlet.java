@@ -1,8 +1,5 @@
 package yanagishima.servlet;
 
-import static java.lang.String.format;
-import static java.lang.String.join;
-import static java.util.Collections.nCopies;
 import static javax.servlet.http.HttpServletResponse.SC_OK;
 
 import java.io.IOException;
@@ -26,7 +23,7 @@ import yanagishima.annotation.DatasourceAuth;
 import yanagishima.client.presto.PrestoClient;
 import yanagishima.config.YanagishimaConfig;
 import yanagishima.model.db.Query;
-import yanagishima.repository.TinyOrm;
+import yanagishima.service.QueryService;
 
 @RestController
 @RequiredArgsConstructor
@@ -34,8 +31,8 @@ public class QueryServlet {
     private static final int LIMIT = 100;
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
+    private final QueryService queryService;
     private final YanagishimaConfig config;
-    private final TinyOrm db;
 
     @DatasourceAuth
     @PostMapping("query")
@@ -69,14 +66,7 @@ public class QueryServlet {
         limitedList.addAll(notRunningList.subList(0, Math.min(LIMIT, list.size()) - runningList.size()));
 
         List<String> queryIds = limitedList.stream().map(query -> (String) query.get("queryId")).collect(Collectors.toList());
-
-        String placeholder = join(", ", nCopies(queryIds.size(), "?"));
-        List<Query> queries = db.searchBySQL(Query.class,
-                                             format("SELECT engine, query_id, fetch_result_time_string, query_string "
-                                                    + "FROM query "
-                                                    + "WHERE engine='presto' and datasource=\'%s\' and query_id IN (%s)",
-                                                    datasource, placeholder),
-                                             new ArrayList<>(queryIds));
+        List<Query> queries = queryService.getAll(datasource, "presto", queryIds);
 
         List<String> existDbQueryIds = new ArrayList<>();
         for (Query query : queries) {

@@ -11,13 +11,13 @@ import lombok.extern.slf4j.Slf4j;
 import yanagishima.annotation.DatasourceAuth;
 import yanagishima.model.db.Query;
 import yanagishima.model.dto.HistoryStatusDto;
-import yanagishima.repository.TinyOrm;
+import yanagishima.service.QueryService;
 
 @Slf4j
 @RestController
 @RequiredArgsConstructor
 public class HistoryStatusServlet {
-    private final TinyOrm db;
+    private final QueryService queryService;
 
     @DatasourceAuth
     @GetMapping("historyStatus")
@@ -40,8 +40,8 @@ public class HistoryStatusServlet {
 
     private Optional<Query> findQuery(String datasource, String engine, String queryId) {
         if (engine == null) {
-            return db.singleQuery("query_id=? and datasource=?", queryId, datasource);
+            return queryService.get(queryId, datasource);
         }
-        return db.singleQuery("query_id=? and datasource=? and engine=?", queryId, datasource, engine);
+        return queryService.getByEngine(queryId, datasource, engine);
     }
 }

@@ -16,13 +16,13 @@ import lombok.RequiredArgsConstructor;
 import yanagishima.annotation.DatasourceAuth;
 import yanagishima.config.YanagishimaConfig;
 import yanagishima.model.db.Query;
-import yanagishima.repository.TinyOrm;
+import yanagishima.service.QueryService;
 
 @RestController
 @RequiredArgsConstructor
 public class CsvDownloadServlet {
+  private final QueryService queryService;
   private final YanagishimaConfig config;
-  private final TinyOrm db;
 
   @DatasourceAuth
   @GetMapping("csvdownload")
@@ -43,8 +43,7 @@ public class CsvDownloadServlet {
     }
     String user = request.getHeader(config.getAuditHttpHeaderName());
     requireNonNull(user, "user is null");
-    Optional<Query> userQuery = db.singleQuery("query_id=? and datasource=? and user=?",
-                                               queryId, datasource, user);
+    Optional<Query> userQuery = queryService.get(queryId, datasource, user);
     if (userQuery.isPresent()) {
       downloadCsv(response, fileName, datasource, queryId, encode, header, bom);
     }
