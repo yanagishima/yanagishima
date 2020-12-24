@@ -2,7 +2,6 @@ package yanagishima.servlet;
 
 import static yanagishima.util.AccessControlUtil.sendForbiddenError;
 import static yanagishima.util.AccessControlUtil.validateDatasource;
-import static yanagishima.util.HttpRequestUtil.getRequiredParameter;
 import static yanagishima.util.SparkUtil.getSparkJdbcApplicationId;
 import static yanagishima.util.SparkUtil.getSparkRunningJobListWithProgress;
 import static yanagishima.util.SparkUtil.getSparkSqlJobFromSqlserver;
@@ -15,34 +14,29 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import javax.inject.Inject;
-import javax.inject.Singleton;
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import lombok.RequiredArgsConstructor;
 import yanagishima.model.spark.SparkSqlJob;
 import yanagishima.config.YanagishimaConfig;
 
-@Singleton
-public class SparkJobListServlet extends HttpServlet {
-    private static final long serialVersionUID = 1L;
-
+@RestController
+@RequiredArgsConstructor
+public class SparkJobListServlet {
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
     private final YanagishimaConfig config;
 
-    @Inject
-    public SparkJobListServlet(YanagishimaConfig config) {
-        this.config = config;
-    }
-
-    @Override
-    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        String datasource = getRequiredParameter(request, "datasource");
+    @GetMapping("sparkJobList")
+    public void get(@RequestParam String datasource,
+                    HttpServletRequest request, HttpServletResponse response) throws IOException {
         if (config.isCheckDatasource() && !validateDatasource(request, datasource)) {
             sendForbiddenError(response);
             return;
