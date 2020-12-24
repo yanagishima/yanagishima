@@ -82,7 +82,7 @@ public class CommentServlet {
             } else {
                 Comment likedComment = db.singleComment("datasource = ? and engine = ? and query_id = ?",
                                                                       datasource, engine, queryId).get();
-                int likeCount = likedComment.getLikeCount() + like.orElse(1);
+                int likeCount = likedComment.getLikeCount() + like.get();
                 String updateSql = format("UPDATE comment SET like_count=%d WHERE datasource = '%s' and engine = '%s' and query_id = '%s'",
                                           likeCount, datasource, engine, queryId);
                 db.updateBySQL(updateSql);
