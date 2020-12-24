@@ -8,13 +8,11 @@ public class PrestoServletModule extends ServletModule {
 	protected void configureServlets() {
 		bind(QueryHistoryServlet.class);
 		bind(QueryHistoryUserServlet.class);
-		bind(DatasourceAuthServlet.class);
 		bind(QueryStatusServlet.class);
 		bind(LabelServlet.class);
 
 		serve("/queryHistory").with(QueryHistoryServlet.class);
 		serve("/queryHistoryUser").with(QueryHistoryUserServlet.class);
-		serve("/datasourceAuth").with(DatasourceAuthServlet.class);
 		serve("/queryStatus").with(QueryStatusServlet.class);
 		serve("/label").with(LabelServlet.class);
 	}

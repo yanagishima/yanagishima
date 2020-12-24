@@ -1,8 +1,8 @@
 package yanagishima.servlet;
 
+import static java.lang.String.format;
+import static java.util.Objects.requireNonNull;
 import static yanagishima.util.Constants.DATASOURCE_HEADER;
-import static yanagishima.util.HttpRequestUtil.getRequiredHeader;
-import static yanagishima.util.JsonUtil.writeJSON;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -11,30 +11,23 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import javax.inject.Inject;
-import javax.inject.Singleton;
-import javax.servlet.http.HttpServlet;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestHeader;
+import org.springframework.web.bind.annotation.RestController;
 
+import lombok.RequiredArgsConstructor;
 import yanagishima.config.YanagishimaConfig;
 
-@Singleton
-public class DatasourceAuthServlet extends HttpServlet {
-    private static final long serialVersionUID = 1L;
-
+@RestController
+@RequiredArgsConstructor
+public class DatasourceAuthServlet {
     private final YanagishimaConfig config;
 
-    @Inject
-    public DatasourceAuthServlet(YanagishimaConfig config) {
-        this.config = config;
-    }
-
-    @Override
-    protected void doGet(HttpServletRequest request, HttpServletResponse response) {
+    @GetMapping("datasourceAuth")
+    public Map<String, Object> get(@RequestHeader(name = DATASOURCE_HEADER, required = false) String header) {
         Map<String, Object> responseBody = new HashMap<>();
         if (config.isCheckDatasource()) {
-            String header = getRequiredHeader(request, DATASOURCE_HEADER);
+            requireNonNull(header, format("Missing required header '%s'", DATASOURCE_HEADER));
             if (header.equals("*")) {
                 responseBody.put("datasources", getDatasourceEngineList(config.getDatasources()));
             } else {
@@ -45,7 +38,7 @@ public class DatasourceAuthServlet extends HttpServlet {
         } else {
             responseBody.put("datasources", getDatasourceEngineList(config.getDatasources()));
         }
-        writeJSON(response, responseBody);
+        return responseBody;
     }
 
     private List<Map<String, Map<String, Object>>> getDatasourceEngineList(List<String> allowedDatasources) {
