@@ -24,13 +24,13 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import yanagishima.config.YanagishimaConfig;
 import yanagishima.model.hive.HiveQueryResult;
-import yanagishima.service.HiveService;
+import yanagishima.service.HiveServiceImpl;
 
 @Slf4j
 @RestController
 @RequiredArgsConstructor
 public class HivePartitionServlet {
-    private final HiveService hiveService;
+    private final HiveServiceImpl hiveService;
     private final YanagishimaConfig config;
 
     @PostMapping(path = {"hivePartition", "sparkPartition"})

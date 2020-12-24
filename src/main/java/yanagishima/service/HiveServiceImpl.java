@@ -6,6 +6,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
 import org.komamitsu.fluency.Fluency;
+import org.springframework.stereotype.Service;
+
 import yanagishima.config.YanagishimaConfig;
 import yanagishima.exception.HiveQueryErrorException;
 import yanagishima.pool.StatementPool;
@@ -37,7 +39,8 @@ import static yanagishima.util.TimeoutUtil.checkTimeout;
 import static yanagishima.util.TypeCoerceUtil.objectToString;
 
 @Slf4j
-public class HiveServiceImpl implements HiveService {
+@Service
+public class HiveServiceImpl {
     private final YanagishimaConfig config;
     private final ExecutorService executorService = Executors.newFixedThreadPool(10);
     private final TinyOrm db;
@@ -52,7 +55,6 @@ public class HiveServiceImpl implements HiveService {
         this.statementPool = statementPool;
     }
 
-    @Override
     public String doQueryAsync(String engine, String datasource, String query, String userName, Optional<String> hiveUser, Optional<String> hivePassword) {
         String queryId = QueryIdUtil.generate(datasource, query, engine);
         executorService.submit(new Task(queryId, engine, datasource, query, userName, hiveUser, hivePassword));
@@ -91,7 +93,6 @@ public class HiveServiceImpl implements HiveService {
         }
     }
 
-    @Override
     public HiveQueryResult doQuery(String engine,
                                    String datasource,
                                    String query,
