@@ -98,8 +98,7 @@ public class YanagishimaServer {
     private static Injector createInjector(Properties properties) {
         return Guice.createInjector(
                 new PrestoServiceModule(properties),
-                new DbModule(),
-                new PoolModule());
+                new DbModule());
     }
 
     @VisibleForTesting
