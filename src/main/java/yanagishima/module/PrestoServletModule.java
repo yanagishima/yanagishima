@@ -7,7 +7,6 @@ public class PrestoServletModule extends ServletModule {
 	@Override
 	protected void configureServlets() {
 		bind(FormatSqlServlet.class);
-		bind(HistoryStatusServlet.class);
 		bind(CsvDownloadServlet.class);
 		bind(QueryHistoryServlet.class);
 		bind(QueryHistoryUserServlet.class);
@@ -17,7 +16,6 @@ public class PrestoServletModule extends ServletModule {
 		bind(LabelServlet.class);
 
 		serve("/format").with(FormatSqlServlet.class);
-		serve("/historyStatus").with(HistoryStatusServlet.class);
 		serve("/csvdownload").with(CsvDownloadServlet.class);
 		serve("/queryHistory").with(QueryHistoryServlet.class);
 		serve("/queryHistoryUser").with(QueryHistoryUserServlet.class);
