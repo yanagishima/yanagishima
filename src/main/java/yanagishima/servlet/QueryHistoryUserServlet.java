@@ -2,71 +2,60 @@ package yanagishima.servlet;
 
 import static yanagishima.util.AccessControlUtil.sendForbiddenError;
 import static yanagishima.util.AccessControlUtil.validateDatasource;
-import static yanagishima.util.HttpRequestUtil.getOrDefaultParameter;
-import static yanagishima.util.HttpRequestUtil.getRequiredParameter;
-import static yanagishima.util.JsonUtil.writeJSON;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
-import javax.inject.Inject;
-import javax.inject.Singleton;
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
 import io.airlift.units.DataSize;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import yanagishima.config.YanagishimaConfig;
 import yanagishima.repository.TinyOrm;
 import yanagishima.model.db.Query;
 
 @Slf4j
-@Singleton
-public class QueryHistoryUserServlet extends HttpServlet {
-    private static final long serialVersionUID = 1L;
-
+@RestController
+@RequiredArgsConstructor
+public class QueryHistoryUserServlet {
     private final YanagishimaConfig config;
     private final TinyOrm db;
 
-    @Inject
-    public QueryHistoryUserServlet(YanagishimaConfig config, TinyOrm db) {
-        this.config = config;
-        this.db = db;
-    }
-
-    @Override
-    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+    @GetMapping("queryHistoryUser")
+    public Map<String, Object> get(@RequestParam String datasource,
+                                   @RequestParam String engine,
+                                   @RequestParam(defaultValue = "") String search,
+                                   @RequestParam(required = false) String label,
+                                   @RequestParam(defaultValue = "100") String limit,
+                                   HttpServletRequest request, HttpServletResponse response) {
         Map<String, Object> responseBody = new HashMap<>();
         try {
-            String datasource = getRequiredParameter(request, "datasource");
             if (config.isCheckDatasource() && !validateDatasource(request, datasource)) {
                 sendForbiddenError(response);
-                return;
+                return responseBody;
             }
 
-            String engine = getRequiredParameter(request, "engine");
             String userName = request.getHeader(config.getAuditHttpHeaderName());
-            String search = request.getParameter("search");
 
             responseBody.put("headers", Arrays.asList("Id", "Query", "Time", "rawDataSize", "engine", "finishedTime", "linenumber", "labelName", "status"));
 
-            String limit = getOrDefaultParameter(request, "limit", "100");
-            String label = request.getParameter("label");
             List<Query> queryList;
             if (label == null || label.isEmpty()) {
                 String joinWhere = "LEFT OUTER JOIN label b on a.datasource = b.datasource AND a.engine = b.engine AND a.query_id = b.query_id "
                                    + "WHERE a.datasource=\'" + datasource + "\' "
                                    + "and a.engine=\'" + engine + "\' and "
                                    + "a.user=\'" + userName + "\' "
-                                   + "and a.query_string LIKE '%" + Optional.ofNullable(search).orElse("") + "%' ORDER BY a.query_id DESC LIMIT " + limit;
+                                   + "and a.query_string LIKE '%" + search + "%' ORDER BY a.query_id DESC LIMIT " + limit;
                 String countSql = "SELECT count(*) FROM query a " + joinWhere;
                 String fetchSql = "SELECT "
                                   + "a.engine, "
@@ -131,6 +120,6 @@ public class QueryHistoryUserServlet extends HttpServlet {
             log.error(e.getMessage(), e);
             responseBody.put("error", e.getMessage());
         }
-        writeJSON(response, responseBody);
+        return responseBody;
     }
 }
