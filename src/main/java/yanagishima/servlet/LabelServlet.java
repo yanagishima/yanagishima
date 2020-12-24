@@ -3,53 +3,46 @@ package yanagishima.servlet;
 import static yanagishima.repository.TinyOrm.value;
 import static yanagishima.util.AccessControlUtil.sendForbiddenError;
 import static yanagishima.util.AccessControlUtil.validateDatasource;
-import static yanagishima.util.HttpRequestUtil.getRequiredParameter;
-import static yanagishima.util.JsonUtil.writeJSON;
 
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
-import javax.inject.Inject;
-import javax.inject.Singleton;
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import yanagishima.config.YanagishimaConfig;
 import yanagishima.repository.TinyOrm;
 import yanagishima.model.db.Label;
 
 @Slf4j
-@Singleton
-public class LabelServlet extends HttpServlet {
-    private static final long serialVersionUID = 1L;
-
+@Deprecated
+@RestController
+@RequiredArgsConstructor
+public class LabelServlet {
     private final TinyOrm db;
     private final YanagishimaConfig config;
 
-    @Inject
-    public LabelServlet(TinyOrm db, YanagishimaConfig config) {
-        this.db = db;
-        this.config = config;
-    }
-
-    @Override
-    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+    @PostMapping("label")
+    public Map<String, Object> post(@RequestParam String datasource,
+                                    @RequestParam String engine,
+                                    @RequestParam(name = "queryid") String queryId,
+                                    @RequestParam String labelName,
+                                    HttpServletRequest request, HttpServletResponse response) {
         Map<String, Object> responseBody = new HashMap<>();
         try {
-            String datasource = getRequiredParameter(request, "datasource");
             if (config.isCheckDatasource() && !validateDatasource(request, datasource)) {
                 sendForbiddenError(response);
-                return;
+                return responseBody;
             }
-
-            String engine = getRequiredParameter(request, "engine");
-            String queryId = getRequiredParameter(request, "queryid");
-            String labelName = getRequiredParameter(request, "labelName");
 
             int count = db.insert(Label.class, value("datasource", datasource),
                                   value("engine", engine),
@@ -66,22 +59,22 @@ public class LabelServlet extends HttpServlet {
             log.error(e.getMessage(), e);
             responseBody.put("error", e.getMessage());
         }
-        writeJSON(response, responseBody);
+        return responseBody;
     }
 
-    @Override
-    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+    @GetMapping("label")
+    public Map<String, Object> get(@RequestParam String datasource,
+                                   @RequestParam String engine,
+                                   @RequestParam(name = "queryid") String queryId,
+                                   HttpServletRequest request, HttpServletResponse response) {
         Map<String, Object> responseBody = new HashMap<>();
 
         try {
-            String datasource = getRequiredParameter(request, "datasource");
             if (config.isCheckDatasource() && !validateDatasource(request, datasource)) {
                 sendForbiddenError(response);
-                return;
+                return responseBody;
             }
 
-            String engine = getRequiredParameter(request, "engine");
-            String queryId = getRequiredParameter(request, "queryid");
             Optional<Label> optionalLabel = db.singleLabel("datasource = ? and engine = ? and query_id = ?", datasource, engine, queryId);
             if (optionalLabel.isPresent()) {
                 responseBody.put("label", optionalLabel.get().getLabelName());
@@ -90,21 +83,21 @@ public class LabelServlet extends HttpServlet {
             log.error(e.getMessage(), e);
             responseBody.put("error", e.getMessage());
         }
-        writeJSON(response, responseBody);
+        return responseBody;
     }
 
-    @Override
-    protected void doDelete(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+    @DeleteMapping("label")
+    public Map<String, Object> delete(@RequestParam String datasource,
+                                      @RequestParam String engine,
+                                      @RequestParam(name = "queryid") String queryId,
+                                      HttpServletRequest request, HttpServletResponse response) {
         Map<String, Object> responseBody = new HashMap<>();
         try {
-            String datasource = getRequiredParameter(request, "datasource");
             if (config.isCheckDatasource() && !validateDatasource(request, datasource)) {
                 sendForbiddenError(response);
-                return;
+                return responseBody;
             }
 
-            String engine = getRequiredParameter(request, "engine");
-            String queryId = getRequiredParameter(request, "queryid");
             db.singleLabel("datasource = ? and engine = ? and query_id = ?", datasource, engine, queryId).ifPresent(Label::delete);
             responseBody.put("datasource", datasource);
             responseBody.put("engine", engine);
@@ -113,6 +106,6 @@ public class LabelServlet extends HttpServlet {
             log.error(e.getMessage(), e);
             responseBody.put("error", e.getMessage());
         }
-        writeJSON(response, responseBody);
+        return responseBody;
     }
 }
