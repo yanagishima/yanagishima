@@ -21,7 +21,6 @@ import lombok.NonNull;
 import me.geso.tinyorm.Row;
 import me.geso.tinyorm.TinyORM;
 import yanagishima.config.YanagishimaConfig;
-import yanagishima.model.db.Comment;
 import yanagishima.model.db.Query;
 
 public class TinyOrm {
@@ -51,27 +50,9 @@ public class TinyOrm {
     }
   }
 
-  public Optional<Comment> singleComment(String query, Object... params) {
-    try (TinyORM tinyOrm = getTinyOrm()) {
-      return tinyOrm.single(Comment.class).where(query, params).execute();
-    }
-  }
-
-  public void deleteComment(String query, Object... params) {
-    try (TinyORM tinyOrm = getTinyOrm()) {
-      tinyOrm.single(Comment.class).where(query, params).execute().ifPresent(tinyOrm::delete);
-    }
-  }
-
   public Optional<Query> singleQuery(String query, Object... params) {
     try (TinyORM tinyOrm = getTinyOrm()) {
       return tinyOrm.single(Query.class).where(query, params).execute();
-    }
-  }
-
-  public List<Comment> searchComments(String orderBy, String query, Object... params) {
-    try (TinyORM tinyOrm = getTinyOrm()) {
-      return tinyOrm.search(Comment.class).where(query, params).orderBy(orderBy).execute();
     }
   }
 
@@ -84,12 +65,6 @@ public class TinyOrm {
   public <T extends Row<?>> List<T> searchBySQL(Class<T> klass, String sql) {
     try (TinyORM tinyOrm = getTinyOrm()) {
       return tinyOrm.searchBySQL(klass, sql, Collections.emptyList());
-    }
-  }
-
-  public int updateBySQL(String sql) {
-    try (TinyORM tinyOrm = getTinyOrm()) {
-      return tinyOrm.updateBySQL(sql);
     }
   }
 

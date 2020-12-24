@@ -20,7 +20,6 @@ import org.junit.jupiter.api.Test;
 
 import yanagishima.config.YanagishimaConfig;
 import yanagishima.config.YanagishimaConfig.DatabaseType;
-import yanagishima.model.db.Comment;
 import yanagishima.model.db.Query;
 
 class TinyOrmTest {
@@ -60,72 +59,11 @@ class TinyOrmTest {
   }
 
   @Test
-  void testSingleComment() {
-    assertEquals(Optional.empty(), tinyOrm.singleComment("1 = 2"));
-
-    assertEquals(1, tinyOrm.insert(Comment.class,
-                                   value("datasource", "test_datasource"),
-                                   value("engine", "test_engine"),
-                                   value("like_count", "1")
-                                   ));
-    assertThat(tinyOrm.singleComment("datasource = ? and engine = ?", "test_datasource", "test_engine")).isPresent();
-  }
-
-  @Test
-  void testDeleteComment() {
-    String orderBy = "1";
-    assertThat(tinyOrm.searchComments(orderBy, "1 = 1")).isEmpty();
-
-    assertEquals(1, tinyOrm.insert(Comment.class,
-                                   value("datasource", "test_datasource"),
-                                   value("engine", "test_engine"),
-                                   value("query_id", "1"),
-                                   value("like_count", "1")
-                                   ));
-    assertEquals(1, tinyOrm.insert(Comment.class,
-                                   value("datasource", "test_datasource2"),
-                                   value("engine", "test_engine2"),
-                                   value("query_id", "2"),
-                                   value("like_count", "2")
-                                   ));
-    assertThat(tinyOrm.searchComments(orderBy, "1 = 1")).hasSize(2);
-
-    tinyOrm.deleteComment("datasource = ? and engine = ? and query_id = ?", "test_datasource", "test_engine", "1");
-    assertThat(tinyOrm.searchComments(orderBy, "1 = 1")).hasSize(1);
-    assertThat(tinyOrm.searchComments(orderBy, "datasource = ?", "test_datasource")).hasSize(0);
-    assertThat(tinyOrm.searchComments(orderBy, "datasource = ?", "test_datasource2")).hasSize(1);
-
-    tinyOrm.deleteComment("datasource = ? and engine = ? and query_id = ?", "test_datasource2", "test_engine2", "2");
-    assertThat(tinyOrm.searchComments(orderBy, "1 = 1")).hasSize(0);
-  }
-
-  @Test
   void testSingleQuery() {
     assertEquals(Optional.empty(), tinyOrm.singleQuery("datasource = 'test_a'"));
 
     tinyOrm.insert(Query.class, value("datasource", "test_a"));
     assertThat(tinyOrm.singleQuery("datasource = 'test_a'")).isPresent();
-  }
-
-  @Test
-  void testSearchComments() {
-    String orderBy = "update_time_string DESC";
-    assertThat(tinyOrm.searchComments(orderBy, "datasource = ?", 1)).isEmpty();
-
-    assertEquals(1, tinyOrm.insert(Comment.class,
-                                   value("datasource", "1"),
-                                   value("update_time_string", "2019"),
-                                   value("like_count", "100")));
-    assertEquals(1, tinyOrm.insert(Comment.class,
-                                   value("datasource", "2"),
-                                   value("update_time_string", "2020"),
-                                   value("like_count", "200")));
-
-    assertThat(tinyOrm.searchComments(orderBy, "1 = 1"))
-        .extracting(Comment::getUpdateTimeString)
-        .containsExactly("2020", "2019");
-    assertThat(tinyOrm.searchComments(orderBy, "datasource = ?", 1)).hasSize(1);
-    assertThat(tinyOrm.searchComments(orderBy, "datasource = ?", 2)).hasSize(1);
   }
 
   @Test
@@ -147,18 +85,6 @@ class TinyOrmTest {
     assertThat(tinyOrm.searchBySQL(Query.class, "SELECT * FROM query WHERE datasource IN (?)", List.of("test_b"))).hasSize(1);
     assertThat(tinyOrm.searchBySQL(Query.class, "SELECT * FROM query WHERE datasource IN (?, ?)", List.of("test_a", "test_b"))).hasSize(2);
     assertThat(tinyOrm.searchBySQL(Query.class, "SELECT * FROM query WHERE datasource IN (?)", List.of("not_found"))).isEmpty();
-  }
-
-  @Test
-  void testUpdateBySQL() {
-    assertThat(tinyOrm.singleQuery("1 = 1")).isEmpty();
-
-    tinyOrm.insert(Query.class, value("datasource", "test_a"), value("user",  "alice"));
-    assertThat(tinyOrm.singleQuery("datasource = ? and user = ?", "test_a", "alice")).isPresent();
-
-    tinyOrm.updateBySQL("UPDATE query SET user = 'bob'");
-    assertThat(tinyOrm.singleQuery("datasource = ? and user = ?", "test_a", "alice")).isEmpty();
-    assertThat(tinyOrm.singleQuery("datasource = ? and user = ?", "test_a", "bob")).isPresent();
   }
 
   @Test
