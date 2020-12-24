@@ -19,14 +19,14 @@ import org.springframework.web.bind.annotation.RestController;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import yanagishima.config.YanagishimaConfig;
-import yanagishima.service.HiveService;
+import yanagishima.service.HiveServiceImpl;
 
 @Slf4j
 @RestController
 @RequiredArgsConstructor
 public class HiveAsyncServlet {
     private final YanagishimaConfig config;
-    private final HiveService hiveService;
+    private final HiveServiceImpl hiveService;
 
     @PostMapping(path = {"hiveAsync", "sparkAsync"})
     public Map<String, Object> post(@RequestParam String datasource,

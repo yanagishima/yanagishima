@@ -21,14 +21,14 @@ import lombok.extern.slf4j.Slf4j;
 import yanagishima.config.YanagishimaConfig;
 import yanagishima.exception.HiveQueryErrorException;
 import yanagishima.model.hive.HiveQueryResult;
-import yanagishima.service.HiveService;
+import yanagishima.service.HiveServiceImpl;
 
 @Slf4j
 @RestController
 @RequiredArgsConstructor
 public class HiveServlet {
     private final YanagishimaConfig config;
-    private final HiveService hiveService;
+    private final HiveServiceImpl hiveService;
 
     @PostMapping(path = {"hive", "spark"})
     public Map<String, Object> post(@RequestParam String datasource,
