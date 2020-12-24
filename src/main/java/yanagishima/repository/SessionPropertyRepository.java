@@ -9,5 +9,5 @@ import yanagishima.model.db.SessionProperty;
 
 @Repository
 public interface SessionPropertyRepository extends CrudRepository<SessionProperty, Long> {
-  List<SessionProperty> findAllByDatasourceAndEngineAndAndQueryId(String datasource, String engine, String queryId);
+  List<SessionProperty> findAllByDatasourceAndEngineAndQueryId(String datasource, String engine, String queryId);
 }

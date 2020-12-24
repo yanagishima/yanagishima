@@ -16,7 +16,7 @@ public class SessionPropertyService {
   private final SessionPropertyRepository sessionPropertyRepository;
 
   public List<SessionProperty> getAll(String datasource, String engine, String queryId) {
-    return sessionPropertyRepository.findAllByDatasourceAndEngineAndAndQueryId(datasource, engine, queryId);
+    return sessionPropertyRepository.findAllByDatasourceAndEngineAndQueryId(datasource, engine, queryId);
   }
 
   public void insert(String datasource, String engine, String queryId, Map<String, String> properties) {
