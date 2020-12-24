@@ -4,10 +4,7 @@ import static java.lang.String.format;
 import static java.lang.String.join;
 import static yanagishima.util.AccessControlUtil.sendForbiddenError;
 import static yanagishima.util.AccessControlUtil.validateDatasource;
-import static yanagishima.util.HttpRequestUtil.getRequiredParameter;
-import static yanagishima.util.JsonUtil.writeJSON;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -16,52 +13,46 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.TreeSet;
 
-import javax.inject.Inject;
-import javax.inject.Singleton;
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import yanagishima.config.YanagishimaConfig;
 import yanagishima.model.hive.HiveQueryResult;
 import yanagishima.service.HiveService;
 
 @Slf4j
-@Singleton
-public class HivePartitionServlet extends HttpServlet {
-    private static final long serialVersionUID = 1L;
-
+@RestController
+@RequiredArgsConstructor
+public class HivePartitionServlet {
     private final HiveService hiveService;
     private final YanagishimaConfig config;
 
-    @Inject
-    public HivePartitionServlet(HiveService hiveService, YanagishimaConfig config) {
-        this.hiveService = hiveService;
-        this.config = config;
-    }
-
-    @Override
-    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+    @PostMapping(path = {"hivePartition", "sparkPartition"})
+    public Map<String, Object> post(@RequestParam String datasource,
+                                    @RequestParam String engine,
+                                    @RequestParam String schema,
+                                    @RequestParam String table,
+                                    @RequestParam(required = false) String partitionColumn,
+                                    @RequestParam(required = false) String partitionColumnType,
+                                    @RequestParam(required = false) String partitionValue,
+                                    @RequestParam(name = "user") Optional<String> hiveUser,
+                                    @RequestParam(name = "password") Optional<String> hivePassword,
+                                    HttpServletRequest request, HttpServletResponse response) {
         Map<String, Object> responseBody = new HashMap<>();
 
         try {
-            String datasource = getRequiredParameter(request, "datasource");
             if (config.isCheckDatasource() && !validateDatasource(request, datasource)) {
                 sendForbiddenError(response);
-                return;
+                return responseBody;
             }
 
             String user = getUsername(request);
-            Optional<String> hiveUser = Optional.ofNullable(request.getParameter("user"));
-            Optional<String> hivePassword = Optional.ofNullable(request.getParameter("password"));
-            String engine = getRequiredParameter(request, "engine");
-            String schema = getRequiredParameter(request, "schema");
-            String table = getRequiredParameter(request, "table");
-            String partitionColumn = request.getParameter("partitionColumn");
-            String partitionColumnType = request.getParameter("partitionColumnType");
-            String partitionValue = request.getParameter("partitionValue");
             if (partitionColumn == null || partitionValue == null) {
                 String query = format("SHOW PARTITIONS %s.`%s`", schema, table);
                 if (user != null) {
@@ -119,7 +110,7 @@ public class HivePartitionServlet extends HttpServlet {
             log.error(e.getMessage(), e);
             responseBody.put("error", e.getMessage());
         }
-        writeJSON(response, responseBody);
+        return responseBody;
     }
 
     private String getUsername(HttpServletRequest request) {
