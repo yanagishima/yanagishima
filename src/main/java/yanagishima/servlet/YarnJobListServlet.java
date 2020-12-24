@@ -6,7 +6,6 @@ import static java.util.Collections.nCopies;
 import static yanagishima.util.AccessControlUtil.sendForbiddenError;
 import static yanagishima.util.AccessControlUtil.validateDatasource;
 import static yanagishima.util.Constants.YANAGISHIAM_HIVE_JOB_PREFIX;
-import static yanagishima.util.HttpRequestUtil.getRequiredParameter;
 
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -15,38 +14,33 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import javax.inject.Inject;
-import javax.inject.Singleton;
-import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.core.MediaType;
 
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import lombok.RequiredArgsConstructor;
 import yanagishima.config.YanagishimaConfig;
 import yanagishima.repository.TinyOrm;
 import yanagishima.model.db.Query;
 import yanagishima.util.YarnUtil;
 
-@Singleton
-public class YarnJobListServlet extends HttpServlet {
-	private static final long serialVersionUID = 1L;
+@RestController
+@RequiredArgsConstructor
+public class YarnJobListServlet {
 	private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 	private static final int LIMIT = 100;
 
 	private final YanagishimaConfig config;
 	private final TinyOrm db;
 
-	@Inject
-	public YarnJobListServlet(YanagishimaConfig config, TinyOrm db) {
-		this.config = config;
-		this.db = db;
-	}
-
-	@Override
-	protected void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
-		String datasource = getRequiredParameter(request, "datasource");
+	@GetMapping("yarnJobList")
+	public void get(@RequestParam String datasource, HttpServletRequest request, HttpServletResponse response) throws IOException {
 		if (config.isCheckDatasource() && !validateDatasource(request, datasource)) {
 			sendForbiddenError(response);
 			return;
