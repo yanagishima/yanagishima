@@ -11,6 +11,8 @@ import okhttp3.OkHttpClient;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
 import org.komamitsu.fluency.Fluency;
+import org.springframework.stereotype.Service;
+
 import yanagishima.config.YanagishimaConfig;
 import yanagishima.exception.QueryErrorException;
 import yanagishima.repository.TinyOrm;
@@ -53,7 +55,8 @@ import static yanagishima.util.QueryEngine.presto;
 import static yanagishima.util.TimeoutUtil.checkTimeout;
 
 @Slf4j
-public class PrestoServiceImpl implements PrestoService {
+@Service
+public class PrestoServiceImpl {
     private static final CSVFormat CSV_FORMAT = CSVFormat.EXCEL
             .withDelimiter('\t')
             .withNullString("\\N")
@@ -81,7 +84,6 @@ public class PrestoServiceImpl implements PrestoService {
         this.maxResultFileByteSize = config.getMaxResultFileByteSize();
     }
 
-    @Override
     public String doQueryAsync(String datasource, String query, Optional<String> sessionPropertyOptional, String userName, Optional<String> prestoUser, Optional<String> prestoPassword) {
         sessionPropertyOptional.ifPresent(sessionProperty -> {
             try {
@@ -126,7 +128,6 @@ public class PrestoServiceImpl implements PrestoService {
         }
     }
 
-    @Override
     public PrestoQueryResult doQuery(String datasource,
                                      String query,
                                      String userName,

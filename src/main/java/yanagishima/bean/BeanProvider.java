@@ -9,34 +9,18 @@ import com.google.inject.Injector;
 import yanagishima.config.YanagishimaConfig;
 import yanagishima.repository.TinyOrm;
 import yanagishima.service.HiveService;
-import yanagishima.service.OldPrestoService;
-import yanagishima.service.PrestoService;
 
 @Component
 public class BeanProvider {
-  private final PrestoService prestoService;
-  private final OldPrestoService oldPrestoService;
   private final HiveService hiveService;
   private final YanagishimaConfig config;
   private final TinyOrm db;
 
   @Autowired
   public BeanProvider(Injector injector) {
-    this.prestoService = injector.getInstance(PrestoService.class);
-    this.oldPrestoService = injector.getInstance(OldPrestoService.class);
     this.hiveService = injector.getInstance(HiveService.class);
     this.config = injector.getInstance(YanagishimaConfig.class);
     this.db = injector.getInstance(TinyOrm.class);
-  }
-
-  @Bean
-  public PrestoService prestoService() {
-    return prestoService;
-  }
-
-  @Bean
-  public OldPrestoService oldPrestoService() {
-    return oldPrestoService;
   }
 
   @Bean

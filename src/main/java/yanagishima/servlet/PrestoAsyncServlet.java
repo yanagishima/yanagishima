@@ -19,15 +19,15 @@ import io.prestosql.client.ClientException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import yanagishima.config.YanagishimaConfig;
-import yanagishima.service.OldPrestoService;
-import yanagishima.service.PrestoService;
+import yanagishima.service.OldPrestoServiceImpl;
+import yanagishima.service.PrestoServiceImpl;
 
 @Slf4j
 @RestController
 @RequiredArgsConstructor
 public class PrestoAsyncServlet {
-    private final PrestoService prestoService;
-    private final OldPrestoService oldPrestoService;
+    private final PrestoServiceImpl prestoService;
+    private final OldPrestoServiceImpl oldPrestoService;
     private final YanagishimaConfig config;
 
     @PostMapping("prestoAsync")

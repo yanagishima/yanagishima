@@ -12,6 +12,8 @@ import okhttp3.OkHttpClient;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
 import org.komamitsu.fluency.Fluency;
+import org.springframework.stereotype.Service;
+
 import yanagishima.config.YanagishimaConfig;
 import yanagishima.exception.QueryErrorException;
 import yanagishima.repository.TinyOrm;
@@ -50,7 +52,8 @@ import static yanagishima.util.QueryEngine.presto;
 import static yanagishima.util.TimeoutUtil.checkTimeout;
 
 @Slf4j
-public class OldPrestoServiceImpl implements OldPrestoService {
+@Service
+public class OldPrestoServiceImpl {
     private static final CSVFormat CSV_FORMAT = CSVFormat.EXCEL.withDelimiter('\t').withNullString("\\N").withRecordSeparator(System.getProperty("line.separator"));
 
     private final YanagishimaConfig config;
@@ -69,7 +72,6 @@ public class OldPrestoServiceImpl implements OldPrestoService {
         this.fluency = buildStaticFluency(config);
     }
 
-    @Override
     public String doQueryAsync(String datasource, String query, String userName, Optional<String> prestoUser, Optional<String> prestoPassword) {
         StatementClient client = getStatementClient(datasource, query, userName, prestoUser, prestoPassword);
         executorService.submit(new Task(datasource, query, client, userName));
@@ -106,7 +108,6 @@ public class OldPrestoServiceImpl implements OldPrestoService {
         }
     }
 
-    @Override
     public PrestoQueryResult doQuery(String datasource,
                                      String query,
                                      String userName,
