@@ -49,13 +49,13 @@ public class KillHiveServlet {
         }
         if (config.isUseJdbcCancel(datasource)) {
             log.info(format("killing %s in %s by Statement#cancel", id, datasource));
-            try (Statement statement = statements.getStatement(datasource, id)) {
+            try (Statement statement = statements.get(datasource, id)) {
                 if (statement == null) {
                     log.error("statement is null");
                 } else {
                     statement.cancel();
                 }
-                statements.removeStatement(datasource, id);
+                statements.remove(datasource, id);
             } catch (SQLException e) {
                 throw new RuntimeException(e);
             }

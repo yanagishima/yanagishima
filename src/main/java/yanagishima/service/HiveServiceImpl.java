@@ -168,7 +168,7 @@ public class HiveServiceImpl {
             }
 
             if (async && config.isUseJdbcCancel(datasource)) {
-                statementPool.putStatement(datasource, queryId, statement);
+                statementPool.put(datasource, queryId, statement);
             }
 
             boolean hasResultSet = statement.execute(query);
@@ -231,7 +231,7 @@ public class HiveServiceImpl {
                     queryResult.setLineNumber(lineNumber);
                     queryResult.setRecords(rows);
                     if (async && config.isUseJdbcCancel(datasource)) {
-                        statementPool.removeStatement(datasource, queryId);
+                        statementPool.remove(datasource, queryId);
                     }
 
                     DataSize rawDataSize = new DataSize(Files.size(dst), DataSize.Unit.BYTE);
