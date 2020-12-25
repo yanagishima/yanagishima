@@ -13,7 +13,6 @@ import javax.servlet.http.HttpServletResponse;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static com.google.common.base.Strings.isNullOrEmpty;
 import static java.lang.String.join;
 import static java.util.Collections.nCopies;
 import static yanagishima.util.AccessControlUtil.sendForbiddenError;
@@ -34,7 +33,7 @@ public class QueryHistoryServlet {
     @RequestMapping(value = "/queryHistory", method = { RequestMethod.GET, RequestMethod.POST })
     public Map<String, Object> get(@RequestParam String datasource,
                                    @RequestParam(required = false) String queryids,
-                                   @RequestParam(required = false) String label,
+                                   @RequestParam(required = false) String label, // Deprecated
                                    HttpServletRequest request, HttpServletResponse response) {
         Map<String, Object> responseBody = new HashMap<>();
         try {
@@ -44,7 +43,7 @@ public class QueryHistoryServlet {
             }
             String[] queryIds = queryids.split(","); // TODO: Fix NPE
             responseBody.put("headers", Arrays.asList("Id", "Query", "Time", "rawDataSize", "engine", "finishedTime", "linenumber", "labelName", "status"));
-            responseBody.put("results", getHistories(label, datasource, queryIds));
+            responseBody.put("results", getHistories(datasource, queryIds));
 
         } catch (Throwable e) {
             log.error(e.getMessage(), e);
@@ -53,34 +52,16 @@ public class QueryHistoryServlet {
         return responseBody;
     }
 
-    private List<List<Object>> getHistories(String label, String datasource, String[] queryIds) {
+    private List<List<Object>> getHistories(String datasource, String[] queryIds) {
         List<List<Object>> queryHistories = new ArrayList<>();
-        for (Query query : getQueries(label, datasource, queryIds)) {
+        for (Query query : getQueries(datasource, queryIds)) {
             queryHistories.add(toQueryHistory(query));
         }
         return queryHistories;
     }
 
-    private List<Query> getQueries(String label, String datasource, String[] queryIds) {
+    private List<Query> getQueries(String datasource, String[] queryIds) {
         String placeholder = join(", ", nCopies(queryIds.length, "?"));
-        if (isNullOrEmpty(label)) {
-            return db.searchBySQL(Query.class,
-                                  "SELECT "
-                                  + "a.engine, "
-                                  + "a.query_id, "
-                                  + "a.fetch_result_time_string, "
-                                  + "a.query_string, "
-                                  + "a.status, "
-                                  + "a.elapsed_time_millis, "
-                                  + "a.result_file_size, "
-                                  + "a.linenumber, "
-                                  + "b.label_name AS label_name "
-                                  + "FROM query a "
-                                  + "LEFT OUTER JOIN label b "
-                                  + "on a.datasource = b.datasource AND a.engine = b.engine AND a.query_id = b.query_id "
-                                  + "WHERE a.datasource=\'" + datasource + "\' and a.query_id IN (" + placeholder + ")",
-                                  Arrays.stream(queryIds).collect(Collectors.toList()));
-        }
         return db.searchBySQL(Query.class,
                               "SELECT "
                               + "a.engine, "
@@ -91,13 +72,10 @@ public class QueryHistoryServlet {
                               + "a.elapsed_time_millis, "
                               + "a.result_file_size, "
                               + "a.linenumber, "
-                              + "b.label_name AS label_name "
+                              + "null AS label_name " // Deprecated
                               + "FROM query a "
-                              + "LEFT OUTER JOIN label b "
-                              + "on a.datasource = b.datasource AND a.engine = b.engine AND a.query_id = b.query_id "
-                              + "WHERE b.label_name = \'" + label + "\' and a.datasource=\'" + datasource + "\' and a.query_id IN (" + placeholder + ")",
+                              + "WHERE a.datasource=\'" + datasource + "\' and a.query_id IN (" + placeholder + ")",
                               Arrays.stream(queryIds).collect(Collectors.toList()));
-
     }
 
     private static List<Object> toQueryHistory(Query query) {
