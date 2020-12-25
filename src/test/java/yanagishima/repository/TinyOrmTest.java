@@ -21,7 +21,6 @@ import org.junit.jupiter.api.Test;
 import yanagishima.config.YanagishimaConfig;
 import yanagishima.config.YanagishimaConfig.DatabaseType;
 import yanagishima.model.db.Comment;
-import yanagishima.model.db.Label;
 import yanagishima.model.db.Query;
 
 class TinyOrmTest {
@@ -58,17 +57,6 @@ class TinyOrmTest {
   @Test
   void testExecuteQuery() {
     tinyOrm.executeQuery("SELECT 1");
-  }
-
-  @Test
-  void testInsert() {
-    assertThat(tinyOrm.singleLabel("datasource = ?", 1)).isEmpty();
-
-    assertEquals(1, tinyOrm.insert(Label.class, value("datasource", "1")));
-    assertThat(tinyOrm.singleLabel("datasource = ?", 1)).isPresent();
-
-    assertEquals(1, tinyOrm.insert(Label.class, value("datasource", "2"), value("label_name", null)));
-    assertThat(tinyOrm.singleLabel("datasource = ?", 2)).isPresent();
   }
 
   @Test
@@ -117,14 +105,6 @@ class TinyOrmTest {
 
     tinyOrm.insert(Query.class, value("datasource", "test_a"));
     assertThat(tinyOrm.singleQuery("datasource = 'test_a'")).isPresent();
-  }
-
-  @Test
-  void testSingleLabel() {
-    assertThat(tinyOrm.singleLabel("datasource = ?", 1)).isEmpty();
-
-    assertEquals(1, tinyOrm.insert(Label.class, value("datasource", "1")));
-    assertThat(tinyOrm.singleLabel("datasource = ?", 1)).isPresent();
   }
 
   @Test

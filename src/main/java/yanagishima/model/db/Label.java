@@ -1,30 +1,30 @@
 package yanagishima.model.db;
 
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.Id;
+import javax.persistence.IdClass;
+import javax.persistence.Table;
+
 import lombok.Data;
-import lombok.EqualsAndHashCode;
-import me.geso.tinyorm.Row;
-import me.geso.tinyorm.annotations.Column;
-import me.geso.tinyorm.annotations.PrimaryKey;
-import me.geso.tinyorm.annotations.Table;
 
-@Table("label")
 @Data
-@EqualsAndHashCode(callSuper = false)
-public class Label extends Row<Label> {
-
-    @PrimaryKey
-    @Column("datasource")
+@Entity
+@IdClass(LabelId.class)
+@Table(name = "label")
+public class Label {
+    @Id
+    @Column(name = "datasource")
     private String datasource;
 
-    @PrimaryKey
-    @Column("engine")
+    @Id
+    @Column(name = "engine")
     private String engine;
 
-    @PrimaryKey
-    @Column("query_id")
+    @Id
+    @Column(name = "query_id")
     private String queryid;
 
-    @Column("label_name")
+    @Column(name = "label_name")
     private String labelName;
-
 }

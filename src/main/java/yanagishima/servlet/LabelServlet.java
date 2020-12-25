@@ -1,6 +1,5 @@
 package yanagishima.servlet;
 
-import static yanagishima.repository.TinyOrm.value;
 import static yanagishima.util.AccessControlUtil.sendForbiddenError;
 import static yanagishima.util.AccessControlUtil.validateDatasource;
 
@@ -20,15 +19,15 @@ import org.springframework.web.bind.annotation.RestController;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import yanagishima.config.YanagishimaConfig;
-import yanagishima.repository.TinyOrm;
 import yanagishima.model.db.Label;
+import yanagishima.service.LabelService;
 
 @Slf4j
 @Deprecated
 @RestController
 @RequiredArgsConstructor
 public class LabelServlet {
-    private final TinyOrm db;
+    private final LabelService labelService;
     private final YanagishimaConfig config;
 
     @PostMapping("label")
@@ -44,16 +43,13 @@ public class LabelServlet {
                 return responseBody;
             }
 
-            int count = db.insert(Label.class, value("datasource", datasource),
-                                  value("engine", engine),
-                                  value("query_id", queryId),
-                                  value("label_name", labelName));
+            labelService.insert(datasource, engine, queryId, labelName);
 
             responseBody.put("datasource", datasource);
             responseBody.put("engine", engine);
             responseBody.put("queryid", queryId);
             responseBody.put("labelName", labelName);
-            responseBody.put("count", count);
+            responseBody.put("count", 1);
 
         } catch (Throwable e) {
             log.error(e.getMessage(), e);
@@ -75,7 +71,7 @@ public class LabelServlet {
                 return responseBody;
             }
 
-            Optional<Label> optionalLabel = db.singleLabel("datasource = ? and engine = ? and query_id = ?", datasource, engine, queryId);
+            Optional<Label> optionalLabel = labelService.get(datasource, engine, queryId);
             if (optionalLabel.isPresent()) {
                 responseBody.put("label", optionalLabel.get().getLabelName());
             }
@@ -98,7 +94,7 @@ public class LabelServlet {
                 return responseBody;
             }
 
-            db.singleLabel("datasource = ? and engine = ? and query_id = ?", datasource, engine, queryId).ifPresent(Label::delete);
+            labelService.get(datasource, engine, queryId).ifPresent(labelService::delete);
             responseBody.put("datasource", datasource);
             responseBody.put("engine", engine);
             responseBody.put("queryid", queryId);
