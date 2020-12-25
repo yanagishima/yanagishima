@@ -7,13 +7,14 @@ import io.airlift.units.DataSize;
 import io.airlift.units.Duration;
 import com.facebook.presto.client.*;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.OkHttpClient;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
-import org.komamitsu.fluency.Fluency;
 import org.springframework.stereotype.Service;
 
+import yanagishima.client.fluentd.FluencyClient;
 import yanagishima.config.YanagishimaConfig;
 import yanagishima.exception.QueryErrorException;
 import yanagishima.repository.TinyOrm;
@@ -21,7 +22,6 @@ import yanagishima.model.presto.PrestoQueryResult;
 import yanagishima.util.Constants;
 import yanagishima.util.TypeCoerceUtil;
 
-import javax.inject.Inject;
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.net.URI;
@@ -39,38 +39,31 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.base.Verify.verify;
 import static com.facebook.presto.client.OkHttpUtil.basicAuth;
-import static com.facebook.presto.client.OkHttpUtil.setupTimeouts;
 import static java.lang.String.format;
 import static java.util.Collections.emptyMap;
 import static java.util.concurrent.TimeUnit.MINUTES;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static yanagishima.util.DbUtil.insertQueryHistory;
 import static yanagishima.util.DbUtil.storeError;
-import static yanagishima.util.FluentdUtil.buildStaticFluency;
 import static yanagishima.util.PathUtil.getResultFilePath;
 import static yanagishima.util.QueryEngine.presto;
 import static yanagishima.util.TimeoutUtil.checkTimeout;
 
 @Slf4j
 @Service
+@RequiredArgsConstructor
 public class OldPrestoServiceImpl {
     private static final CSVFormat CSV_FORMAT = CSVFormat.EXCEL.withDelimiter('\t').withNullString("\\N").withRecordSeparator(System.getProperty("line.separator"));
 
     private final YanagishimaConfig config;
-    private final OkHttpClient httpClient;
+    private final OkHttpClient httpClient = new OkHttpClient.Builder()
+        .connectTimeout(5, SECONDS)
+        .readTimeout(5, SECONDS)
+        .writeTimeout(5, SECONDS)
+        .build();
     private final ExecutorService executorService = Executors.newFixedThreadPool(10);
-    private final Fluency fluency;
+    private final FluencyClient fluencyClient;
     private final TinyOrm db;
-
-    @Inject
-    public OldPrestoServiceImpl(YanagishimaConfig config, TinyOrm db) {
-        this.config = config;
-        this.db = db;
-        OkHttpClient.Builder builder = new OkHttpClient.Builder();
-        setupTimeouts(builder, 5, SECONDS);
-        httpClient = builder.build();
-        this.fluency = buildStaticFluency(config);
-    }
 
     public String doQueryAsync(String datasource, String query, String userName, Optional<String> prestoUser, Optional<String> prestoPassword) {
         StatementClient client = getStatementClient(datasource, query, userName, prestoUser, prestoPassword);
@@ -263,10 +256,6 @@ public class OldPrestoServiceImpl {
     }
 
     private void emitExecutedEvent(String username, String query, String queryId, String datasource, long elapsedTime) {
-        if (config.getFluentdExecutedTag().isEmpty()) {
-            return;
-        }
-
         Map<String, Object> event = new HashMap<>();
         event.put("elapsed_time_millseconds", elapsedTime);
         event.put("user", username);
@@ -275,18 +264,10 @@ public class OldPrestoServiceImpl {
         event.put("datasource", datasource);
         event.put("engine", presto.name());
 
-        try {
-            fluency.emit(config.getFluentdExecutedTag().get(), event);
-        } catch (IOException e) {
-            log.error(e.getMessage(), e);
-        }
+        fluencyClient.emitExecuted(event);
     }
 
     private void emitFailedEvent(String username, String query, String datasource, QueryStatusInfo results, long elapsedTime) {
-        if (config.getFluentdFaliedTag().isEmpty()) {
-            return;
-        }
-
         Map<String, Object> event = new HashMap<>();
         event.put("elapsed_time_millseconds", elapsedTime);
         event.put("user", username);
@@ -297,11 +278,7 @@ public class OldPrestoServiceImpl {
         event.put("errorType", results.getError().getErrorType());
         event.put("message", results.getError().getMessage());
 
-        try {
-            fluency.emit(config.getFluentdFaliedTag().get(), event);
-        } catch (IOException e) {
-            log.error(e.getMessage(), e);
-        }
+        fluencyClient.emitFailed(event);
     }
 
     private void checkSecretKeyword(String username, String query, String queryId, String datasource) {
