@@ -1,6 +1,5 @@
 package yanagishima.servlet;
 
-import static io.prestosql.client.OkHttpUtil.basicAuth;
 import static java.lang.String.format;
 import static yanagishima.util.AccessControlUtil.sendForbiddenError;
 import static yanagishima.util.AccessControlUtil.validateDatasource;
@@ -8,6 +7,7 @@ import static yanagishima.util.AccessControlUtil.validateDatasource;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -20,9 +20,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
 import okhttp3.Response;
+import yanagishima.client.presto.PrestoClient;
 import yanagishima.config.YanagishimaConfig;
 
 @Slf4j
@@ -32,11 +31,12 @@ public class QueryStatusServlet {
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
     private final YanagishimaConfig config;
-    private final OkHttpClient httpClient = new OkHttpClient();
 
     @PostMapping("queryStatus")
     public Map<?, ?> post(@RequestParam String datasource,
                           @RequestParam(name = "queryid", required = false) String queryId,
+                          @RequestParam Optional<String> user,
+                          @RequestParam Optional<String> password,
                           HttpServletRequest request, HttpServletResponse response) throws IOException {
 		if (config.isCheckDatasource() && !validateDatasource(request, datasource)) {
 			sendForbiddenError(response);
@@ -46,13 +46,7 @@ public class QueryStatusServlet {
 		String coordinatorServer = config.getPrestoCoordinatorServer(datasource);
 		String json;
 		String userName = request.getHeader(config.getAuditHttpHeaderName());
-		Request prestoRequest;
-		if (userName == null) {
-			prestoRequest = new Request.Builder().url(coordinatorServer + "/v1/query/" + queryId).build();
-		} else {
-			prestoRequest = new Request.Builder().url(coordinatorServer + "/v1/query/" + queryId).addHeader("X-Presto-User", userName).build();
-		}
-		try (Response prestoResponse = buildClient(request).newCall(prestoRequest).execute()) {
+		try (Response prestoResponse = new PrestoClient(coordinatorServer, userName, user, password).get(queryId)) {
 			if (!prestoResponse.isSuccessful() || prestoResponse.body() == null) {
 				return toMap(prestoResponse.code(), prestoResponse.message());
 			}
@@ -70,17 +64,6 @@ public class QueryStatusServlet {
 		status.remove("outputStage");
 		status.remove("session");
 		return status;
-	}
-
-	private OkHttpClient buildClient(HttpServletRequest request) {
-		String user = request.getParameter("user");
-		String password = request.getParameter("password");
-		if (user != null && password != null) {
-			OkHttpClient.Builder builder = httpClient.newBuilder();
-			builder.addInterceptor(basicAuth(user, password));
-			return builder.build();
-		}
-		return httpClient;
 	}
 
 	private Map<String, String> toMap(int code, String message) {

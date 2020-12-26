@@ -1,6 +1,5 @@
 package yanagishima.servlet;
 
-import static io.prestosql.client.OkHttpUtil.basicAuth;
 import static java.lang.String.format;
 import static java.lang.String.join;
 import static java.util.Collections.nCopies;
@@ -25,9 +24,8 @@ import org.springframework.web.bind.annotation.RestController;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import lombok.RequiredArgsConstructor;
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
 import okhttp3.Response;
+import yanagishima.client.presto.PrestoClient;
 import yanagishima.config.YanagishimaConfig;
 import yanagishima.repository.TinyOrm;
 import yanagishima.model.db.Query;
@@ -40,8 +38,6 @@ public class QueryServlet {
 
     private final YanagishimaConfig config;
     private final TinyOrm db;
-
-    private final OkHttpClient httpClient = new OkHttpClient();
 
     @PostMapping("query")
     public Object post(@RequestParam String datasource,
@@ -57,25 +53,9 @@ public class QueryServlet {
             return List.of();
         }
 
-        OkHttpClient client = httpClient;
-        if (user.isPresent() && password.isPresent()) {
-            if (user.get().isEmpty()) {
-                return Map.of("error", "user is empty");
-            }
-            OkHttpClient.Builder clientBuilder = httpClient.newBuilder();
-            clientBuilder.addInterceptor(basicAuth(user.get(), password.get()));
-            client = clientBuilder.build();
-        }
         String userName = request.getHeader(config.getAuditHttpHeaderName());
-        Request prestoRequest;
-        if (userName == null) {
-            prestoRequest = new Request.Builder().url(coordinatorServer + "/v1/query").build();
-        } else {
-            prestoRequest = new Request.Builder().url(coordinatorServer + "/v1/query").addHeader("X-Presto-User", userName).build();
-        }
-
         String originalJson;
-        try (Response prestoResponse = client.newCall(prestoRequest).execute()) {
+        try (Response prestoResponse = new PrestoClient(coordinatorServer, userName, user, password).get()) {
             originalJson = prestoResponse.body().string();
             int code = prestoResponse.code();
             if (code != SC_OK) {
