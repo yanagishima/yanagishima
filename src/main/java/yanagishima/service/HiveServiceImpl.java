@@ -2,12 +2,13 @@ package yanagishima.service;
 
 import io.airlift.units.DataSize;
 import io.airlift.units.Duration;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
-import org.komamitsu.fluency.Fluency;
 import org.springframework.stereotype.Service;
 
+import yanagishima.client.fluentd.FluencyClient;
 import yanagishima.config.YanagishimaConfig;
 import yanagishima.exception.HiveQueryErrorException;
 import yanagishima.pool.StatementPool;
@@ -15,7 +16,6 @@ import yanagishima.repository.TinyOrm;
 import yanagishima.model.hive.HiveQueryResult;
 import yanagishima.util.QueryIdUtil;
 
-import javax.inject.Inject;
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -31,7 +31,6 @@ import static java.lang.String.format;
 import static yanagishima.util.Constants.YANAGISHIAM_HIVE_JOB_PREFIX;
 import static yanagishima.util.DbUtil.insertQueryHistory;
 import static yanagishima.util.DbUtil.storeError;
-import static yanagishima.util.FluentdUtil.buildStaticFluency;
 import static yanagishima.util.PathUtil.getResultFilePath;
 import static yanagishima.util.QueryEngine.hive;
 import static yanagishima.util.QueryEngine.spark;
@@ -40,20 +39,13 @@ import static yanagishima.util.TypeCoerceUtil.objectToString;
 
 @Slf4j
 @Service
+@RequiredArgsConstructor
 public class HiveServiceImpl {
     private final YanagishimaConfig config;
     private final ExecutorService executorService = Executors.newFixedThreadPool(10);
     private final TinyOrm db;
-    private final Fluency fluency;
+    private final FluencyClient fluencyClient;
     private final StatementPool statementPool;
-
-    @Inject
-    public HiveServiceImpl(YanagishimaConfig config, TinyOrm db, StatementPool statementPool) {
-        this.config = config;
-        this.db = db;
-        this.fluency = buildStaticFluency(config);
-        this.statementPool = statementPool;
-    }
 
     public String doQueryAsync(String engine, String datasource, String query, String userName, Optional<String> hiveUser, Optional<String> hivePassword) {
         String queryId = QueryIdUtil.generate(datasource, query, engine);
@@ -283,10 +275,6 @@ public class HiveServiceImpl {
     }
 
     private void emitExecutedEvent(String username, String query, String queryId, String datasource, String engine, long elapsedTime) {
-        if (config.getFluentdExecutedTag().isEmpty()) {
-            return;
-        }
-
         Map<String, Object> event = new HashMap<>();
         event.put("elapsed_time_millseconds", elapsedTime);
         event.put("user", username);
@@ -295,11 +283,7 @@ public class HiveServiceImpl {
         event.put("datasource", datasource);
         event.put("engine", engine);
 
-        try {
-            fluency.emit(config.getFluentdExecutedTag().get(), event);
-        } catch (IOException e) {
-            log.error(e.getMessage(), e);
-        }
+        fluencyClient.emitExecuted(event);
     }
 
     private String getJdbcUrl(String datasource, String engine, String userName) {

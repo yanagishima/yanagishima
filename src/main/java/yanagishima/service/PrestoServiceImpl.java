@@ -6,13 +6,14 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import io.airlift.units.DataSize;
 import io.airlift.units.Duration;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.OkHttpClient;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
-import org.komamitsu.fluency.Fluency;
 import org.springframework.stereotype.Service;
 
+import yanagishima.client.fluentd.FluencyClient;
 import yanagishima.config.YanagishimaConfig;
 import yanagishima.exception.QueryErrorException;
 import yanagishima.repository.TinyOrm;
@@ -20,7 +21,6 @@ import yanagishima.model.presto.PrestoQueryResult;
 import yanagishima.util.Constants;
 import yanagishima.util.TypeCoerceUtil;
 
-import javax.inject.Inject;
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.net.URI;
@@ -37,7 +37,6 @@ import static com.google.common.base.MoreObjects.firstNonNull;
 import static com.google.common.base.Preconditions.checkState;
 import static io.airlift.units.DataSize.Unit.BYTE;
 import static io.prestosql.client.OkHttpUtil.basicAuth;
-import static io.prestosql.client.OkHttpUtil.setupTimeouts;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Verify.verify;
 import static java.lang.String.format;
@@ -48,13 +47,13 @@ import static java.util.concurrent.TimeUnit.MINUTES;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static yanagishima.util.DbUtil.insertQueryHistory;
 import static yanagishima.util.DbUtil.storeError;
-import static yanagishima.util.FluentdUtil.buildStaticFluency;
 import static yanagishima.util.PathUtil.getResultFilePath;
 import static yanagishima.util.QueryEngine.presto;
 import static yanagishima.util.TimeoutUtil.checkTimeout;
 
 @Slf4j
 @Service
+@RequiredArgsConstructor
 public class PrestoServiceImpl {
     private static final CSVFormat CSV_FORMAT = CSVFormat.EXCEL
             .withDelimiter('\t')
@@ -62,28 +61,18 @@ public class PrestoServiceImpl {
             .withRecordSeparator(System.getProperty("line.separator"));
 
     private final YanagishimaConfig config;
-    private final OkHttpClient httpClient;
+    private final OkHttpClient httpClient = new OkHttpClient.Builder()
+        .connectTimeout(5, SECONDS)
+        .readTimeout(5, SECONDS)
+        .writeTimeout(5, SECONDS)
+        .build();
     private final SessionPropertyService sessionPropertyService;
     private final ExecutorService executorService = Executors.newFixedThreadPool(10);
-    private final Fluency fluency;
+    private final FluencyClient fluencyClient;
     private final TinyOrm db;
-
-    private final long maxResultFileByteSize;
 
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
     private Map<String, String> properties = ImmutableMap.of();
-
-    @Inject
-    public PrestoServiceImpl(YanagishimaConfig config, TinyOrm db, SessionPropertyService sessionPropertyService) {
-        this.config = config;
-        this.db = db;
-        OkHttpClient.Builder builder = new OkHttpClient.Builder();
-        setupTimeouts(builder, 5, SECONDS);
-        httpClient = builder.build();
-        this.fluency = buildStaticFluency(config);
-        this.maxResultFileByteSize = config.getMaxResultFileByteSize();
-        this.sessionPropertyService = sessionPropertyService;
-    }
 
     public String doQueryAsync(String datasource, String query, Optional<String> sessionPropertyOptional, String userName, Optional<String> prestoUser, Optional<String> prestoPassword) {
         sessionPropertyOptional.ifPresent(sessionProperty -> {
@@ -252,8 +241,8 @@ public class PrestoServiceImpl {
                         List<String> row = data.stream().map(TypeCoerceUtil::objectToString).collect(Collectors.toList());
                         printer.printRecord(row);
                         resultBytes += row.toString().getBytes(UTF_8).length;
-                        if (resultBytes > maxResultFileByteSize) {
-                            String message = format("Result file size exceeded %s bytes. queryId=%s, datasource=%s", maxResultFileByteSize, queryId, datasource);
+                        if (resultBytes > config.getMaxResultFileByteSize()) {
+                            String message = format("Result file size exceeded %s bytes. queryId=%s, datasource=%s", config.getMaxResultFileByteSize(), queryId, datasource);
                             storeError(db, datasource, presto.name(), client.currentStatusInfo().getId(), client.getQuery(), userName, message);
                             throw new RuntimeException(message);
                         }
@@ -279,10 +268,6 @@ public class PrestoServiceImpl {
     }
 
     private void emitExecutedEvent(String username, String query, String queryId, String datasource, long elapsedTime) {
-        if (config.getFluentdExecutedTag().isEmpty()) {
-            return;
-        }
-
         Map<String, Object> event = new HashMap<>();
         event.put("elapsed_time_millseconds", elapsedTime);
         event.put("user", username);
@@ -291,18 +276,10 @@ public class PrestoServiceImpl {
         event.put("datasource", datasource);
         event.put("engine", presto.name());
 
-        try {
-            fluency.emit(config.getFluentdExecutedTag().get(), event);
-        } catch (IOException e) {
-            log.error(e.getMessage(), e);
-        }
+        fluencyClient.emitExecuted(event);
     }
 
     private void emitFailedEvent(String username, String query, String datasource, QueryStatusInfo status, long elapsedTime) {
-        if (config.getFluentdFaliedTag().isEmpty()) {
-            return;
-        }
-
         Map<String, Object> event = new HashMap<>();
         event.put("elapsed_time_millseconds", elapsedTime);
         event.put("user", username);
@@ -313,11 +290,7 @@ public class PrestoServiceImpl {
         event.put("errorType", status.getError().getErrorType());
         event.put("message", status.getError().getMessage());
 
-        try {
-            fluency.emit(config.getFluentdFaliedTag().get(), event);
-        } catch (IOException e) {
-            log.error(e.getMessage(), e);
-        }
+        fluencyClient.emitFailed(event);
     }
 
     private void checkSecretKeyword(String query, String datasource, String id, String username, List<String> secretKeywords) {

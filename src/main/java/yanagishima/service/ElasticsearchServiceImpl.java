@@ -7,16 +7,15 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
-import org.komamitsu.fluency.Fluency;
 import org.springframework.stereotype.Service;
 
+import yanagishima.client.fluentd.FluencyClient;
 import yanagishima.config.YanagishimaConfig;
 import yanagishima.exception.ElasticsearchQueryErrorException;
 import yanagishima.repository.TinyOrm;
 import yanagishima.model.elasticsearch.ElasticsearchQueryResult;
 import yanagishima.util.QueryIdUtil;
 
-import javax.annotation.PostConstruct;
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -32,7 +31,6 @@ import java.util.concurrent.TimeUnit;
 import static com.github.wyukawa.elasticsearch.unofficial.jdbc.driver.ElasticsearchDriver.DRIVER_URL_START;
 import static yanagishima.util.DbUtil.insertQueryHistory;
 import static yanagishima.util.DbUtil.storeError;
-import static yanagishima.util.FluentdUtil.buildStaticFluency;
 import static yanagishima.util.PathUtil.getResultFilePath;
 import static yanagishima.util.TimeoutUtil.checkTimeout;
 import static yanagishima.util.QueryEngine.elasticsearch;
@@ -46,12 +44,7 @@ public class ElasticsearchServiceImpl {
 
     private final YanagishimaConfig config;
     private final TinyOrm db;
-    private Fluency fluency;
-
-    @PostConstruct
-    public void postConstruct() {
-        this.fluency = buildStaticFluency(config);
-    }
+    private final FluencyClient fluencyClient;
 
     public ElasticsearchQueryResult doQuery(String datasource, String query, String userName, boolean storeFlag, int limit) throws ElasticsearchQueryErrorException {
         String queryId = QueryIdUtil.generate(datasource, query, elasticsearch.name());
@@ -239,10 +232,6 @@ public class ElasticsearchServiceImpl {
     }
 
     private void emitExecutedEvent(String username, String query, String queryId, String datasource, long elapsedTime) {
-        if (config.getFluentdExecutedTag().isEmpty()) {
-            return;
-        }
-
         Map<String, Object> event = new HashMap<>();
         event.put("elapsed_time_millseconds", elapsedTime);
         event.put("user", username);
@@ -251,10 +240,6 @@ public class ElasticsearchServiceImpl {
         event.put("datasource", datasource);
         event.put("engine", "elasticsearch");
 
-        try {
-            fluency.emit(config.getFluentdExecutedTag().get(), event);
-        } catch (IOException e) {
-            log.error(e.getMessage(), e);
-        }
+        fluencyClient.emitExecuted(event);
     }
 }
