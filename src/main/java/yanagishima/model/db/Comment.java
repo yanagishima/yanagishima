@@ -1,38 +1,39 @@
 package yanagishima.model.db;
 
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.Id;
+import javax.persistence.IdClass;
+import javax.persistence.Table;
+
 import lombok.Data;
-import lombok.EqualsAndHashCode;
-import me.geso.tinyorm.Row;
-import me.geso.tinyorm.annotations.Column;
-import me.geso.tinyorm.annotations.PrimaryKey;
-import me.geso.tinyorm.annotations.Table;
 
-@Table("comment")
 @Data
-@EqualsAndHashCode(callSuper = false)
-public class Comment extends Row<Comment> {
-
-    @PrimaryKey
-    @Column("datasource")
+@Entity
+@IdClass(CommentId.class)
+@Table(name = "comment")
+public class Comment {
+    @Id
+    @Column(name = "datasource")
     private String datasource;
 
-    @PrimaryKey
-    @Column("engine")
+    @Id
+    @Column(name = "engine")
     private String engine;
 
-    @PrimaryKey
-    @Column("query_id")
+    @Id
+    @Column(name = "query_id")
     private String queryid;
 
-    @Column("update_time_string")
+    @Column(name = "update_time_string")
     private String updateTimeString;
 
-    @Column("content")
+    @Column(name = "content")
     private String content;
 
-    @Column("user")
+    @Column(name = "user")
     private String user;
 
-    @Column("like_count")
+    @Column(name = "like_count")
     private int likeCount;
 }

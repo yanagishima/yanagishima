@@ -3,8 +3,8 @@ package yanagishima.servlet;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import yanagishima.config.YanagishimaConfig;
-import yanagishima.repository.TinyOrm;
 import yanagishima.model.db.Comment;
+import yanagishima.service.CommentService;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -15,9 +15,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
-import static yanagishima.repository.TinyOrm.value;
 import static yanagishima.util.AccessControlUtil.sendForbiddenError;
 import static yanagishima.util.AccessControlUtil.validateDatasource;
 
@@ -31,8 +29,8 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequiredArgsConstructor
 public class CommentServlet {
+    private final CommentService commentService;
     private final YanagishimaConfig config;
-    private final TinyOrm db;
 
     @PostMapping("comment")
     public Map<String, Object> post(@RequestParam String datasource,
@@ -59,33 +57,20 @@ public class CommentServlet {
 
             if (like.isEmpty()) {
                 requireNonNull(content, "content is null");
-                Optional<Comment> comment = db.singleComment("datasource = ? and engine = ? and query_id = ?",
-                                                                           datasource, engine, queryId);
+                Optional<Comment> comment = commentService.get(datasource, engine, queryId);
                 if (comment.isPresent()) {
-                    String updateSql = format("UPDATE comment SET user = '%s', content = '%s', update_time_string = '%s' "
-                                              + "WHERE datasource = '%s' and engine = '%s' and query_id = '%s'",
-                                              user, content, updateTimeString, datasource, engine, queryId);
-                    db.updateBySQL(updateSql);
+                    commentService.update(comment.get(), user, content, updateTimeString);
                     responseBody.put("content", content);
                     responseBody.put("likeCount", comment.get().getLikeCount());
                 } else {
-                    db.insert(Comment.class, value("datasource", datasource),
-                       value("engine", engine),
-                       value("query_id", queryId),
-                       value("user", user),
-                       value("content", content),
-                       value("like_count", 0),
-                       value("update_time_string", updateTimeString));
+                    commentService.insert(datasource, engine, queryId, user, content, updateTimeString);
                     responseBody.put("content", content);
                     responseBody.put("likeCount", 0);
                 }
             } else {
-                Comment likedComment = db.singleComment("datasource = ? and engine = ? and query_id = ?",
-                                                                      datasource, engine, queryId).get();
+                Comment likedComment = commentService.get(datasource, engine, queryId).get();
                 int likeCount = likedComment.getLikeCount() + like.get();
-                String updateSql = format("UPDATE comment SET like_count=%d WHERE datasource = '%s' and engine = '%s' and query_id = '%s'",
-                                          likeCount, datasource, engine, queryId);
-                db.updateBySQL(updateSql);
+                commentService.update(likedComment, likeCount);
                 responseBody.put("likeCount", likeCount);
             }
         } catch (Throwable e) {
@@ -99,7 +84,7 @@ public class CommentServlet {
     public Map<String, Object> get(@RequestParam String datasource,
                                    @RequestParam String engine,
                                    @RequestParam(name = "queryid", required = false) String queryId,
-                                   @RequestParam(defaultValue = "update_time_string") String sort,
+                                   @RequestParam(defaultValue = "updateTimeString") String sort,
                                    @RequestParam(defaultValue = "") String search,
                                    HttpServletRequest request, HttpServletResponse response) {
         Map<String, Object> responseBody = new HashMap<>();
@@ -110,12 +95,10 @@ public class CommentServlet {
 
             List<Comment> comments = new ArrayList<>();
             if (queryId != null) {
-                Optional<Comment> comment = db.singleComment("datasource = ? and engine = ? and query_id = ?",
-                                                             datasource, engine, queryId);
+                Optional<Comment> comment = commentService.get(datasource, engine, queryId);
                 comment.ifPresent(comments::add);
             } else {
-                comments = db.searchComments(sort + " DESC",
-                                             "datasource = ? and engine = ? and content LIKE '%" + search + "%'", datasource, engine);
+                comments = commentService.getAll(datasource, engine, search, sort);
             }
             responseBody.put("comments", comments);
         } catch (Throwable e) {
@@ -136,8 +119,7 @@ public class CommentServlet {
                 sendForbiddenError(response);
             }
 
-            db.deleteComment("datasource = ? and engine = ? and query_id = ?",
-                             datasource, engine, queryId);
+            commentService.delete(datasource, engine, queryId);
             responseBody.put("datasource", datasource);
             responseBody.put("engine", engine);
             responseBody.put("queryid", queryId);
