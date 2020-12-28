@@ -7,9 +7,8 @@ import io.prestosql.sql.parser.ParsingOptions;
 import io.prestosql.sql.parser.SqlParser;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
 import okhttp3.Response;
+import yanagishima.client.presto.PrestoClient;
 import yanagishima.config.YanagishimaConfig;
 import yanagishima.exception.QueryErrorException;
 import yanagishima.model.presto.PrestoQueryResult;
@@ -23,7 +22,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-import static io.prestosql.client.OkHttpUtil.basicAuth;
 import static java.lang.String.format;
 import static yanagishima.util.AccessControlUtil.sendForbiddenError;
 import static yanagishima.util.AccessControlUtil.validateDatasource;
@@ -41,7 +39,6 @@ public class CheckPrestoQueryServlet {
 
     private final PrestoServiceImpl prestoService;
     private final YanagishimaConfig config;
-    private final OkHttpClient httpClient = new OkHttpClient();
 
     @PostMapping("checkPrestoQuery")
     public Map<String, Object> post(@RequestParam String datasource,
@@ -85,13 +82,7 @@ public class CheckPrestoQueryServlet {
             }
 
             String coordinatorServer = config.getPrestoCoordinatorServer(datasource);
-            Request prestoRequest;
-            if (user == null) {
-                prestoRequest = new Request.Builder().url(coordinatorServer + "/v1/query/" + queryId).build();
-            } else {
-                prestoRequest = new Request.Builder().url(coordinatorServer + "/v1/query/" + queryId).addHeader("X-Presto-User", user).build();
-            }
-            try (Response prestoResponse = buildClient(request).newCall(prestoRequest).execute()) {
+            try (Response prestoResponse = new PrestoClient(coordinatorServer, user, prestoUser, prestoPassword).get(queryId)) {
                 if (prestoResponse.isSuccessful() && prestoResponse.body() != null) {
                     String json = prestoResponse.body().string();
                     Map status = OBJECT_MAPPER.readValue(json, Map.class);
@@ -126,17 +117,6 @@ public class CheckPrestoQueryServlet {
             responseBody.put("error", e.getMessage());
         }
         return responseBody;
-    }
-
-    private OkHttpClient buildClient(HttpServletRequest request) {
-        String user = request.getParameter("user");
-        String password = request.getParameter("password");
-        if (user != null && password != null) {
-            OkHttpClient.Builder builder = httpClient.newBuilder();
-            builder.addInterceptor(basicAuth(user, password));
-            return builder.build();
-        }
-        return httpClient;
     }
 
     @Nullable
