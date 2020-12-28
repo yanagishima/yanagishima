@@ -29,7 +29,6 @@ import yanagishima.config.YanagishimaConfig;
 import yanagishima.exception.ElasticsearchQueryErrorException;
 import yanagishima.model.db.Query;
 import yanagishima.model.elasticsearch.ElasticsearchQueryResult;
-import yanagishima.repository.TinyOrm;
 import yanagishima.service.ElasticsearchServiceImpl;
 import yanagishima.service.QueryService;
 
@@ -41,7 +40,6 @@ public class ElasticsearchServlet {
     private final ElasticsearchServiceImpl elasticsearchServiceImpl;
     private final QueryService queryService;
     private final YanagishimaConfig config;
-    private final TinyOrm db;
 
     @DatasourceAuth
     @PostMapping("elasticsearch")

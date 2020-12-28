@@ -39,7 +39,7 @@ public class DataConfig {
     hikariConfig.setJdbcUrl(config.getConnectionUrl());
     hikariConfig.setUsername(config.getConnectionUsername());
     hikariConfig.setPassword(config.getConnectionPassword());
-    hikariConfig.setMaximumPoolSize(config.getConnectionMaxPoolSize() / 2); // Share with TinyOrm
+    hikariConfig.setMaximumPoolSize(config.getConnectionMaxPoolSize());
     hikariConfig.setMaxLifetime(config.getConnectionMaxLifetime());
     return new HikariDataSource(hikariConfig);
   }
