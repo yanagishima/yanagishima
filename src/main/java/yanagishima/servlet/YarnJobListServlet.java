@@ -3,8 +3,6 @@ package yanagishima.servlet;
 import static java.lang.String.format;
 import static java.lang.String.join;
 import static java.util.Collections.nCopies;
-import static yanagishima.util.AccessControlUtil.sendForbiddenError;
-import static yanagishima.util.AccessControlUtil.validateDatasource;
 import static yanagishima.util.Constants.YANAGISHIAM_HIVE_JOB_PREFIX;
 
 import java.io.IOException;
@@ -25,9 +23,10 @@ import org.springframework.web.bind.annotation.RestController;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import lombok.RequiredArgsConstructor;
+import yanagishima.annotation.DatasourceAuth;
 import yanagishima.config.YanagishimaConfig;
-import yanagishima.repository.TinyOrm;
 import yanagishima.model.db.Query;
+import yanagishima.repository.TinyOrm;
 import yanagishima.util.YarnUtil;
 
 @RestController
@@ -39,12 +38,9 @@ public class YarnJobListServlet {
 	private final YanagishimaConfig config;
 	private final TinyOrm db;
 
+	@DatasourceAuth
 	@GetMapping("yarnJobList")
 	public void get(@RequestParam String datasource, HttpServletRequest request, HttpServletResponse response) throws IOException {
-		if (config.isCheckDatasource() && !validateDatasource(request, datasource)) {
-			sendForbiddenError(response);
-			return;
-		}
 		String resourceManagerUrl = config.getResourceManagerUrl(datasource);
 		List<Map> yarnJobs = YarnUtil.getJobList(resourceManagerUrl, config.getResourceManagerBegin(datasource));
 		List<Map> runningJobs = yarnJobs.stream().filter(job -> job.get("state").equals("RUNNING")).collect(Collectors.toList());;

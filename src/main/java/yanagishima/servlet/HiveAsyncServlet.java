@@ -2,7 +2,6 @@ package yanagishima.servlet;
 
 import static java.lang.String.format;
 import static yanagishima.util.AccessControlUtil.sendForbiddenError;
-import static yanagishima.util.AccessControlUtil.validateDatasource;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -18,6 +17,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import yanagishima.annotation.DatasourceAuth;
 import yanagishima.config.YanagishimaConfig;
 import yanagishima.service.HiveServiceImpl;
 
@@ -28,6 +28,7 @@ public class HiveAsyncServlet {
     private final YanagishimaConfig config;
     private final HiveServiceImpl hiveService;
 
+    @DatasourceAuth
     @PostMapping(path = {"hiveAsync", "sparkAsync"})
     public Map<String, Object> post(@RequestParam String datasource,
                                     @RequestParam String engine,
@@ -48,10 +49,6 @@ public class HiveAsyncServlet {
                 return responseBody;
             }
 
-            if (config.isCheckDatasource() && !validateDatasource(request, datasource)) {
-                sendForbiddenError(response);
-                return responseBody;
-            }
             if (userName != null) {
                 log.info(format("%s executed %s in datasource=%s, engine=%s", userName, query, datasource, engine));
             }

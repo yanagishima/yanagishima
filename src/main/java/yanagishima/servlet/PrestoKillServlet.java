@@ -1,22 +1,20 @@
 package yanagishima.servlet;
 
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import okhttp3.Response;
-import yanagishima.client.presto.PrestoClient;
-import yanagishima.config.YanagishimaConfig;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 import java.util.Map;
 import java.util.Optional;
 
-import static yanagishima.util.AccessControlUtil.sendForbiddenError;
-import static yanagishima.util.AccessControlUtil.validateDatasource;
+import javax.servlet.http.HttpServletRequest;
 
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import okhttp3.Response;
+import yanagishima.annotation.DatasourceAuth;
+import yanagishima.client.presto.PrestoClient;
+import yanagishima.config.YanagishimaConfig;
 
 @Slf4j
 @RestController
@@ -24,22 +22,18 @@ import org.springframework.web.bind.annotation.RestController;
 public class PrestoKillServlet {
     private final YanagishimaConfig config;
 
+    @DatasourceAuth
     @PostMapping("kill")
     public Map<String, Object> post(@RequestParam String datasource,
                                     @RequestParam(name = "queryid", required = false) String queryId,
                                     @RequestParam Optional<String> user,
                                     @RequestParam Optional<String> password,
-                                    HttpServletRequest request, HttpServletResponse response) {
+                                    HttpServletRequest request) {
 		if (queryId == null) {
 			return Map.of();
 		}
 
 		try {
-			if (config.isCheckDatasource() && !validateDatasource(request, datasource)) {
-				sendForbiddenError(response);
-				return Map.of();
-			}
-
 			String coordinatorUrl = config.getPrestoCoordinatorServer(datasource);
 			String userName = request.getHeader(config.getAuditHttpHeaderName());
 			Response killResponse = new PrestoClient(coordinatorUrl, userName, user, password).kill(queryId);

@@ -1,16 +1,5 @@
 package yanagishima.servlet;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-
-import lombok.RequiredArgsConstructor;
-import yanagishima.config.YanagishimaConfig;
-import yanagishima.repository.TinyOrm;
-import yanagishima.model.spark.SparkSqlJob;
-import yanagishima.model.db.Query;
-import yanagishima.util.*;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.time.LocalDateTime;
@@ -23,12 +12,25 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-import static yanagishima.util.AccessControlUtil.sendForbiddenError;
-import static yanagishima.util.AccessControlUtil.validateDatasource;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import lombok.RequiredArgsConstructor;
+import yanagishima.annotation.DatasourceAuth;
+import yanagishima.config.YanagishimaConfig;
+import yanagishima.model.db.Query;
+import yanagishima.model.spark.SparkSqlJob;
+import yanagishima.repository.TinyOrm;
+import yanagishima.util.JsonUtil;
+import yanagishima.util.SparkUtil;
+import yanagishima.util.Status;
+import yanagishima.util.YarnUtil;
 
 @RestController
 @RequiredArgsConstructor
@@ -36,16 +38,13 @@ public class HiveQueryStatusServlet {
     private final YanagishimaConfig yanagishimaConfig;
     private final TinyOrm db;
 
+    @DatasourceAuth
     @PostMapping(path = { "hiveQueryStatus", "sparkQueryStatus" })
     public void post(@RequestParam String datasource,
                      @RequestParam String engine,
                      @RequestParam String queryid,
                      @RequestParam(name = "user") Optional<String> hiveUser,
                      HttpServletRequest request, HttpServletResponse response) {
-		if (yanagishimaConfig.isCheckDatasource() && !validateDatasource(request, datasource)) {
-			sendForbiddenError(response);
-			return;
-		}
 		String resourceManagerUrl = yanagishimaConfig.getResourceManagerUrl(datasource);
 		String userName = null;
 		if (yanagishimaConfig.isUseAuditHttpHeaderName()) {

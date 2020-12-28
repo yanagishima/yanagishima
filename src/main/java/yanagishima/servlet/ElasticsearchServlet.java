@@ -2,7 +2,6 @@ package yanagishima.servlet;
 
 import static java.lang.String.format;
 import static yanagishima.util.AccessControlUtil.sendForbiddenError;
-import static yanagishima.util.AccessControlUtil.validateDatasource;
 import static yanagishima.util.Constants.YANAGISHIMA_COMMENT;
 import static yanagishima.util.JsonUtil.writeJSON;
 
@@ -25,6 +24,7 @@ import org.springframework.web.bind.annotation.RestController;
 import io.swagger.annotations.Api;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import yanagishima.annotation.DatasourceAuth;
 import yanagishima.config.YanagishimaConfig;
 import yanagishima.exception.ElasticsearchQueryErrorException;
 import yanagishima.model.db.Query;
@@ -41,6 +41,7 @@ public class ElasticsearchServlet {
     private final YanagishimaConfig config;
     private final TinyOrm db;
 
+    @DatasourceAuth
     @PostMapping("elasticsearch")
     public Map<String, Object> post(@RequestParam String datasource, HttpServletRequest request, HttpServletResponse response) {
         Map<String, Object> responseBody = new HashMap<>();
@@ -57,10 +58,6 @@ public class ElasticsearchServlet {
                 return responseBody;
             }
             try {
-                if (config.isCheckDatasource() && !validateDatasource(request, datasource)) {
-                    sendForbiddenError(response);
-                    return responseBody;
-                }
                 if (user != null) {
                     log.info(format("%s executed %s in %s", user, query, datasource));
                 }

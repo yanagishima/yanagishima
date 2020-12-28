@@ -1,35 +1,35 @@
 package yanagishima.servlet;
 
+import static java.lang.String.format;
+import static yanagishima.util.Constants.YANAGISHIMA_COMMENT;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+
+import javax.annotation.Nullable;
+import javax.servlet.http.HttpServletRequest;
+
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Splitter;
+
 import io.prestosql.sql.parser.ParsingException;
 import io.prestosql.sql.parser.ParsingOptions;
 import io.prestosql.sql.parser.SqlParser;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.Response;
+import yanagishima.annotation.DatasourceAuth;
 import yanagishima.client.presto.PrestoClient;
 import yanagishima.config.YanagishimaConfig;
 import yanagishima.exception.QueryErrorException;
 import yanagishima.model.presto.PrestoQueryResult;
 import yanagishima.service.PrestoServiceImpl;
-
-import javax.annotation.Nullable;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-
-import static java.lang.String.format;
-import static yanagishima.util.AccessControlUtil.sendForbiddenError;
-import static yanagishima.util.AccessControlUtil.validateDatasource;
-import static yanagishima.util.Constants.YANAGISHIMA_COMMENT;
-
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
 
 @Slf4j
 @RestController
@@ -40,19 +40,15 @@ public class CheckPrestoQueryServlet {
     private final PrestoServiceImpl prestoService;
     private final YanagishimaConfig config;
 
+    @DatasourceAuth
     @PostMapping("checkPrestoQuery")
     public Map<String, Object> post(@RequestParam String datasource,
                                     @RequestParam(required = false) String query,
                                     @RequestParam(name = "user", required = false) Optional<String> prestoUser,
                                     @RequestParam(name = "password", required = false) Optional<String> prestoPassword,
-                                    HttpServletRequest request, HttpServletResponse response) {
+                                    HttpServletRequest request) {
         Map<String, Object> responseBody = new HashMap<>();
         if (query == null) {
-            return responseBody;
-        }
-
-        if (config.isCheckDatasource() && !validateDatasource(request, datasource)) {
-            sendForbiddenError(response);
             return responseBody;
         }
 

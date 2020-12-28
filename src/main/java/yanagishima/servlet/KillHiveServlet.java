@@ -1,8 +1,6 @@
 package yanagishima.servlet;
 
 import static java.lang.String.format;
-import static yanagishima.util.AccessControlUtil.sendForbiddenError;
-import static yanagishima.util.AccessControlUtil.validateDatasource;
 
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -18,6 +16,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import yanagishima.annotation.DatasourceAuth;
 import yanagishima.config.YanagishimaConfig;
 import yanagishima.pool.StatementPool;
 import yanagishima.util.YarnUtil;
@@ -29,16 +28,12 @@ public class KillHiveServlet {
     private final StatementPool statements;
     private final YanagishimaConfig config;
 
+    @DatasourceAuth
     @PostMapping("killHive")
     public void post(@RequestParam(required = false) String id,
                      @RequestParam String datasource,
                      HttpServletRequest request, HttpServletResponse response) {
         if (id == null) {
-            return;
-        }
-
-        if (config.isCheckDatasource() && !validateDatasource(request, datasource)) {
-            sendForbiddenError(response);
             return;
         }
 
