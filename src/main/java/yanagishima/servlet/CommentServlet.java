@@ -2,12 +2,12 @@ package yanagishima.servlet;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import yanagishima.annotation.DatasourceAuth;
 import yanagishima.config.YanagishimaConfig;
 import yanagishima.model.db.Comment;
 import yanagishima.service.CommentService;
 
 import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -16,8 +16,6 @@ import java.util.Map;
 import java.util.Optional;
 
 import static java.util.Objects.requireNonNull;
-import static yanagishima.util.AccessControlUtil.sendForbiddenError;
-import static yanagishima.util.AccessControlUtil.validateDatasource;
 
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -32,20 +30,16 @@ public class CommentServlet {
     private final CommentService commentService;
     private final YanagishimaConfig config;
 
+    @DatasourceAuth
     @PostMapping("comment")
     public Map<String, Object> post(@RequestParam String datasource,
                                     @RequestParam String engine,
                                     @RequestParam(name = "queryid") String queryId,
                                     @RequestParam Optional<Integer> like,
                                     @RequestParam(required = false) String content,
-                                    HttpServletRequest request, HttpServletResponse response) {
+                                    HttpServletRequest request) {
         Map<String, Object> responseBody = new HashMap<>();
         try {
-            if (config.isCheckDatasource() && !validateDatasource(request, datasource)) {
-                sendForbiddenError(response);
-                return responseBody;
-            }
-
             String user = request.getHeader(config.getAuditHttpHeaderName());
 
             responseBody.put("datasource", datasource);
@@ -80,19 +74,15 @@ public class CommentServlet {
         return responseBody;
     }
 
+    @DatasourceAuth
     @GetMapping("comment")
     public Map<String, Object> get(@RequestParam String datasource,
                                    @RequestParam String engine,
                                    @RequestParam(name = "queryid", required = false) String queryId,
                                    @RequestParam(defaultValue = "updateTimeString") String sort,
-                                   @RequestParam(defaultValue = "") String search,
-                                   HttpServletRequest request, HttpServletResponse response) {
+                                   @RequestParam(defaultValue = "") String search) {
         Map<String, Object> responseBody = new HashMap<>();
         try {
-            if (config.isCheckDatasource() && !validateDatasource(request, datasource)) {
-                sendForbiddenError(response);
-            }
-
             List<Comment> comments = new ArrayList<>();
             if (queryId != null) {
                 Optional<Comment> comment = commentService.get(datasource, engine, queryId);
@@ -108,17 +98,13 @@ public class CommentServlet {
         return responseBody;
     }
 
+    @DatasourceAuth
     @DeleteMapping("comment")
     public Map<String, Object> delete(@RequestParam String datasource,
                                       @RequestParam String engine,
-                                      @RequestParam(name = "queryid") String queryId,
-                                      HttpServletRequest request, HttpServletResponse response) {
+                                      @RequestParam(name = "queryid") String queryId) {
         Map<String, Object> responseBody = new HashMap<>();
         try {
-            if (config.isCheckDatasource() && !validateDatasource(request, datasource)) {
-                sendForbiddenError(response);
-            }
-
             commentService.delete(datasource, engine, queryId);
             responseBody.put("datasource", datasource);
             responseBody.put("engine", engine);
