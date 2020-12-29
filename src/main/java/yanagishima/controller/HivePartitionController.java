@@ -22,13 +22,13 @@ import lombok.extern.slf4j.Slf4j;
 import yanagishima.annotation.DatasourceAuth;
 import yanagishima.config.YanagishimaConfig;
 import yanagishima.model.hive.HiveQueryResult;
-import yanagishima.service.HiveServiceImpl;
+import yanagishima.service.HiveService;
 
 @Slf4j
 @RestController
 @RequiredArgsConstructor
 public class HivePartitionController {
-    private final HiveServiceImpl hiveService;
+    private final HiveService hiveService;
     private final YanagishimaConfig config;
 
     @DatasourceAuth

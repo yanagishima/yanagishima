@@ -19,15 +19,15 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import yanagishima.annotation.DatasourceAuth;
 import yanagishima.config.YanagishimaConfig;
-import yanagishima.service.OldPrestoServiceImpl;
-import yanagishima.service.PrestoServiceImpl;
+import yanagishima.service.OldPrestoService;
+import yanagishima.service.PrestoService;
 
 @Slf4j
 @RestController
 @RequiredArgsConstructor
 public class PrestoAsyncController {
-    private final PrestoServiceImpl prestoService;
-    private final OldPrestoServiceImpl oldPrestoService;
+    private final PrestoService prestoService;
+    private final OldPrestoService oldPrestoService;
     private final YanagishimaConfig config;
 
     @DatasourceAuth
