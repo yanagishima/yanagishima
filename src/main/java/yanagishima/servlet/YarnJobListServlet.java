@@ -1,8 +1,5 @@
 package yanagishima.servlet;
 
-import static java.lang.String.format;
-import static java.lang.String.join;
-import static java.util.Collections.nCopies;
 import static yanagishima.util.Constants.YANAGISHIAM_HIVE_JOB_PREFIX;
 
 import java.io.IOException;
@@ -26,7 +23,7 @@ import lombok.RequiredArgsConstructor;
 import yanagishima.annotation.DatasourceAuth;
 import yanagishima.config.YanagishimaConfig;
 import yanagishima.model.db.Query;
-import yanagishima.repository.TinyOrm;
+import yanagishima.service.QueryService;
 import yanagishima.util.YarnUtil;
 
 @RestController
@@ -35,8 +32,8 @@ public class YarnJobListServlet {
 	private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 	private static final int LIMIT = 100;
 
+	private final QueryService queryService;
 	private final YanagishimaConfig config;
-	private final TinyOrm db;
 
 	@DatasourceAuth
 	@GetMapping("yarnJobList")
@@ -87,13 +84,7 @@ public class YarnJobListServlet {
 			return List.of();
 		}
 
-		String placeholder = join(", ", nCopies(queryIds.size(), "?"));
-		List<Query> queries = db.searchBySQL(Query.class,
-											 format("SELECT engine, query_id, fetch_result_time_string, query_string "
-													+ "FROM query "
-													+ "WHERE engine='hive' and datasource=\'%s\' and query_id IN (%s)",
-													datasource, placeholder),
-											 queryIds.stream().collect(Collectors.toList()));
+		List<Query> queries = queryService.getAll(datasource, "hive", queryIds);
 
 		return queries.stream().map(Query::getQueryId).collect(Collectors.toList());
 	}

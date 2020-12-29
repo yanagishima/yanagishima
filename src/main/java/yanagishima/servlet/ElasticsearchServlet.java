@@ -31,6 +31,7 @@ import yanagishima.model.db.Query;
 import yanagishima.model.elasticsearch.ElasticsearchQueryResult;
 import yanagishima.repository.TinyOrm;
 import yanagishima.service.ElasticsearchServiceImpl;
+import yanagishima.service.QueryService;
 
 @Slf4j
 @Api(tags = "elasticsearch")
@@ -38,6 +39,7 @@ import yanagishima.service.ElasticsearchServiceImpl;
 @RequiredArgsConstructor
 public class ElasticsearchServlet {
     private final ElasticsearchServiceImpl elasticsearchServiceImpl;
+    private final QueryService queryService;
     private final YanagishimaConfig config;
     private final TinyOrm db;
 
@@ -72,7 +74,7 @@ public class ElasticsearchServlet {
                 Optional.ofNullable(queryResult.getWarningMessage()).ifPresent(warningMessage ->
                     responseBody.put("warn", warningMessage)
                 );
-                db.singleQuery("query_id=? and datasource=? and engine=?", queryResult.getQueryId(), datasource, "elasticsearch").ifPresent(queryData ->
+                queryService.get(queryResult.getQueryId(), datasource, "elasticsearch").ifPresent(queryData ->
                     responseBody.put("elapsedTimeMillis", toElapsedTimeMillis(queryResult.getQueryId(), queryData))
                 );
             } catch (ElasticsearchQueryErrorException e) {

@@ -26,7 +26,7 @@ import yanagishima.annotation.DatasourceAuth;
 import yanagishima.config.YanagishimaConfig;
 import yanagishima.model.db.Query;
 import yanagishima.model.spark.SparkSqlJob;
-import yanagishima.repository.TinyOrm;
+import yanagishima.service.QueryService;
 import yanagishima.util.JsonUtil;
 import yanagishima.util.SparkUtil;
 import yanagishima.util.Status;
@@ -35,8 +35,8 @@ import yanagishima.util.YarnUtil;
 @RestController
 @RequiredArgsConstructor
 public class HiveQueryStatusServlet {
+    private final QueryService queryService;
     private final YanagishimaConfig yanagishimaConfig;
-    private final TinyOrm db;
 
     @DatasourceAuth
     @PostMapping(path = { "hiveQueryStatus", "sparkQueryStatus" })
@@ -55,7 +55,7 @@ public class HiveQueryStatusServlet {
 			}
 		}
 
-		Optional<Query> queryOptional = db.singleQuery("query_id=? and datasource=? and engine=?", queryid, datasource, engine);
+		Optional<Query> queryOptional = queryService.getByEngine(queryid, datasource, engine);
 		if (engine.equals("hive")) {
 			Optional<Map> applicationOptional = YarnUtil.getApplication(resourceManagerUrl, queryid, userName, yanagishimaConfig.getResourceManagerBegin(datasource));
 			if (applicationOptional.isPresent()) {

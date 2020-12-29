@@ -17,7 +17,6 @@ import org.springframework.stereotype.Service;
 import yanagishima.client.fluentd.FluencyClient;
 import yanagishima.config.YanagishimaConfig;
 import yanagishima.exception.QueryErrorException;
-import yanagishima.repository.TinyOrm;
 import yanagishima.model.presto.PrestoQueryResult;
 import yanagishima.util.Constants;
 import yanagishima.util.TypeCoerceUtil;
@@ -43,11 +42,8 @@ import static java.lang.String.format;
 import static java.util.Collections.emptyMap;
 import static java.util.concurrent.TimeUnit.MINUTES;
 import static java.util.concurrent.TimeUnit.SECONDS;
-import static yanagishima.util.DbUtil.insertQueryHistory;
-import static yanagishima.util.DbUtil.storeError;
 import static yanagishima.util.PathUtil.getResultFilePath;
 import static yanagishima.util.QueryEngine.presto;
-import static yanagishima.util.TimeoutUtil.checkTimeout;
 
 @Slf4j
 @Service
@@ -55,6 +51,7 @@ import static yanagishima.util.TimeoutUtil.checkTimeout;
 public class OldPrestoServiceImpl {
     private static final CSVFormat CSV_FORMAT = CSVFormat.EXCEL.withDelimiter('\t').withNullString("\\N").withRecordSeparator(System.getProperty("line.separator"));
 
+    private final QueryService queryService;
     private final YanagishimaConfig config;
     private final OkHttpClient httpClient = new OkHttpClient.Builder()
         .connectTimeout(5, SECONDS)
@@ -63,7 +60,6 @@ public class OldPrestoServiceImpl {
         .build();
     private final ExecutorService executorService = Executors.newFixedThreadPool(10);
     private final FluencyClient fluencyClient;
-    private final TinyOrm db;
 
     public String doQueryAsync(String datasource, String query, String userName, Optional<String> prestoUser, Optional<String> prestoPassword) {
         StatementClient client = getStatementClient(datasource, query, userName, prestoUser, prestoPassword);
@@ -126,14 +122,14 @@ public class OldPrestoServiceImpl {
                 QueryStatusInfo results = client.isRunning() ? client.currentStatusInfo() : client.finalStatusInfo();
                 String queryId = results.getId();
                 String message = format("Query failed (#%s) in %s: presto internal error message=%s", queryId, datasource, e.getMessage());
-                storeError(db, datasource, presto.name(), queryId, query, userName, message);
+                queryService.saveError(datasource, presto.name(), queryId, query, userName, message);
                 throw e;
             }
 
             if (System.currentTimeMillis() - start > queryMaxRunTime.toMillis()) {
                 String queryId = client.currentStatusInfo().getId();
                 String message = format("Query failed (#%s) in %s: Query exceeded maximum time limit of %s", queryId, datasource, queryMaxRunTime.toString());
-                storeError(db, datasource, presto.name(), queryId, query, userName, message);
+                queryService.saveError(datasource, presto.name(), queryId, query, userName, message);
                 throw new RuntimeException(message);
             }
         }
@@ -153,7 +149,7 @@ public class OldPrestoServiceImpl {
             List<List<String>> rows = processData(client, datasource, queryId, query, prestoQueryResult, columns, start, limit, userName);
             prestoQueryResult.setRecords(rows);
             if (storeFlag) {
-                insertQueryHistory(db, datasource, presto.name(), query, userName, queryId, prestoQueryResult.getLineNumber());
+                queryService.save(datasource, presto.name(), query, userName, queryId, prestoQueryResult.getLineNumber());
             }
 
             emitExecutedEvent(userName, query, queryId, datasource, System.currentTimeMillis() - start);
@@ -174,7 +170,7 @@ public class OldPrestoServiceImpl {
             if (prestoQueryResult.getQueryId() == null) {
                 String queryId = results.getId();
                 String message = format("Query failed (#%s) in %s: %s", queryId, datasource, results.getError().getMessage());
-                storeError(db, datasource, presto.name(), queryId, query, userName, message);
+                queryService.saveError(datasource, presto.name(), queryId, query, userName, message);
             } else {
                 Path successDst = getResultFilePath(datasource, prestoQueryResult.getQueryId(), false);
                 try {
@@ -230,7 +226,7 @@ public class OldPrestoServiceImpl {
                         resultBytes += row.toString().getBytes(StandardCharsets.UTF_8).length;
                         if (resultBytes > maxResultFileByteSize) {
                             String message = format("Result file size exceeded %s bytes. queryId=%s, datasource=%s", maxResultFileByteSize, queryId, datasource);
-                            storeError(db, datasource, presto.name(), client.currentStatusInfo().getId(), query, userName, message);
+                            queryService.saveError(datasource, presto.name(), client.currentStatusInfo().getId(), query, userName, message);
                             throw new RuntimeException(message);
                         }
 
@@ -242,7 +238,7 @@ public class OldPrestoServiceImpl {
                     }
                 }
                 client.advance();
-                checkTimeout(db, queryMaxRunTime, start, datasource, presto.name(), queryId, query, userName);
+                queryService.saveTimeout(queryMaxRunTime, start, datasource, presto.name(), queryId, query, userName);
             }
 
             queryResult.setLineNumber(lineNumber);
@@ -285,7 +281,7 @@ public class OldPrestoServiceImpl {
         for (String keyword : config.getPrestoSecretKeywords(datasource)) {
             if (query.contains(keyword)) {
                 String message = "query error occurs";
-                storeError(db, datasource, presto.name(), queryId, query, username, message);
+                queryService.saveError(datasource, presto.name(), queryId, query, username, message);
                 throw new RuntimeException(message);
             }
         }
@@ -301,7 +297,7 @@ public class OldPrestoServiceImpl {
                     for (String partitionKey : partitionKeys) {
                         if (!query.contains(partitionKey)) {
                             String message = format("If you query %s, you must specify %s in where clause", table, partitionKey);
-                            storeError(db, datasource, presto.name(), queryId, query, username, message);
+                            queryService.saveError(datasource, presto.name(), queryId, query, username, message);
                             throw new RuntimeException(message);
                         }
                     }

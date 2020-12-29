@@ -16,8 +16,8 @@ import lombok.extern.slf4j.Slf4j;
 import yanagishima.annotation.DatasourceAuth;
 import yanagishima.config.YanagishimaConfig;
 import yanagishima.model.dto.PublishDto;
-import yanagishima.repository.TinyOrm;
 import yanagishima.service.PublishService;
+import yanagishima.service.QueryService;
 
 @Slf4j
 @Api(tags = "publish")
@@ -25,8 +25,8 @@ import yanagishima.service.PublishService;
 @RequiredArgsConstructor
 public class PublishServlet extends HttpServlet {
   private final PublishService publishService;
+  private final QueryService queryService;
   private final YanagishimaConfig config;
-  private final TinyOrm db;
 
   @DatasourceAuth
   @PostMapping("publish")
@@ -40,7 +40,7 @@ public class PublishServlet extends HttpServlet {
         return publishDto;
       }
       requireNonNull(userName, "Username must exist when auditing header name is enabled");
-      db.singleQuery("query_id = ? AND datasource = ? AND user = ?", queryid, datasource, userName)
+      queryService.get(queryid, datasource, userName)
         .orElseThrow(() -> new RuntimeException(format("Cannot find query id (%s) for publish", queryid)));
       publishDto.setPublishId(publishService.publish(datasource, engine, queryid, userName).getPublishId());
       return publishDto;

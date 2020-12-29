@@ -19,14 +19,14 @@ import lombok.extern.slf4j.Slf4j;
 import yanagishima.annotation.DatasourceAuth;
 import yanagishima.config.YanagishimaConfig;
 import yanagishima.model.db.Query;
-import yanagishima.repository.TinyOrm;
+import yanagishima.service.QueryService;
 
 @Slf4j
 @RestController
 @RequiredArgsConstructor
 public class QueryHistoryUserServlet {
+    private final QueryService queryService;
     private final YanagishimaConfig config;
-    private final TinyOrm db;
 
     @DatasourceAuth
     @GetMapping("queryHistoryUser")
@@ -34,7 +34,7 @@ public class QueryHistoryUserServlet {
                                    @RequestParam String engine,
                                    @RequestParam(defaultValue = "") String search,
                                    @RequestParam(required = false) String label, // Deprecated
-                                   @RequestParam(defaultValue = "100") String limit,
+                                   @RequestParam(defaultValue = "100") int limit,
                                    HttpServletRequest request) {
         Map<String, Object> responseBody = new HashMap<>();
         try {
@@ -42,25 +42,8 @@ public class QueryHistoryUserServlet {
 
             responseBody.put("headers", Arrays.asList("Id", "Query", "Time", "rawDataSize", "engine", "finishedTime", "linenumber", "labelName", "status"));
 
-            List<Query> queryList;
-            String where = "WHERE a.datasource=\'" + datasource + "\' "
-                               + "and a.engine=\'" + engine + "\' and "
-                               + "a.user=\'" + userName + "\' "
-                               + "and a.query_string LIKE '%" + search + "%' ORDER BY a.query_id DESC LIMIT " + limit;
-            String countSql = "SELECT count(*) FROM query a " + where;
-            String fetchSql = "SELECT "
-                              + "a.engine, "
-                              + "a.query_id, "
-                              + "a.fetch_result_time_string, "
-                              + "a.query_string, "
-                              + "a.status, "
-                              + "a.elapsed_time_millis, "
-                              + "a.result_file_size, "
-                              + "a.linenumber, "
-                              + "null AS label_name " // Deprecated
-                              + "FROM query a " + where;
-            responseBody.put("hit", db.queryForLong(countSql).getAsLong());
-            queryList = db.searchBySQL(Query.class, fetchSql);
+            List<Query> queryList = queryService.getAll(datasource, engine, userName, search, limit);
+            responseBody.put("hit", queryList.size());
 
             List<List<Object>> queryHistoryList = new ArrayList<>();
             for (Query query : queryList) {
@@ -77,7 +60,7 @@ public class QueryHistoryUserServlet {
                 row.add(query.getEngine());
                 row.add(query.getFetchResultTimeString());
                 row.add(query.getLinenumber());
-                row.add(query.getExtraColumn("label_name"));
+                row.add(null); // Deprecated: labelName
                 row.add(query.getStatus());
                 queryHistoryList.add(row);
             }
@@ -88,7 +71,7 @@ public class QueryHistoryUserServlet {
                 responseBody.put("results", queryHistoryList);
             }
 
-            long totalCount = db.countQuery("datasource=? and engine=? and user=?", datasource, engine, userName);
+            long totalCount = queryService.count(datasource, engine, userName);
             responseBody.put("total", totalCount);
 
         } catch (Throwable e) {

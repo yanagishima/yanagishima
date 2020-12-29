@@ -13,21 +13,21 @@ import lombok.RequiredArgsConstructor;
 import yanagishima.annotation.DatasourceAuth;
 import yanagishima.model.db.Query;
 import yanagishima.model.dto.ElasticsearchQueryStatusDto;
-import yanagishima.repository.TinyOrm;
+import yanagishima.service.QueryService;
 import yanagishima.util.Status;
 
 @Api(tags = "elasticsearch")
 @RestController
 @RequiredArgsConstructor
 public class ElasticsearchQueryStatusServlet {
-    private final TinyOrm db;
+    private final QueryService queryService;
 
     @DatasourceAuth
     @PostMapping("elasticsearchQueryStatus")
     public ElasticsearchQueryStatusDto post(@RequestParam String datasource,
                                             @RequestParam(name = "queryid") String queryId) {
         ElasticsearchQueryStatusDto elasticsearchQueryStatusDto = new ElasticsearchQueryStatusDto();
-        Optional<Query> query = db.singleQuery("query_id=? and datasource=? and engine=?", queryId, datasource, "elasticsearch");
+        Optional<Query> query = queryService.getByEngine(queryId, datasource, "elasticsearch");
         elasticsearchQueryStatusDto.setState(getStatus(query));
         return elasticsearchQueryStatusDto;
     }

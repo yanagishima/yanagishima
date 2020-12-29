@@ -19,16 +19,16 @@ import yanagishima.annotation.DatasourceAuth;
 import yanagishima.config.YanagishimaConfig;
 import yanagishima.model.db.Query;
 import yanagishima.model.db.SessionProperty;
-import yanagishima.repository.TinyOrm;
 import yanagishima.service.SessionPropertyService;
+import yanagishima.service.QueryService;
 
 @Slf4j
 @RestController
 @RequiredArgsConstructor
 public class HistoryServlet {
     private final SessionPropertyService sessionPropertyService;
+    private final QueryService queryService;
     private final YanagishimaConfig config;
-    private final TinyOrm db;
 
     @DatasourceAuth
     @GetMapping("history")
@@ -44,13 +44,13 @@ public class HistoryServlet {
         try {
             Optional<Query> queryOptional;
             if (engine == null) {
-                queryOptional = db.singleQuery("query_id=? and datasource=?", queryId, datasource);
+                queryOptional = queryService.get(queryId, datasource);
             } else {
-                queryOptional = db.singleQuery("query_id=? and datasource=? and engine=?", queryId, datasource, engine);
+                queryOptional = queryService.getByEngine(queryId, datasource, engine);
             }
 
             String user = request.getHeader(config.getAuditHttpHeaderName());
-            Optional<Query> userQueryOptional = db.singleQuery("query_id=? and datasource=? and user=?", queryId, datasource, user);
+            Optional<Query> userQueryOptional = queryService.get(queryId, datasource, user);
             responseBody.put("editLabel", userQueryOptional.isPresent());
 
             queryOptional.ifPresent(query -> {
