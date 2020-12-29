@@ -16,7 +16,8 @@ public class StarredSchemaService {
   private final StarredSchemaRepository starredSchemaRepository;
 
   public List<StarredSchema> getAll(String datasource, String engine, String catalog, String user) {
-    return starredSchemaRepository.findAllByDatasourceAndEngineAndCatalogAndUser(datasource, engine, catalog, user);
+    return starredSchemaRepository.findAllByDatasourceAndEngineAndCatalogAndUser(datasource, engine, catalog,
+                                                                                 user);
   }
 
   public StarredSchema insert(String datasource, String engine, String catalog, String schema, String user) {

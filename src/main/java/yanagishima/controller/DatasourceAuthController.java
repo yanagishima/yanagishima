@@ -21,41 +21,42 @@ import yanagishima.config.YanagishimaConfig;
 @RestController
 @RequiredArgsConstructor
 public class DatasourceAuthController {
-    private final YanagishimaConfig config;
+  private final YanagishimaConfig config;
 
-    @GetMapping("datasourceAuth")
-    public Map<String, Object> get(@RequestHeader(name = DATASOURCE_HEADER, required = false) String header) {
-        Map<String, Object> responseBody = new HashMap<>();
-        if (config.isCheckDatasource()) {
-            requireNonNull(header, format("Missing required header '%s'", DATASOURCE_HEADER));
-            if (header.equals("*")) {
-                responseBody.put("datasources", getDatasourceEngineList(config.getDatasources()));
-            } else {
-                List<String> headerDatasources = Arrays.asList(header.split(","));
-                List<String> allowedDatasources = config.getDatasources().stream().filter(headerDatasources::contains).collect(Collectors.toList());
-                responseBody.put("datasources", getDatasourceEngineList(allowedDatasources));
-            }
-        } else {
-            responseBody.put("datasources", getDatasourceEngineList(config.getDatasources()));
-        }
-        return responseBody;
+  @GetMapping("datasourceAuth")
+  public Map<String, Object> get(@RequestHeader(name = DATASOURCE_HEADER, required = false) String header) {
+    Map<String, Object> responseBody = new HashMap<>();
+    if (config.isCheckDatasource()) {
+      requireNonNull(header, format("Missing required header '%s'", DATASOURCE_HEADER));
+      if (header.equals("*")) {
+        responseBody.put("datasources", getDatasourceEngineList(config.getDatasources()));
+      } else {
+        List<String> headerDatasources = Arrays.asList(header.split(","));
+        List<String> allowedDatasources = config.getDatasources().stream().filter(headerDatasources::contains)
+                                                .collect(Collectors.toList());
+        responseBody.put("datasources", getDatasourceEngineList(allowedDatasources));
+      }
+    } else {
+      responseBody.put("datasources", getDatasourceEngineList(config.getDatasources()));
     }
+    return responseBody;
+  }
 
-    private List<Map<String, Map<String, Object>>> getDatasourceEngineList(List<String> allowedDatasources) {
-        List<Map<String, Map<String, Object>>> datasourceEngines = new ArrayList<>();
-        for (String datasource : allowedDatasources) {
-            List<String> engines = config.getEngines().stream()
-                                         .filter(engine -> config.getDatasources(engine).contains(datasource))
-                                         .collect(Collectors.toList());
+  private List<Map<String, Map<String, Object>>> getDatasourceEngineList(List<String> allowedDatasources) {
+    List<Map<String, Map<String, Object>>> datasourceEngines = new ArrayList<>();
+    for (String datasource : allowedDatasources) {
+      List<String> engines = config.getEngines().stream()
+                                   .filter(engine -> config.getDatasources(engine).contains(datasource))
+                                   .collect(Collectors.toList());
 
-            Map<String, Object> context = Map.of(
-                    "engines", engines,
-                    "auth", config.isAuth(datasource),
-                    "metadataService", false, // Deprecated
-                    "datetimePartitionHasHyphen", config.isDatatimePartitionHasHyphen(datasource));
+      Map<String, Object> context = Map.of(
+          "engines", engines,
+          "auth", config.isAuth(datasource),
+          "metadataService", false, // Deprecated
+          "datetimePartitionHasHyphen", config.isDatatimePartitionHasHyphen(datasource));
 
-            datasourceEngines.add(Map.of(datasource, context));
-        }
-        return datasourceEngines;
+      datasourceEngines.add(Map.of(datasource, context));
     }
+    return datasourceEngines;
+  }
 }

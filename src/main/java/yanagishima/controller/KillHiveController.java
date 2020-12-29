@@ -25,58 +25,59 @@ import yanagishima.util.YarnUtil;
 @RestController
 @RequiredArgsConstructor
 public class KillHiveController {
-    private final StatementPool statements;
-    private final YanagishimaConfig config;
+  private final StatementPool statements;
+  private final YanagishimaConfig config;
 
-    @DatasourceAuth
-    @PostMapping("killHive")
-    public void post(@RequestParam(required = false) String id,
-                     @RequestParam String datasource,
-                     HttpServletRequest request, HttpServletResponse response) {
-        if (id == null) {
-            return;
-        }
-
-        String resourceManagerUrl = config.getResourceManagerUrl(datasource);
-        if (id.startsWith("application_")) {
-            killApplication(response, resourceManagerUrl, id);
-            return;
-        }
-        if (config.isUseJdbcCancel(datasource)) {
-            log.info(format("killing %s in %s by Statement#cancel", id, datasource));
-            try (Statement statement = statements.get(datasource, id)) {
-                if (statement == null) {
-                    log.error("statement is null");
-                } else {
-                    statement.cancel();
-                }
-                statements.remove(datasource, id);
-            } catch (SQLException e) {
-                throw new RuntimeException(e);
-            }
-            return;
-        }
-        YarnUtil.getApplication(resourceManagerUrl, id, getUsername(request), config.getResourceManagerBegin(datasource)).ifPresent(application -> {
-            String applicationId = (String) application.get("id");
-            killApplication(response, resourceManagerUrl, applicationId);
-        });
+  @DatasourceAuth
+  @PostMapping("killHive")
+  public void post(@RequestParam(required = false) String id,
+                   @RequestParam String datasource,
+                   HttpServletRequest request, HttpServletResponse response) {
+    if (id == null) {
+      return;
     }
 
-    private String getUsername(HttpServletRequest request) {
-        if (config.isUseAuditHttpHeaderName()) {
-            return request.getHeader(config.getAuditHttpHeaderName());
-        }
-        return request.getParameter("user");
+    String resourceManagerUrl = config.getResourceManagerUrl(datasource);
+    if (id.startsWith("application_")) {
+      killApplication(response, resourceManagerUrl, id);
+      return;
     }
+    if (config.isUseJdbcCancel(datasource)) {
+      log.info(format("killing %s in %s by Statement#cancel", id, datasource));
+      try (Statement statement = statements.get(datasource, id)) {
+        if (statement == null) {
+          log.error("statement is null");
+        } else {
+          statement.cancel();
+        }
+        statements.remove(datasource, id);
+      } catch (SQLException e) {
+        throw new RuntimeException(e);
+      }
+      return;
+    }
+    YarnUtil.getApplication(resourceManagerUrl, id, getUsername(request),
+                            config.getResourceManagerBegin(datasource)).ifPresent(application -> {
+      String applicationId = (String) application.get("id");
+      killApplication(response, resourceManagerUrl, applicationId);
+    });
+  }
 
-    private static void killApplication(HttpServletResponse response, String resourceManagerUrl, String id) {
-        try {
-            String json = YarnUtil.kill(resourceManagerUrl, id);
-            response.setContentType("application/json");
-            PrintWriter writer = response.getWriter();
-            writer.println(json);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+  private String getUsername(HttpServletRequest request) {
+    if (config.isUseAuditHttpHeaderName()) {
+      return request.getHeader(config.getAuditHttpHeaderName());
     }
+    return request.getParameter("user");
+  }
+
+  private static void killApplication(HttpServletResponse response, String resourceManagerUrl, String id) {
+    try {
+      String json = YarnUtil.kill(resourceManagerUrl, id);
+      response.setContentType("application/json");
+      PrintWriter writer = response.getWriter();
+      writer.println(json);
+    } catch (IOException e) {
+      throw new RuntimeException(e);
+    }
+  }
 }

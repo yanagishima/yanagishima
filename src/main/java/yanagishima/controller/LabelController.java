@@ -21,65 +21,65 @@ import yanagishima.service.LabelService;
 @RestController
 @RequiredArgsConstructor
 public class LabelController {
-    private final LabelService labelService;
+  private final LabelService labelService;
 
-    @DatasourceAuth
-    @PostMapping("label")
-    public Map<String, Object> post(@RequestParam String datasource,
+  @DatasourceAuth
+  @PostMapping("label")
+  public Map<String, Object> post(@RequestParam String datasource,
+                                  @RequestParam String engine,
+                                  @RequestParam(name = "queryid") String queryId,
+                                  @RequestParam String labelName) {
+    Map<String, Object> responseBody = new HashMap<>();
+    try {
+      labelService.insert(datasource, engine, queryId, labelName);
+
+      responseBody.put("datasource", datasource);
+      responseBody.put("engine", engine);
+      responseBody.put("queryid", queryId);
+      responseBody.put("labelName", labelName);
+      responseBody.put("count", 1);
+
+    } catch (Throwable e) {
+      log.error(e.getMessage(), e);
+      responseBody.put("error", e.getMessage());
+    }
+    return responseBody;
+  }
+
+  @DatasourceAuth
+  @GetMapping("label")
+  public Map<String, Object> get(@RequestParam String datasource,
+                                 @RequestParam String engine,
+                                 @RequestParam(name = "queryid") String queryId) {
+    Map<String, Object> responseBody = new HashMap<>();
+
+    try {
+      Optional<Label> optionalLabel = labelService.get(datasource, engine, queryId);
+      if (optionalLabel.isPresent()) {
+        responseBody.put("label", optionalLabel.get().getLabelName());
+      }
+    } catch (Throwable e) {
+      log.error(e.getMessage(), e);
+      responseBody.put("error", e.getMessage());
+    }
+    return responseBody;
+  }
+
+  @DatasourceAuth
+  @DeleteMapping("label")
+  public Map<String, Object> delete(@RequestParam String datasource,
                                     @RequestParam String engine,
-                                    @RequestParam(name = "queryid") String queryId,
-                                    @RequestParam String labelName) {
-        Map<String, Object> responseBody = new HashMap<>();
-        try {
-            labelService.insert(datasource, engine, queryId, labelName);
-
-            responseBody.put("datasource", datasource);
-            responseBody.put("engine", engine);
-            responseBody.put("queryid", queryId);
-            responseBody.put("labelName", labelName);
-            responseBody.put("count", 1);
-
-        } catch (Throwable e) {
-            log.error(e.getMessage(), e);
-            responseBody.put("error", e.getMessage());
-        }
-        return responseBody;
+                                    @RequestParam(name = "queryid") String queryId) {
+    Map<String, Object> responseBody = new HashMap<>();
+    try {
+      labelService.get(datasource, engine, queryId).ifPresent(labelService::delete);
+      responseBody.put("datasource", datasource);
+      responseBody.put("engine", engine);
+      responseBody.put("queryid", queryId);
+    } catch (Throwable e) {
+      log.error(e.getMessage(), e);
+      responseBody.put("error", e.getMessage());
     }
-
-    @DatasourceAuth
-    @GetMapping("label")
-    public Map<String, Object> get(@RequestParam String datasource,
-                                   @RequestParam String engine,
-                                   @RequestParam(name = "queryid") String queryId) {
-        Map<String, Object> responseBody = new HashMap<>();
-
-        try {
-            Optional<Label> optionalLabel = labelService.get(datasource, engine, queryId);
-            if (optionalLabel.isPresent()) {
-                responseBody.put("label", optionalLabel.get().getLabelName());
-            }
-        } catch (Throwable e) {
-            log.error(e.getMessage(), e);
-            responseBody.put("error", e.getMessage());
-        }
-        return responseBody;
-    }
-
-    @DatasourceAuth
-    @DeleteMapping("label")
-    public Map<String, Object> delete(@RequestParam String datasource,
-                                      @RequestParam String engine,
-                                      @RequestParam(name = "queryid") String queryId) {
-        Map<String, Object> responseBody = new HashMap<>();
-        try {
-            labelService.get(datasource, engine, queryId).ifPresent(labelService::delete);
-            responseBody.put("datasource", datasource);
-            responseBody.put("engine", engine);
-            responseBody.put("queryid", queryId);
-        } catch (Throwable e) {
-            log.error(e.getMessage(), e);
-            responseBody.put("error", e.getMessage());
-        }
-        return responseBody;
-    }
+    return responseBody;
+  }
 }

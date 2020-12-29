@@ -5,4 +5,4 @@ import org.springframework.context.annotation.Configuration;
 
 @Configuration
 @ComponentScan(basePackages = "yanagishima")
-public class AppConfig { }
+public class AppConfig {}

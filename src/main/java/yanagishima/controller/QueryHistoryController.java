@@ -26,58 +26,60 @@ import yanagishima.service.QueryService;
 @RestController
 @RequiredArgsConstructor
 public class QueryHistoryController {
-    private final QueryService queryService;
+  private final QueryService queryService;
 
-    @DatasourceAuth
-    @RequestMapping(value = "/queryHistory", method = { RequestMethod.GET, RequestMethod.POST })
-    public Map<String, Object> get(@RequestParam String datasource,
-                                   @RequestParam(required = false) String queryids,
-                                   @RequestParam(required = false) String label // Deprecated
-                                   ) {
-        Map<String, Object> responseBody = new HashMap<>();
-        try {
-            String[] queryIds = queryids.split(","); // TODO: Fix NPE
-            responseBody.put("headers", Arrays.asList("Id", "Query", "Time", "rawDataSize", "engine", "finishedTime", "linenumber", "labelName", "status"));
-            responseBody.put("results", getHistories(datasource, queryIds));
+  @DatasourceAuth
+  @RequestMapping(value = "/queryHistory", method = { RequestMethod.GET, RequestMethod.POST })
+  public Map<String, Object> get(@RequestParam String datasource,
+                                 @RequestParam(required = false) String queryids,
+                                 @RequestParam(required = false) String label // Deprecated
+  ) {
+    Map<String, Object> responseBody = new HashMap<>();
+    try {
+      String[] queryIds = queryids.split(","); // TODO: Fix NPE
+      responseBody.put("headers", Arrays
+          .asList("Id", "Query", "Time", "rawDataSize", "engine", "finishedTime", "linenumber", "labelName",
+                  "status"));
+      responseBody.put("results", getHistories(datasource, queryIds));
 
-        } catch (Throwable e) {
-            log.error(e.getMessage(), e);
-            responseBody.put("error", e.getMessage());
-        }
-        return responseBody;
+    } catch (Throwable e) {
+      log.error(e.getMessage(), e);
+      responseBody.put("error", e.getMessage());
     }
+    return responseBody;
+  }
 
-    private List<List<Object>> getHistories(String datasource, String[] queryIds) {
-        List<List<Object>> queryHistories = new ArrayList<>();
-        for (Query query : getQueries(datasource, queryIds)) {
-            queryHistories.add(toQueryHistory(query));
-        }
-        return queryHistories;
+  private List<List<Object>> getHistories(String datasource, String[] queryIds) {
+    List<List<Object>> queryHistories = new ArrayList<>();
+    for (Query query : getQueries(datasource, queryIds)) {
+      queryHistories.add(toQueryHistory(query));
     }
+    return queryHistories;
+  }
 
-    private List<Query> getQueries(String datasource, String[] queryIds) {
-        return queryService.getAll(datasource, Lists.newArrayList(queryIds));
-    }
+  private List<Query> getQueries(String datasource, String[] queryIds) {
+    return queryService.getAll(datasource, Lists.newArrayList(queryIds));
+  }
 
-    private static List<Object> toQueryHistory(Query query) {
-        List<Object> row = new ArrayList<>();
-        row.add(query.getQueryId());
-        row.add(query.getQueryString());
-        row.add(query.getElapsedTimeMillis());
-        row.add(toSuccinctDataSize(query.getResultFileSize()));
-        row.add(query.getEngine());
-        row.add(query.getFetchResultTimeString());
-        row.add(query.getLinenumber());
-        row.add(query.getStatus());
-        return row;
-    }
+  private static List<Object> toQueryHistory(Query query) {
+    List<Object> row = new ArrayList<>();
+    row.add(query.getQueryId());
+    row.add(query.getQueryString());
+    row.add(query.getElapsedTimeMillis());
+    row.add(toSuccinctDataSize(query.getResultFileSize()));
+    row.add(query.getEngine());
+    row.add(query.getFetchResultTimeString());
+    row.add(query.getLinenumber());
+    row.add(query.getStatus());
+    return row;
+  }
 
-    @Nullable
-    private static String toSuccinctDataSize(Integer size) {
-        if (size == null) {
-            return null;
-        }
-        DataSize dataSize = new DataSize(size, DataSize.Unit.BYTE);
-        return dataSize.convertToMostSuccinctDataSize().toString();
+  @Nullable
+  private static String toSuccinctDataSize(Integer size) {
+    if (size == null) {
+      return null;
     }
+    DataSize dataSize = new DataSize(size, DataSize.Unit.BYTE);
+    return dataSize.convertToMostSuccinctDataSize().toString();
+  }
 }

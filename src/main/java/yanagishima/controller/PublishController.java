@@ -30,7 +30,8 @@ public class PublishController extends HttpServlet {
 
   @DatasourceAuth
   @PostMapping("publish")
-  public PublishDto post(@RequestParam String datasource, @RequestParam String engine, @RequestParam String queryid,
+  public PublishDto post(@RequestParam String datasource, @RequestParam String engine,
+                         @RequestParam String queryid,
                          HttpServletRequest request) {
     PublishDto publishDto = new PublishDto();
     try {
@@ -41,7 +42,8 @@ public class PublishController extends HttpServlet {
       }
       requireNonNull(userName, "Username must exist when auditing header name is enabled");
       queryService.get(queryid, datasource, userName)
-        .orElseThrow(() -> new RuntimeException(format("Cannot find query id (%s) for publish", queryid)));
+                  .orElseThrow(
+                      () -> new RuntimeException(format("Cannot find query id (%s) for publish", queryid)));
       publishDto.setPublishId(publishService.publish(datasource, engine, queryid, userName).getPublishId());
       return publishDto;
     } catch (Throwable e) {

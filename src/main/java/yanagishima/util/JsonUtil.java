@@ -12,14 +12,14 @@ import lombok.experimental.UtilityClass;
 
 @UtilityClass
 public final class JsonUtil {
-	private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
+  private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
-	public static void writeJSON(HttpServletResponse response, Object obj) {
-		response.setContentType(ContentType.APPLICATION_JSON.getMimeType());
-		try (OutputStream stream = response.getOutputStream()) {
-			OBJECT_MAPPER.writeValue(stream, obj);
-		} catch (IOException e) {
-			throw new RuntimeException(e);
-		}
-	}
+  public static void writeJSON(HttpServletResponse response, Object obj) {
+    response.setContentType(ContentType.APPLICATION_JSON.getMimeType());
+    try (OutputStream stream = response.getOutputStream()) {
+      OBJECT_MAPPER.writeValue(stream, obj);
+    } catch (IOException e) {
+      throw new RuntimeException(e);
+    }
+  }
 }

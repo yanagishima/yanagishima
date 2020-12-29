@@ -25,54 +25,55 @@ import yanagishima.service.HiveService;
 @RestController
 @RequiredArgsConstructor
 public class HiveAsyncController {
-    private final YanagishimaConfig config;
-    private final HiveService hiveService;
+  private final YanagishimaConfig config;
+  private final HiveService hiveService;
 
-    @DatasourceAuth
-    @PostMapping(path = {"hiveAsync", "sparkAsync"})
-    public Map<String, Object> post(@RequestParam String datasource,
-                                    @RequestParam String engine,
-                                    @RequestParam(name = "user", required = false) Optional<String> hiveUser,
-                                    @RequestParam(name = "password", required = false) Optional<String> hivePassword,
-                                    @RequestParam(required = false) String query,
-                                    HttpServletRequest request,
-                                    HttpServletResponse response) {
-        if (query == null) {
-            return Map.of();
-        }
+  @DatasourceAuth
+  @PostMapping(path = { "hiveAsync", "sparkAsync" })
+  public Map<String, Object> post(@RequestParam String datasource,
+                                  @RequestParam String engine,
+                                  @RequestParam(name = "user", required = false) Optional<String> hiveUser,
+                                  @RequestParam(name = "password", required = false)
+                                      Optional<String> hivePassword,
+                                  @RequestParam(required = false) String query,
+                                  HttpServletRequest request,
+                                  HttpServletResponse response) {
+    if (query == null) {
+      return Map.of();
+    }
 
-        Map<String, Object> responseBody = new HashMap<>();
-        try {
-            String userName = getUsername(request);
-            if (config.isUserRequired() && userName == null) {
-                sendForbiddenError(response);
-                return responseBody;
-            }
-
-            if (userName != null) {
-                log.info(format("%s executed %s in datasource=%s, engine=%s", userName, query, datasource, engine));
-            }
-
-            String queryId = hiveService.doQueryAsync(engine, datasource, query, userName, hiveUser, hivePassword);
-            responseBody.put("queryid", queryId);
-        } catch (Throwable e) {
-            log.error(e.getMessage(), e);
-            responseBody.put("error", e.getMessage());
-        }
+    Map<String, Object> responseBody = new HashMap<>();
+    try {
+      String userName = getUsername(request);
+      if (config.isUserRequired() && userName == null) {
+        sendForbiddenError(response);
         return responseBody;
+      }
+
+      if (userName != null) {
+        log.info(format("%s executed %s in datasource=%s, engine=%s", userName, query, datasource, engine));
+      }
+
+      String queryId = hiveService.doQueryAsync(engine, datasource, query, userName, hiveUser, hivePassword);
+      responseBody.put("queryid", queryId);
+    } catch (Throwable e) {
+      log.error(e.getMessage(), e);
+      responseBody.put("error", e.getMessage());
+    }
+    return responseBody;
+  }
+
+  @Nullable
+  private String getUsername(HttpServletRequest request) {
+    if (config.isUseAuditHttpHeaderName()) {
+      return request.getHeader(config.getAuditHttpHeaderName());
     }
 
-    @Nullable
-    private String getUsername(HttpServletRequest request) {
-        if (config.isUseAuditHttpHeaderName()) {
-            return request.getHeader(config.getAuditHttpHeaderName());
-        }
-
-        String user = request.getParameter("user");
-        String password = request.getParameter("password");
-        if (user != null && password != null) {
-            return user;
-        }
-        return null;
+    String user = request.getParameter("user");
+    String password = request.getParameter("password");
+    if (user != null && password != null) {
+      return user;
     }
+    return null;
+  }
 }

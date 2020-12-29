@@ -26,7 +26,8 @@ public class CommentService {
     return commentRepository.findByDatasourceAndEngineAndQueryid(datasource, engine, queryId);
   }
 
-  public Comment insert(String datasource, String engine, String queryId, String user, String content, String updateTimeString) {
+  public Comment insert(String datasource, String engine, String queryId, String user, String content,
+                        String updateTimeString) {
     Comment comment = new Comment();
     comment.setDatasource(datasource);
     comment.setEngine(engine);

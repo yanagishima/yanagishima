@@ -17,31 +17,31 @@ import yanagishima.service.QueryService;
 @RestController
 @RequiredArgsConstructor
 public class HistoryStatusController {
-    private final QueryService queryService;
+  private final QueryService queryService;
 
-    @DatasourceAuth
-    @GetMapping("historyStatus")
-    public HistoryStatusDto get(@RequestParam String datasource,
-                                @RequestParam(required = false) String engine,
-                                @RequestParam(name = "queryid", required = false) String queryId) {
-        HistoryStatusDto historyStatusDto = new HistoryStatusDto();
-        historyStatusDto.setStatus("ng");
-        if (queryId == null) {
-            return historyStatusDto;
-        }
-        try {
-            findQuery(datasource, engine, queryId).ifPresent(query -> historyStatusDto.setStatus("ok"));
-        } catch (Throwable e) {
-            log.error(e.getMessage(), e);
-            historyStatusDto.setError(e.getMessage());
-        }
-        return historyStatusDto;
+  @DatasourceAuth
+  @GetMapping("historyStatus")
+  public HistoryStatusDto get(@RequestParam String datasource,
+                              @RequestParam(required = false) String engine,
+                              @RequestParam(name = "queryid", required = false) String queryId) {
+    HistoryStatusDto historyStatusDto = new HistoryStatusDto();
+    historyStatusDto.setStatus("ng");
+    if (queryId == null) {
+      return historyStatusDto;
     }
+    try {
+      findQuery(datasource, engine, queryId).ifPresent(query -> historyStatusDto.setStatus("ok"));
+    } catch (Throwable e) {
+      log.error(e.getMessage(), e);
+      historyStatusDto.setError(e.getMessage());
+    }
+    return historyStatusDto;
+  }
 
-    private Optional<Query> findQuery(String datasource, String engine, String queryId) {
-        if (engine == null) {
-            return queryService.get(queryId, datasource);
-        }
-        return queryService.getByEngine(queryId, datasource, engine);
+  private Optional<Query> findQuery(String datasource, String engine, String queryId) {
+    if (engine == null) {
+      return queryService.get(queryId, datasource);
     }
+    return queryService.getByEngine(queryId, datasource, engine);
+  }
 }

@@ -15,24 +15,24 @@ import lombok.Data;
 @Entity
 @Table(name = "starred_schema")
 public class StarredSchema {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "starred_schema_id")
-    @JsonProperty("starred_schema_id")
-    private int starredSchemaId;
+  @Id
+  @GeneratedValue(strategy = GenerationType.IDENTITY)
+  @Column(name = "starred_schema_id")
+  @JsonProperty("starred_schema_id")
+  private int starredSchemaId;
 
-    @Column(name = "datasource")
-    private String datasource;
+  @Column(name = "datasource")
+  private String datasource;
 
-    @Column(name = "engine")
-    private String engine;
+  @Column(name = "engine")
+  private String engine;
 
-    @Column(name = "catalog")
-    private String catalog;
+  @Column(name = "catalog")
+  private String catalog;
 
-    @Column(name = "`schema`")
-    private String schema;
+  @Column(name = "`schema`")
+  private String schema;
 
-    @Column(name = "user")
-    private String user;
+  @Column(name = "user")
+  private String user;
 }

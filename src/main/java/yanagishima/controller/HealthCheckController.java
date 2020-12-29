@@ -16,13 +16,13 @@ import lombok.RequiredArgsConstructor;
 @RestController
 @RequiredArgsConstructor
 public class HealthCheckController { // Implements HealthIndicator after migrating to Spring Boot
-    private final DataSource dataSource;
+  private final DataSource dataSource;
 
-    @GetMapping("healthCheck")
-    public void get() throws SQLException {
-        try (Connection connection = dataSource.getConnection();
-             Statement statement = connection.createStatement()) {
-            statement.executeQuery("select 1");
-        }
+  @GetMapping("healthCheck")
+  public void get() throws SQLException {
+    try (Connection connection = dataSource.getConnection();
+         Statement statement = connection.createStatement()) {
+      statement.executeQuery("select 1");
     }
+  }
 }
