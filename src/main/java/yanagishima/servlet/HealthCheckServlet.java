@@ -1,20 +1,28 @@
 package yanagishima.servlet;
 
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.sql.Statement;
+
+import javax.sql.DataSource;
+
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import io.swagger.annotations.Api;
 import lombok.RequiredArgsConstructor;
-import yanagishima.repository.TinyOrm;
 
 @Api(tags = "internal")
 @RestController
 @RequiredArgsConstructor
-public class HealthCheckServlet {
-    private final TinyOrm db;
+public class HealthCheckServlet { // Implements HealthIndicator after migrating to Spring Boot
+    private final DataSource dataSource;
 
     @GetMapping("healthCheck")
-    public void get() {
-        db.executeQuery("select 1");
+    public void get() throws SQLException {
+        try (Connection connection = dataSource.getConnection();
+             Statement statement = connection.createStatement()) {
+            statement.executeQuery("select 1");
+        }
     }
 }

@@ -126,7 +126,6 @@ dependencies {
     compile 'com.squareup.okhttp3:okhttp:3.9.0'
     compile 'org.apache.httpcomponents:fluent-hc:4.4.1'
     compile 'org.xerial:sqlite-jdbc:3.20.1'
-    compile 'me.geso:tinyorm:1.13.0'
     compileOnly 'org.projectlombok:lombok:1.18.8'
     annotationProcessor 'org.projectlombok:lombok:1.18.8'
     compile 'org.komamitsu:fluency:1.7.0'

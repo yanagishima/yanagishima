@@ -1,5 +1,26 @@
 package yanagishima.server;
 
+import java.io.BufferedInputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.util.Arrays;
+import java.util.EnumSet;
+import java.util.Properties;
+
+import javax.servlet.DispatcherType;
+
+import org.eclipse.jetty.server.Server;
+import org.eclipse.jetty.servlet.DefaultServlet;
+import org.eclipse.jetty.servlet.FilterHolder;
+import org.eclipse.jetty.servlet.ServletContextHandler;
+import org.eclipse.jetty.servlet.ServletHolder;
 import org.springframework.web.context.ContextLoaderListener;
 import org.springframework.web.context.WebApplicationContext;
 import org.springframework.web.context.support.AnnotationConfigWebApplicationContext;
@@ -8,30 +29,14 @@ import org.springframework.web.servlet.DispatcherServlet;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.servlet.GuiceFilter;
+
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
 import lombok.extern.slf4j.Slf4j;
-import org.eclipse.jetty.server.Server;
-import org.eclipse.jetty.servlet.DefaultServlet;
-import org.eclipse.jetty.servlet.FilterHolder;
-import org.eclipse.jetty.servlet.ServletContextHandler;
-import org.msgpack.core.annotations.VisibleForTesting;
-
-import org.eclipse.jetty.servlet.ServletHolder;
 import yanagishima.config.YanagishimaConfig;
 import yanagishima.filter.YanagishimaFilter;
-import yanagishima.module.*;
-import yanagishima.repository.TinyOrm;
-
-import javax.servlet.DispatcherType;
-import java.io.*;
-import java.sql.Connection;
-import java.sql.SQLException;
-import java.sql.Statement;
-import java.util.Arrays;
-import java.util.EnumSet;
-import java.util.Properties;
+import yanagishima.module.PrestoServiceModule;
 
 @Slf4j
 public class YanagishimaServer {
@@ -48,7 +53,7 @@ public class YanagishimaServer {
 
         injector = createInjector(properties);
 
-        createTables(injector.getInstance(TinyOrm.class), config.getDatabaseType());
+        createTables(config);
 
         Server server = new Server(config.getServerPort());
         server.setAttribute("org.eclipse.jetty.server.Request.maxFormContentSize", -1);
@@ -97,15 +102,13 @@ public class YanagishimaServer {
 
     private static Injector createInjector(Properties properties) {
         return Guice.createInjector(
-                new PrestoServiceModule(properties),
-                new DbModule());
+                new PrestoServiceModule(properties));
     }
 
-    @VisibleForTesting
-    public static void createTables(TinyOrm db, YanagishimaConfig.DatabaseType databaseType) throws SQLException {
-        try (Connection connection = db.getConnection();
+    public static void createTables(YanagishimaConfig config) throws SQLException {
+        try (Connection connection = DriverManager.getConnection(config.getConnectionUrl(), config.getConnectionUsername(), config.getConnectionPassword());
              Statement statement = connection.createStatement()) {
-            switch (databaseType) {
+            switch (config.getDatabaseType()) {
                 case SQLITE:
                     statement.executeUpdate(""
                                             + "CREATE TABLE IF NOT EXISTS query ("
@@ -237,7 +240,7 @@ public class YanagishimaServer {
                                             + "session_value varchar(256) not null)");
                     break;
                 default:
-                    throw new IllegalArgumentException("Illegal database type: " + databaseType);
+                    throw new IllegalArgumentException("Illegal database type: " + config.getDatabaseType());
             }
         }
     }

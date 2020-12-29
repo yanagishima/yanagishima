@@ -17,7 +17,6 @@ import yanagishima.config.YanagishimaConfig;
 import yanagishima.model.db.Comment;
 import yanagishima.model.db.Query;
 import yanagishima.model.db.SessionProperty;
-import yanagishima.repository.TinyOrm;
 import yanagishima.service.CommentService;
 import yanagishima.service.PublishService;
 import yanagishima.service.QueryService;
@@ -32,7 +31,6 @@ public class ShareHistoryServlet {
     private final SessionPropertyService sessionPropertyService;
     private final CommentService commentService;
     private final YanagishimaConfig config;
-    private final TinyOrm db;
 
     @GetMapping("share/shareHistory")
     public Map<String, Object> get(@RequestParam(name = "publish_id") String publishId) {
