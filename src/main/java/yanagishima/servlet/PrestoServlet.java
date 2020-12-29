@@ -1,28 +1,31 @@
 package yanagishima.servlet;
 
-import io.prestosql.client.ClientException;
+import static java.lang.String.format;
+import static yanagishima.util.AccessControlUtil.sendForbiddenError;
+import static yanagishima.util.Constants.YANAGISHIMA_COMMENT;
 
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import yanagishima.config.YanagishimaConfig;
-import yanagishima.exception.QueryErrorException;
-import yanagishima.model.presto.PrestoQueryResult;
-import yanagishima.service.PrestoServiceImpl;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 import javax.annotation.Nullable;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.util.*;
-import java.util.stream.Collectors;
-
-import static java.lang.String.format;
-import static yanagishima.util.AccessControlUtil.sendForbiddenError;
-import static yanagishima.util.AccessControlUtil.validateDatasource;
-import static yanagishima.util.Constants.YANAGISHIMA_COMMENT;
 
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+
+import io.prestosql.client.ClientException;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import yanagishima.annotation.DatasourceAuth;
+import yanagishima.config.YanagishimaConfig;
+import yanagishima.exception.QueryErrorException;
+import yanagishima.model.presto.PrestoQueryResult;
+import yanagishima.service.PrestoServiceImpl;
 
 @Slf4j
 @RestController
@@ -31,6 +34,7 @@ public class PrestoServlet {
 	private final PrestoServiceImpl prestoService;
 	private final YanagishimaConfig config;
 
+	@DatasourceAuth
 	@PostMapping("presto")
 	public Map<String, Object> post(@RequestParam String datasource,
 									@RequestParam(name = "query") Optional<String> queryOptional,
@@ -54,10 +58,6 @@ public class PrestoServlet {
 				try {
 					String coordinatorServer = config.getPrestoCoordinatorServerOrNull(datasource);
 					if (coordinatorServer == null) {
-						return responseBody;
-					}
-					if (config.isCheckDatasource() && !validateDatasource(request, datasource)) {
-						sendForbiddenError(response);
 						return responseBody;
 					}
 					if (userName != null) {

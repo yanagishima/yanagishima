@@ -2,7 +2,6 @@ package yanagishima.servlet;
 
 import static java.lang.String.format;
 import static yanagishima.util.AccessControlUtil.sendForbiddenError;
-import static yanagishima.util.AccessControlUtil.validateDatasource;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -18,6 +17,7 @@ import org.springframework.web.bind.annotation.RestController;
 import io.prestosql.client.ClientException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import yanagishima.annotation.DatasourceAuth;
 import yanagishima.config.YanagishimaConfig;
 import yanagishima.service.OldPrestoServiceImpl;
 import yanagishima.service.PrestoServiceImpl;
@@ -30,6 +30,7 @@ public class PrestoAsyncServlet {
     private final OldPrestoServiceImpl oldPrestoService;
     private final YanagishimaConfig config;
 
+    @DatasourceAuth
     @PostMapping("prestoAsync")
     public Map<String, Object> post(@RequestParam String datasource,
                                     @RequestParam(required = false) String query,
@@ -45,10 +46,6 @@ public class PrestoAsyncServlet {
         try {
             String user = getUsername(request);
             if (config.isUserRequired() && user == null) {
-                sendForbiddenError(response);
-                return responseBody;
-            }
-            if (config.isCheckDatasource() && !validateDatasource(request, datasource)) {
                 sendForbiddenError(response);
                 return responseBody;
             }

@@ -1,6 +1,7 @@
 package yanagishima.servlet;
 
 import lombok.RequiredArgsConstructor;
+import yanagishima.annotation.DatasourceAuth;
 import yanagishima.config.YanagishimaConfig;
 import yanagishima.util.SparkUtil;
 import yanagishima.util.YarnUtil;
@@ -11,9 +12,6 @@ import java.io.IOException;
 import java.util.Map;
 import java.util.Optional;
 
-import static yanagishima.util.AccessControlUtil.sendForbiddenError;
-import static yanagishima.util.AccessControlUtil.validateDatasource;
-
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -23,16 +21,13 @@ import org.springframework.web.bind.annotation.RestController;
 public class HiveQueryDetailServlet {
     private final YanagishimaConfig yanagishimaConfig;
 
+    @DatasourceAuth
     @GetMapping(path = {"hiveQueryDetail", "sparkQueryDetail"})
     public void get(@RequestParam String datasource,
                     @RequestParam String engine,
                     @RequestParam(name = "id") Optional<String> idOptional,
                     @RequestParam(name = "user") Optional<String> hiveUser,
                     HttpServletRequest request, HttpServletResponse response) throws IOException {
-        if (yanagishimaConfig.isCheckDatasource() && !validateDatasource(request, datasource)) {
-            sendForbiddenError(response);
-            return;
-        }
         String resourceManagerUrl = yanagishimaConfig.getResourceManagerUrl(datasource);
         if (engine.equals("hive")) {
             idOptional.ifPresent(id -> {

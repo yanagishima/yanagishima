@@ -1,7 +1,5 @@
 package yanagishima.servlet;
 
-import static yanagishima.util.AccessControlUtil.sendForbiddenError;
-import static yanagishima.util.AccessControlUtil.validateDatasource;
 import static yanagishima.util.HistoryUtil.createHistoryResult;
 
 import java.util.HashMap;
@@ -10,7 +8,6 @@ import java.util.Map;
 import java.util.Optional;
 
 import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -18,6 +15,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import yanagishima.annotation.DatasourceAuth;
 import yanagishima.config.YanagishimaConfig;
 import yanagishima.model.db.Query;
 import yanagishima.model.db.SessionProperty;
@@ -32,21 +30,18 @@ public class HistoryServlet {
     private final YanagishimaConfig config;
     private final TinyOrm db;
 
+    @DatasourceAuth
     @GetMapping("history")
     public Map<String, Object> get(@RequestParam String datasource,
                                    @RequestParam(required = false) String engine,
                                    @RequestParam(name = "queryid", required = false) String queryId,
-                                   HttpServletRequest request, HttpServletResponse response) {
+                                   HttpServletRequest request) {
         Map<String, Object> responseBody = new HashMap<>();
         if (queryId == null) {
             return responseBody;
         }
 
         try {
-            if (config.isCheckDatasource() && !validateDatasource(request, datasource)) {
-                sendForbiddenError(response);
-                return responseBody;
-            }
             Optional<Query> queryOptional;
             if (engine == null) {
                 queryOptional = db.singleQuery("query_id=? and datasource=?", queryId, datasource);

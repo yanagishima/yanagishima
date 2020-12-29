@@ -1,12 +1,8 @@
 package yanagishima.servlet;
 
-import static yanagishima.util.AccessControlUtil.sendForbiddenError;
-import static yanagishima.util.AccessControlUtil.validateDatasource;
-
 import java.util.List;
 
 import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -31,13 +27,8 @@ public class BookmarkUserServlet {
   @GetMapping("bookmarkUser")
   protected BookmarkDto get(@RequestParam String datasource, @RequestParam String engine,
                             @RequestParam(name = "bookmarkAll", defaultValue = "false") boolean showAll,
-                            HttpServletRequest request, HttpServletResponse response) {
+                            HttpServletRequest request) {
     BookmarkDto bookmarkDto = new BookmarkDto();
-    if (config.isCheckDatasource() && !validateDatasource(request, datasource)) {
-      sendForbiddenError(response);
-      return bookmarkDto;
-    }
-
     try {
       String user = request.getHeader(config.getAuditHttpHeaderName());
       List<Bookmark> bookmarks = bookmarkService.getAll(showAll, datasource, engine, user);

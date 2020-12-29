@@ -1,13 +1,9 @@
 package yanagishima.servlet;
 
-import static yanagishima.util.AccessControlUtil.sendForbiddenError;
-import static yanagishima.util.AccessControlUtil.validateDatasource;
-
 import java.util.List;
 import java.util.stream.Collectors;
 
 import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -20,6 +16,7 @@ import com.google.common.base.Splitter;
 import io.swagger.annotations.Api;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import yanagishima.annotation.DatasourceAuth;
 import yanagishima.config.YanagishimaConfig;
 import yanagishima.model.db.Bookmark;
 import yanagishima.model.dto.BookmarkCreateDto;
@@ -36,18 +33,15 @@ public class BookmarkServlet {
   private final YanagishimaConfig config;
   private final BookmarkService bookmarkService;
 
+  @DatasourceAuth
   @PostMapping("bookmark")
   public BookmarkCreateDto post(@RequestParam String datasource,
                                 @RequestParam String query,
                                 @RequestParam String engine,
                                 @RequestParam(required = false) String title,
                                 @RequestParam(required = false) String snippet,
-                                HttpServletRequest request, HttpServletResponse response) {
+                                HttpServletRequest request) {
     BookmarkCreateDto bookmarkCreateDto = new BookmarkCreateDto();
-    if (config.isCheckDatasource() && !validateDatasource(request, datasource)) {
-      sendForbiddenError(response);
-      return bookmarkCreateDto;
-    }
     try {
       String userName = request.getHeader(config.getAuditHttpHeaderName());
       Bookmark bookmark = bookmarkService.insert(datasource, query, title, engine, userName, snippet);
@@ -59,14 +53,10 @@ public class BookmarkServlet {
     return bookmarkCreateDto;
   }
 
+  @DatasourceAuth
   @GetMapping("bookmark")
-  public BookmarkDto get(@RequestParam String datasource, @RequestParam(name = "bookmark_id") String bookmarkId,
-                         HttpServletRequest request, HttpServletResponse response) {
+  public BookmarkDto get(@RequestParam String datasource, @RequestParam(name = "bookmark_id") String bookmarkId) {
     BookmarkDto bookmarkDto = new BookmarkDto();
-    if (config.isCheckDatasource() && !validateDatasource(request, datasource)) {
-      sendForbiddenError(response);
-      return bookmarkDto;
-    }
     try {
       List<String> bookmarkIds = SPLITTER.splitToList(bookmarkId);
       if (bookmarkIds.isEmpty()) {
@@ -84,16 +74,13 @@ public class BookmarkServlet {
     return bookmarkDto;
   }
 
+  @DatasourceAuth
   @DeleteMapping("bookmark")
   public BookmarkDto delete(@RequestParam String datasource,
                             @RequestParam String engine,
                             @RequestParam(name = "bookmark_id") int bookmarkId,
-                            HttpServletRequest request, HttpServletResponse response) {
+                            HttpServletRequest request) {
     BookmarkDto bookmarkDto = new BookmarkDto();
-    if (config.isCheckDatasource() && !validateDatasource(request, datasource)) {
-      sendForbiddenError(response);
-      return bookmarkDto;
-    }
     try {
       bookmarkService.delete(bookmarkId);
 

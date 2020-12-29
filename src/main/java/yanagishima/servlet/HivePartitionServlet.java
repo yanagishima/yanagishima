@@ -2,8 +2,6 @@ package yanagishima.servlet;
 
 import static java.lang.String.format;
 import static java.lang.String.join;
-import static yanagishima.util.AccessControlUtil.sendForbiddenError;
-import static yanagishima.util.AccessControlUtil.validateDatasource;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -14,7 +12,6 @@ import java.util.Set;
 import java.util.TreeSet;
 
 import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -22,6 +19,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import yanagishima.annotation.DatasourceAuth;
 import yanagishima.config.YanagishimaConfig;
 import yanagishima.model.hive.HiveQueryResult;
 import yanagishima.service.HiveServiceImpl;
@@ -33,6 +31,7 @@ public class HivePartitionServlet {
     private final HiveServiceImpl hiveService;
     private final YanagishimaConfig config;
 
+    @DatasourceAuth
     @PostMapping(path = {"hivePartition", "sparkPartition"})
     public Map<String, Object> post(@RequestParam String datasource,
                                     @RequestParam String engine,
@@ -43,15 +42,10 @@ public class HivePartitionServlet {
                                     @RequestParam(required = false) String partitionValue,
                                     @RequestParam(name = "user") Optional<String> hiveUser,
                                     @RequestParam(name = "password") Optional<String> hivePassword,
-                                    HttpServletRequest request, HttpServletResponse response) {
+                                    HttpServletRequest request) {
         Map<String, Object> responseBody = new HashMap<>();
 
         try {
-            if (config.isCheckDatasource() && !validateDatasource(request, datasource)) {
-                sendForbiddenError(response);
-                return responseBody;
-            }
-
             String user = getUsername(request);
             if (partitionColumn == null || partitionValue == null) {
                 String query = format("SHOW PARTITIONS %s.`%s`", schema, table);

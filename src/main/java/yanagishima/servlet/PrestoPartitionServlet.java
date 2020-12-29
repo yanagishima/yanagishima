@@ -5,8 +5,6 @@ import static io.prestosql.client.OkHttpUtil.basicAuth;
 import static java.lang.String.format;
 import static java.lang.String.join;
 import static java.util.Objects.requireNonNull;
-import static yanagishima.util.AccessControlUtil.sendForbiddenError;
-import static yanagishima.util.AccessControlUtil.validateDatasource;
 import static yanagishima.util.Constants.YANAGISHIMA_COMMENT;
 
 import java.io.IOException;
@@ -20,7 +18,6 @@ import java.util.TreeSet;
 
 import javax.annotation.Nullable;
 import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -33,6 +30,7 @@ import lombok.extern.slf4j.Slf4j;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
+import yanagishima.annotation.DatasourceAuth;
 import yanagishima.config.YanagishimaConfig;
 import yanagishima.model.presto.PrestoQueryResult;
 import yanagishima.service.PrestoServiceImpl;
@@ -46,6 +44,7 @@ public class PrestoPartitionServlet {
     private final PrestoServiceImpl prestoService;
     private final YanagishimaConfig config;
 
+    @DatasourceAuth
     @PostMapping("prestoPartition")
     public Map<String, Object> post(@RequestParam String datasource,
                                     @RequestParam String catalog,
@@ -56,14 +55,9 @@ public class PrestoPartitionServlet {
                                     @RequestParam(required = false) String partitionValue,
                                     @RequestParam(name = "user") Optional<String> prestoUser,
                                     @RequestParam(name = "password") Optional<String> prestoPassword,
-                                    HttpServletRequest request, HttpServletResponse response) {
+                                    HttpServletRequest request) {
         Map<String, Object> responseBody = new HashMap<>();
         try {
-            if (config.isCheckDatasource() && !validateDatasource(request, datasource)) {
-                sendForbiddenError(response);
-                return responseBody;
-            }
-
             String user = getUsername(request);
             Optional<String> webHdfsProxyUser = config.getWebhdfsProxyUser(datasource);
             Optional<String> webHdfsProxyPassword = config.getWebhdfsProxyPassword(datasource);

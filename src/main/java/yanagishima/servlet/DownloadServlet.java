@@ -1,8 +1,6 @@
 package yanagishima.servlet;
 
 import static java.util.Objects.requireNonNull;
-import static yanagishima.util.AccessControlUtil.sendForbiddenError;
-import static yanagishima.util.AccessControlUtil.validateDatasource;
 import static yanagishima.util.DownloadUtil.downloadTsv;
 
 import java.util.Optional;
@@ -16,6 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import io.swagger.annotations.Api;
 import lombok.RequiredArgsConstructor;
+import yanagishima.annotation.DatasourceAuth;
 import yanagishima.config.YanagishimaConfig;
 import yanagishima.model.db.Query;
 import yanagishima.repository.TinyOrm;
@@ -27,6 +26,7 @@ public class DownloadServlet {
   private final YanagishimaConfig config;
   private final TinyOrm db;
 
+  @DatasourceAuth
   @GetMapping("download")
   public void get(@RequestParam String datasource,
                   @RequestParam(required = false) String queryid,
@@ -35,11 +35,6 @@ public class DownloadServlet {
                   @RequestParam(defaultValue = "true") boolean bom,
                   HttpServletRequest request, HttpServletResponse response) {
     if (queryid == null) {
-      return;
-    }
-
-    if (config.isCheckDatasource() && !validateDatasource(request, datasource)) {
-      sendForbiddenError(response);
       return;
     }
 

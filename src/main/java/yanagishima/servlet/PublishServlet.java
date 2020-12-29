@@ -2,12 +2,9 @@ package yanagishima.servlet;
 
 import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
-import static yanagishima.util.AccessControlUtil.sendForbiddenError;
-import static yanagishima.util.AccessControlUtil.validateDatasource;
 
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -16,6 +13,7 @@ import org.springframework.web.bind.annotation.RestController;
 import io.swagger.annotations.Api;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import yanagishima.annotation.DatasourceAuth;
 import yanagishima.config.YanagishimaConfig;
 import yanagishima.model.dto.PublishDto;
 import yanagishima.repository.TinyOrm;
@@ -30,15 +28,11 @@ public class PublishServlet extends HttpServlet {
   private final YanagishimaConfig config;
   private final TinyOrm db;
 
+  @DatasourceAuth
   @PostMapping("publish")
   public PublishDto post(@RequestParam String datasource, @RequestParam String engine, @RequestParam String queryid,
-                         HttpServletRequest request, HttpServletResponse response) {
+                         HttpServletRequest request) {
     PublishDto publishDto = new PublishDto();
-    if (config.isCheckDatasource() && !validateDatasource(request, datasource)) {
-      sendForbiddenError(response);
-      return publishDto;
-    }
-
     try {
       String userName = request.getHeader(config.getAuditHttpHeaderName());
       if (config.isAllowOtherReadResult(datasource)) {

@@ -1,8 +1,6 @@
 package yanagishima.servlet;
 
 import static java.lang.String.format;
-import static yanagishima.util.AccessControlUtil.sendForbiddenError;
-import static yanagishima.util.AccessControlUtil.validateDatasource;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -10,7 +8,6 @@ import java.util.Map;
 import java.util.Optional;
 
 import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -21,6 +18,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.Response;
+import yanagishima.annotation.DatasourceAuth;
 import yanagishima.client.presto.PrestoClient;
 import yanagishima.config.YanagishimaConfig;
 
@@ -32,17 +30,13 @@ public class QueryStatusServlet {
 
     private final YanagishimaConfig config;
 
+    @DatasourceAuth
     @PostMapping("queryStatus")
     public Map<?, ?> post(@RequestParam String datasource,
                           @RequestParam(name = "queryid", required = false) String queryId,
                           @RequestParam Optional<String> user,
                           @RequestParam Optional<String> password,
-                          HttpServletRequest request, HttpServletResponse response) throws IOException {
-		if (config.isCheckDatasource() && !validateDatasource(request, datasource)) {
-			sendForbiddenError(response);
-			return Map.of();
-		}
-
+                          HttpServletRequest request) throws IOException {
 		String coordinatorServer = config.getPrestoCoordinatorServer(datasource);
 		String json;
 		String userName = request.getHeader(config.getAuditHttpHeaderName());

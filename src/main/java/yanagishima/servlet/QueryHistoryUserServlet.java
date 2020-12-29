@@ -1,8 +1,5 @@
 package yanagishima.servlet;
 
-import static yanagishima.util.AccessControlUtil.sendForbiddenError;
-import static yanagishima.util.AccessControlUtil.validateDatasource;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -11,7 +8,6 @@ import java.util.List;
 import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -20,9 +16,10 @@ import org.springframework.web.bind.annotation.RestController;
 import io.airlift.units.DataSize;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import yanagishima.annotation.DatasourceAuth;
 import yanagishima.config.YanagishimaConfig;
-import yanagishima.repository.TinyOrm;
 import yanagishima.model.db.Query;
+import yanagishima.repository.TinyOrm;
 
 @Slf4j
 @RestController
@@ -31,20 +28,16 @@ public class QueryHistoryUserServlet {
     private final YanagishimaConfig config;
     private final TinyOrm db;
 
+    @DatasourceAuth
     @GetMapping("queryHistoryUser")
     public Map<String, Object> get(@RequestParam String datasource,
                                    @RequestParam String engine,
                                    @RequestParam(defaultValue = "") String search,
                                    @RequestParam(required = false) String label, // Deprecated
                                    @RequestParam(defaultValue = "100") String limit,
-                                   HttpServletRequest request, HttpServletResponse response) {
+                                   HttpServletRequest request) {
         Map<String, Object> responseBody = new HashMap<>();
         try {
-            if (config.isCheckDatasource() && !validateDatasource(request, datasource)) {
-                sendForbiddenError(response);
-                return responseBody;
-            }
-
             String userName = request.getHeader(config.getAuditHttpHeaderName());
 
             responseBody.put("headers", Arrays.asList("Id", "Query", "Time", "rawDataSize", "engine", "finishedTime", "linenumber", "labelName", "status"));

@@ -1,7 +1,5 @@
 package yanagishima.servlet;
 
-import static yanagishima.util.AccessControlUtil.sendForbiddenError;
-import static yanagishima.util.AccessControlUtil.validateDatasource;
 import static yanagishima.util.SparkUtil.getSparkJdbcApplicationId;
 import static yanagishima.util.SparkUtil.getSparkRunningJobListWithProgress;
 import static yanagishima.util.SparkUtil.getSparkSqlJobFromSqlserver;
@@ -14,7 +12,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.springframework.web.bind.annotation.GetMapping;
@@ -24,8 +21,9 @@ import org.springframework.web.bind.annotation.RestController;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import lombok.RequiredArgsConstructor;
-import yanagishima.model.spark.SparkSqlJob;
+import yanagishima.annotation.DatasourceAuth;
 import yanagishima.config.YanagishimaConfig;
+import yanagishima.model.spark.SparkSqlJob;
 
 @RestController
 @RequiredArgsConstructor
@@ -34,13 +32,10 @@ public class SparkJobListServlet {
 
     private final YanagishimaConfig config;
 
+    @DatasourceAuth
     @GetMapping("sparkJobList")
     public void get(@RequestParam String datasource,
-                    HttpServletRequest request, HttpServletResponse response) throws IOException {
-        if (config.isCheckDatasource() && !validateDatasource(request, datasource)) {
-            sendForbiddenError(response);
-            return;
-        }
+                    HttpServletResponse response) throws IOException {
         String resourceManagerUrl = config.getResourceManagerUrl(datasource);
         String sparkJdbcApplicationId = getSparkJdbcApplicationId(config.getSparkWebUrl(datasource));
         List<Map> runningJobs = getSparkRunningJobListWithProgress(resourceManagerUrl, sparkJdbcApplicationId);

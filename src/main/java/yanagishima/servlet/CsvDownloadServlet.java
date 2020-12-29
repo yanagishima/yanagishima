@@ -1,8 +1,6 @@
 package yanagishima.servlet;
 
 import static java.util.Objects.requireNonNull;
-import static yanagishima.util.AccessControlUtil.sendForbiddenError;
-import static yanagishima.util.AccessControlUtil.validateDatasource;
 import static yanagishima.util.DownloadUtil.downloadCsv;
 
 import java.util.Optional;
@@ -15,6 +13,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import lombok.RequiredArgsConstructor;
+import yanagishima.annotation.DatasourceAuth;
 import yanagishima.config.YanagishimaConfig;
 import yanagishima.model.db.Query;
 import yanagishima.repository.TinyOrm;
@@ -25,6 +24,7 @@ public class CsvDownloadServlet {
   private final YanagishimaConfig config;
   private final TinyOrm db;
 
+  @DatasourceAuth
   @GetMapping("csvdownload")
   public void get(@RequestParam String datasource,
                   @RequestParam(name = "queryid", required = false) String queryId,
@@ -37,11 +37,6 @@ public class CsvDownloadServlet {
     }
 
     String fileName = queryId + ".csv";
-    if (config.isCheckDatasource() && !validateDatasource(request, datasource)) {
-      sendForbiddenError(response);
-      return;
-    }
-
     if (config.isAllowOtherReadResult(datasource)) {
       downloadCsv(response, fileName, datasource, queryId, encode, header, bom);
       return;
