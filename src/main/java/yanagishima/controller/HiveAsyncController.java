@@ -19,14 +19,14 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import yanagishima.annotation.DatasourceAuth;
 import yanagishima.config.YanagishimaConfig;
-import yanagishima.service.HiveServiceImpl;
+import yanagishima.service.HiveService;
 
 @Slf4j
 @RestController
 @RequiredArgsConstructor
 public class HiveAsyncController {
     private final YanagishimaConfig config;
-    private final HiveServiceImpl hiveService;
+    private final HiveService hiveService;
 
     @DatasourceAuth
     @PostMapping(path = {"hiveAsync", "sparkAsync"})

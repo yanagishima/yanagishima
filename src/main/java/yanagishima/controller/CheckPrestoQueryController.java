@@ -29,7 +29,7 @@ import yanagishima.client.presto.PrestoClient;
 import yanagishima.config.YanagishimaConfig;
 import yanagishima.exception.QueryErrorException;
 import yanagishima.model.presto.PrestoQueryResult;
-import yanagishima.service.PrestoServiceImpl;
+import yanagishima.service.PrestoService;
 
 @Slf4j
 @RestController
@@ -37,7 +37,7 @@ import yanagishima.service.PrestoServiceImpl;
 public class CheckPrestoQueryController {
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
-    private final PrestoServiceImpl prestoService;
+    private final PrestoService prestoService;
     private final YanagishimaConfig config;
 
     @DatasourceAuth

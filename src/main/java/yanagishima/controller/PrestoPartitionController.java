@@ -33,7 +33,7 @@ import okhttp3.Response;
 import yanagishima.annotation.DatasourceAuth;
 import yanagishima.config.YanagishimaConfig;
 import yanagishima.model.presto.PrestoQueryResult;
-import yanagishima.service.PrestoServiceImpl;
+import yanagishima.service.PrestoService;
 
 @Slf4j
 @RestController
@@ -41,7 +41,7 @@ import yanagishima.service.PrestoServiceImpl;
 public class PrestoPartitionController {
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
-    private final PrestoServiceImpl prestoService;
+    private final PrestoService prestoService;
     private final YanagishimaConfig config;
 
     @DatasourceAuth

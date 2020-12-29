@@ -29,7 +29,7 @@ import yanagishima.config.YanagishimaConfig;
 import yanagishima.exception.ElasticsearchQueryErrorException;
 import yanagishima.model.db.Query;
 import yanagishima.model.elasticsearch.ElasticsearchQueryResult;
-import yanagishima.service.ElasticsearchServiceImpl;
+import yanagishima.service.ElasticsearchService;
 import yanagishima.service.QueryService;
 
 @Slf4j
@@ -37,7 +37,7 @@ import yanagishima.service.QueryService;
 @RestController
 @RequiredArgsConstructor
 public class ElasticsearchController {
-    private final ElasticsearchServiceImpl elasticsearchServiceImpl;
+    private final ElasticsearchService elasticsearchService;
     private final QueryService queryService;
     private final YanagishimaConfig config;
 
@@ -94,12 +94,12 @@ public class ElasticsearchController {
         int limit = query.startsWith(YANAGISHIMA_COMMENT) ? Integer.MAX_VALUE : config.getSelectLimit();
 
         if (request.getParameter("translate") != null) {
-            return elasticsearchServiceImpl.doTranslate(datasource, query, userName, true, limit);
+            return elasticsearchService.doTranslate(datasource, query, userName, true, limit);
         }
         if (query.startsWith(YANAGISHIMA_COMMENT)) {
-            return elasticsearchServiceImpl.doQuery(datasource, query, userName, false, limit);
+            return elasticsearchService.doQuery(datasource, query, userName, false, limit);
         }
-        return elasticsearchServiceImpl.doQuery(datasource, query, userName, true, limit);
+        return elasticsearchService.doQuery(datasource, query, userName, true, limit);
     }
 
     private static long toElapsedTimeMillis(String queryId, Query query) {

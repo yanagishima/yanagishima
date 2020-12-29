@@ -35,7 +35,7 @@ import static yanagishima.util.TypeCoerceUtil.objectToString;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class ElasticsearchServiceImpl {
+public class ElasticsearchService {
     private static final CSVFormat CSV_FORMAT = CSVFormat.EXCEL.withDelimiter('\t').withNullString("\\N").withRecordSeparator(System.getProperty("line.separator"));
 
     private final QueryService queryService;

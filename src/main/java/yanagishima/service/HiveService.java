@@ -36,7 +36,7 @@ import static yanagishima.util.TypeCoerceUtil.objectToString;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class HiveServiceImpl {
+public class HiveService {
     private final QueryService queryService;
     private final YanagishimaConfig config;
     private final ExecutorService executorService = Executors.newFixedThreadPool(10);

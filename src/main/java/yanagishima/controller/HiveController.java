@@ -21,14 +21,14 @@ import yanagishima.annotation.DatasourceAuth;
 import yanagishima.config.YanagishimaConfig;
 import yanagishima.exception.HiveQueryErrorException;
 import yanagishima.model.hive.HiveQueryResult;
-import yanagishima.service.HiveServiceImpl;
+import yanagishima.service.HiveService;
 
 @Slf4j
 @RestController
 @RequiredArgsConstructor
 public class HiveController {
     private final YanagishimaConfig config;
-    private final HiveServiceImpl hiveService;
+    private final HiveService hiveService;
 
     @DatasourceAuth
     @PostMapping(path = {"hive", "spark"})
