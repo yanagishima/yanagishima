@@ -1,7 +1,5 @@
 package yanagishima.config;
 
-import static yanagishima.server.YanagishimaServer.injector;
-
 import java.util.Properties;
 
 import javax.sql.DataSource;
@@ -17,11 +15,14 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 
+import lombok.RequiredArgsConstructor;
+
 @Configuration
 @EnableTransactionManagement
 @EnableJpaRepositories("yanagishima.repository")
+@RequiredArgsConstructor
 public class DataConfig {
-  private final YanagishimaConfig config = injector.getInstance(YanagishimaConfig.class);
+  private final YanagishimaConfig config;
 
   @Bean
   public LocalContainerEntityManagerFactoryBean entityManagerFactory() {

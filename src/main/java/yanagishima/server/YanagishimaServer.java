@@ -26,8 +26,6 @@ import org.springframework.web.context.WebApplicationContext;
 import org.springframework.web.context.support.AnnotationConfigWebApplicationContext;
 import org.springframework.web.servlet.DispatcherServlet;
 
-import com.google.inject.Guice;
-import com.google.inject.Injector;
 import com.google.inject.servlet.GuiceFilter;
 
 import joptsimple.OptionParser;
@@ -36,7 +34,6 @@ import joptsimple.OptionSpec;
 import lombok.extern.slf4j.Slf4j;
 import yanagishima.config.YanagishimaConfig;
 import yanagishima.filter.YanagishimaFilter;
-import yanagishima.module.PrestoServiceModule;
 
 @Slf4j
 public class YanagishimaServer {
@@ -45,13 +42,11 @@ public class YanagishimaServer {
     private static final String CONFIG_LOCATION_PACKAGE = "yanagishima.config";
 
     // Expose to JVM singleton value for sharing with Spring DI
-    public static Injector injector;
+    public static Properties properties;
 
     public static void main(String[] args) throws Exception {
-        Properties properties = loadProperties(args, new OptionParser());
-        YanagishimaConfig config = new YanagishimaConfig(properties);
-
-        injector = createInjector(properties);
+        properties = loadProperties(args, new OptionParser());
+        YanagishimaConfig config = new YanagishimaConfig();
 
         createTables(config);
 
@@ -98,11 +93,6 @@ public class YanagishimaServer {
         AnnotationConfigWebApplicationContext context = new AnnotationConfigWebApplicationContext();
         context.setConfigLocation(CONFIG_LOCATION_PACKAGE);
         return context;
-    }
-
-    private static Injector createInjector(Properties properties) {
-        return Guice.createInjector(
-                new PrestoServiceModule(properties));
     }
 
     public static void createTables(YanagishimaConfig config) throws SQLException {

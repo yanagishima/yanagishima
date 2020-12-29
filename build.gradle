@@ -118,7 +118,6 @@ dependencies {
     compile 'com.facebook.presto:presto-client:0.215'
     compile 'io.prestosql:presto-client:347'
     compile 'io.prestosql:presto-parser:347'
-    compile 'com.google.inject:guice:4.0'
     compile 'com.google.inject.extensions:guice-servlet:4.0'
     compile 'org.codehaus.jackson:jackson-core-asl:1.9.13'
     compile 'org.codehaus.jackson:jackson-mapper-asl:1.9.13'
