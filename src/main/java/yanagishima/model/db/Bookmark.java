@@ -15,27 +15,27 @@ import lombok.Data;
 @Entity
 @Table(name = "bookmark")
 public class Bookmark {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "bookmark_id")
-    @JsonProperty("bookmark_id")
-    private int bookmarkId;
+  @Id
+  @GeneratedValue(strategy = GenerationType.IDENTITY)
+  @Column(name = "bookmark_id")
+  @JsonProperty("bookmark_id")
+  private int bookmarkId;
 
-    @Column(name = "datasource")
-    private String datasource;
+  @Column(name = "datasource")
+  private String datasource;
 
-    @Column(name = "engine")
-    private String engine;
+  @Column(name = "engine")
+  private String engine;
 
-    @Column(name = "query")
-    private String query;
+  @Column(name = "query")
+  private String query;
 
-    @Column(name = "title")
-    private String title;
+  @Column(name = "title")
+  private String title;
 
-    @Column(name = "user")
-    private String user;
+  @Column(name = "user")
+  private String user;
 
-    @Column(name = "snippet")
-    private String snippet;
+  @Column(name = "snippet")
+  private String snippet;
 }

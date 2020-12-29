@@ -26,7 +26,8 @@ public class BookmarkService {
     return bookmarkRepository.findAllByDatasourceAndBookmarkIdIn(datasource, bookmarkIds);
   }
 
-  public Bookmark insert(String datasource, String query, String title, String engine, String user, String snippet) {
+  public Bookmark insert(String datasource, String query, String title, String engine, String user,
+                         String snippet) {
     Bookmark bookmark = new Bookmark();
     bookmark.setDatasource(datasource);
     bookmark.setQuery(query);

@@ -20,7 +20,7 @@ targetCompatibility = JavaVersion.VERSION_11
 
 checkstyle {
     configFile = file("$project.rootDir/config/checkstyle/checkstyle.xml")
-    toolVersion = "8.22"
+    toolVersion = "8.29"
     showViolations = true
     ignoreFailures = false
     maxWarnings = 0

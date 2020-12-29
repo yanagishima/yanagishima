@@ -26,48 +26,49 @@ import yanagishima.service.SessionPropertyService;
 @RestController
 @RequiredArgsConstructor
 public class HistoryController {
-    private final SessionPropertyService sessionPropertyService;
-    private final QueryService queryService;
-    private final YanagishimaConfig config;
+  private final SessionPropertyService sessionPropertyService;
+  private final QueryService queryService;
+  private final YanagishimaConfig config;
 
-    @DatasourceAuth
-    @GetMapping("history")
-    public Map<String, Object> get(@RequestParam String datasource,
-                                   @RequestParam(required = false) String engine,
-                                   @RequestParam(name = "queryid", required = false) String queryId,
-                                   HttpServletRequest request) {
-        Map<String, Object> responseBody = new HashMap<>();
-        if (queryId == null) {
-            return responseBody;
-        }
-
-        try {
-            Optional<Query> queryOptional;
-            if (engine == null) {
-                queryOptional = queryService.get(queryId, datasource);
-            } else {
-                queryOptional = queryService.getByEngine(queryId, datasource, engine);
-            }
-
-            String user = request.getHeader(config.getAuditHttpHeaderName());
-            Optional<Query> userQueryOptional = queryService.get(queryId, datasource, user);
-            responseBody.put("editLabel", userQueryOptional.isPresent());
-
-            queryOptional.ifPresent(query -> {
-                responseBody.put("engine", query.getEngine());
-                boolean resultVisible;
-                if (config.isAllowOtherReadResult(datasource)) {
-                    resultVisible = true;
-                } else {
-                    resultVisible = userQueryOptional.isPresent();
-                }
-                List<SessionProperty> sessionPropertyList = sessionPropertyService.getAll(datasource, engine, queryId);
-                createHistoryResult(responseBody, config.getSelectLimit(), datasource, query, resultVisible, sessionPropertyList);
-            });
-        } catch (Throwable e) {
-            log.error(e.getMessage(), e);
-            responseBody.put("error", e.getMessage());
-        }
-        return responseBody;
+  @DatasourceAuth
+  @GetMapping("history")
+  public Map<String, Object> get(@RequestParam String datasource,
+                                 @RequestParam(required = false) String engine,
+                                 @RequestParam(name = "queryid", required = false) String queryId,
+                                 HttpServletRequest request) {
+    Map<String, Object> responseBody = new HashMap<>();
+    if (queryId == null) {
+      return responseBody;
     }
+
+    try {
+      Optional<Query> queryOptional;
+      if (engine == null) {
+        queryOptional = queryService.get(queryId, datasource);
+      } else {
+        queryOptional = queryService.getByEngine(queryId, datasource, engine);
+      }
+
+      String user = request.getHeader(config.getAuditHttpHeaderName());
+      Optional<Query> userQueryOptional = queryService.get(queryId, datasource, user);
+      responseBody.put("editLabel", userQueryOptional.isPresent());
+
+      queryOptional.ifPresent(query -> {
+        responseBody.put("engine", query.getEngine());
+        boolean resultVisible;
+        if (config.isAllowOtherReadResult(datasource)) {
+          resultVisible = true;
+        } else {
+          resultVisible = userQueryOptional.isPresent();
+        }
+        List<SessionProperty> sessionPropertyList = sessionPropertyService.getAll(datasource, engine, queryId);
+        createHistoryResult(responseBody, config.getSelectLimit(), datasource, query, resultVisible,
+                            sessionPropertyList);
+      });
+    } catch (Throwable e) {
+      log.error(e.getMessage(), e);
+      responseBody.put("error", e.getMessage());
+    }
+    return responseBody;
+  }
 }

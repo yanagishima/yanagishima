@@ -55,7 +55,8 @@ public class BookmarkController {
 
   @DatasourceAuth
   @GetMapping("bookmark")
-  public BookmarkDto get(@RequestParam String datasource, @RequestParam(name = "bookmark_id") String bookmarkId) {
+  public BookmarkDto get(@RequestParam String datasource,
+                         @RequestParam(name = "bookmark_id") String bookmarkId) {
     BookmarkDto bookmarkDto = new BookmarkDto();
     try {
       List<String> bookmarkIds = SPLITTER.splitToList(bookmarkId);

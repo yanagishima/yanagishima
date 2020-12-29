@@ -25,59 +25,61 @@ import yanagishima.service.QueryService;
 @RestController
 @RequiredArgsConstructor
 public class QueryHistoryUserController {
-    private final QueryService queryService;
-    private final YanagishimaConfig config;
+  private final QueryService queryService;
+  private final YanagishimaConfig config;
 
-    @DatasourceAuth
-    @GetMapping("queryHistoryUser")
-    public Map<String, Object> get(@RequestParam String datasource,
-                                   @RequestParam String engine,
-                                   @RequestParam(defaultValue = "") String search,
-                                   @RequestParam(required = false) String label, // Deprecated
-                                   @RequestParam(defaultValue = "100") int limit,
-                                   HttpServletRequest request) {
-        Map<String, Object> responseBody = new HashMap<>();
-        try {
-            String userName = request.getHeader(config.getAuditHttpHeaderName());
+  @DatasourceAuth
+  @GetMapping("queryHistoryUser")
+  public Map<String, Object> get(@RequestParam String datasource,
+                                 @RequestParam String engine,
+                                 @RequestParam(defaultValue = "") String search,
+                                 @RequestParam(required = false) String label, // Deprecated
+                                 @RequestParam(defaultValue = "100") int limit,
+                                 HttpServletRequest request) {
+    Map<String, Object> responseBody = new HashMap<>();
+    try {
+      String userName = request.getHeader(config.getAuditHttpHeaderName());
 
-            responseBody.put("headers", Arrays.asList("Id", "Query", "Time", "rawDataSize", "engine", "finishedTime", "linenumber", "labelName", "status"));
+      responseBody.put("headers", Arrays
+          .asList("Id", "Query", "Time", "rawDataSize", "engine", "finishedTime", "linenumber", "labelName",
+                  "status"));
 
-            List<Query> queryList = queryService.getAll(datasource, engine, userName, search, limit);
-            responseBody.put("hit", queryList.size());
+      List<Query> queryList = queryService.getAll(datasource, engine, userName, search, limit);
+      responseBody.put("hit", queryList.size());
 
-            List<List<Object>> queryHistoryList = new ArrayList<>();
-            for (Query query : queryList) {
-                List<Object> row = new ArrayList<>();
-                row.add(query.getQueryId());
-                row.add(query.getQueryString());
-                row.add(query.getElapsedTimeMillis());
-                if (query.getResultFileSize() == null) {
-                    row.add(null);
-                } else {
-                    DataSize rawDataSize = new DataSize(query.getResultFileSize(), DataSize.Unit.BYTE);
-                    row.add(rawDataSize.convertToMostSuccinctDataSize().toString());
-                }
-                row.add(query.getEngine());
-                row.add(query.getFetchResultTimeString());
-                row.add(query.getLinenumber());
-                row.add(null); // Deprecated: labelName
-                row.add(query.getStatus());
-                queryHistoryList.add(row);
-            }
-
-            if (queryHistoryList.isEmpty()) {
-                responseBody.put("results", Collections.emptyList());
-            } else {
-                responseBody.put("results", queryHistoryList);
-            }
-
-            long totalCount = queryService.count(datasource, engine, userName);
-            responseBody.put("total", totalCount);
-
-        } catch (Throwable e) {
-            log.error(e.getMessage(), e);
-            responseBody.put("error", e.getMessage());
+      List<List<Object>> queryHistoryList = new ArrayList<>();
+      for (Query query : queryList) {
+        List<Object> row = new ArrayList<>();
+        row.add(query.getQueryId());
+        row.add(query.getQueryString());
+        row.add(query.getElapsedTimeMillis());
+        if (query.getResultFileSize() == null) {
+          row.add(null);
+        } else {
+          DataSize rawDataSize = new DataSize(query.getResultFileSize(), DataSize.Unit.BYTE);
+          row.add(rawDataSize.convertToMostSuccinctDataSize().toString());
         }
-        return responseBody;
+        row.add(query.getEngine());
+        row.add(query.getFetchResultTimeString());
+        row.add(query.getLinenumber());
+        row.add(null); // Deprecated: labelName
+        row.add(query.getStatus());
+        queryHistoryList.add(row);
+      }
+
+      if (queryHistoryList.isEmpty()) {
+        responseBody.put("results", Collections.emptyList());
+      } else {
+        responseBody.put("results", queryHistoryList);
+      }
+
+      long totalCount = queryService.count(datasource, engine, userName);
+      responseBody.put("total", totalCount);
+
+    } catch (Throwable e) {
+      log.error(e.getMessage(), e);
+      responseBody.put("error", e.getMessage());
     }
+    return responseBody;
+  }
 }

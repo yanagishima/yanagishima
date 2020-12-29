@@ -28,92 +28,92 @@ import yanagishima.service.CommentService;
 @RestController
 @RequiredArgsConstructor
 public class CommentController {
-    private final CommentService commentService;
-    private final YanagishimaConfig config;
+  private final CommentService commentService;
+  private final YanagishimaConfig config;
 
-    @DatasourceAuth
-    @PostMapping("comment")
-    public Map<String, Object> post(@RequestParam String datasource,
+  @DatasourceAuth
+  @PostMapping("comment")
+  public Map<String, Object> post(@RequestParam String datasource,
+                                  @RequestParam String engine,
+                                  @RequestParam(name = "queryid") String queryId,
+                                  @RequestParam Optional<Integer> like,
+                                  @RequestParam(required = false) String content,
+                                  HttpServletRequest request) {
+    Map<String, Object> responseBody = new HashMap<>();
+    try {
+      String user = request.getHeader(config.getAuditHttpHeaderName());
+
+      responseBody.put("datasource", datasource);
+      responseBody.put("engine", engine);
+      responseBody.put("queryid", queryId);
+      responseBody.put("user", user);
+      String updateTimeString = ZonedDateTime.now().toString();
+      responseBody.put("updateTimeString", updateTimeString);
+
+      if (like.isEmpty()) {
+        requireNonNull(content, "content is null");
+        Optional<Comment> comment = commentService.get(datasource, engine, queryId);
+        if (comment.isPresent()) {
+          commentService.update(comment.get(), user, content, updateTimeString);
+          responseBody.put("content", content);
+          responseBody.put("likeCount", comment.get().getLikeCount());
+        } else {
+          commentService.insert(datasource, engine, queryId, user, content, updateTimeString);
+          responseBody.put("content", content);
+          responseBody.put("likeCount", 0);
+        }
+      } else {
+        Comment likedComment = commentService.get(datasource, engine, queryId).get();
+        int likeCount = likedComment.getLikeCount() + like.get();
+        commentService.update(likedComment, likeCount);
+        responseBody.put("likeCount", likeCount);
+      }
+    } catch (Throwable e) {
+      log.error(e.getMessage(), e);
+      responseBody.put("error", e.getMessage());
+    }
+    return responseBody;
+  }
+
+  @DatasourceAuth
+  @GetMapping("comment")
+  public Map<String, Object> get(@RequestParam String datasource,
+                                 @RequestParam String engine,
+                                 @RequestParam(name = "queryid", required = false) String queryId,
+                                 @RequestParam(defaultValue = "updateTimeString") String sort,
+                                 @RequestParam(defaultValue = "") String search) {
+    Map<String, Object> responseBody = new HashMap<>();
+    try {
+      List<Comment> comments = new ArrayList<>();
+      if (queryId != null) {
+        Optional<Comment> comment = commentService.get(datasource, engine, queryId);
+        comment.ifPresent(comments::add);
+      } else {
+        comments = commentService.getAll(datasource, engine, search, sort);
+      }
+      responseBody.put("comments", comments);
+    } catch (Throwable e) {
+      log.error(e.getMessage(), e);
+      responseBody.put("error", e.getMessage());
+    }
+    return responseBody;
+  }
+
+  @DatasourceAuth
+  @DeleteMapping("comment")
+  public Map<String, Object> delete(@RequestParam String datasource,
                                     @RequestParam String engine,
-                                    @RequestParam(name = "queryid") String queryId,
-                                    @RequestParam Optional<Integer> like,
-                                    @RequestParam(required = false) String content,
-                                    HttpServletRequest request) {
-        Map<String, Object> responseBody = new HashMap<>();
-        try {
-            String user = request.getHeader(config.getAuditHttpHeaderName());
-
-            responseBody.put("datasource", datasource);
-            responseBody.put("engine", engine);
-            responseBody.put("queryid", queryId);
-            responseBody.put("user", user);
-            String updateTimeString = ZonedDateTime.now().toString();
-            responseBody.put("updateTimeString", updateTimeString);
-
-            if (like.isEmpty()) {
-                requireNonNull(content, "content is null");
-                Optional<Comment> comment = commentService.get(datasource, engine, queryId);
-                if (comment.isPresent()) {
-                    commentService.update(comment.get(), user, content, updateTimeString);
-                    responseBody.put("content", content);
-                    responseBody.put("likeCount", comment.get().getLikeCount());
-                } else {
-                    commentService.insert(datasource, engine, queryId, user, content, updateTimeString);
-                    responseBody.put("content", content);
-                    responseBody.put("likeCount", 0);
-                }
-            } else {
-                Comment likedComment = commentService.get(datasource, engine, queryId).get();
-                int likeCount = likedComment.getLikeCount() + like.get();
-                commentService.update(likedComment, likeCount);
-                responseBody.put("likeCount", likeCount);
-            }
-        } catch (Throwable e) {
-            log.error(e.getMessage(), e);
-            responseBody.put("error", e.getMessage());
-        }
-        return responseBody;
+                                    @RequestParam(name = "queryid") String queryId) {
+    Map<String, Object> responseBody = new HashMap<>();
+    try {
+      commentService.delete(datasource, engine, queryId);
+      responseBody.put("datasource", datasource);
+      responseBody.put("engine", engine);
+      responseBody.put("queryid", queryId);
+    } catch (Throwable e) {
+      log.error(e.getMessage(), e);
+      responseBody.put("error", e.getMessage());
     }
-
-    @DatasourceAuth
-    @GetMapping("comment")
-    public Map<String, Object> get(@RequestParam String datasource,
-                                   @RequestParam String engine,
-                                   @RequestParam(name = "queryid", required = false) String queryId,
-                                   @RequestParam(defaultValue = "updateTimeString") String sort,
-                                   @RequestParam(defaultValue = "") String search) {
-        Map<String, Object> responseBody = new HashMap<>();
-        try {
-            List<Comment> comments = new ArrayList<>();
-            if (queryId != null) {
-                Optional<Comment> comment = commentService.get(datasource, engine, queryId);
-                comment.ifPresent(comments::add);
-            } else {
-                comments = commentService.getAll(datasource, engine, search, sort);
-            }
-            responseBody.put("comments", comments);
-        } catch (Throwable e) {
-            log.error(e.getMessage(), e);
-            responseBody.put("error", e.getMessage());
-        }
-        return responseBody;
-    }
-
-    @DatasourceAuth
-    @DeleteMapping("comment")
-    public Map<String, Object> delete(@RequestParam String datasource,
-                                      @RequestParam String engine,
-                                      @RequestParam(name = "queryid") String queryId) {
-        Map<String, Object> responseBody = new HashMap<>();
-        try {
-            commentService.delete(datasource, engine, queryId);
-            responseBody.put("datasource", datasource);
-            responseBody.put("engine", engine);
-            responseBody.put("queryid", queryId);
-        } catch (Throwable e) {
-            log.error(e.getMessage(), e);
-            responseBody.put("error", e.getMessage());
-        }
-        return responseBody;
-    }
+    return responseBody;
+  }
 }

@@ -13,18 +13,18 @@ import lombok.Data;
 @IdClass(LabelId.class)
 @Table(name = "label")
 public class Label {
-    @Id
-    @Column(name = "datasource")
-    private String datasource;
+  @Id
+  @Column(name = "datasource")
+  private String datasource;
 
-    @Id
-    @Column(name = "engine")
-    private String engine;
+  @Id
+  @Column(name = "engine")
+  private String engine;
 
-    @Id
-    @Column(name = "query_id")
-    private String queryid;
+  @Id
+  @Column(name = "query_id")
+  private String queryid;
 
-    @Column(name = "label_name")
-    private String labelName;
+  @Column(name = "label_name")
+  private String labelName;
 }

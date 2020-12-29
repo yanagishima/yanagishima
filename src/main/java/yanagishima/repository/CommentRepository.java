@@ -12,7 +12,8 @@ import yanagishima.model.db.CommentId;
 
 @Repository
 public interface CommentRepository extends CrudRepository<Comment, CommentId> {
-  List<Comment> findAllByDatasourceAndEngineAndContentContains(String datasource, String engine, String content, Sort sort);
+  List<Comment> findAllByDatasourceAndEngineAndContentContains(String datasource, String engine, String content,
+                                                               Sort sort);
 
   Optional<Comment> findByDatasourceAndEngineAndQueryid(String datasource, String engine, String queryid);
 

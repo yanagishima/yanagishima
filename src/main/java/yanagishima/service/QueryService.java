@@ -60,8 +60,10 @@ public class QueryService {
     return queryRepository.countAllByDatasourceAndEngineAndUser(datasource, engine, user);
   }
 
-  public Query insert(String datasource, String engine, String queryId, String fetchResultTimeString, String queryString,
-                      String user, String status, Integer elapsedTimeMillis, Integer resultFileSize, Integer linenumber) {
+  public Query insert(String datasource, String engine, String queryId, String fetchResultTimeString,
+                      String queryString,
+                      String user, String status, Integer elapsedTimeMillis, Integer resultFileSize,
+                      Integer linenumber) {
     Query query = new Query();
     query.setDatasource(datasource);
     query.setEngine(engine);
@@ -76,18 +78,22 @@ public class QueryService {
     return queryRepository.save(query);
   }
 
-  public void saveTimeout(Duration queryMaxRunTime, long start, String datasource, String engine, String queryId, String query, String user) {
+  public void saveTimeout(Duration queryMaxRunTime, long start, String datasource, String engine,
+                          String queryId, String query, String user) {
     if (System.currentTimeMillis() - start > queryMaxRunTime.toMillis()) {
-      String message = format("Query failed (#%s) in %s: Query exceeded maximum time limit of %s", queryId, datasource, queryMaxRunTime.toString());
+      String message = format("Query failed (#%s) in %s: Query exceeded maximum time limit of %s", queryId,
+                              datasource, queryMaxRunTime.toString());
       saveError(datasource, engine, queryId, query, user, message);
       throw new RuntimeException(message);
     }
   }
 
-  public void saveError(String datasource, String engine, String queryId, String queryString, String user, String errorMessage) {
+  public void saveError(String datasource, String engine, String queryId, String queryString, String user,
+                        String errorMessage) {
     try {
-      LocalDateTime submitTimeLdt = LocalDateTime.parse(queryId.substring(0, "yyyyMMdd_HHmmss".length()), DateTimeFormatter
-          .ofPattern("yyyyMMdd_HHmmss"));
+      LocalDateTime submitTimeLdt = LocalDateTime.parse(queryId.substring(0, "yyyyMMdd_HHmmss".length()),
+                                                        DateTimeFormatter
+                                                            .ofPattern("yyyyMMdd_HHmmss"));
       ZonedDateTime submitTimeZdt = submitTimeLdt.atZone(ZoneId.of("GMT", ZoneId.SHORT_IDS));
       String fetchResultTimeString = ZonedDateTime.now().toString();
       ZonedDateTime fetchResultTime = ZonedDateTime.parse(fetchResultTimeString);
@@ -116,9 +122,11 @@ public class QueryService {
     }
   }
 
-  public void save(String datasource, String engine, String queryString, String user, String queryId, int linenumber) {
+  public void save(String datasource, String engine, String queryString, String user, String queryId,
+                   int linenumber) {
     try {
-      LocalDateTime submitTimeLdt = LocalDateTime.parse(queryId.substring(0, "yyyyMMdd_HHmmss".length()), DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss"));
+      LocalDateTime submitTimeLdt = LocalDateTime.parse(queryId.substring(0, "yyyyMMdd_HHmmss".length()),
+                                                        DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss"));
       ZonedDateTime submitTimeZdt = submitTimeLdt.atZone(ZoneId.of("GMT", ZoneId.SHORT_IDS));
       String fetchResultTimeString = ZonedDateTime.now().toString();
       ZonedDateTime fetchResultTime = ZonedDateTime.parse(fetchResultTimeString);
