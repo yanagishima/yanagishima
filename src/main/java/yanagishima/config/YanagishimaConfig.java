@@ -12,78 +12,72 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
-import java.util.Properties;
-
-import javax.annotation.Nullable;
 
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.env.Environment;
 
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 
-import yanagishima.server.YanagishimaServer;
-import yanagishima.util.PropertiesUtil;
+import lombok.RequiredArgsConstructor;
 
 @Configuration
+@RequiredArgsConstructor
 public class YanagishimaConfig {
   private static final Splitter SPLITTER = Splitter.on(',').trimResults().omitEmptyStrings();
 
-  private final Properties properties = YanagishimaServer.properties; // Migrate to exact Spring configuration
-
-  public int getServerPort() {
-    return Integer.parseInt(properties.getProperty("jetty.port", "8080"));
-  }
+  private final Environment environment;
 
   public boolean corsEnabled() {
-    return Boolean.parseBoolean(properties.getProperty("cors.enabled", "false"));
+    return Boolean.parseBoolean(environment.getProperty("cors.enabled", "false"));
   }
 
   public String getPrestoCoordinatorServer(String datasource) {
-    return PropertiesUtil.getParam(properties, "presto.coordinator.server." + datasource);
+    return environment.getRequiredProperty("presto.coordinator.server." + datasource);
   }
 
   public String getPrestoCoordinatorServerOrNull(String datasource) {
-    return properties.getProperty("presto.coordinator.server." + datasource);
+    return environment.getProperty("presto.coordinator.server." + datasource);
   }
 
   public String getPrestoRedirectServer(String datasource) {
-    String redirectStr = properties.getProperty("presto.redirect.server." + datasource);
+    String redirectStr = environment.getProperty("presto.redirect.server." + datasource);
     return firstNonNull(redirectStr, getPrestoCoordinatorServer(datasource));
   }
 
   public String getCatalog(String datasource) {
-    return PropertiesUtil.getParam(properties, "catalog." + datasource);
+    return environment.getRequiredProperty("catalog." + datasource);
   }
 
   public String getSchema(String datasource) {
-    return PropertiesUtil.getParam(properties, "schema." + datasource);
+    return environment.getRequiredProperty("schema." + datasource);
   }
 
   public String getUser(String datasource) {
-    String user = properties.getProperty("user." + datasource);
+    String user = environment.getProperty("user." + datasource);
     return firstNonNull(user, "yanagishima");
   }
 
   public String getSource(String datasource) {
-    String source = properties.getProperty("source." + datasource);
+    String source = environment.getProperty("source." + datasource);
     return firstNonNull(source, "yanagishima");
   }
 
   public int getSelectLimit() {
-    String limitStr = properties.getProperty("select.limit");
+    String limitStr = environment.getProperty("select.limit");
     return Integer.parseInt(firstNonNull(limitStr, "500"));
   }
 
   public String getAuditHttpHeaderName() {
-    return properties.getProperty("audit.http.header.name");
+    return environment.getProperty("audit.http.header.name");
   }
 
   public boolean isUseAuditHttpHeaderName() {
-    return Boolean.parseBoolean(properties.getProperty("use.audit.http.header.name"));
+    return Boolean.parseBoolean(environment.getProperty("use.audit.http.header.name"));
   }
 
   public List<String> getDatasources(String engine) {
-    String datasourceProperties = properties.getProperty(engine + ".datasources");
+    String datasourceProperties = environment.getProperty(engine + ".datasources");
     if (datasourceProperties == null) {
       return Collections.emptyList();
     }
@@ -105,16 +99,16 @@ public class YanagishimaConfig {
   }
 
   public List<String> getEngines() {
-    return Arrays.asList(PropertiesUtil.getParam(properties, "sql.query.engines").split(","));
+    return Arrays.asList(environment.getRequiredProperty("sql.query.engines").split(","));
   }
 
   public double getQueryMaxRunTimeSeconds() {
-    String secondsStr = properties.getProperty("presto.query.max-run-time-seconds");
+    String secondsStr = environment.getProperty("presto.query.max-run-time-seconds");
     return Double.parseDouble(firstNonNull(secondsStr, "3600"));
   }
 
   public double getQueryMaxRunTimeSeconds(String datasource) {
-    String property = properties.getProperty("presto.query.max-run-time-seconds" + "." + datasource);
+    String property = environment.getProperty("presto.query.max-run-time-seconds" + "." + datasource);
     if (property == null) {
       return getQueryMaxRunTimeSeconds();
     }
@@ -122,26 +116,26 @@ public class YanagishimaConfig {
   }
 
   public long getMaxResultFileByteSize() {
-    String sizeStr = properties.getProperty("presto.max-result-file-byte-size");
+    String sizeStr = environment.getProperty("presto.max-result-file-byte-size");
     return Long.parseLong(firstNonNull(sizeStr, "1073741824"));
   }
 
   public long getHiveMaxResultFileByteSize() {
-    String sizeStr = properties.getProperty("hive.max-result-file-byte-size");
+    String sizeStr = environment.getProperty("hive.max-result-file-byte-size");
     return Long.parseLong(firstNonNull(sizeStr, "1073741824"));
   }
 
   public int getToValuesQueryLimit() {
-    String limitStr = properties.getProperty("to.values.query.limit");
+    String limitStr = environment.getProperty("to.values.query.limit");
     return Integer.parseInt(firstNonNull(limitStr, "500"));
   }
 
   public boolean isCheckDatasource() {
-    return Boolean.parseBoolean(properties.getProperty("check.datasource"));
+    return Boolean.parseBoolean(environment.getProperty("check.datasource"));
   }
 
   public List<String> getInvisibleSchemas(String datasource, String catalog) {
-    String invisibleSchemas = properties.getProperty("invisible.schema." + datasource + "." + catalog);
+    String invisibleSchemas = environment.getProperty("invisible.schema." + datasource + "." + catalog);
     if (invisibleSchemas == null) {
       return Collections.emptyList();
     }
@@ -149,7 +143,7 @@ public class YanagishimaConfig {
   }
 
   public List<String> getInvisibleDatabases(String datasource) {
-    String invisibleDatabases = properties.getProperty("invisible.database." + datasource);
+    String invisibleDatabases = environment.getProperty("invisible.database." + datasource);
     if (invisibleDatabases == null) {
       return Collections.emptyList();
     }
@@ -157,51 +151,51 @@ public class YanagishimaConfig {
   }
 
   public Optional<String> getFluentdExecutedTag() {
-    return Optional.ofNullable(properties.getProperty("fluentd.executed.tag"));
+    return Optional.ofNullable(environment.getProperty("fluentd.executed.tag"));
   }
 
   public Optional<String> getFluentdFaliedTag() {
-    return Optional.ofNullable(properties.getProperty("fluentd.failed.tag"));
+    return Optional.ofNullable(environment.getProperty("fluentd.failed.tag"));
   }
 
   public String getFluentdHost() {
-    return firstNonNull(properties.getProperty("fluentd.host"), "localhost");
+    return firstNonNull(environment.getProperty("fluentd.host"), "localhost");
   }
 
   public int getFluentdPort() {
-    return Integer.parseInt(firstNonNull(properties.getProperty("fluentd.port"), "24224"));
+    return Integer.parseInt(firstNonNull(environment.getProperty("fluentd.port"), "24224"));
   }
 
   public boolean isUserRequired() {
-    return Boolean.parseBoolean(properties.getProperty("user.require"));
+    return Boolean.parseBoolean(environment.getProperty("user.require"));
   }
 
   public String getHiveJdbcUrl(String datasource) {
-    return PropertiesUtil.getParam(properties, "hive.jdbc.url." + datasource);
+    return environment.getRequiredProperty("hive.jdbc.url." + datasource);
   }
 
   public String getSparkJdbcUrl(String datasource) {
-    return PropertiesUtil.getParam(properties, "spark.jdbc.url." + datasource);
+    return environment.getRequiredProperty("spark.jdbc.url." + datasource);
   }
 
   public String getSparkWebUrl(String datasource) {
-    return PropertiesUtil.getParam(properties, "spark.web.url." + datasource);
+    return environment.getRequiredProperty("spark.web.url." + datasource);
   }
 
   public String getHiveJdbcUser(String datasource) {
-    return properties.getProperty("hive.jdbc.user." + datasource);
+    return environment.getProperty("hive.jdbc.user." + datasource);
   }
 
   public String getHiveJdbcPassword(String datasource) {
-    return properties.getProperty("hive.jdbc.password." + datasource);
+    return environment.getProperty("hive.jdbc.password." + datasource);
   }
 
   public double getHiveQueryMaxRunTimeSeconds() {
-    return Double.parseDouble(properties.getProperty("hive.query.max-run-time-seconds"));
+    return Double.parseDouble(environment.getProperty("hive.query.max-run-time-seconds"));
   }
 
   public double getHiveQueryMaxRunTimeSeconds(String datasource) {
-    String property = properties.getProperty("hive.query.max-run-time-seconds" + "." + datasource);
+    String property = environment.getProperty("hive.query.max-run-time-seconds" + "." + datasource);
     if (property == null) {
       return getHiveQueryMaxRunTimeSeconds();
     }
@@ -209,15 +203,15 @@ public class YanagishimaConfig {
   }
 
   public String getResourceManagerUrl(String datasource) {
-    return PropertiesUtil.getParam(properties, "resource.manager.url." + datasource);
+    return environment.getRequiredProperty("resource.manager.url." + datasource);
   }
 
   public Optional<String> getResourceManagerBegin(String datasource) {
-    return Optional.ofNullable(properties.getProperty("resource.manager.url." + datasource + ".begin"));
+    return Optional.ofNullable(environment.getProperty("resource.manager.url." + datasource + ".begin"));
   }
 
   public List<String> getHiveDisallowedKeywords(String datasource) {
-    String property = properties.getProperty("hive.disallowed.keywords." + datasource);
+    String property = environment.getProperty("hive.disallowed.keywords." + datasource);
     if (property == null) {
       return Collections.emptyList();
     }
@@ -225,7 +219,7 @@ public class YanagishimaConfig {
   }
 
   public List<String> getHiveSetupQueryList(String datasource) {
-    String property = properties.getProperty("hive.setup.query.path." + datasource);
+    String property = environment.getProperty("hive.setup.query.path." + datasource);
     List<String> hiveSetupQueryList = new ArrayList<>();
     if (property == null) {
       return Collections.emptyList();
@@ -244,11 +238,11 @@ public class YanagishimaConfig {
   }
 
   public boolean isAuth(String datasource) {
-    return Boolean.parseBoolean(properties.getProperty("auth." + datasource));
+    return Boolean.parseBoolean(environment.getProperty("auth." + datasource));
   }
 
   public List<String> getHiveSecretKeywords(String datasource) {
-    String property = properties.getProperty("hive.secret.keywords." + datasource);
+    String property = environment.getProperty("hive.secret.keywords." + datasource);
     if (property == null) {
       return Collections.emptyList();
     }
@@ -256,7 +250,7 @@ public class YanagishimaConfig {
   }
 
   public List<String> getPrestoSecretKeywords(String datasource) {
-    String property = properties.getProperty("presto.secret.keywords." + datasource);
+    String property = environment.getProperty("presto.secret.keywords." + datasource);
     if (property == null) {
       return Collections.emptyList();
     }
@@ -264,7 +258,7 @@ public class YanagishimaConfig {
   }
 
   public List<String> getPrestoMustSpecifyConditions(String datasource) {
-    String property = properties.getProperty("presto.must.specify.conditions." + datasource);
+    String property = environment.getProperty("presto.must.specify.conditions." + datasource);
     if (property == null) {
       return Collections.emptyList();
     }
@@ -272,7 +266,7 @@ public class YanagishimaConfig {
   }
 
   public List<String> getHiveMustSpecifyConditions(String datasource) {
-    String property = properties.getProperty("hive.must.specify.conditions." + datasource);
+    String property = environment.getProperty("hive.must.specify.conditions." + datasource);
     if (property == null) {
       return Collections.emptyList();
     }
@@ -280,7 +274,7 @@ public class YanagishimaConfig {
   }
 
   public boolean isAllowOtherReadResult(String datasource) {
-    String property = properties.getProperty("allow.other.read.result." + datasource);
+    String property = environment.getProperty("allow.other.read.result." + datasource);
     if (property == null) {
       return true;
     }
@@ -288,7 +282,7 @@ public class YanagishimaConfig {
   }
 
   public boolean isUseNewShowPartitions(String datasource) {
-    String property = properties.getProperty("use.new.show.partitions." + datasource);
+    String property = environment.getProperty("use.new.show.partitions." + datasource);
     if (property == null) {
       return true;
     }
@@ -296,11 +290,11 @@ public class YanagishimaConfig {
   }
 
   public boolean isUseJdbcCancel(String datasource) {
-    return Boolean.parseBoolean(properties.getProperty("use.jdbc.cancel." + datasource));
+    return Boolean.parseBoolean(environment.getProperty("use.jdbc.cancel." + datasource));
   }
 
   public List<String> getElasticsearchSecretKeywords(String datasource) {
-    String property = properties.getProperty("elasticsearch.secret.keywords." + datasource);
+    String property = environment.getProperty("elasticsearch.secret.keywords." + datasource);
     if (property == null) {
       return Collections.emptyList();
     }
@@ -308,7 +302,7 @@ public class YanagishimaConfig {
   }
 
   public List<String> getElasticsearchMustSpecifyConditions(String datasource) {
-    String property = properties.getProperty("elasticsearch.must.specify.conditions." + datasource);
+    String property = environment.getProperty("elasticsearch.must.specify.conditions." + datasource);
     if (property == null) {
       return Collections.emptyList();
     }
@@ -316,11 +310,11 @@ public class YanagishimaConfig {
   }
 
   public String getElasticsearchJdbcUrl(String datasource) {
-    return PropertiesUtil.getParam(properties, "elasticsearch.jdbc.url." + datasource);
+    return environment.getRequiredProperty("elasticsearch.jdbc.url." + datasource);
   }
 
   public List<String> getElasticsearchDisallowedKeywords(String datasource) {
-    String property = properties.getProperty("elasticsearch.disallowed.keywords." + datasource);
+    String property = environment.getProperty("elasticsearch.disallowed.keywords." + datasource);
     if (property == null) {
       return Collections.emptyList();
     }
@@ -328,17 +322,17 @@ public class YanagishimaConfig {
   }
 
   public long getElasticsearchMaxResultFileByteSize() {
-    String sizeStr = properties.getProperty("elasticsearch.max-result-file-byte-size");
+    String sizeStr = environment.getProperty("elasticsearch.max-result-file-byte-size");
     return Long.parseLong(firstNonNull(sizeStr, "1073741824"));
   }
 
   public double getElasticsearchQueryMaxRunTimeSeconds() {
-    String secondsStr = properties.getProperty("elasticsearch.query.max-run-time-seconds");
+    String secondsStr = environment.getProperty("elasticsearch.query.max-run-time-seconds");
     return Double.parseDouble(firstNonNull(secondsStr, "3600"));
   }
 
   public double getElasticsearchQueryMaxRunTimeSeconds(String datasource) {
-    String property = properties.getProperty("elasticsearch.query.max-run-time-seconds" + "." + datasource);
+    String property = environment.getProperty("elasticsearch.query.max-run-time-seconds" + "." + datasource);
     if (property == null) {
       return getElasticsearchQueryMaxRunTimeSeconds();
     }
@@ -346,43 +340,11 @@ public class YanagishimaConfig {
   }
 
   public boolean isHiveImpersonation(String datasource) {
-    return Boolean.parseBoolean(properties.getProperty("hive.jdbc.impersonation." + datasource));
-  }
-
-  public DatabaseType getDatabaseType() {
-    String databaseType = properties.getProperty("database.type", "sqlite").toUpperCase();
-    return DatabaseType.valueOf(databaseType);
-  }
-
-  public enum DatabaseType {
-    SQLITE,
-    MYSQL
-  }
-
-  public String getConnectionUrl() {
-    return properties.getProperty("database.connection-url", "jdbc:sqlite:data/yanagishima.db");
-  }
-
-  @Nullable
-  public String getConnectionUsername() {
-    return properties.getProperty("database.user");
-  }
-
-  @Nullable
-  public String getConnectionPassword() {
-    return properties.getProperty("database.password");
-  }
-
-  public int getConnectionMaxPoolSize() {
-    return Integer.parseInt(properties.getProperty("database.max-pool-size", "10"));
-  }
-
-  public long getConnectionMaxLifetime() {
-    return Long.parseLong(properties.getProperty("database.max-lifetime", "1800000"));
+    return Boolean.parseBoolean(environment.getProperty("hive.jdbc.impersonation." + datasource));
   }
 
   public boolean isDatatimePartitionHasHyphen(String datasource) {
-    String property = properties.getProperty("datetime.partition.has.hyphen." + datasource);
+    String property = environment.getProperty("datetime.partition.has.hyphen." + datasource);
     if (property == null) {
       return false;
     }
@@ -390,12 +352,12 @@ public class YanagishimaConfig {
   }
 
   public boolean isUseOldPresto(String datasource) {
-    return Boolean.parseBoolean(properties.getProperty("use.old.presto." + datasource));
+    return Boolean.parseBoolean(environment.getProperty("use.old.presto." + datasource));
   }
 
   public String getHiveDriverClassName(String datawsource) {
-    String property = properties.getProperty("hive.jdbc.driver." + datawsource,
-                                             "org.apache.hive.jdbc.HiveDriver");
+    String property = environment.getProperty("hive.jdbc.driver." + datawsource,
+                                              "org.apache.hive.jdbc.HiveDriver");
     return property;
   }
 }

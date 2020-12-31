@@ -3,7 +3,6 @@ package yanagishima.controller;
 import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
 
-import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 
 import org.springframework.web.bind.annotation.PostMapping;
@@ -23,7 +22,7 @@ import yanagishima.service.QueryService;
 @Api(tags = "publish")
 @RestController
 @RequiredArgsConstructor
-public class PublishController extends HttpServlet {
+public class PublishController {
   private final PublishService publishService;
   private final QueryService queryService;
   private final YanagishimaConfig config;

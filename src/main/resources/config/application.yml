@@ -1,0 +1,55 @@
+server:
+  port: 8080
+  jetty:
+    max-http-form-post-size: 2GB
+
+spring:
+  application:
+    name: yanagishima
+  datasource:
+    driver-class-name: com.mysql.jdbc.Driver
+    username: root
+    password: test
+    url: jdbc:mysql://localhost:13306/test?allowPublicKeyRetrieval=true&useSSL=false
+    initialization-mode: always
+  resources:
+    static-locations: file:web
+
+# Datasources
+sql.query.engines: presto,hive,spark,elasticsearch
+check.datasource: false
+select.limit: 500
+audit.http.header.name: some.auth.header
+use.audit.http.header.name: false
+to.values.query.limit: 500
+cors.enabled: true
+
+# Presto
+presto.datasources: docker-presto
+presto.query.max-run-time-seconds: 1800
+presto.max-result-file-byte-size: 1073741824
+auth.docker-presto: false
+presto.coordinator.server.docker-presto: http://localhost:18080
+presto.redirect.server.docker-presto: http://localhost:18080/ui
+catalog.docker-presto: tpch
+schema.docker-presto: sf1
+
+# Hive
+hive.datasources: docker-hive
+hive.jdbc.url.docker-hive: jdbc:hive2://localhost:10000/default
+hive.jdbc.user.docker-hive: yanagishima
+hive.jdbc.password.docker-hive: yanagishima
+hive.query.max-run-time-seconds: 3600
+hive.query.max-run-time-seconds.docker-hive: 3600
+resource.manager.url.docker-hive: http://localhost:8088
+hive.max-result-file-byte-size: 1073741824
+
+# Spark
+spark.datasources: docker-spark
+spark.jdbc.url.docker-spark: jdbc:hive2://localhost:10001
+spark.web.url.docker-spark: http://localhost:14040
+resource.manager.url.docker-spark: http://localhost:18088
+
+# Elasticsearch
+elasticsearch.datasources: docker-elasticsearch
+elasticsearch.jdbc.url.docker-elasticsearch: jdbc:es://localhost:9200

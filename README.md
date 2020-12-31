@@ -26,7 +26,7 @@ git checkout -b [version] refs/tags/[version]
 cd build/distributions
 unzip yanagishima-[version].zip
 cd yanagishima-[version]
-vim conf/yanagishima.properties
+vim config/application.yml
 nohup bin/yanagishima-start.sh >y.log 2>&1 &
 ```
 see http://localhost:8080/

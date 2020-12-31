@@ -59,6 +59,11 @@ task copyPackage(type: Copy) {
   into('build/package')
 }
 
+task copyConfig(type: Copy) {
+  from('src/main/resources/config')
+  into('build/package/config')
+}
+
 task copyData(type: Copy) {
     from('data')
     into('build/package/data')
@@ -76,6 +81,7 @@ task copy(dependsOn: [
       'copyDeps',
       'copyLibs',
       'copyPackage',
+      'copyConfig',
       'copyData',
       'copyResult']) {
   }
@@ -112,16 +118,9 @@ buildscript {
 dependencies {
     compile 'org.slf4j:slf4j-api:1.7.10'
     compile 'org.slf4j:slf4j-log4j12:1.7.10'
-    compile 'log4j:log4j:1.2.17'
-    compile 'org.eclipse.jetty.aggregate:jetty-all:9.4.25.v20191220'
-    compile 'javax.servlet:javax.servlet-api:3.1.0'
     compile 'com.facebook.presto:presto-client:0.215'
     compile 'io.prestosql:presto-client:347'
     compile 'io.prestosql:presto-parser:347'
-    compile 'com.google.inject.extensions:guice-servlet:4.0'
-    compile 'org.codehaus.jackson:jackson-core-asl:1.9.13'
-    compile 'org.codehaus.jackson:jackson-mapper-asl:1.9.13'
-    compile 'net.sf.jopt-simple:jopt-simple:4.8'
     compile 'com.squareup.okhttp3:okhttp:3.9.0'
     compile 'org.apache.httpcomponents:fluent-hc:4.4.1'
     compile 'org.xerial:sqlite-jdbc:3.20.1'
@@ -135,24 +134,33 @@ dependencies {
     compile 'com.github.wyukawa.elasticsearch.unofficial.jdbc.driver:elasticsearch-jdbc-driver:0.0.9'
     compile 'org.jsoup:jsoup:1.11.3'
     compile 'mysql:mysql-connector-java:5.1.47'
-    compile 'com.zaxxer:HikariCP:3.4.5'
-    compile 'org.springframework:spring-core:5.2.11.RELEASE'
-    compile 'org.springframework:spring-webmvc:5.2.11.RELEASE'
-    compile 'org.springframework:spring-context-support:5.2.11.RELEASE'
-    compile 'org.springframework.data:spring-data-jpa:2.3.6.RELEASE'
+    compile 'org.springframework.boot:spring-boot-starter-web:2.3.5.RELEASE'
+    compile 'org.springframework.boot:spring-boot-starter-jetty:2.3.5.RELEASE'
+    compile 'org.springframework.boot:spring-boot-starter-data-jpa:2.3.5.RELEASE'
+    compile 'org.springframework.boot:spring-boot-autoconfigure:2.3.5.RELEASE'
     compile 'io.springfox:springfox-swagger2:2.9.2'
     compile 'io.springfox:springfox-swagger-ui:2.9.2'
-    compile 'org.hibernate:hibernate-entitymanager:5.4.26.Final'
 
     errorprone 'com.google.errorprone:error_prone_core:2.3.4'
 
     // For tests
     testImplementation "org.junit.jupiter:junit-jupiter-api:5.7.0"
     testImplementation "org.junit.jupiter:junit-jupiter-engine:5.7.0"
+    testImplementation 'org.springframework.boot:spring-boot-starter-test:2.3.5.RELEASE'
+    testCompile 'com.h2database:h2:1.4.200'
     testCompile 'org.mockito:mockito-core:2.23.4'
     testCompile 'org.assertj:assertj-core:3.18.1'
 }
 
 test {
     useJUnitPlatform()
+}
+
+configurations {
+  all {
+    exclude group: 'ch.qos.logback', module: 'logback-classic'
+    exclude group: 'com.google.code.gson', module: 'gson'
+    exclude group: 'org.eclipse.jetty.aggregate', module: 'jetty-all'
+    exclude group: 'javax.servlet', module: 'servlet-api'
+  }
 }
