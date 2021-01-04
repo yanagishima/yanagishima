@@ -10,5 +10,4 @@ import yanagishima.model.db.StarredSchema;
 @Setter
 public class StarredSchemaDto {
   private List<StarredSchema> starredSchemaList;
-  private String error;
 }

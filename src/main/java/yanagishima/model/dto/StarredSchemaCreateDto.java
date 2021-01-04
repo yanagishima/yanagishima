@@ -10,5 +10,4 @@ import lombok.Setter;
 public class StarredSchemaCreateDto {
   @JsonProperty("starred_schema_id")
   private int starredSchemaId;
-  private String error;
 }
