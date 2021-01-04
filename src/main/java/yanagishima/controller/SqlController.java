@@ -15,11 +15,13 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import yanagishima.exception.YanagishimaParseException;
 import yanagishima.model.dto.FormatSqlDto;
+import yanagishima.model.dto.HiveQueryDto;
+import yanagishima.model.dto.PrestoQueryDto;
 
 @Slf4j
 @RestController
 @RequiredArgsConstructor
-public class FormatSqlController {
+public class SqlController {
   @PostMapping("format")
   public FormatSqlDto post(@RequestParam String query) {
     try {
@@ -35,9 +37,29 @@ public class FormatSqlController {
     }
   }
 
+  @PostMapping("convertHive")
+  public HiveQueryDto convertHive(@RequestParam String query) {
+    return new HiveQueryDto(toHiveQuery(query));
+  }
+
+  @PostMapping("convertPresto")
+  public PrestoQueryDto convertPresto(@RequestParam String query) {
+    return new PrestoQueryDto(toPrestoQuery(query));
+  }
+
   private String formatQuery(String query) {
     SqlParser sqlParser = new SqlParser();
     Statement statement = sqlParser.createStatement(query, new ParsingOptions(AS_DOUBLE));
     return SqlFormatter.formatSql(statement);
+  }
+
+  private static String toHiveQuery(String prestoQuery) {
+    return prestoQuery.replace("json_extract_scalar", "get_json_object")
+                      .replace("cross join unnest", "lateral view explode");
+  }
+
+  private static String toPrestoQuery(String hiveQuery) {
+    return hiveQuery.replace("get_json_object", "json_extract_scalar")
+                    .replace("lateral view explode", "cross join unnest");
   }
 }
