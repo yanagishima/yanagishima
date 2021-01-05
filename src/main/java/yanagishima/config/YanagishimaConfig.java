@@ -287,11 +287,6 @@ public class YanagishimaConfig {
     return Boolean.parseBoolean(property);
   }
 
-  public Optional<String> getWebhdfsUrl(String datasource, String catalog, String schema, String table) {
-    return Optional.ofNullable(
-        properties.getProperty(String.format("webhdfs.url.%s.%s.%s.%s", datasource, catalog, schema, table)));
-  }
-
   public boolean isUseNewShowPartitions(String datasource) {
     String property = properties.getProperty("use.new.show.partitions." + datasource);
     if (property == null) {
@@ -352,14 +347,6 @@ public class YanagishimaConfig {
 
   public boolean isHiveImpersonation(String datasource) {
     return Boolean.parseBoolean(properties.getProperty("hive.jdbc.impersonation." + datasource));
-  }
-
-  public Optional<String> getWebhdfsProxyUser(String datasource) {
-    return Optional.ofNullable(properties.getProperty(String.format("webhdfs.proxy.user.%s", datasource)));
-  }
-
-  public Optional<String> getWebhdfsProxyPassword(String datasource) {
-    return Optional.ofNullable(properties.getProperty(String.format("webhdfs.proxy.password.%s", datasource)));
   }
 
   public DatabaseType getDatabaseType() {
