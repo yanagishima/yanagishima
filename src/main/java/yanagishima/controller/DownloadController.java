@@ -1,6 +1,7 @@
 package yanagishima.controller;
 
 import static java.util.Objects.requireNonNull;
+import static yanagishima.util.DownloadUtil.downloadCsv;
 import static yanagishima.util.DownloadUtil.downloadTsv;
 
 import java.util.Optional;
@@ -48,6 +49,31 @@ public class DownloadController {
     Optional<Query> query = queryService.get(queryid, datasource, user);
     if (query.isPresent()) {
       downloadTsv(response, fileName, datasource, queryid, encode, header, bom);
+    }
+  }
+
+  @DatasourceAuth
+  @GetMapping("csvdownload")
+  public void download(@RequestParam String datasource,
+                       @RequestParam(name = "queryid", required = false) String queryId,
+                       @RequestParam(defaultValue = "UTF-8") String encode,
+                       @RequestParam(defaultValue = "true") boolean header,
+                       @RequestParam(defaultValue = "true") boolean bom,
+                       HttpServletRequest request, HttpServletResponse response) {
+    if (queryId == null) {
+      return;
+    }
+
+    String fileName = queryId + ".csv";
+    if (config.isAllowOtherReadResult(datasource)) {
+      downloadCsv(response, fileName, datasource, queryId, encode, header, bom);
+      return;
+    }
+    String user = request.getHeader(config.getAuditHttpHeaderName());
+    requireNonNull(user, "user is null");
+    Optional<Query> userQuery = queryService.get(queryId, datasource, user);
+    if (userQuery.isPresent()) {
+      downloadCsv(response, fileName, datasource, queryId, encode, header, bom);
     }
   }
 }

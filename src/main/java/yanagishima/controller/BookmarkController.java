@@ -53,6 +53,22 @@ public class BookmarkController {
     return bookmarkCreateDto;
   }
 
+  @GetMapping("bookmarkUser")
+  protected BookmarkDto get(@RequestParam String datasource, @RequestParam String engine,
+                            @RequestParam(name = "bookmarkAll", defaultValue = "false") boolean showAll,
+                            HttpServletRequest request) {
+    BookmarkDto bookmarkDto = new BookmarkDto();
+    try {
+      String user = request.getHeader(config.getAuditHttpHeaderName());
+      List<Bookmark> bookmarks = bookmarkService.getAll(showAll, datasource, engine, user);
+      bookmarkDto.setBookmarks(bookmarks);
+    } catch (Throwable e) {
+      log.error(e.getMessage(), e);
+      bookmarkDto.setError(e.getMessage());
+    }
+    return bookmarkDto;
+  }
+
   @DatasourceAuth
   @GetMapping("bookmark")
   public BookmarkDto get(@RequestParam String datasource,

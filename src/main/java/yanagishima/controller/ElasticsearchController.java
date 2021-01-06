@@ -28,9 +28,11 @@ import yanagishima.annotation.DatasourceAuth;
 import yanagishima.config.YanagishimaConfig;
 import yanagishima.exception.ElasticsearchQueryErrorException;
 import yanagishima.model.db.Query;
+import yanagishima.model.dto.ElasticsearchQueryStatusDto;
 import yanagishima.model.elasticsearch.ElasticsearchQueryResult;
 import yanagishima.service.ElasticsearchService;
 import yanagishima.service.QueryService;
+import yanagishima.util.Status;
 
 @Slf4j
 @Api(tags = "elasticsearch")
@@ -94,6 +96,16 @@ public class ElasticsearchController {
     return responseBody;
   }
 
+  @DatasourceAuth
+  @PostMapping("elasticsearchQueryStatus")
+  public ElasticsearchQueryStatusDto getStatus(@RequestParam String datasource,
+                                               @RequestParam(name = "queryid") String queryId) {
+    ElasticsearchQueryStatusDto elasticsearchQueryStatusDto = new ElasticsearchQueryStatusDto();
+    Optional<Query> query = queryService.getByEngine(queryId, datasource, "elasticsearch");
+    elasticsearchQueryStatusDto.setState(getStatus(query));
+    return elasticsearchQueryStatusDto;
+  }
+
   private ElasticsearchQueryResult executeQuery(HttpServletRequest request, String query, String datasource,
                                                 String userName) throws ElasticsearchQueryErrorException {
     int limit = query.startsWith(YANAGISHIMA_COMMENT) ? Integer.MAX_VALUE : config.getSelectLimit();
@@ -114,5 +126,19 @@ public class ElasticsearchController {
     String fetchResultTimeString = query.getFetchResultTimeString();
     ZonedDateTime fetchResultTime = ZonedDateTime.parse(fetchResultTimeString);
     return ChronoUnit.MILLIS.between(submitTimeZdt, fetchResultTime);
+  }
+
+  private static String getStatus(Optional<Query> query) {
+    if (query.isEmpty()) {
+      return "RUNNING";
+    }
+    String status = query.get().getStatus();
+    if (status.equals(Status.SUCCEED.name())) {
+      return "FINISHED";
+    }
+    if (status.equals(Status.FAILED.name())) {
+      return "FAILED";
+    }
+    throw new IllegalArgumentException(format("unknown status=%s", status));
   }
 }
