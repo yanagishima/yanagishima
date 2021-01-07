@@ -7,6 +7,7 @@ import java.util.Optional;
 import org.springframework.stereotype.Service;
 
 import lombok.RequiredArgsConstructor;
+import yanagishima.model.User;
 import yanagishima.model.db.Publish;
 import yanagishima.repository.PublishRepository;
 
@@ -23,9 +24,9 @@ public class PublishService {
     return publishRepository.findByPublishId(publishId);
   }
 
-  public Publish publish(String datasource, String engine, String queryId, String user) {
+  public Publish publish(String datasource, String engine, String queryId, User user) {
     Optional<Publish> publishedQuery = get(datasource, engine, queryId);
-    return publishedQuery.orElseGet(() -> insert(datasource, engine, queryId, user));
+    return publishedQuery.orElseGet(() -> insert(datasource, engine, queryId, user.getId()));
   }
 
   private Publish insert(String datasource, String engine, String queryId, String user) {

@@ -21,6 +21,7 @@ import org.springframework.stereotype.Service;
 
 import io.airlift.units.Duration;
 import lombok.RequiredArgsConstructor;
+import yanagishima.model.User;
 import yanagishima.model.db.Query;
 import yanagishima.repository.QueryRepository;
 import yanagishima.util.PathUtil;
@@ -44,8 +45,8 @@ public class QueryService {
     return queryRepository.findAllByDatasourceAndQueryIdIn(datasource, queryIds);
   }
 
-  public Optional<Query> get(String queryId, String datasource, String user) {
-    return queryRepository.findByQueryIdAndDatasourceAndUser(queryId, datasource, user);
+  public Optional<Query> get(String queryId, String datasource, User user) {
+    return queryRepository.findByQueryIdAndDatasourceAndUser(queryId, datasource, user.getId());
   }
 
   public Optional<Query> getByEngine(String queryId, String datasource, String engine) {

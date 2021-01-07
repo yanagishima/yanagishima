@@ -6,7 +6,6 @@ import static yanagishima.util.DownloadUtil.downloadTsv;
 
 import java.util.Optional;
 
-import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.springframework.web.bind.annotation.GetMapping;
@@ -17,6 +16,7 @@ import io.swagger.annotations.Api;
 import lombok.RequiredArgsConstructor;
 import yanagishima.annotation.DatasourceAuth;
 import yanagishima.config.YanagishimaConfig;
+import yanagishima.model.User;
 import yanagishima.model.db.Query;
 import yanagishima.service.QueryService;
 
@@ -34,7 +34,7 @@ public class DownloadController {
                   @RequestParam(defaultValue = "UTF-8") String encode,
                   @RequestParam(defaultValue = "true") boolean header,
                   @RequestParam(defaultValue = "true") boolean bom,
-                  HttpServletRequest request, HttpServletResponse response) {
+                  User user, HttpServletResponse response) {
     if (queryid == null) {
       return;
     }
@@ -44,7 +44,6 @@ public class DownloadController {
       downloadTsv(response, fileName, datasource, queryid, encode, header, bom);
       return;
     }
-    String user = request.getHeader(config.getAuditHttpHeaderName());
     requireNonNull(user, "Username must exist when auditing header name is enabled");
     Optional<Query> query = queryService.get(queryid, datasource, user);
     if (query.isPresent()) {
@@ -59,7 +58,7 @@ public class DownloadController {
                        @RequestParam(defaultValue = "UTF-8") String encode,
                        @RequestParam(defaultValue = "true") boolean header,
                        @RequestParam(defaultValue = "true") boolean bom,
-                       HttpServletRequest request, HttpServletResponse response) {
+                       User user, HttpServletResponse response) {
     if (queryId == null) {
       return;
     }
@@ -69,7 +68,6 @@ public class DownloadController {
       downloadCsv(response, fileName, datasource, queryId, encode, header, bom);
       return;
     }
-    String user = request.getHeader(config.getAuditHttpHeaderName());
     requireNonNull(user, "user is null");
     Optional<Query> userQuery = queryService.get(queryId, datasource, user);
     if (userQuery.isPresent()) {

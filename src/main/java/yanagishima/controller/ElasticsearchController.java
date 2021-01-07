@@ -77,7 +77,7 @@ public class ElasticsearchController {
                                                                            responseBody
                                                                                .put("warn", warningMessage)
         );
-        queryService.get(queryResult.getQueryId(), datasource, "elasticsearch")
+        queryService.getByEngine(queryResult.getQueryId(), datasource, "elasticsearch")
           .ifPresent(queryData -> responseBody.put("elapsedTimeMillis",
                                                    toElapsedTimeMillis(queryResult.getQueryId(), queryData))
         );
