@@ -9,6 +9,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import lombok.RequiredArgsConstructor;
+import yanagishima.model.User;
 import yanagishima.model.db.Comment;
 import yanagishima.repository.CommentRepository;
 
@@ -26,21 +27,21 @@ public class CommentService {
     return commentRepository.findByDatasourceAndEngineAndQueryid(datasource, engine, queryId);
   }
 
-  public Comment insert(String datasource, String engine, String queryId, String user, String content,
+  public Comment insert(String datasource, String engine, String queryId, User user, String content,
                         String updateTimeString) {
     Comment comment = new Comment();
     comment.setDatasource(datasource);
     comment.setEngine(engine);
     comment.setQueryid(queryId);
-    comment.setUser(user);
+    comment.setUser(user.getId());
     comment.setContent(content);
     comment.setLikeCount(0);
     comment.setUpdateTimeString(updateTimeString);
     return commentRepository.save(comment);
   }
 
-  public void update(Comment comment, String user, String content, String updateTimeString) {
-    comment.setUser(user);
+  public void update(Comment comment, User user, String content, String updateTimeString) {
+    comment.setUser(user.getId());
     comment.setContent(content);
     comment.setUpdateTimeString(updateTimeString);
     commentRepository.save(comment);

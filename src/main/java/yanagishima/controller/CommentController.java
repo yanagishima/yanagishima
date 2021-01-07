@@ -9,8 +9,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-import javax.servlet.http.HttpServletRequest;
-
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -20,7 +18,7 @@ import org.springframework.web.bind.annotation.RestController;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import yanagishima.annotation.DatasourceAuth;
-import yanagishima.config.YanagishimaConfig;
+import yanagishima.model.User;
 import yanagishima.model.db.Comment;
 import yanagishima.service.CommentService;
 
@@ -29,7 +27,6 @@ import yanagishima.service.CommentService;
 @RequiredArgsConstructor
 public class CommentController {
   private final CommentService commentService;
-  private final YanagishimaConfig config;
 
   @DatasourceAuth
   @PostMapping("comment")
@@ -38,11 +35,9 @@ public class CommentController {
                                   @RequestParam(name = "queryid") String queryId,
                                   @RequestParam Optional<Integer> like,
                                   @RequestParam(required = false) String content,
-                                  HttpServletRequest request) {
+                                  User user) {
     Map<String, Object> responseBody = new HashMap<>();
     try {
-      String user = request.getHeader(config.getAuditHttpHeaderName());
-
       responseBody.put("datasource", datasource);
       responseBody.put("engine", engine);
       responseBody.put("queryid", queryId);
