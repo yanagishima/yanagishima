@@ -3,8 +3,6 @@ package yanagishima.controller;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import javax.servlet.http.HttpServletRequest;
-
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -17,7 +15,7 @@ import io.swagger.annotations.Api;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import yanagishima.annotation.DatasourceAuth;
-import yanagishima.config.YanagishimaConfig;
+import yanagishima.model.User;
 import yanagishima.model.db.Bookmark;
 import yanagishima.model.dto.BookmarkCreateDto;
 import yanagishima.model.dto.BookmarkDto;
@@ -30,7 +28,6 @@ import yanagishima.service.BookmarkService;
 public class BookmarkController {
   private static final Splitter SPLITTER = Splitter.on(',').trimResults().omitEmptyStrings();
 
-  private final YanagishimaConfig config;
   private final BookmarkService bookmarkService;
 
   @DatasourceAuth
@@ -40,11 +37,10 @@ public class BookmarkController {
                                 @RequestParam String engine,
                                 @RequestParam(required = false) String title,
                                 @RequestParam(required = false) String snippet,
-                                HttpServletRequest request) {
+                                User user) {
     BookmarkCreateDto bookmarkCreateDto = new BookmarkCreateDto();
     try {
-      String userName = request.getHeader(config.getAuditHttpHeaderName());
-      Bookmark bookmark = bookmarkService.insert(datasource, query, title, engine, userName, snippet);
+      Bookmark bookmark = bookmarkService.insert(datasource, query, title, engine, user, snippet);
       bookmarkCreateDto.setBookmarkId(bookmark.getBookmarkId());
     } catch (Throwable e) {
       log.error(e.getMessage(), e);
@@ -56,10 +52,9 @@ public class BookmarkController {
   @GetMapping("bookmarkUser")
   protected BookmarkDto get(@RequestParam String datasource, @RequestParam String engine,
                             @RequestParam(name = "bookmarkAll", defaultValue = "false") boolean showAll,
-                            HttpServletRequest request) {
+                            User user) {
     BookmarkDto bookmarkDto = new BookmarkDto();
     try {
-      String user = request.getHeader(config.getAuditHttpHeaderName());
       List<Bookmark> bookmarks = bookmarkService.getAll(showAll, datasource, engine, user);
       bookmarkDto.setBookmarks(bookmarks);
     } catch (Throwable e) {
@@ -96,12 +91,11 @@ public class BookmarkController {
   public BookmarkDto delete(@RequestParam String datasource,
                             @RequestParam String engine,
                             @RequestParam(name = "bookmark_id") int bookmarkId,
-                            HttpServletRequest request) {
+                            User user) {
     BookmarkDto bookmarkDto = new BookmarkDto();
     try {
       bookmarkService.delete(bookmarkId);
 
-      String user = request.getHeader(config.getAuditHttpHeaderName());
       List<Bookmark> bookmarks = bookmarkService.getAll(false, datasource, engine, user);
       bookmarkDto.setBookmarks(bookmarks);
     } catch (Throwable e) {
