@@ -1,7 +1,10 @@
 package yanagishima.config;
 
+import java.util.List;
+
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.web.method.support.HandlerMethodArgumentResolver;
 import org.springframework.web.servlet.config.annotation.DefaultServletHandlerConfigurer;
 import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
@@ -10,6 +13,7 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 import lombok.RequiredArgsConstructor;
 import yanagishima.interceptor.DatasourceInterceptor;
+import yanagishima.resolver.UserArgumentResolver;
 
 @Configuration
 @EnableWebMvc
@@ -17,6 +21,7 @@ import yanagishima.interceptor.DatasourceInterceptor;
 @RequiredArgsConstructor
 public class WebMvcConfig implements WebMvcConfigurer {
   private final DatasourceInterceptor datasourceInterceptor;
+  private final UserArgumentResolver userArgumentResolver;
 
   @Override
   public void configureDefaultServletHandling(DefaultServletHandlerConfigurer configurer) {
@@ -28,6 +33,11 @@ public class WebMvcConfig implements WebMvcConfigurer {
     registry
         .addInterceptor(datasourceInterceptor)
         .addPathPatterns("/**");
+  }
+
+  @Override
+  public void addArgumentResolvers(List<HandlerMethodArgumentResolver> argumentResolvers) {
+    argumentResolvers.add(userArgumentResolver);
   }
 
   @Override
