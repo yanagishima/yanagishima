@@ -1,0 +1,13 @@
+server:
+  port: 8080
+  jetty:
+    max-http-form-post-size: 2GB
+
+spring:
+  application:
+    name: yanagishima
+  datasource:
+    driver-class-name: org.h2.Driver
+    username: sa
+    password: password
+    url: jdbc:h2:mem:testdb

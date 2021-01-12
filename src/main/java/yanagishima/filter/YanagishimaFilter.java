@@ -10,16 +10,16 @@ import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletResponse;
 
+import org.springframework.stereotype.Component;
+
+import lombok.RequiredArgsConstructor;
+import yanagishima.config.YanagishimaConfig;
 import yanagishima.util.Constants;
 
+@Component
+@RequiredArgsConstructor
 public class YanagishimaFilter implements Filter {
-  private final boolean corsEnabled;
-  private final String auditHttpHeaderName;
-
-  public YanagishimaFilter(boolean corsEnabled, String auditHttpHeaderName) {
-    this.corsEnabled = corsEnabled;
-    this.auditHttpHeaderName = auditHttpHeaderName;
-  }
+  private final YanagishimaConfig config;
 
   @Override
   public void init(FilterConfig filterConfig) throws ServletException {
@@ -29,13 +29,13 @@ public class YanagishimaFilter implements Filter {
   @Override
   public void doFilter(ServletRequest request, ServletResponse servletResponse, FilterChain chain)
       throws IOException, ServletException {
-    if (corsEnabled) {
+    if (config.corsEnabled()) {
       HttpServletResponse response = (HttpServletResponse) servletResponse;
-      if (auditHttpHeaderName == null) {
+      if (config.getAuditHttpHeaderName() == null) {
         response.setHeader("Access-Control-Allow-Headers", Constants.DATASOURCE_HEADER);
       } else {
         response.setHeader("Access-Control-Allow-Headers",
-                           Constants.DATASOURCE_HEADER + ", " + auditHttpHeaderName);
+                           Constants.DATASOURCE_HEADER + ", " + config.getAuditHttpHeaderName());
       }
       response.setHeader("Access-Control-Allow-Origin", "*");
       response.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS, DELETE");
