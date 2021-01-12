@@ -7,6 +7,7 @@ import javax.transaction.Transactional;
 import org.springframework.stereotype.Service;
 
 import lombok.RequiredArgsConstructor;
+import yanagishima.model.User;
 import yanagishima.model.db.StarredSchema;
 import yanagishima.repository.StarredSchemaRepository;
 
@@ -15,18 +16,18 @@ import yanagishima.repository.StarredSchemaRepository;
 public class StarredSchemaService {
   private final StarredSchemaRepository starredSchemaRepository;
 
-  public List<StarredSchema> getAll(String datasource, String engine, String catalog, String user) {
+  public List<StarredSchema> getAll(String datasource, String engine, String catalog, User user) {
     return starredSchemaRepository.findAllByDatasourceAndEngineAndCatalogAndUser(datasource, engine, catalog,
-                                                                                 user);
+                                                                                 user.getId());
   }
 
-  public StarredSchema insert(String datasource, String engine, String catalog, String schema, String user) {
+  public StarredSchema insert(String datasource, String engine, String catalog, String schema, User user) {
     StarredSchema starredSchema = new StarredSchema();
     starredSchema.setDatasource(datasource);
     starredSchema.setEngine(engine);
     starredSchema.setCatalog(catalog);
     starredSchema.setSchema(schema);
-    starredSchema.setUser(user);
+    starredSchema.setUser(user.getId());
     return starredSchemaRepository.save(starredSchema);
   }
 

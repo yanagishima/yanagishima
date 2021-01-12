@@ -7,8 +7,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-import javax.servlet.http.HttpServletRequest;
-
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -17,6 +15,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import yanagishima.annotation.DatasourceAuth;
 import yanagishima.config.YanagishimaConfig;
+import yanagishima.model.User;
 import yanagishima.model.db.Query;
 import yanagishima.model.db.SessionProperty;
 import yanagishima.model.dto.HistoryStatusDto;
@@ -36,7 +35,7 @@ public class HistoryController {
   public Map<String, Object> get(@RequestParam String datasource,
                                  @RequestParam(required = false) String engine,
                                  @RequestParam(name = "queryid", required = false) String queryId,
-                                 HttpServletRequest request) {
+                                 User user) {
     Map<String, Object> responseBody = new HashMap<>();
     if (queryId == null) {
       return responseBody;
@@ -50,7 +49,6 @@ public class HistoryController {
         queryOptional = queryService.getByEngine(queryId, datasource, engine);
       }
 
-      String user = request.getHeader(config.getAuditHttpHeaderName());
       Optional<Query> userQueryOptional = queryService.get(queryId, datasource, user);
       responseBody.put("editLabel", userQueryOptional.isPresent());
 
