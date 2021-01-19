@@ -13,3 +13,13 @@ jobs:
       - name: Gradle Checks
         run: |
           ./gradlew check
+  npm:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v2
+        with:
+          node-version: '12'
+      - name: NPM build
+      - run: npm --prefix ./web install
+      - run: npm --prefix ./web run build
