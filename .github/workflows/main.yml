@@ -13,3 +13,25 @@ jobs:
       - name: Gradle Checks
         run: |
           ./gradlew check
+  npm:
+    runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        working-directory: web
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - ubuntu-latest
+          - macos-latest
+          - windows-latest
+        architecture:
+          - x64
+    name: ${{ matrix.architecture }} on ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v2
+        with:
+          node-version: '12'
+      - run: npm install
+      - run: npm run build
