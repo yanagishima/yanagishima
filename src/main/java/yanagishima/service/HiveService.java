@@ -85,8 +85,6 @@ public class HiveService {
         int limit = config.getSelectLimit();
         getHiveQueryResult(queryId, engine, datasource, query, true, limit, userName, hiveUser, hivePassword,
                            true);
-      } catch (HiveQueryErrorException e) {
-        log.warn(e.getCause().getMessage());
       } catch (Throwable e) {
         log.error(e.getMessage(), e);
       }
