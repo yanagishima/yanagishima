@@ -77,10 +77,15 @@ public class QueryController {
     for (Query query : queries) {
       existDbQueryIds.add(query.getQueryId());
     }
+    List<Map> userQueryList = new ArrayList<>();
     for (Map query : limitedList) {
       String queryId = (String) query.get("queryId");
       query.put("existdb", existDbQueryIds.contains(queryId));
+      Map session = (Map) query.get("session");
+      if (session.get("user").equals(userName)) {
+        userQueryList.add(query);
+      }
     }
-    return limitedList;
+    return userQueryList;
   }
 }
