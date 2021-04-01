@@ -365,11 +365,11 @@ public class YanagishimaConfig {
     return Boolean.parseBoolean(environment.getProperty("presto.impersonation." + datasource));
   }
 
-  public String getPrestoImpersonatedUser(String datasource) {
-    return environment.getProperty("presto.impersonated.user." + datasource);
+  public Optional<String> getPrestoImpersonatedUser(String datasource) {
+    return Optional.ofNullable(environment.getProperty("presto.impersonated.user." + datasource));
   }
 
-  public String getPrestoImpersonatedPassword(String datasource) {
-    return environment.getProperty("presto.impersonated.password." + datasource);
+  public Optional<String> getPrestoImpersonatedPassword(String datasource) {
+    return Optional.ofNullable(environment.getProperty("presto.impersonated.password." + datasource));
   }
 }
