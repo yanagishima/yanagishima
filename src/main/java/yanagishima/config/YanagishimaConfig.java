@@ -360,4 +360,16 @@ public class YanagishimaConfig {
                                               "org.apache.hive.jdbc.HiveDriver");
     return property;
   }
+
+  public boolean isPrestoImpersonation(String datasource) {
+    return Boolean.parseBoolean(environment.getProperty("presto.impersonation." + datasource));
+  }
+
+  public String getPrestoImpersonatedUser(String datasource) {
+    return environment.getProperty("presto.impersonated.user." + datasource);
+  }
+
+  public String getPrestoImpersonatedPassword(String datasource) {
+    return environment.getProperty("presto.impersonated.password." + datasource);
+  }
 }

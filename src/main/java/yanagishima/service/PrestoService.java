@@ -10,6 +10,7 @@ import static java.lang.String.format;
 import static java.lang.String.join;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Collections.emptyMap;
+import static java.util.Objects.requireNonNull;
 import static java.util.concurrent.TimeUnit.MINUTES;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static yanagishima.util.PathUtil.getResultFilePath;
@@ -371,6 +372,19 @@ public class PrestoService {
     }
 
     String user = firstNonNull(userName, config.getUser(datasource));
+    if (config.isPrestoImpersonation(datasource)) {
+      String prestoImpersonatedUser = config.getPrestoImpersonatedUser(datasource);
+      String prestoImpersonatedPassword = config.getPrestoImpersonatedPassword(datasource);
+      requireNonNull(prestoImpersonatedUser);
+      requireNonNull(prestoImpersonatedPassword);
+      ClientSession clientSession = buildClientSession(server, user, source, catalog, schema,
+              properties);
+      checkArgument(clientSession.getServer().getScheme().equalsIgnoreCase("https"),
+              "Authentication using username/password requires HTTPS to be enabled");
+      OkHttpClient.Builder clientBuilder = httpClient.newBuilder();
+      clientBuilder.addInterceptor(basicAuth(prestoImpersonatedUser, prestoImpersonatedPassword));
+      return StatementClientFactory.newStatementClient(clientBuilder.build(), clientSession, query);
+    }
     ClientSession clientSession = buildClientSession(server, user, source, catalog, schema, properties);
     return StatementClientFactory.newStatementClient(httpClient, clientSession, query);
   }
