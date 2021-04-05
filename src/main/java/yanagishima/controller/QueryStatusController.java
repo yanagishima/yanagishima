@@ -40,7 +40,14 @@ public class QueryStatusController {
     String coordinatorServer = config.getPrestoCoordinatorServer(datasource);
     String json;
     String userName = request.getHeader(config.getAuditHttpHeaderName());
-    try (Response prestoResponse = new PrestoClient(coordinatorServer, userName, user, password).get(queryId)) {
+    PrestoClient prestoClient = null;
+    if (config.isPrestoImpersonation(datasource)) {
+      prestoClient = new PrestoClient(coordinatorServer, userName,
+              config.getPrestoImpersonatedUser(datasource), config.getPrestoImpersonatedPassword(datasource));
+    } else {
+      prestoClient = new PrestoClient(coordinatorServer, userName, user, password);
+    }
+    try (Response prestoResponse = prestoClient.get(queryId)) {
       if (!prestoResponse.isSuccessful() || prestoResponse.body() == null) {
         return toMap(prestoResponse.code(), prestoResponse.message());
       }

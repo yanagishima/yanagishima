@@ -36,7 +36,14 @@ public class PrestoKillController {
     try {
       String coordinatorUrl = config.getPrestoCoordinatorServer(datasource);
       String userName = request.getHeader(config.getAuditHttpHeaderName());
-      Response killResponse = new PrestoClient(coordinatorUrl, userName, user, password).kill(queryId);
+      PrestoClient prestoClient = null;
+      if (config.isPrestoImpersonation(datasource)) {
+        prestoClient = new PrestoClient(coordinatorUrl, userName,
+                config.getPrestoImpersonatedUser(datasource), config.getPrestoImpersonatedPassword(datasource));
+      } else {
+        prestoClient = new PrestoClient(coordinatorUrl, userName, user, password);
+      }
+      Response killResponse = prestoClient.kill(queryId);
       return Map.of("code", killResponse.code(), "message", killResponse.message(), "url",
                     killResponse.request().url());
     } catch (Throwable e) {

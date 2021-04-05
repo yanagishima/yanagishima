@@ -47,7 +47,14 @@ public class QueryController {
 
     String userName = request.getHeader(config.getAuditHttpHeaderName());
     String originalJson;
-    try (Response prestoResponse = new PrestoClient(coordinatorServer, userName, user, password).get()) {
+    PrestoClient prestoClient = null;
+    if (config.isPrestoImpersonation(datasource)) {
+      prestoClient = new PrestoClient(coordinatorServer, userName,
+              config.getPrestoImpersonatedUser(datasource), config.getPrestoImpersonatedPassword(datasource));
+    } else {
+      prestoClient = new PrestoClient(coordinatorServer, userName, user, password);
+    }
+    try (Response prestoResponse = prestoClient.get()) {
       originalJson = prestoResponse.body().string();
       int code = prestoResponse.code();
       if (code != SC_OK) {

@@ -371,6 +371,18 @@ public class PrestoService {
     }
 
     String user = firstNonNull(userName, config.getUser(datasource));
+    Optional<String> prestoImpersonatedUser = config.getPrestoImpersonatedUser(datasource);
+    Optional<String> prestoImpersonatedPassword = config.getPrestoImpersonatedPassword(datasource);
+    if (config.isPrestoImpersonation(datasource)
+            && prestoImpersonatedUser.isPresent() && prestoImpersonatedPassword.isPresent()) {
+      ClientSession clientSession = buildClientSession(server, user, source, catalog, schema,
+              properties);
+      checkArgument(clientSession.getServer().getScheme().equalsIgnoreCase("https"),
+              "Authentication using username/password requires HTTPS to be enabled");
+      OkHttpClient.Builder clientBuilder = httpClient.newBuilder();
+      clientBuilder.addInterceptor(basicAuth(prestoImpersonatedUser.get(), prestoImpersonatedPassword.get()));
+      return StatementClientFactory.newStatementClient(clientBuilder.build(), clientSession, query);
+    }
     ClientSession clientSession = buildClientSession(server, user, source, catalog, schema, properties);
     return StatementClientFactory.newStatementClient(httpClient, clientSession, query);
   }

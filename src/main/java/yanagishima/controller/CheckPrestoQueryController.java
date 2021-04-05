@@ -80,8 +80,14 @@ public class CheckPrestoQueryController {
       }
 
       String coordinatorServer = config.getPrestoCoordinatorServer(datasource);
-      try (Response prestoResponse = new PrestoClient(coordinatorServer, user, prestoUser, prestoPassword).get(
-          queryId)) {
+      PrestoClient prestoClient = null;
+      if (config.isPrestoImpersonation(datasource)) {
+        prestoClient = new PrestoClient(coordinatorServer, user,
+                config.getPrestoImpersonatedUser(datasource), config.getPrestoImpersonatedPassword(datasource));
+      } else {
+        prestoClient = new PrestoClient(coordinatorServer, user, prestoUser, prestoPassword);
+      }
+      try (Response prestoResponse = prestoClient.get(queryId)) {
         if (prestoResponse.isSuccessful() && prestoResponse.body() != null) {
           String json = prestoResponse.body().string();
           Map status = OBJECT_MAPPER.readValue(json, Map.class);
