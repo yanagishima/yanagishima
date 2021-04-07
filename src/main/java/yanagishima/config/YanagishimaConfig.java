@@ -158,6 +158,10 @@ public class YanagishimaConfig {
     return Optional.ofNullable(environment.getProperty("fluentd.failed.tag"));
   }
 
+  public Optional<String> getFluentdPublishTag() {
+    return Optional.ofNullable(environment.getProperty("fluentd.publish.tag"));
+  }
+
   public String getFluentdHost() {
     return firstNonNull(environment.getProperty("fluentd.host"), "localhost");
   }

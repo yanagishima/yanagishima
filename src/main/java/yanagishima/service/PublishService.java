@@ -38,4 +38,9 @@ public class PublishService {
     publish.setUser(user);
     return publishRepository.save(publish);
   }
+
+  public void update(Publish publish, String viewers) {
+    publish.setViewers(viewers);
+    publishRepository.save(publish);
+  }
 }
