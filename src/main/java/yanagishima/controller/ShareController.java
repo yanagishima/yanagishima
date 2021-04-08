@@ -29,6 +29,7 @@ import yanagishima.service.CommentService;
 import yanagishima.service.PublishService;
 import yanagishima.service.QueryService;
 import yanagishima.service.SessionPropertyService;
+import yanagishima.util.AccessControlUtil;
 
 @Slf4j
 @Api(tags = "download")
@@ -47,12 +48,20 @@ public class ShareController {
                   @RequestParam(defaultValue = "UTF-8") String encode,
                   @RequestParam(defaultValue = "true") boolean header,
                   @RequestParam(defaultValue = "true") boolean bom,
+                  User user,
                   HttpServletResponse response) {
     if (publishId == null) {
       return;
     }
 
     publishService.get(publishId).ifPresent(publish -> {
+      String publishUser = publish.getUser();
+      String requestUser = user.getId();
+      String viewers = publish.getViewers();
+      if (!canAccessPublishedPage(publishUser, requestUser, viewers)) {
+        AccessControlUtil.sendForbiddenError(response);
+        return;
+      }
       String fileName = publishId + ".csv";
       downloadCsv(response, fileName, publish.getDatasource(), publish.getQueryId(), encode, header, bom);
     });
@@ -63,26 +72,40 @@ public class ShareController {
                        @RequestParam(defaultValue = "UTF-8") String encode,
                        @RequestParam(defaultValue = "true") boolean header,
                        @RequestParam(defaultValue = "true") boolean bom,
+                       User user,
                        HttpServletResponse response) {
     if (publishId == null) {
       return;
     }
 
     publishService.get(publishId).ifPresent(publish -> {
+      String publishUser = publish.getUser();
+      String requestUser = user.getId();
+      String viewers = publish.getViewers();
+      if (!canAccessPublishedPage(publishUser, requestUser, viewers)) {
+        AccessControlUtil.sendForbiddenError(response);
+        return;
+      }
       String fileName = publishId + ".tsv";
       downloadTsv(response, fileName, publish.getDatasource(), publish.getQueryId(), encode, header, bom);
     });
   }
 
   @GetMapping("share/shareHistory")
-  public Map<String, Object> get(@RequestParam(name = "publish_id") String publishId, User user) {
+  public Map<String, Object> get(@RequestParam(name = "publish_id") String publishId, User user,
+                                 HttpServletResponse response) {
     Map<String, Object> body = new HashMap<>();
     try {
       publishService.get(publishId).ifPresent(publish -> {
         String publishUser = publish.getUser();
         String requestUser = user.getId();
+        String viewers = publish.getViewers();
+        if (!canAccessPublishedPage(publishUser, requestUser, viewers)) {
+          AccessControlUtil.sendForbiddenError(response);
+          return;
+        }
         if (publishUser != null && publishUser.equals(requestUser)) {
-          body.put("viewers", publish.getViewers());
+          body.put("viewers", viewers);
         }
         String datasource = publish.getDatasource();
         body.put("datasource", datasource);
@@ -105,7 +128,7 @@ public class ShareController {
 
   @PostMapping("share/updateViewers")
   public Map<String, Object> updateViewers(@RequestParam(name = "publish_id") String publishId, User user,
-                                           String viewers) {
+                                           String viewers, HttpServletResponse response) {
     Map<String, Object> body = new HashMap<>();
     try {
       publishService.get(publishId).ifPresent(publish -> {
@@ -116,6 +139,9 @@ public class ShareController {
           body.put("viewers", viewers);
           emitPublishEvent(publish.getPublishId(), publish.getDatasource(), publish.getEngine(),
                   publish.getQueryId(), publish.getUser(), viewers);
+        } else {
+          AccessControlUtil.sendForbiddenError(response);
+          return;
         }
       });
     } catch (Throwable e) {
@@ -135,5 +161,17 @@ public class ShareController {
     event.put("user", user);
     event.put("viewers", viewers);
     fluencyClient.emitPublish(event);
+  }
+
+  private boolean canAccessPublishedPage(String publishUser, String requestUser, String viewers) {
+    if (publishUser != null && publishUser.equals(requestUser)) {
+      return true;
+    }
+
+    if (viewers != null && viewers.contains(requestUser)) {
+      return true;
+    }
+
+    return false;
   }
 }
