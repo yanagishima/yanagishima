@@ -105,6 +105,7 @@ public class ShareController {
           return;
         }
         if (publishUser != null && publishUser.equals(requestUser)) {
+          body.put("publisherFlag", true);
           body.put("viewers", viewers);
         }
         String datasource = publish.getDatasource();
