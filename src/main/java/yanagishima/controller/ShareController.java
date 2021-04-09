@@ -128,8 +128,10 @@ public class ShareController {
   }
 
   @PostMapping("share/updateViewers")
-  public Map<String, Object> updateViewers(@RequestParam(name = "publish_id") String publishId, User user,
-                                           String viewers, HttpServletResponse response) {
+  public Map<String, Object> updateViewers(@RequestParam(name = "publish_id") String publishId,
+                                           @RequestParam String viewers,
+                                           User user,
+                                           HttpServletResponse response) {
     Map<String, Object> body = new HashMap<>();
     try {
       publishService.get(publishId).ifPresent(publish -> {
