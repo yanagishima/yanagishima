@@ -140,9 +140,10 @@ public class ShareController {
         String publishUser = publish.getUser();
         String requestUser = user.getId();
         if (publishUser != null && publishUser.equals(requestUser)) {
-          publishService.update(publish, viewers);
-          body.put("viewers", viewers);
-          emitPublishEvent(publish, viewers, "share/updateViewers");
+          String lowerViewers = viewers.toLowerCase();
+          publishService.update(publish, lowerViewers);
+          body.put("viewers", lowerViewers);
+          emitPublishEvent(publish, lowerViewers, "share/updateViewers");
         } else {
           AccessControlUtil.sendForbiddenError(response);
           return;
