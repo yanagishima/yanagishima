@@ -10,8 +10,12 @@ public final class PublishUtil {
             return true;
         }
 
-        if (viewers != null && viewers.contains(requestUser)) {
-            return true;
+        if (viewers != null) {
+            for (String viewer : viewers.split(",")) {
+                if (viewer.equals(requestUser)) {
+                    return true;
+                }
+            }
         }
 
         return false;

@@ -19,5 +19,7 @@ class PublishUtilTest {
                 "jp12345,jp67890"));
         assertFalse(PublishUtil.canAccessPublishedPage("jp11111", "jp99999",
                 null));
+        assertFalse(PublishUtil.canAccessPublishedPage("jp11111", "jp1234",
+                "jp12345,jp67890"));
     }
 }
