@@ -3,6 +3,7 @@ package yanagishima.controller;
 import static yanagishima.util.DownloadUtil.downloadCsv;
 import static yanagishima.util.DownloadUtil.downloadTsv;
 import static yanagishima.util.HistoryUtil.createHistoryResult;
+import static yanagishima.util.PublishUtil.canAccessPublishedPage;
 
 import java.util.HashMap;
 import java.util.List;
@@ -164,17 +165,5 @@ public class ShareController {
     event.put("user", user);
     event.put("viewers", viewers);
     fluencyClient.emitPublish(event);
-  }
-
-  private boolean canAccessPublishedPage(String publishUser, String requestUser, String viewers) {
-    if (publishUser != null && publishUser.equals(requestUser)) {
-      return true;
-    }
-
-    if (viewers != null && viewers.contains(requestUser)) {
-      return true;
-    }
-
-    return false;
   }
 }
