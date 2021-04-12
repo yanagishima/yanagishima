@@ -24,6 +24,7 @@ import yanagishima.client.fluentd.FluencyClient;
 import yanagishima.config.YanagishimaConfig;
 import yanagishima.model.User;
 import yanagishima.model.db.Comment;
+import yanagishima.model.db.Publish;
 import yanagishima.model.db.Query;
 import yanagishima.model.db.SessionProperty;
 import yanagishima.service.CommentService;
@@ -141,8 +142,7 @@ public class ShareController {
         if (publishUser != null && publishUser.equals(requestUser)) {
           publishService.update(publish, viewers);
           body.put("viewers", viewers);
-          emitPublishEvent(publish.getPublishId(), publish.getDatasource(), publish.getEngine(),
-                  publish.getQueryId(), publish.getUser(), viewers);
+          emitPublishEvent(publish, viewers, "share/updateViewers");
         } else {
           AccessControlUtil.sendForbiddenError(response);
           return;
@@ -155,15 +155,15 @@ public class ShareController {
     return body;
   }
 
-  private void emitPublishEvent(String publishId, String datasource, String engine, String queryId, String user,
-                                String viewers) {
+  private void emitPublishEvent(Publish publish, String viewers, String path) {
     Map<String, Object> event = new HashMap<>();
-    event.put("publish_id", publishId);
-    event.put("datasource", datasource);
-    event.put("engine", engine);
-    event.put("query_id", queryId);
-    event.put("user", user);
+    event.put("publish_id", publish.getPublishId());
+    event.put("datasource", publish.getDatasource());
+    event.put("engine", publish.getEngine());
+    event.put("query_id", publish.getQueryId());
+    event.put("user", publish.getUser());
     event.put("viewers", viewers);
+    event.put("path", path);
     fluencyClient.emitPublish(event);
   }
 }
