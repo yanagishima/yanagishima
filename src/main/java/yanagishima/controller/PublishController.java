@@ -54,10 +54,11 @@ public class PublishController {
 
   @DatasourceAuth
   @GetMapping("publishList")
-  public PublishListDto list(@RequestParam String datasource, @RequestParam String engine, User user) {
+  public PublishListDto list(@RequestParam String datasource, @RequestParam String engine, User user,
+                             @RequestParam(defaultValue = "100") int limit) {
     PublishListDto publishListDto = new PublishListDto();
     try {
-      publishListDto.setPublishList(publishService.getAll(datasource, engine, user));
+      publishListDto.setPublishList(publishService.getAll(datasource, engine, user, limit));
     } catch (Throwable e) {
       log.error(e.getMessage(), e);
       publishListDto.setError(e.getMessage());

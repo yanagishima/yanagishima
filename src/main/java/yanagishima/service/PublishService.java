@@ -5,6 +5,7 @@ import static org.apache.commons.codec.digest.DigestUtils.md5Hex;
 import java.util.List;
 import java.util.Optional;
 
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
 import lombok.RequiredArgsConstructor;
@@ -25,8 +26,9 @@ public class PublishService {
     return publishRepository.findByPublishId(publishId);
   }
 
-  public List<Publish> getAll(String datasource, String engine, User user) {
-    return publishRepository.findAllByDatasourceAndEngineAndUser(datasource, engine, user.getId());
+  public List<Publish> getAll(String datasource, String engine, User user, int limit) {
+    return publishRepository.findAllByDatasourceAndEngineAndUserOrderByQueryIdDesc(datasource, engine,
+            user.getId(), PageRequest.of(0, limit));
   }
 
   public Publish publish(String datasource, String engine, String queryId, User user) {
