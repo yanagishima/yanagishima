@@ -103,7 +103,7 @@ public class ShareController {
         String requestUser = user.getId();
         String viewers = publish.getViewers();
         if (!canAccessPublishedPage(publishUser, requestUser, viewers)) {
-          body.put("accessDeniedFlag", true);
+          AccessControlUtil.sendForbiddenError(response);
           return;
         }
         if (publishUser != null && publishUser.equals(requestUser)) {
