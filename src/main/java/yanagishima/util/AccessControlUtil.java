@@ -31,4 +31,8 @@ public final class AccessControlUtil {
       throw new RuntimeException(e);
     }
   }
+
+  public static void setForbiddenStatus(HttpServletResponse response) {
+    response.setStatus(SC_FORBIDDEN);
+  }
 }
