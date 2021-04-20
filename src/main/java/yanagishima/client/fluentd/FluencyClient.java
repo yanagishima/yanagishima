@@ -21,7 +21,8 @@ public class FluencyClient {
 
   @PostConstruct
   public void postConstruct() {
-    if (config.getFluentdExecutedTag().isPresent() || config.getFluentdFaliedTag().isPresent()) {
+    if (config.getFluentdExecutedTag().isPresent() || config.getFluentdFaliedTag().isPresent()
+            || config.getFluentdPublishTag().isPresent()) {
       try {
         this.fluency = Fluency.defaultFluency(config.getFluentdHost(), config.getFluentdPort());
       } catch (IOException e) {
@@ -51,6 +52,18 @@ public class FluencyClient {
 
     try {
       fluency.emit(config.getFluentdFaliedTag().get(), event);
+    } catch (IOException e) {
+      log.error(e.getMessage(), e);
+    }
+  }
+
+  public void emitPublish(Map<String, Object> event) {
+    if (config.getFluentdPublishTag().isEmpty()) {
+      return;
+    }
+
+    try {
+      fluency.emit(config.getFluentdPublishTag().get(), event);
     } catch (IOException e) {
       log.error(e.getMessage(), e);
     }

@@ -1,7 +1,9 @@
 package yanagishima.repository;
 
+import java.util.List;
 import java.util.Optional;
 
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.stereotype.Repository;
 
@@ -12,4 +14,7 @@ public interface PublishRepository extends CrudRepository<Publish, String> {
   Optional<Publish> findByDatasourceAndEngineAndQueryId(String datasource, String engine, String queryId);
 
   Optional<Publish> findByPublishId(String publishId);
+
+  List<Publish> findAllByDatasourceAndEngineAndUserOrderByQueryIdDesc(String datasource, String engine,
+                                                                      String user, Pageable pageable);
 }

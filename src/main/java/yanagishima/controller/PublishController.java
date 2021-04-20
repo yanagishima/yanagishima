@@ -3,6 +3,7 @@ package yanagishima.controller;
 import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
 
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -14,6 +15,7 @@ import yanagishima.annotation.DatasourceAuth;
 import yanagishima.config.YanagishimaConfig;
 import yanagishima.model.User;
 import yanagishima.model.dto.PublishDto;
+import yanagishima.model.dto.PublishListDto;
 import yanagishima.service.PublishService;
 import yanagishima.service.QueryService;
 
@@ -48,5 +50,19 @@ public class PublishController {
       publishDto.setError(e.getMessage());
     }
     return publishDto;
+  }
+
+  @DatasourceAuth
+  @GetMapping("publishList")
+  public PublishListDto list(@RequestParam String datasource, @RequestParam String engine, User user,
+                             @RequestParam(defaultValue = "100") int limit) {
+    PublishListDto publishListDto = new PublishListDto();
+    try {
+      publishListDto.setPublishList(publishService.getAll(datasource, engine, user, limit));
+    } catch (Throwable e) {
+      log.error(e.getMessage(), e);
+      publishListDto.setError(e.getMessage());
+    }
+    return publishListDto;
   }
 }

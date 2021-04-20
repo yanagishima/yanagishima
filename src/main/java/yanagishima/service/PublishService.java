@@ -2,8 +2,10 @@ package yanagishima.service;
 
 import static org.apache.commons.codec.digest.DigestUtils.md5Hex;
 
+import java.util.List;
 import java.util.Optional;
 
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
 import lombok.RequiredArgsConstructor;
@@ -24,6 +26,11 @@ public class PublishService {
     return publishRepository.findByPublishId(publishId);
   }
 
+  public List<Publish> getAll(String datasource, String engine, User user, int limit) {
+    return publishRepository.findAllByDatasourceAndEngineAndUserOrderByQueryIdDesc(datasource, engine,
+            user.getId(), PageRequest.of(0, limit));
+  }
+
   public Publish publish(String datasource, String engine, String queryId, User user) {
     Optional<Publish> publishedQuery = get(datasource, engine, queryId);
     return publishedQuery.orElseGet(() -> insert(datasource, engine, queryId, user.getId()));
@@ -37,5 +44,10 @@ public class PublishService {
     publish.setQueryId(queryId);
     publish.setUser(user);
     return publishRepository.save(publish);
+  }
+
+  public void update(Publish publish, String viewers) {
+    publish.setViewers(viewers);
+    publishRepository.save(publish);
   }
 }

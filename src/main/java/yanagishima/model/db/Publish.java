@@ -27,4 +27,7 @@ public class Publish {
   @Column(name = "user")
   private String user;
 
+  @Column(name = "viewers")
+  private String viewers;
+
 }

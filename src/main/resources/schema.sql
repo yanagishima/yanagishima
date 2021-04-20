@@ -18,6 +18,7 @@ datasource varchar(256),
 engine varchar(256),
 query_id varchar(256),
 user varchar(256),
+viewers text,
 primary key(publish_id))
 ;
 
