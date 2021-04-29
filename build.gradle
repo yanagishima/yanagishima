@@ -1,8 +1,10 @@
-apply plugin: 'java'
-apply plugin: 'distribution'
-apply plugin: 'checkstyle'
-apply plugin: 'net.ltgt.errorprone'
-apply plugin: 'com.adarshr.test-logger'
+plugins {
+    id 'java'
+    id 'distribution'
+    id 'checkstyle'
+    id "net.ltgt.errorprone" version "2.0.1"
+    id 'com.adarshr.test-logger' version '3.0.0'
+}
 
 version = '22.0'
 
@@ -104,16 +106,6 @@ tasks.withType(JavaCompile).configureEach {
 
 distZip.dependsOn 'copy'
 
-
-buildscript {
-    repositories {
-        maven { url "https://plugins.gradle.org/m2/" }
-    }
-    dependencies {
-        classpath "net.ltgt.gradle:gradle-errorprone-plugin:1.1.1"
-        classpath "com.adarshr:gradle-test-logger-plugin:2.1.1"
-    }
-}
 
 dependencies {
     compile 'org.slf4j:slf4j-api:1.7.10'
