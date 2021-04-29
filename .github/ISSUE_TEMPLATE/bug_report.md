@@ -1,33 +1,23 @@
-<!--
+---
+name: Bug report
+about: Create a report to help us improve
+title: ''
+labels: 'type: bug'
+assignees: ''
 
-** Please read the guidelines below. **
+---
 
-Issues that do not follow these guidelines are likely to be closed.
+**Yanagishima version**:
 
-1.  GitHub is reserved for bug reports and feature requests.
+**Presto version**:
 
-2.  Please fill out EITHER the feature request block or the bug report block
-    below, and delete the other block.
-
--->
-
-<!-- Feature request -->
-
-**Describe the feature**:
-
-<!-- Bug report -->
-
-**yanagishima version**:
-
-**presto version**:
-
-**conf/yanagishima.properties**:
+**conf/application.yml**:
 
 **JVM version** (`java -version`):
 
 **Server OS version** (`uname -a` if on a Unix-like system):
 
-**Client OS version**
+**Client OS version**:
 
 **Browser**:
 
