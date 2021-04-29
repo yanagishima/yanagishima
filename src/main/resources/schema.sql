@@ -43,14 +43,6 @@ like_count integer,
 primary key(datasource, engine, query_id))
 ;
 
-CREATE TABLE IF NOT EXISTS label (
-datasource varchar(256),
-engine varchar(256),
-query_id varchar(256),
-label_name varchar(256),
-primary key(datasource, engine, query_id))
-;
-
 CREATE TABLE IF NOT EXISTS starred_schema (
 starred_schema_id integer primary key auto_increment,
 datasource varchar(256) not null,

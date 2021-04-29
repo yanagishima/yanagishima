@@ -31,15 +31,12 @@ public class QueryHistoryController {
   @DatasourceAuth
   @RequestMapping(value = "/queryHistory", method = { RequestMethod.GET, RequestMethod.POST })
   public Map<String, Object> get(@RequestParam String datasource,
-                                 @RequestParam(required = false) String queryids,
-                                 @RequestParam(required = false) String label // Deprecated
-  ) {
+                                 @RequestParam(required = false) String queryids) {
     Map<String, Object> responseBody = new HashMap<>();
     try {
       String[] queryIds = queryids.split(","); // TODO: Fix NPE
       responseBody.put("headers", Arrays
-          .asList("Id", "Query", "Time", "rawDataSize", "engine", "finishedTime", "linenumber", "labelName",
-                  "status"));
+          .asList("Id", "Query", "Time", "rawDataSize", "engine", "finishedTime", "linenumber", "status"));
       responseBody.put("results", getHistories(datasource, queryIds));
 
     } catch (Throwable e) {

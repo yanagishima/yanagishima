@@ -50,7 +50,6 @@ public class HistoryController {
       }
 
       Optional<Query> userQueryOptional = queryService.get(queryId, datasource, user);
-      responseBody.put("editLabel", userQueryOptional.isPresent());
 
       queryOptional.ifPresent(query -> {
         responseBody.put("engine", query.getEngine());

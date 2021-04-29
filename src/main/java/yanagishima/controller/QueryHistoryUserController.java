@@ -32,7 +32,6 @@ public class QueryHistoryUserController {
   public Map<String, Object> get(@RequestParam String datasource,
                                  @RequestParam String engine,
                                  @RequestParam(defaultValue = "") String search,
-                                 @RequestParam(required = false) String label, // Deprecated
                                  @RequestParam(defaultValue = "100") int limit,
                                  HttpServletRequest request) {
     Map<String, Object> responseBody = new HashMap<>();
@@ -40,8 +39,7 @@ public class QueryHistoryUserController {
       String userName = request.getHeader(config.getAuditHttpHeaderName());
 
       responseBody.put("headers", Arrays
-          .asList("Id", "Query", "Time", "rawDataSize", "engine", "finishedTime", "linenumber", "labelName",
-                  "status"));
+          .asList("Id", "Query", "Time", "rawDataSize", "engine", "finishedTime", "linenumber", "status"));
 
       List<Query> queryList = queryService.getAll(datasource, engine, userName, search, limit);
       responseBody.put("hit", queryList.size());
@@ -61,7 +59,6 @@ public class QueryHistoryUserController {
         row.add(query.getEngine());
         row.add(query.getFetchResultTimeString());
         row.add(query.getLinenumber());
-        row.add(null); // Deprecated: labelName
         row.add(query.getStatus());
         queryHistoryList.add(row);
       }
