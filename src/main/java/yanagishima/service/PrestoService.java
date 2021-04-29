@@ -5,7 +5,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.base.Verify.verify;
 import static io.airlift.units.DataSize.Unit.BYTE;
-import static io.prestosql.client.OkHttpUtil.basicAuth;
+import static io.trino.client.OkHttpUtil.basicAuth;
 import static java.lang.String.format;
 import static java.lang.String.join;
 import static java.nio.charset.StandardCharsets.UTF_8;
@@ -42,13 +42,13 @@ import com.google.common.collect.ImmutableSet;
 
 import io.airlift.units.DataSize;
 import io.airlift.units.Duration;
-import io.prestosql.client.ClientSession;
-import io.prestosql.client.Column;
-import io.prestosql.client.FailureInfo;
-import io.prestosql.client.QueryError;
-import io.prestosql.client.QueryStatusInfo;
-import io.prestosql.client.StatementClient;
-import io.prestosql.client.StatementClientFactory;
+import io.trino.client.ClientSession;
+import io.trino.client.Column;
+import io.trino.client.FailureInfo;
+import io.trino.client.QueryError;
+import io.trino.client.QueryStatusInfo;
+import io.trino.client.StatementClient;
+import io.trino.client.StatementClientFactory;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.OkHttpClient;
@@ -389,8 +389,8 @@ public class PrestoService {
 
   private static ClientSession buildClientSession(String server, String user, String source, String catalog,
                                                   String schema, Map<String, String> properties) {
-    return new ClientSession(URI.create(server), user, source, Optional.empty(), ImmutableSet.of(), null,
-                             catalog,
+    return new ClientSession(URI.create(server), user, Optional.empty(), source, Optional.empty(),
+                             ImmutableSet.of(), null, catalog,
                              schema, null, ZoneId.systemDefault(), Locale.getDefault(),
                              ImmutableMap.of(), properties, emptyMap(), emptyMap(), ImmutableMap.of(), null,
                              new Duration(2, MINUTES), false);
