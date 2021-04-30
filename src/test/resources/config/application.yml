@@ -11,3 +11,8 @@ spring:
     username: sa
     password: password
     url: jdbc:h2:mem:testdb
+
+audit:
+  http:
+    header:
+      name: empno
