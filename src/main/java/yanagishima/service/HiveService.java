@@ -241,8 +241,7 @@ public class HiveService {
             statementPool.remove(datasource, queryId);
           }
 
-          DataSize rawDataSize = new DataSize(Files.size(dst), DataSize.Unit.BYTE);
-          queryResult.setRawDataSize(rawDataSize.convertToMostSuccinctDataSize());
+          queryResult.setRawDataSize(DataSize.ofBytes(Files.size(dst)).succinct());
         } catch (IOException e) {
           throw new RuntimeException(e);
         }

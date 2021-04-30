@@ -96,8 +96,7 @@ public class ElasticsearchService {
         result.setRecords(rowDataList);
 
         long size = Files.size(dst);
-        DataSize rawDataSize = new DataSize(size, DataSize.Unit.BYTE);
-        result.setRawDataSize(rawDataSize.convertToMostSuccinctDataSize());
+        result.setRawDataSize(DataSize.ofBytes(size).succinct());
       } catch (IOException e) {
         throw new RuntimeException(e);
       }
@@ -197,8 +196,7 @@ public class ElasticsearchService {
           result.setRecords(rows);
 
           long size = Files.size(dst);
-          DataSize rawDataSize = new DataSize(size, DataSize.Unit.BYTE);
-          result.setRawDataSize(rawDataSize.convertToMostSuccinctDataSize());
+          result.setRawDataSize(DataSize.ofBytes(size).succinct());
         } catch (IOException e) {
           throw new RuntimeException(e);
         }

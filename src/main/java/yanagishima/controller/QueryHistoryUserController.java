@@ -1,5 +1,7 @@
 package yanagishima.controller;
 
+import static yanagishima.util.FormatUtil.toSuccinctDataSize;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -12,7 +14,6 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import io.airlift.units.DataSize;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import yanagishima.annotation.DatasourceAuth;
@@ -53,8 +54,7 @@ public class QueryHistoryUserController {
         if (query.getResultFileSize() == null) {
           row.add(null);
         } else {
-          DataSize rawDataSize = new DataSize(query.getResultFileSize(), DataSize.Unit.BYTE);
-          row.add(rawDataSize.convertToMostSuccinctDataSize().toString());
+          row.add(toSuccinctDataSize(query.getResultFileSize()));
         }
         row.add(query.getEngine());
         row.add(query.getFetchResultTimeString());

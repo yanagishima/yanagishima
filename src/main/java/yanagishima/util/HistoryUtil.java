@@ -1,6 +1,7 @@
 package yanagishima.util;
 
 import static java.lang.String.format;
+import static yanagishima.util.FormatUtil.toSuccinctDataSize;
 import static yanagishima.util.PathUtil.getResultFilePath;
 
 import java.io.BufferedReader;
@@ -13,13 +14,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import javax.annotation.Nullable;
-
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
 
-import io.airlift.units.DataSize;
 import lombok.experimental.UtilityClass;
 import yanagishima.model.db.Query;
 import yanagishima.model.db.SessionProperty;
@@ -85,14 +83,5 @@ public final class HistoryUtil {
       throw new RuntimeException(e);
     }
     responseBody.put("results", rows);
-  }
-
-  @Nullable
-  private static String toSuccinctDataSize(Integer size) {
-    if (size == null) {
-      return null;
-    }
-    DataSize dataSize = new DataSize(size, DataSize.Unit.BYTE);
-    return dataSize.convertToMostSuccinctDataSize().toString();
   }
 }
