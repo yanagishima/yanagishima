@@ -194,8 +194,9 @@ public class YanagishimaConfig {
     return environment.getProperty("hive.jdbc.password." + datasource);
   }
 
-  public double getHiveQueryMaxRunTimeSeconds() {
-    return Double.parseDouble(environment.getProperty("hive.query.max-run-time-seconds"));
+  private double getHiveQueryMaxRunTimeSeconds() {
+    String seconds = environment.getProperty("hive.query.max-run-time-seconds");
+    return Double.parseDouble(firstNonNull(seconds, "3600"));
   }
 
   public double getHiveQueryMaxRunTimeSeconds(String datasource) {
