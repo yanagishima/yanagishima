@@ -73,10 +73,10 @@ public class PrestoController {
         PrestoQueryResult prestoQueryResult;
         if (query.startsWith(YANAGISHIMA_COMMENT)) {
           prestoQueryResult = prestoService.doQuery(datasource, query, userName, prestoUser, prestoPassword,
-                                                    store, Integer.MAX_VALUE);
+                                                    Map.of(), store, Integer.MAX_VALUE);
         } else {
           prestoQueryResult = prestoService.doQuery(datasource, query, userName, prestoUser, prestoPassword,
-                                                    store, config.getSelectLimit());
+                                                    Map.of(), store, config.getSelectLimit());
         }
         String queryId = prestoQueryResult.getQueryId();
         responseBody.put("queryid", queryId);
