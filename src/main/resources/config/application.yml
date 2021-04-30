@@ -15,6 +15,24 @@ spring:
   resources:
     static-locations: file:web
 
+# Metrics
+management:
+  metrics:
+    export.prometheus.enabled: true
+    distribution:
+      percentiles:
+        http.server.requests: 0.5, 0.75, 0.95, 0.99
+  endpoint:
+    metrics.enabled: true
+    prometheus.enabled: true
+    heapdump.enabled: false
+    health:
+      show-details: always
+    env:
+      keys-to-sanitize: .*password.*
+  endpoints:
+    web.exposure.include: '*'
+
 # Datasources
 sql.query.engines: presto,hive,spark,elasticsearch
 check.datasource: false
