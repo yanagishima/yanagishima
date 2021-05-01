@@ -23,12 +23,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import io.airlift.units.DataSize;
@@ -48,46 +47,17 @@ import yanagishima.util.QueryIdUtil;
 public class HiveService {
   private final QueryService queryService;
   private final YanagishimaConfig config;
-  private final ExecutorService executorService = Executors.newFixedThreadPool(10);
   private final FluencyClient fluencyClient;
   private final StatementPool statementPool;
 
-  public String doQueryAsync(String engine, String datasource, String query, String userName,
-                             Optional<String> hiveUser, Optional<String> hivePassword) {
-    String queryId = QueryIdUtil.generate(datasource, query, engine);
-    executorService.submit(new Task(queryId, engine, datasource, query, userName, hiveUser, hivePassword));
-    return queryId;
-  }
-
-  public class Task implements Runnable {
-    private final String queryId;
-    private final String engine;
-    private final String datasource;
-    private final String query;
-    private final String userName;
-    private final Optional<String> hiveUser;
-    private final Optional<String> hivePassword;
-
-    public Task(String queryId, String engine, String datasource, String query, String userName,
-                Optional<String> hiveUser, Optional<String> hivePassword) {
-      this.queryId = queryId;
-      this.engine = engine;
-      this.datasource = datasource;
-      this.query = query;
-      this.userName = userName;
-      this.hiveUser = hiveUser;
-      this.hivePassword = hivePassword;
-    }
-
-    @Override
-    public void run() {
-      try {
-        int limit = config.getSelectLimit();
-        getHiveQueryResult(queryId, engine, datasource, query, true, limit, userName, hiveUser, hivePassword,
-                           true);
-      } catch (Throwable e) {
-        log.error(e.getMessage(), e);
-      }
+  @Async
+  public void executeAsync(String engine, String datasource, String queryId, String query, String userName,
+                           Optional<String> hiveUser, Optional<String> hivePassword) {
+    try {
+      getHiveQueryResult(queryId, engine, datasource, query, true, config.getSelectLimit(),
+                         userName, hiveUser, hivePassword, true);
+    } catch (Throwable e) {
+      log.error(e.getMessage(), e);
     }
   }
 

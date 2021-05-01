@@ -14,6 +14,12 @@ spring:
     initialization-mode: always
   resources:
     static-locations: file:web
+  task:
+    execution:
+      pool:
+        core-size: 10
+        max-size: 30
+        queue-capacity: 1000
 
 # Metrics
 management:

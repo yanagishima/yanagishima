@@ -20,6 +20,7 @@ import lombok.extern.slf4j.Slf4j;
 import yanagishima.annotation.DatasourceAuth;
 import yanagishima.config.YanagishimaConfig;
 import yanagishima.service.HiveService;
+import yanagishima.util.QueryIdUtil;
 
 @Slf4j
 @RestController
@@ -54,7 +55,8 @@ public class HiveAsyncController {
         log.info(format("%s executed %s in datasource=%s, engine=%s", userName, query, datasource, engine));
       }
 
-      String queryId = hiveService.doQueryAsync(engine, datasource, query, userName, hiveUser, hivePassword);
+      String queryId = QueryIdUtil.generate(datasource, query, engine);
+      hiveService.executeAsync(engine, datasource, queryId, query, userName, hiveUser, hivePassword);
       responseBody.put("queryid", queryId);
     } catch (Throwable e) {
       log.error(e.getMessage(), e);
