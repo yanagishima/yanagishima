@@ -2,7 +2,7 @@ version: '2'
 services:
   hadoop-master:
     hostname: hadoop-master
-    image: 'prestodev/hdp2.6-hive:24'
+    image: 'ghcr.io/trinodb/testing/hdp3.1-hive:38'
     ports:
       - '1180:1180'
       - '8020:8020'
@@ -12,6 +12,6 @@ services:
       - '9083:9083'
       - '10000:10000'
       - '19888:19888'
-      - '13306:3306'
+      - '23306:3306'
       - '50070:50070'
       - '50075:50075'
