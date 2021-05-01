@@ -4,6 +4,8 @@ plugins {
     id 'checkstyle'
     id "net.ltgt.errorprone" version "2.0.1"
     id 'com.adarshr.test-logger' version '3.0.0'
+    id 'io.spring.dependency-management' version '1.0.11.RELEASE'
+    id 'org.springframework.boot' version '2.3.5.RELEASE'
 }
 
 version = '22.0'
@@ -113,8 +115,8 @@ dependencies {
     implementation 'com.facebook.presto:presto-client:0.215'
     implementation 'io.prestosql:presto-client:347'
     implementation 'io.prestosql:presto-parser:347'
-    implementation 'com.squareup.okhttp3:okhttp:3.9.0'
-    implementation 'org.apache.httpcomponents:fluent-hc:4.4.1'
+    implementation 'com.squareup.okhttp3:okhttp'
+    implementation 'org.apache.httpcomponents:fluent-hc'
     compileOnly 'org.projectlombok:lombok:1.18.8'
     annotationProcessor 'org.projectlombok:lombok:1.18.8'
     implementation 'org.komamitsu:fluency:1.7.0'
@@ -125,22 +127,20 @@ dependencies {
     implementation 'com.github.wyukawa.elasticsearch.unofficial.jdbc.driver:elasticsearch-jdbc-driver:0.0.9'
     implementation 'org.jsoup:jsoup:1.11.3'
     implementation 'mysql:mysql-connector-java:5.1.47'
-    implementation 'org.springframework.boot:spring-boot-starter-web:2.3.5.RELEASE'
-    implementation 'org.springframework.boot:spring-boot-starter-jetty:2.3.5.RELEASE'
-    implementation 'org.springframework.boot:spring-boot-starter-data-jpa:2.3.5.RELEASE'
-    implementation 'org.springframework.boot:spring-boot-autoconfigure:2.3.5.RELEASE'
-    implementation 'org.springframework.boot:spring-boot-starter-actuator:2.3.5.RELEASE'
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+    implementation 'org.springframework.boot:spring-boot-starter-jetty'
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+    implementation 'org.springframework.boot:spring-boot-autoconfigure'
+    implementation 'org.springframework.boot:spring-boot-starter-actuator'
     implementation 'io.springfox:springfox-boot-starter:3.0.0'
 
     errorprone 'com.google.errorprone:error_prone_core:2.3.4'
 
     // For tests
-    testImplementation "org.junit.jupiter:junit-jupiter-api:5.7.0"
-    testImplementation "org.junit.jupiter:junit-jupiter-engine:5.7.0"
-    testImplementation 'org.springframework.boot:spring-boot-starter-test:2.3.5.RELEASE'
-    testImplementation 'com.h2database:h2:1.4.200'
-    testImplementation 'org.mockito:mockito-core:2.23.4'
-    testImplementation 'org.assertj:assertj-core:3.18.1'
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testImplementation 'com.h2database:h2'
+    testImplementation 'org.mockito:mockito-core'
+    testImplementation 'org.assertj:assertj-core'
 }
 
 test {
