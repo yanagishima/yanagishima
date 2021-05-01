@@ -4,11 +4,11 @@ import static java.lang.String.format;
 import static yanagishima.util.AccessControlUtil.sendForbiddenError;
 import static yanagishima.util.Constants.YANAGISHIMA_COMMENT;
 import static yanagishima.util.JsonUtil.writeJSON;
+import static yanagishima.util.QueryIdUtil.datetimeOf;
 
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
-import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.HashMap;
 import java.util.Map;
@@ -120,8 +120,7 @@ public class ElasticsearchController {
   }
 
   private static long toElapsedTimeMillis(String queryId, Query query) {
-    LocalDateTime submitTimeLdt = LocalDateTime.parse(queryId.substring(0, "yyyyMMdd_HHmmss".length()),
-                                                      DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss"));
+    LocalDateTime submitTimeLdt = datetimeOf(queryId);
     ZonedDateTime submitTimeZdt = submitTimeLdt.atZone(ZoneId.of("GMT", ZoneId.SHORT_IDS));
     String fetchResultTimeString = query.getFetchResultTimeString();
     ZonedDateTime fetchResultTime = ZonedDateTime.parse(fetchResultTimeString);
