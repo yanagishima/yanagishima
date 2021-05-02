@@ -66,16 +66,6 @@ task copyConfig(type: Copy) {
   into('build/package/config')
 }
 
-task copyData(type: Copy) {
-    from('data')
-    into('build/package/data')
-}
-
-task copyResult(type: Copy) {
-    from('result')
-    into('build/package/result')
-}
-
 task copy(dependsOn: [
       'createDirs',
       'buildWeb',
@@ -83,9 +73,7 @@ task copy(dependsOn: [
       'copyDeps',
       'copyLibs',
       'copyPackage',
-      'copyConfig',
-      'copyData',
-      'copyResult']) {
+      'copyConfig']) {
   }
 
 distributions {
