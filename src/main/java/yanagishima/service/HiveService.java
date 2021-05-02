@@ -31,6 +31,7 @@ import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
 import org.springframework.stereotype.Service;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.airlift.units.DataSize;
 import io.airlift.units.Duration;
 import lombok.RequiredArgsConstructor;
@@ -147,6 +148,7 @@ public class HiveService {
     }
   }
 
+  @SuppressFBWarnings("SQL_INJECTION")
   private void processData(String engine,
                            String datasource,
                            String query,

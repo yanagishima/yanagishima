@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.swagger.annotations.Api;
 import lombok.RequiredArgsConstructor;
 import yanagishima.annotation.DatasourceAuth;
@@ -23,6 +24,7 @@ public class QueryDetailController {
 
   @DatasourceAuth
   @GetMapping("queryDetail")
+  @SuppressFBWarnings("UNVALIDATED_REDIRECT")
   public void get(@RequestParam String datasource, @RequestParam String queryid,
                   HttpServletResponse response) throws IOException {
     String redirectServer = config.getPrestoRedirectServer(datasource);

@@ -3,6 +3,7 @@ plugins {
     id 'distribution'
     id 'checkstyle'
     id "net.ltgt.errorprone" version "2.0.1"
+    id "com.github.spotbugs" version "4.7.1"
     id 'com.adarshr.test-logger' version '3.0.0'
 }
 
@@ -104,6 +105,21 @@ tasks.withType(JavaCompile).configureEach {
     }
 }
 
+// Spotbugs
+spotbugsMain {
+    reportLevel = 'high'
+    reports {
+        html {
+            enabled = true
+            stylesheet = 'fancy-hist.xsl'
+        }
+    }
+}
+
+spotbugsTest {
+    enabled = false
+}
+
 distZip.dependsOn 'copy'
 
 
@@ -133,6 +149,8 @@ dependencies {
     implementation 'io.springfox:springfox-boot-starter:3.0.0'
 
     errorprone 'com.google.errorprone:error_prone_core:2.3.4'
+    spotbugsPlugins 'com.h3xstream.findsecbugs:findsecbugs-plugin:1.10.1'
+    compileOnly "com.github.spotbugs:spotbugs-annotations:${spotbugs.toolVersion.get()}"
 
     // For tests
     testImplementation "org.junit.jupiter:junit-jupiter-api:5.7.0"

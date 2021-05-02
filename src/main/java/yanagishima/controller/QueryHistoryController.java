@@ -8,8 +8,7 @@ import java.util.Map;
 
 import javax.annotation.Nullable;
 
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -29,7 +28,7 @@ public class QueryHistoryController {
   private final QueryService queryService;
 
   @DatasourceAuth
-  @RequestMapping(value = "/queryHistory", method = { RequestMethod.GET, RequestMethod.POST })
+  @GetMapping("/queryHistory")
   public Map<String, Object> get(@RequestParam String datasource,
                                  @RequestParam(required = false) String queryids,
                                  @RequestParam(required = false) String label // Deprecated

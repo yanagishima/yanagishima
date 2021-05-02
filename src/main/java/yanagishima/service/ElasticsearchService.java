@@ -28,6 +28,7 @@ import org.springframework.stereotype.Service;
 
 import com.github.wyukawa.elasticsearch.unofficial.jdbc.driver.ElasticsearchTranslateClient;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.airlift.units.DataSize;
 import io.airlift.units.Duration;
 import lombok.RequiredArgsConstructor;
@@ -143,6 +144,7 @@ public class ElasticsearchService {
     }
   }
 
+  @SuppressFBWarnings("SQL_INJECTION")
   private void processData(String datasource, String query, int limit, String userName, Connection connection,
                            String queryId, long start, ElasticsearchQueryResult result) throws SQLException {
     Duration queryMaxRunTime = new Duration(config.getElasticsearchQueryMaxRunTimeSeconds(datasource),

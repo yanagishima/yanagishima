@@ -1,6 +1,5 @@
 package yanagishima.controller;
 
-import static java.lang.String.format;
 import static yanagishima.util.AccessControlUtil.sendForbiddenError;
 
 import java.util.HashMap;
@@ -50,7 +49,7 @@ public class PrestoAsyncController {
         return responseBody;
       }
       if (user != null) {
-        log.info(format("%s executed %s in %s", user, query, datasource));
+        log.info("{} executed {} in {}", user, query, datasource);
       }
       if (prestoUser.isPresent() && prestoPassword.isPresent() && prestoUser.get().isEmpty()) {
         responseBody.put("error", "user is empty");
@@ -61,7 +60,7 @@ public class PrestoAsyncController {
         responseBody.put("queryid", queryId);
       } catch (ClientException e) {
         if (prestoUser.isPresent()) {
-          log.error(format("%s failed to be authenticated", prestoUser.get()));
+          log.error("{} failed to be authenticated", prestoUser.get());
         }
         log.error(e.getMessage(), e);
         responseBody.put("error", e.getMessage());

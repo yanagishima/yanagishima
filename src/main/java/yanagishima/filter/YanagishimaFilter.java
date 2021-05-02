@@ -12,6 +12,7 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.springframework.stereotype.Component;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import lombok.RequiredArgsConstructor;
 import yanagishima.config.YanagishimaConfig;
 import yanagishima.util.Constants;
@@ -27,6 +28,7 @@ public class YanagishimaFilter implements Filter {
   }
 
   @Override
+  @SuppressFBWarnings("PERMISSIVE_CORS")
   public void doFilter(ServletRequest request, ServletResponse servletResponse, FilterChain chain)
       throws IOException, ServletException {
     if (config.corsEnabled()) {

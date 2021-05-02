@@ -50,7 +50,7 @@ public final class YarnUtil {
       String json;
       if (beginTime.isPresent()) {
         long currentTimeMillis = System.currentTimeMillis();
-        long startedTimeBegin = currentTimeMillis - Long.valueOf(beginTime.get());
+        long startedTimeBegin = currentTimeMillis - Long.parseLong(beginTime.get());
         json = Request.Get(resourceManagerUrl + "/ws/v1/cluster/apps?startedTimeBegin=" + startedTimeBegin)
                       .execute().returnContent().asString(UTF_8);
       } else {

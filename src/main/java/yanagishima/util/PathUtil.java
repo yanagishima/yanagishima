@@ -6,12 +6,14 @@ import java.io.File;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import lombok.experimental.UtilityClass;
 
 @UtilityClass
 public final class PathUtil {
   private static final String CURRENT_PATH = new File(".").getAbsolutePath();
 
+  @SuppressFBWarnings("PATH_TRAVERSAL_IN")
   public static Path getResultFilePath(String datasource, String queryId, boolean error) {
     String date = queryId.substring(0, 8);
     File directory = new File(format("%s/result/%s/%s", CURRENT_PATH, datasource, date));

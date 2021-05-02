@@ -8,6 +8,7 @@ import java.util.Optional;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import lombok.RequiredArgsConstructor;
 import yanagishima.model.User;
 import yanagishima.model.db.Publish;
@@ -36,6 +37,7 @@ public class PublishService {
     return publishedQuery.orElseGet(() -> insert(datasource, engine, queryId, user.getId()));
   }
 
+  @SuppressFBWarnings("WEAK_MESSAGE_DIGEST_MD5")
   private Publish insert(String datasource, String engine, String queryId, String user) {
     Publish publish = new Publish();
     publish.setPublishId(md5Hex(datasource + ";" + engine + ";" + queryId));
