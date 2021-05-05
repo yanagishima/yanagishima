@@ -2,7 +2,6 @@ package yanagishima.controller;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -67,11 +66,7 @@ public class QueryHistoryUserController {
         queryHistoryList.add(row);
       }
 
-      if (queryHistoryList.isEmpty()) {
-        responseBody.put("results", Collections.emptyList());
-      } else {
-        responseBody.put("results", queryHistoryList);
-      }
+      responseBody.put("results", queryHistoryList);
 
       long totalCount = queryService.count(datasource, engine, userName);
       responseBody.put("total", totalCount);
