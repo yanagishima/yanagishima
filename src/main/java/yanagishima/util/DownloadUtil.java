@@ -1,5 +1,7 @@
 package yanagishima.util;
 
+import static org.apache.commons.csv.CSVFormat.EXCEL;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
@@ -23,51 +25,46 @@ public final class DownloadUtil {
   private static final byte[] BOM = new byte[] { (byte) 0xef, (byte) 0xbb, (byte) 0xbf };
 
   public static void downloadTsv(HttpServletResponse response, String fileName, String datasource,
-                                 String queryid, String encode, boolean showHeader, boolean showBOM) {
-    Path filePath = PathUtil.getResultFilePath(datasource, queryid, false);
-    if (!filePath.toFile().exists()) {
-      throw new RuntimeException(filePath.toFile().getName());
-    }
+                                 String queryId, String encode, boolean showHeader, boolean showBOM) {
     response.setContentType("application/octet-stream");
     response.setHeader("Content-Disposition", "inline; filename=\"" + fileName + "\"");
 
-    download(response, filePath, encode, showHeader, showBOM, '\t');
+    download(response, datasource, queryId, encode, showHeader, showBOM, '\t');
   }
 
   public static void downloadCsv(HttpServletResponse response, String fileName, String datasource,
-                                 String queryid, String encode, boolean showHeader, boolean showBOM) {
-    Path filePath = PathUtil.getResultFilePath(datasource, queryid, false);
-    if (!filePath.toFile().exists()) {
-      throw new RuntimeException(filePath.toFile().getName());
-    }
+                                 String queryId, String encode, boolean showHeader, boolean showBOM) {
     response.setContentType("text/csv");
     response.setHeader("Content-Disposition", "inline; filename=\"" + fileName + "\"");
 
-    download(response, filePath, encode, showHeader, showBOM, ',');
+    download(response, datasource, queryId, encode, showHeader, showBOM, ',');
   }
 
-  private static void download(HttpServletResponse response, Path resultFilePath, String encode,
-                               boolean showHeader, boolean showBOM, char delimiter) {
-    try (PrintWriter writer = new PrintWriter(new OutputStreamWriter(response.getOutputStream(), encode))) {
-      try (BufferedReader reader = Files.newBufferedReader(resultFilePath);
-           CSVPrinter printer = new CSVPrinter(writer, CSVFormat.EXCEL.withDelimiter(delimiter)
-                                                                      .withRecordSeparator(System.getProperty(
-                                                                          "line.separator")))) {
-        CSVParser parser = CSVFormat.EXCEL.withDelimiter('\t').withNullString("\\N").parse(reader);
+  private static void download(HttpServletResponse response, String datasource, String queryId,
+                               String encode, boolean showHeader, boolean showBOM, char delimiter) {
+    Path filePath = PathUtil.getResultFilePath(datasource, queryId, false);
+    if (!filePath.toFile().exists()) {
+      throw new RuntimeException(filePath.toFile().getName());
+    }
 
-        if (showBOM) {
-          response.getOutputStream().write(BOM);
-        }
-        int rowNumber = 0;
-        for (CSVRecord record : parser) {
-          List<String> columns = new ArrayList<>();
-          record.forEach(columns::add);
+    CSVFormat format = EXCEL.withDelimiter(delimiter).withRecordSeparator(System.getProperty("line.separator"));
+    try (PrintWriter writer = new PrintWriter(new OutputStreamWriter(response.getOutputStream(), encode));
+         BufferedReader reader = Files.newBufferedReader(filePath);
+         CSVPrinter printer = new CSVPrinter(writer, format);
+         CSVParser parser = EXCEL.withDelimiter('\t').withNullString("\\N").parse(reader)) {
 
-          if (showHeader || rowNumber > 0) {
-            printer.printRecord(columns);
-          }
-          rowNumber++;
+      if (showBOM) {
+        response.getOutputStream().write(BOM);
+      }
+      int rowNumber = 0;
+      for (CSVRecord record : parser) {
+        List<String> columns = new ArrayList<>();
+        record.forEach(columns::add);
+
+        if (showHeader || rowNumber > 0) {
+          printer.printRecord(columns);
         }
+        rowNumber++;
       }
     } catch (IOException e) {
       throw new RuntimeException(e);
