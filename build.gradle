@@ -101,7 +101,7 @@ distributions {
 
 tasks.withType(JavaCompile).configureEach {
     options.errorprone {
-        error('MissingOverride', 'ClassCanBeStatic', 'ArrayToString', 'RemoveUnusedImports')
+        error('MissingOverride', 'ClassCanBeStatic', 'ArrayToString', 'RemoveUnusedImports', "PreferJavaTimeOverload")
         disable('JavaTimeDefaultTimeZone', 'UnusedVariable', 'UnusedMethod', 'FutureReturnValueIgnored', 'StringSplitter')
     }
 }

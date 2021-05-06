@@ -67,9 +67,9 @@ public class OldPrestoService {
   private final QueryService queryService;
   private final YanagishimaConfig config;
   private final OkHttpClient httpClient = new OkHttpClient.Builder()
-      .connectTimeout(5, SECONDS)
-      .readTimeout(5, SECONDS)
-      .writeTimeout(5, SECONDS)
+      .connectTimeout(java.time.Duration.ofSeconds(5))
+      .readTimeout(java.time.Duration.ofSeconds(5))
+      .writeTimeout(java.time.Duration.ofSeconds(5))
       .build();
   private final ExecutorService executorService = Executors.newFixedThreadPool(10);
   private final FluencyClient fluencyClient;
