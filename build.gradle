@@ -12,9 +12,8 @@ version = '22.0'
 
 repositories {
     mavenCentral()
-    maven { url "http://repo.hortonworks.com/content/repositories/releases" }
-    maven { url "http://repo.hortonworks.com/content/groups/public" }
-    maven { url "http://oss.sonatype.org/content/groups/public/" }
+    maven { url "https://repo.hortonworks.com/content/repositories/releases" }
+    maven { url "https://repo.hortonworks.com/content/groups/public" }
     maven { url "https://plugins.gradle.org/m2/" }
 }
 
