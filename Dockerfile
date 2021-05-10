@@ -13,8 +13,7 @@ RUN curl -fsSL https://deb.nodesource.com/setup_14.x | bash - && \
     apt-get install -y nodejs build-essential
 
 # deply yanagishima
-RUN cd $TMP_PATH && git checkout -b 22.0 refs/tags/22.0 && \
-    cd $TMP_PATH/web && npm install node-sass popper.js
+RUN cd $TMP_PATH/web && npm install node-sass popper.js
 
 RUN cd $TMP_PATH && ./gradlew distZip && \
     cd build/distributions && \
