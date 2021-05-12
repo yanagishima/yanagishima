@@ -1,7 +1,8 @@
 package yanagishima.util;
 
+import static java.lang.String.format;
 import static javax.servlet.http.HttpServletResponse.SC_FORBIDDEN;
-import static yanagishima.util.HttpRequestUtil.getRequiredHeader;
+import static yanagishima.util.Constants.DATASOURCE_HEADER;
 
 import java.io.IOException;
 
@@ -17,7 +18,10 @@ public final class AccessControlUtil {
   private static final Splitter SPLITTER = Splitter.on(',').trimResults().omitEmptyStrings();
 
   public static boolean validateDatasource(HttpServletRequest request, String datasource) {
-    String header = getRequiredHeader(request, Constants.DATASOURCE_HEADER);
+    String header = request.getHeader(DATASOURCE_HEADER);
+    if (header == null) {
+      throw new IllegalArgumentException(format("Missing required header '%s'", DATASOURCE_HEADER));
+    }
     if (header.equals("*")) {
       return true;
     }
