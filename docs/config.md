@@ -48,7 +48,7 @@ hive.setup.query.path.your-hive: /usr/local/yanagishima/conf/hive_setup_query_yo
 cors.enabled: false
 ```
 
-## Single Presto cluster
+## Single Trino cluster
 ```yaml
 server.port: 8080
 presto.datasources: your-presto
@@ -58,7 +58,7 @@ schema.your-presto: default
 sql.query.engines: presto
 ```
 
-## Multiple Presto clusters
+## Multiple Trino clusters
 ```yaml
 server.port: 8080
 presto.datasources: presto1,presto2
@@ -94,7 +94,7 @@ hive.datasources: your-hive
 use.jdbc.cancel.your-hive: true
 ```
 
-## Presto and Hive
+## Trino and Hive
 ```yaml
 server.port: 8080
 presto.datasources: your-cluster

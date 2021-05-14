@@ -19,7 +19,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import yanagishima.annotation.DatasourceAuth;
 import yanagishima.config.YanagishimaConfig;
-import yanagishima.service.OldPrestoService;
 import yanagishima.service.PrestoService;
 
 @Slf4j
@@ -27,7 +26,6 @@ import yanagishima.service.PrestoService;
 @RequiredArgsConstructor
 public class PrestoAsyncController {
   private final PrestoService prestoService;
-  private final OldPrestoService oldPrestoService;
   private final YanagishimaConfig config;
 
   @DatasourceAuth
@@ -78,9 +76,6 @@ public class PrestoAsyncController {
 
   private String executeQuery(String datasource, String query, Optional<String> sessionPropertyOptional,
                               String user, Optional<String> prestoUser, Optional<String> prestoPassword) {
-    if (config.isUseOldPresto(datasource)) {
-      return oldPrestoService.doQueryAsync(datasource, query, user, prestoUser, prestoPassword);
-    }
     return prestoService.doQueryAsync(datasource, query, sessionPropertyOptional, user, prestoUser,
                                       prestoPassword);
   }

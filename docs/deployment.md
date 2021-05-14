@@ -19,7 +19,7 @@ If you set ```check.datasource=true``` and datasource list which you want to all
 
 For example, if there are three datasources(aaa and bbb and ccc) and ```X-yanagishima-datasources=aaa,bbb``` is set, user can't access to datasource ccc.
 
-If you use a presto with LDAP, you need to specify ```auth.xxx=true``` in your application.yml
+If you use a Trino with LDAP, you need to specify ```auth.xxx=true``` in your application.yml
 ```yaml
 server.port: 8080
 presto.datasources: your-presto
