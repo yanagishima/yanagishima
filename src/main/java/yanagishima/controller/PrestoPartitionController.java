@@ -51,7 +51,7 @@ public class PrestoPartitionController {
       if (partitionColumn == null || partitionValue == null) {
         String query = buildGetPartitionsQuery(datasource, catalog, schema, table);
         if (user != null) {
-          log.info(format("%s executed %s in %s", user, query, datasource));
+          log.info("{} executed {} in {}", user, query, datasource);
         }
         PrestoQueryResult prestoQueryResult = prestoService.doQuery(datasource, query, user, prestoUser,
                                                                     prestoPassword, false, Integer.MAX_VALUE);
@@ -85,7 +85,7 @@ public class PrestoPartitionController {
         }
         String query = buildGetPartitionsQuery(datasource, catalog, schema, table, whereList);
         if (user != null) {
-          log.info(format("%s executed %s in %s", user, query, datasource));
+          log.info("{} executed {} in {}", user, query, datasource);
         }
         PrestoQueryResult prestoQueryResult = prestoService.doQuery(datasource, query, user, prestoUser,
                                                                     prestoPassword, false, Integer.MAX_VALUE);

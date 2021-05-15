@@ -1,6 +1,5 @@
 package yanagishima.controller;
 
-import static java.lang.String.format;
 import static yanagishima.util.AccessControlUtil.sendForbiddenError;
 
 import java.util.HashMap;
@@ -51,7 +50,7 @@ public class HiveAsyncController {
       }
 
       if (userName != null) {
-        log.info(format("%s executed %s in datasource=%s, engine=%s", userName, query, datasource, engine));
+        log.info("{} executed {} in datasource={}, engine={}", userName, query, datasource, engine);
       }
 
       String queryId = hiveService.doQueryAsync(engine, datasource, query, userName, hiveUser, hivePassword);
