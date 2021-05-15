@@ -120,10 +120,6 @@ dependencies {
     // MySQL
     implementation 'mysql:mysql-connector-java:5.1.47'
 
-    // Logger
-    implementation 'org.slf4j:slf4j-api:1.7.10'
-    implementation 'org.slf4j:slf4j-log4j12:1.7.10'
-
     // Presto
     implementation 'io.prestosql:presto-client:347'
     implementation 'io.prestosql:presto-parser:347'
@@ -168,7 +164,7 @@ test {
 
 configurations {
   all {
-    exclude group: 'ch.qos.logback', module: 'logback-classic'
+    exclude group: "org.slf4j", module: "slf4j-log4j12"
     exclude group: 'com.google.code.gson', module: 'gson'
     exclude group: 'org.eclipse.jetty.aggregate', module: 'jetty-all'
     exclude group: 'javax.servlet', module: 'servlet-api'
