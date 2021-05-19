@@ -1,7 +1,5 @@
 package yanagishima.controller;
 
-import static java.lang.String.format;
-
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.sql.SQLException;
@@ -43,7 +41,7 @@ public class KillHiveController {
       return;
     }
     if (config.isUseJdbcCancel(datasource)) {
-      log.info(format("killing %s in %s by Statement#cancel", id, datasource));
+      log.info("killing {} in {} by Statement#cancel", id, datasource);
       try (Statement statement = statements.get(datasource, id)) {
         if (statement == null) {
           log.error("statement is null");

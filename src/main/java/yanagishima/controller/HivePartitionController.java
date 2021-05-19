@@ -50,7 +50,7 @@ public class HivePartitionController {
       if (partitionColumn == null || partitionValue == null) {
         String query = format("SHOW PARTITIONS %s.`%s`", schema, table);
         if (user != null) {
-          log.info(format("%s executed %s in %s", user, query, datasource));
+          log.info("{} executed {} in {}", user, query, datasource);
         }
         HiveQueryResult hiveQueryResult = hiveService.doQuery(engine, datasource, query, user, hiveUser,
                                                               hivePassword, false, Integer.MAX_VALUE);
@@ -81,7 +81,7 @@ public class HivePartitionController {
         }
         String query = format("SHOW PARTITIONS %s.`%s` PARTITION(%s)", schema, table, join(", ", whereList));
         if (user != null) {
-          log.info(format("%s executed %s in %s", user, query, datasource));
+          log.info("{} executed {} in {}", user, query, datasource);
         }
         HiveQueryResult hiveQueryResult = hiveService.doQuery(engine, datasource, query, user, hiveUser,
                                                               hivePassword, false, Integer.MAX_VALUE);

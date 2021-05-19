@@ -1,6 +1,5 @@
 package yanagishima.controller;
 
-import static java.lang.String.format;
 import static yanagishima.util.AccessControlUtil.sendForbiddenError;
 import static yanagishima.util.Constants.YANAGISHIMA_COMMENT;
 
@@ -62,7 +61,7 @@ public class PrestoController {
           return responseBody;
         }
         if (userName != null) {
-          log.info(format("%s executed %s in %s", userName, query, datasource));
+          log.info("{} executed {} in {}", userName, query, datasource);
         }
         if (prestoUser.isPresent() && prestoPassword.isPresent()) {
           if (prestoUser.get().length() == 0) {
@@ -104,7 +103,7 @@ public class PrestoController {
         responseBody.put("queryid", e.getQueryId());
       } catch (ClientException e) {
         if (prestoUser.isPresent()) {
-          log.error(format("%s failed to be authenticated", prestoUser.get()));
+          log.error("{} failed to be authenticated", prestoUser.get());
         }
         log.error(e.getMessage(), e);
         responseBody.put("error", e.getMessage());

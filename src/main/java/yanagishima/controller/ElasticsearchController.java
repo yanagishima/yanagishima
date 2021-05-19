@@ -63,7 +63,7 @@ public class ElasticsearchController {
       }
       try {
         if (user != null) {
-          log.info(format("%s executed %s in %s", user, query, datasource));
+          log.info("{} executed {} in {}", user, query, datasource);
         }
         ElasticsearchQueryResult queryResult = executeQuery(request, query, datasource, user);
 
