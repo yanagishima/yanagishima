@@ -16,7 +16,7 @@ public class SwaggerConfig {
     return new Docket(DocumentationType.OAS_30)
         .useDefaultResponseMessages(false)
         .select()
-        .apis(RequestHandlerSelectors.any())
+        .apis(RequestHandlerSelectors.basePackage("yanagishima"))
         .paths(PathSelectors.regex("/.*"))
         .build()
         .apiInfo(new ApiInfoBuilder().title("Yanagishima").description("REST API for yanagishima").build());
