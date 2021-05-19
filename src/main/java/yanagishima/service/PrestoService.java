@@ -79,21 +79,22 @@ public class PrestoService {
   private final FluencyClient fluencyClient;
 
   private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
-  private Map<String, String> properties = ImmutableMap.of();
 
   public String doQueryAsync(String datasource, String query, Optional<String> sessionPropertyOptional,
                              String userName, Optional<String> prestoUser, Optional<String> prestoPassword) {
-    sessionPropertyOptional.ifPresent(sessionProperty -> {
+    Map<String, String> properties = ImmutableMap.of();
+    if (sessionPropertyOptional.isPresent()) {
       try {
-        properties = OBJECT_MAPPER.readValue(sessionProperty, Map.class);
+        properties = OBJECT_MAPPER.readValue(sessionPropertyOptional.get(), Map.class);
       } catch (IOException e) {
         log.error(e.getMessage(), e);
         throw new RuntimeException(e);
       }
-    });
+    }
 
-    StatementClient client = getStatementClient(datasource, query, userName, prestoUser, prestoPassword);
-    executorService.submit(new Task(client, datasource, query, userName));
+    StatementClient client = getStatementClient(
+        datasource, query, userName, prestoUser, prestoPassword, properties);
+    executorService.submit(new Task(client, datasource, query, userName, properties));
     return client.currentStatusInfo().getId();
   }
 
@@ -102,19 +103,22 @@ public class PrestoService {
     private final String datasource;
     private final String query;
     private final String userName;
+    private final Map<String, String> properties;
 
-    Task(StatementClient client, String datasource, String query, String userName) {
+    Task(StatementClient client, String datasource, String query,
+         String userName, Map<String, String> properties) {
       this.client = client;
       this.datasource = datasource;
       this.query = query;
       this.userName = userName;
+      this.properties = properties;
     }
 
     @Override
     public void run() {
       try {
         getPrestoQueryResult(this.datasource, this.query, this.client, true, config.getSelectLimit(),
-                             this.userName);
+                             this.userName, this.properties);
       } catch (QueryErrorException e) {
         log.error(e.getMessage(), e);
       } catch (Throwable e) {
@@ -132,16 +136,18 @@ public class PrestoService {
                                    String userName,
                                    Optional<String> prestoUser,
                                    Optional<String> prestoPassword,
+                                   Map<String, String> properties,
                                    boolean storeFlag,
                                    int limit) throws QueryErrorException {
-    try (StatementClient client = getStatementClient(datasource, query, userName, prestoUser, prestoPassword)) {
-      return getPrestoQueryResult(datasource, query, client, storeFlag, limit, userName);
+    try (StatementClient client = getStatementClient(datasource, query, userName,
+                                                     prestoUser, prestoPassword, properties)) {
+      return getPrestoQueryResult(datasource, query, client, storeFlag, limit, userName, properties);
     }
   }
 
-  private PrestoQueryResult getPrestoQueryResult(String datasource, String query, StatementClient client,
-                                                 boolean storeQueryHistory, int limit, String userName)
-      throws QueryErrorException {
+  private PrestoQueryResult getPrestoQueryResult(
+      String datasource, String query, StatementClient client, boolean storeQueryHistory,
+      int limit, String userName, Map<String, String> properties) throws QueryErrorException {
     checkSecretKeyword(query, datasource, client.currentStatusInfo().getId(), userName,
                        config.getPrestoSecretKeywords(datasource));
     checkRequiredCondition(datasource, query, client.currentStatusInfo().getId(), userName,
@@ -352,7 +358,8 @@ public class PrestoService {
   }
 
   private StatementClient getStatementClient(String datasource, String query, String userName,
-                                             Optional<String> prestoUser, Optional<String> prestoPassword) {
+                                             Optional<String> prestoUser, Optional<String> prestoPassword,
+                                             Map<String, String> properties) {
     String server = config.getPrestoCoordinatorServer(datasource);
     String catalog = config.getCatalog(datasource);
     String schema = config.getSchema(datasource);

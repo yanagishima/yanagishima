@@ -53,8 +53,8 @@ public class PrestoPartitionController {
         if (user != null) {
           log.info("{} executed {} in {}", user, query, datasource);
         }
-        PrestoQueryResult prestoQueryResult = prestoService.doQuery(datasource, query, user, prestoUser,
-                                                                    prestoPassword, false, Integer.MAX_VALUE);
+        PrestoQueryResult prestoQueryResult = prestoService.doQuery(
+            datasource, query, user, prestoUser, prestoPassword, Map.of(), false, Integer.MAX_VALUE);
         responseBody.put("column", prestoQueryResult.getColumns().get(0));
         Set<String> partitions = new TreeSet<>();
         List<List<String>> records = prestoQueryResult.getRecords();
@@ -87,8 +87,8 @@ public class PrestoPartitionController {
         if (user != null) {
           log.info("{} executed {} in {}", user, query, datasource);
         }
-        PrestoQueryResult prestoQueryResult = prestoService.doQuery(datasource, query, user, prestoUser,
-                                                                    prestoPassword, false, Integer.MAX_VALUE);
+        PrestoQueryResult prestoQueryResult = prestoService.doQuery(
+            datasource, query, user, prestoUser, prestoPassword, Map.of(), false, Integer.MAX_VALUE);
         List<String> columns = prestoQueryResult.getColumns();
         int index = 0;
         for (String column : columns) {

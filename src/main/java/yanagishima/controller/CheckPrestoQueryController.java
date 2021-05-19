@@ -71,8 +71,8 @@ public class CheckPrestoQueryController {
       String explainQuery = format("%sEXPLAIN ANALYZE\n%s", YANAGISHIMA_COMMENT, query);
       String queryId = null;
       try {
-        PrestoQueryResult prestoQueryResult = prestoService.doQuery(datasource, explainQuery, user, prestoUser,
-                                                                    prestoPassword, false, Integer.MAX_VALUE);
+        PrestoQueryResult prestoQueryResult = prestoService.doQuery(
+            datasource, explainQuery, user, prestoUser, prestoPassword, Map.of(), false, Integer.MAX_VALUE);
         queryId = prestoQueryResult.getQueryId();
       } catch (QueryErrorException e) {
         log.error(e.getMessage(), e);
