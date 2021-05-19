@@ -4,7 +4,6 @@ import static com.google.common.base.MoreObjects.firstNonNull;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.base.Verify.verify;
-import static io.airlift.units.DataSize.Unit.BYTE;
 import static io.prestosql.client.OkHttpUtil.basicAuth;
 import static java.lang.String.format;
 import static java.lang.String.join;
@@ -285,8 +284,7 @@ public class PrestoService {
       }
 
       queryResult.setLineNumber(rowNumber);
-      DataSize rawDataSize = new DataSize(Files.size(resultPath), BYTE);
-      queryResult.setRawDataSize(rawDataSize.convertToMostSuccinctDataSize());
+      queryResult.setRawDataSize(DataSize.ofBytes(Files.size(resultPath)).succinct());
     } catch (IOException e) {
       throw new RuntimeException(e);
     }

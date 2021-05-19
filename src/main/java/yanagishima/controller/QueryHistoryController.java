@@ -1,12 +1,12 @@
 package yanagishima.controller;
 
+import static yanagishima.util.FormatUtil.toSuccinctDataSize;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
-import javax.annotation.Nullable;
 
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -15,7 +15,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.google.common.collect.Lists;
 
-import io.airlift.units.DataSize;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import yanagishima.annotation.DatasourceAuth;
@@ -69,14 +68,5 @@ public class QueryHistoryController {
     row.add(query.getLinenumber());
     row.add(query.getStatus());
     return row;
-  }
-
-  @Nullable
-  private static String toSuccinctDataSize(Integer size) {
-    if (size == null) {
-      return null;
-    }
-    DataSize dataSize = new DataSize(size, DataSize.Unit.BYTE);
-    return dataSize.convertToMostSuccinctDataSize().toString();
   }
 }
