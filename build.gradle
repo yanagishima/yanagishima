@@ -151,6 +151,8 @@ dependencies {
     // Lombok
     compileOnly 'org.projectlombok:lombok:1.18.8'
     annotationProcessor 'org.projectlombok:lombok:1.18.8'
+    testCompileOnly 'org.projectlombok:lombok:1.18.8'
+    testAnnotationProcessor 'org.projectlombok:lombok:1.18.8'
 
     // Errorprone
     errorprone 'com.google.errorprone:error_prone_core:2.3.4'
@@ -158,7 +160,8 @@ dependencies {
     // Tests
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testImplementation 'com.h2database:h2'
-    testImplementation 'org.mockito:mockito-core'
+    testImplementation 'org.mockito:mockito-core:3.9.0'
+    testImplementation 'org.mockito:mockito-inline:3.9.0'
     testImplementation 'org.assertj:assertj-core'
 }
 
