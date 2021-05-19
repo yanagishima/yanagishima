@@ -2,6 +2,7 @@ package yanagishima.service;
 
 import static java.lang.String.format;
 import static yanagishima.util.PathUtil.getResultFilePath;
+import static yanagishima.util.QueryIdUtil.datetimeOf;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -11,7 +12,6 @@ import java.nio.file.Path;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
-import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Optional;
@@ -92,9 +92,7 @@ public class QueryService {
   public void saveError(String datasource, String engine, String queryId, String queryString, String user,
                         String errorMessage) {
     try {
-      LocalDateTime submitTimeLdt = LocalDateTime.parse(queryId.substring(0, "yyyyMMdd_HHmmss".length()),
-                                                        DateTimeFormatter
-                                                            .ofPattern("yyyyMMdd_HHmmss"));
+      LocalDateTime submitTimeLdt = datetimeOf(queryId);
       ZonedDateTime submitTimeZdt = submitTimeLdt.atZone(ZoneId.of("GMT", ZoneId.SHORT_IDS));
       String fetchResultTimeString = ZonedDateTime.now().toString();
       ZonedDateTime fetchResultTime = ZonedDateTime.parse(fetchResultTimeString);
@@ -126,8 +124,7 @@ public class QueryService {
   public void save(String datasource, String engine, String queryString, String user, String queryId,
                    int linenumber) {
     try {
-      LocalDateTime submitTimeLdt = LocalDateTime.parse(queryId.substring(0, "yyyyMMdd_HHmmss".length()),
-                                                        DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss"));
+      LocalDateTime submitTimeLdt = datetimeOf(queryId);
       ZonedDateTime submitTimeZdt = submitTimeLdt.atZone(ZoneId.of("GMT", ZoneId.SHORT_IDS));
       String fetchResultTimeString = ZonedDateTime.now().toString();
       ZonedDateTime fetchResultTime = ZonedDateTime.parse(fetchResultTimeString);

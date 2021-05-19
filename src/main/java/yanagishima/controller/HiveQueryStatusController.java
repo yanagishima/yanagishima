@@ -1,11 +1,12 @@
 package yanagishima.controller;
 
+import static yanagishima.util.QueryIdUtil.datetimeOf;
+
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
-import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.HashMap;
 import java.util.List;
@@ -117,8 +118,7 @@ public class HiveQueryStatusController {
           }
         }
 
-        LocalDateTime submitTimeLdt = LocalDateTime.parse(queryid.substring(0, "yyyyMMdd_HHmmss".length()),
-                                                          DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss"));
+        LocalDateTime submitTimeLdt = datetimeOf(queryid);
         ZonedDateTime submitTimeZdt = submitTimeLdt.atZone(ZoneId.of("GMT", ZoneId.SHORT_IDS));
         long elapsedTimeMillis = ChronoUnit.MILLIS.between(submitTimeZdt, ZonedDateTime.now(ZoneId.of("GMT")));
         retVal.put("elapsedTime", elapsedTimeMillis);
