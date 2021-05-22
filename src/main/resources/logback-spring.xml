@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<configuration scan="true">
+  <springProperty name="PROJECT_NAME" source="app.project" defaultValue="yanagishima" />
+  <springProperty name="DEFAULT_LEVEL" source="log.defaultLevel" defaultValue="INFO" />
+
+  <property name="LOG_PATH" value="${logging.path:-.}" />
+  <property name="LOG_FILE" value="${LOG_PATH}/${PROJECT_NAME}.log" />
+
+  <!-- console appender -->
+  <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+    <encoder>
+      <pattern>%d{HH:mm:ss.SSS} [%thread] %highlight(%-5level) %yellow(%logger{36}) - %msg%n</pattern>
+    </encoder>
+  </appender>
+
+  <!-- file appender -->
+  <appender name="file" class="ch.qos.logback.core.rolling.RollingFileAppender">
+    <file>${LOG_FILE}</file>
+
+    <rollingPolicy class="ch.qos.logback.core.rolling.FixedWindowRollingPolicy">
+      <fileNamePattern>${PROJECT_NAME}.%i.log</fileNamePattern>
+      <minIndex>1</minIndex>
+      <maxIndex>5</maxIndex>
+    </rollingPolicy>
+
+    <triggeringPolicy class="ch.qos.logback.core.rolling.SizeBasedTriggeringPolicy">
+      <maxFileSize>100MB</maxFileSize>
+    </triggeringPolicy>
+
+    <encoder>
+      <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%-5p]\(%c{0}\) [%t:%X{dt_task_key}:%X{dt_offset}] %m%n%ex</pattern>
+    </encoder>
+  </appender>
+
+  <appender name="ASYNC_FILE" class="ch.qos.logback.classic.AsyncAppender">
+    <appender-ref ref="file" />
+    <queueSize>4096</queueSize>
+  </appender>
+
+  <root level="${DEFAULT_LEVEL}">
+    <appender-ref ref="CONSOLE" />
+    <appender-ref ref="ASYNC_FILE" />
+  </root>
+</configuration>
