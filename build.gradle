@@ -48,7 +48,7 @@ task copyWeb(type: Copy) {
 }
 
 task copyDeps(type: Copy) {
-  from(configurations.compile)
+  from(configurations.runtimeClasspath)
   into('build/package/lib')
 }
 
@@ -91,7 +91,7 @@ task copy(dependsOn: [
 
 distributions {
   main {
-    baseName = 'yanagishima'
+    distributionBaseName = 'yanagishima'
     contents {
       from { 'build/package' }
     }
