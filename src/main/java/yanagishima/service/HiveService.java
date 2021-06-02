@@ -179,7 +179,7 @@ public class HiveService {
           Path dst = getResultFilePath(datasource, queryId, false);
           dst.toFile().createNewFile();
           queryResult.setLineNumber(0);
-          queryResult.setRawDataSize(new DataSize(0, DataSize.Unit.BYTE));
+          queryResult.setRawDataSize(DataSize.ofBytes(0));
           queryResult.setRecords(new ArrayList<>());
           queryResult.setColumns(new ArrayList<>());
           return;
