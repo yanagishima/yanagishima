@@ -27,6 +27,11 @@ checkstyle {
     maxWarnings = 0
 }
 
+jar {
+    archivesBaseName="yanagishima"
+    project.version=""
+}
+
 task createDirs() {
   file('build/package').mkdirs()
 }

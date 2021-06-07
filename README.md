@@ -22,10 +22,10 @@
 git clone https://github.com/yanagishima/yanagishima.git
 cd yanagishima
 git checkout -b [version] refs/tags/[version]
-./gradlew distZip
+./gradlew build -x test
 cd build/distributions
-unzip yanagishima-[version].zip
-cd yanagishima-[version]
+unzip yanagishima.zip
+cd yanagishima
 vim config/application.yml
 nohup bin/yanagishima-start.sh >y.log 2>&1 &
 ```
