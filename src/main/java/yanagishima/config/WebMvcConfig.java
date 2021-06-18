@@ -12,6 +12,7 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 import lombok.RequiredArgsConstructor;
 import yanagishima.interceptor.DatasourceInterceptor;
+import yanagishima.interceptor.LoggingInterceptor;
 import yanagishima.resolver.UserArgumentResolver;
 
 @Configuration
@@ -19,6 +20,7 @@ import yanagishima.resolver.UserArgumentResolver;
 @RequiredArgsConstructor
 public class WebMvcConfig implements WebMvcConfigurer {
   private final DatasourceInterceptor datasourceInterceptor;
+  private final LoggingInterceptor loggingInterceptor;
   private final UserArgumentResolver userArgumentResolver;
 
   @Override
@@ -31,6 +33,12 @@ public class WebMvcConfig implements WebMvcConfigurer {
     registry
         .addInterceptor(datasourceInterceptor)
         .addPathPatterns("/**");
+
+    registry
+        .addInterceptor(loggingInterceptor)
+        .addPathPatterns("/**")
+        .excludePathPatterns("/swagger-resources/**", "/swagger-ui.html", "/swagger-ui/index.html",
+                             "/webjars/**", "/error", "/csrf", "/healthCheck");
   }
 
   @Override
