@@ -1,5 +1,8 @@
 # Release Notes
 
+## Version 23.0
+* Migrate to Spring Boot
+
 ## Version 22.0
 * Avoid scroll bar from hiding error message
 * Remove embedded old bootstrap
