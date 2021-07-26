@@ -1,6 +1,6 @@
 {
   "name": "yanagishima",
-  "version": "22.0.0",
+  "version": "23.0.0",
   "description": "Web UI for Presto/Hive",
   "private": true,
   "scripts": {
