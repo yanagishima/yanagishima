@@ -42,7 +42,7 @@ use.audit.http.header.name: false
 to.values.query.limit: 500
 cors.enabled: true
 
-# Presto
+# Trino
 presto.datasources: docker-presto
 presto.query.max-run-time-seconds: 1800
 presto.max-result-file-byte-size: 1073741824
