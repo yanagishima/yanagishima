@@ -1,6 +1,6 @@
 # Welcome to Yanagishima
 
-*Yanagishima* is an open-source Web application for Trino, Hive, Elasticsearch and Spark.
+*Yanagishima* is an open-source Web application for Trino, Hive and Spark.
 
 [![IMAGE ALT TEXT HERE](http://img.youtube.com/vi/SoneFYNCXJE/maxresdefault.jpg)](http://www.youtube.com/watch?v=SoneFYNCXJE)
 
@@ -39,7 +39,6 @@
 * Comment about query
 * Convert Hive/Trino query
 * Support graphviz to visualize Trino explain result
-* Support Elasticsearch SQL
 * Label
 * Pivot
 * Support Spark SQL

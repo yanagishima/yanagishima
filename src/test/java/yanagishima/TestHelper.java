@@ -1,7 +1,7 @@
 package yanagishima;
 
 import static org.apache.commons.codec.digest.DigestUtils.md5Hex;
-import static yanagishima.util.QueryEngine.elasticsearch;
+import static yanagishima.util.QueryEngine.hive;
 
 import lombok.experimental.UtilityClass;
 import yanagishima.util.QueryIdUtil;
@@ -9,7 +9,7 @@ import yanagishima.util.QueryIdUtil;
 @UtilityClass
 public class TestHelper {
   private static final String TEST_DATASOURCE = "test-datasource";
-  private static final String TEST_ENGINE = elasticsearch.name();
+  private static final String TEST_ENGINE = hive.name();
 
   public static String getQueryId() {
     return QueryIdUtil.generate(TEST_DATASOURCE, "SELECT 'test'", TEST_ENGINE);

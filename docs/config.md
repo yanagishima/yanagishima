@@ -109,14 +109,6 @@ sql.query.engines: presto,hive
 hive.datasources: your-cluster
 ```
 
-## Elasticsearch
-```yaml
-server.port: 8080
-elasticsearch.jdbc.url.your-elasticsearch: jdbc:es:localhost:9200
-elasticsearch.datasources: your-elasticsearch
-sql.query.engines: elasticsearch
-```
-
 ## Spark
 ```yaml
 server.port: 8080

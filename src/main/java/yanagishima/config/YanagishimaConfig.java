@@ -298,52 +298,6 @@ public class YanagishimaConfig {
     return Boolean.parseBoolean(environment.getProperty("use.jdbc.cancel." + datasource));
   }
 
-  public List<String> getElasticsearchSecretKeywords(String datasource) {
-    String property = environment.getProperty("elasticsearch.secret.keywords." + datasource);
-    if (property == null) {
-      return Collections.emptyList();
-    }
-    return SPLITTER.splitToList(property);
-  }
-
-  public List<String> getElasticsearchMustSpecifyConditions(String datasource) {
-    String property = environment.getProperty("elasticsearch.must.specify.conditions." + datasource);
-    if (property == null) {
-      return Collections.emptyList();
-    }
-    return SPLITTER.splitToList(property);
-  }
-
-  public String getElasticsearchJdbcUrl(String datasource) {
-    return environment.getRequiredProperty("elasticsearch.jdbc.url." + datasource);
-  }
-
-  public List<String> getElasticsearchDisallowedKeywords(String datasource) {
-    String property = environment.getProperty("elasticsearch.disallowed.keywords." + datasource);
-    if (property == null) {
-      return Collections.emptyList();
-    }
-    return SPLITTER.splitToList(property);
-  }
-
-  public long getElasticsearchMaxResultFileByteSize() {
-    String sizeStr = environment.getProperty("elasticsearch.max-result-file-byte-size");
-    return Long.parseLong(firstNonNull(sizeStr, "1073741824"));
-  }
-
-  public double getElasticsearchQueryMaxRunTimeSeconds() {
-    String secondsStr = environment.getProperty("elasticsearch.query.max-run-time-seconds");
-    return Double.parseDouble(firstNonNull(secondsStr, "3600"));
-  }
-
-  public double getElasticsearchQueryMaxRunTimeSeconds(String datasource) {
-    String property = environment.getProperty("elasticsearch.query.max-run-time-seconds" + "." + datasource);
-    if (property == null) {
-      return getElasticsearchQueryMaxRunTimeSeconds();
-    }
-    return Double.parseDouble(property);
-  }
-
   public boolean isHiveImpersonation(String datasource) {
     return Boolean.parseBoolean(environment.getProperty("hive.jdbc.impersonation." + datasource));
   }

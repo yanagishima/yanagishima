@@ -34,7 +34,7 @@ management:
     web.exposure.include: '*'
 
 # Datasources
-sql.query.engines: presto,hive,spark,elasticsearch
+sql.query.engines: presto,hive,spark
 check.datasource: false
 select.limit: 500
 audit.http.header.name: some.auth.header
@@ -67,7 +67,3 @@ spark.datasources: docker-spark
 spark.jdbc.url.docker-spark: jdbc:hive2://localhost:10001
 spark.web.url.docker-spark: http://localhost:14040
 resource.manager.url.docker-spark: http://localhost:18088
-
-# Elasticsearch
-elasticsearch.datasources: docker-elasticsearch
-elasticsearch.jdbc.url.docker-elasticsearch: jdbc:es://localhost:9200
