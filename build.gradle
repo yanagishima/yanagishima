@@ -122,9 +122,9 @@ dependencies {
     compile 'org.slf4j:slf4j-api:1.7.10'
     compile 'org.slf4j:slf4j-log4j12:1.7.10'
 
-    // Presto
-    compile 'io.prestosql:presto-client:347'
-    compile 'io.prestosql:presto-parser:347'
+    // Trino
+    compile 'io.trino:trino-client:352'
+    compile 'io.trino:trino-parser:352'
     compile 'com.squareup.okhttp3:okhttp:3.14.9'
 
     // Spark

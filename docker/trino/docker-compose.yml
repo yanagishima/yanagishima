@@ -1,0 +1,6 @@
+version: '2'
+services:
+  trino:
+    image: 'trinodb/trino:352'
+    ports:
+      - '18080:8080'

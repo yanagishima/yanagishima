@@ -1,7 +1,0 @@
-version: '2'
-services:
-  presto:
-    hostname: presto
-    image: 'ghcr.io/trinodb/presto:347'
-    ports:
-      - '18080:8080'

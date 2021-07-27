@@ -1,6 +1,6 @@
 package yanagishima.client.presto;
 
-import static io.prestosql.client.OkHttpUtil.basicAuth;
+import static io.trino.client.OkHttpUtil.basicAuth;
 
 import java.io.IOException;
 import java.util.Optional;
@@ -12,7 +12,7 @@ import okhttp3.Response;
 
 @RequiredArgsConstructor
 public class PrestoClient {
-  private static final String PRESTO_USER_HEADER = "X-Presto-User";
+  private static final String PRESTO_USER_HEADER = "X-Trino-User";
 
   private final OkHttpClient httpClient = new OkHttpClient();
   private final String coordinator;

@@ -18,9 +18,9 @@ import org.springframework.web.bind.annotation.RestController;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Splitter;
 
-import io.prestosql.sql.parser.ParsingException;
-import io.prestosql.sql.parser.ParsingOptions;
-import io.prestosql.sql.parser.SqlParser;
+import io.trino.sql.parser.ParsingException;
+import io.trino.sql.parser.ParsingOptions;
+import io.trino.sql.parser.SqlParser;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.Response;
