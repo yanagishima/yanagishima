@@ -5,12 +5,14 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.base.Verify.verify;
 import static io.trino.client.OkHttpUtil.basicAuth;
+import static io.trino.client.OkHttpUtil.setupInsecureSsl;
 import static java.lang.String.format;
 import static java.lang.String.join;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Collections.emptyMap;
 import static java.util.concurrent.TimeUnit.MINUTES;
 import static java.util.concurrent.TimeUnit.SECONDS;
+import static yanagishima.model.presto.SslVerificationMode.NONE;
 import static yanagishima.util.PathUtil.getResultFilePath;
 import static yanagishima.util.QueryEngine.presto;
 
@@ -372,6 +374,9 @@ public class PrestoService {
                     "Authentication using username/password requires HTTPS to be enabled");
       OkHttpClient.Builder clientBuilder = httpClient.newBuilder();
       clientBuilder.addInterceptor(basicAuth(prestoUser.get(), prestoPassword.get()));
+      if (config.getSslVerification(datasource) == NONE) {
+        setupInsecureSsl(clientBuilder);
+      }
       return StatementClientFactory.newStatementClient(clientBuilder.build(), clientSession, query);
     }
 
@@ -386,9 +391,16 @@ public class PrestoService {
               "Authentication using username/password requires HTTPS to be enabled");
       OkHttpClient.Builder clientBuilder = httpClient.newBuilder();
       clientBuilder.addInterceptor(basicAuth(prestoImpersonatedUser.get(), prestoImpersonatedPassword.get()));
+      if (config.getSslVerification(datasource) == NONE) {
+        setupInsecureSsl(clientBuilder);
+      }
       return StatementClientFactory.newStatementClient(clientBuilder.build(), clientSession, query);
     }
     ClientSession clientSession = buildClientSession(server, user, source, catalog, schema, properties);
+    OkHttpClient.Builder clientBuilder = httpClient.newBuilder();
+    if (config.getSslVerification(datasource) == NONE) {
+      setupInsecureSsl(clientBuilder);
+    }
     return StatementClientFactory.newStatementClient(httpClient, clientSession, query);
   }
 

@@ -23,6 +23,7 @@ import yanagishima.annotation.DatasourceAuth;
 import yanagishima.client.presto.PrestoClient;
 import yanagishima.config.YanagishimaConfig;
 import yanagishima.model.db.Query;
+import yanagishima.model.presto.SslVerificationMode;
 import yanagishima.service.QueryService;
 
 @RestController
@@ -46,13 +47,18 @@ public class QueryController {
     }
 
     String userName = request.getHeader(config.getAuditHttpHeaderName());
+    SslVerificationMode sslVerification = config.getSslVerification(datasource);
     String originalJson;
     PrestoClient prestoClient = null;
     if (config.isPrestoImpersonation(datasource)) {
-      prestoClient = new PrestoClient(coordinatorServer, userName,
-              config.getPrestoImpersonatedUser(datasource), config.getPrestoImpersonatedPassword(datasource));
+      prestoClient = new PrestoClient(
+          coordinatorServer,
+          userName,
+          config.getPrestoImpersonatedUser(datasource),
+          config.getPrestoImpersonatedPassword(datasource),
+          sslVerification);
     } else {
-      prestoClient = new PrestoClient(coordinatorServer, userName, user, password);
+      prestoClient = new PrestoClient(coordinatorServer, userName, user, password, sslVerification);
     }
     try (Response prestoResponse = prestoClient.get()) {
       originalJson = prestoResponse.body().string();

@@ -20,6 +20,7 @@ import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 
 import lombok.RequiredArgsConstructor;
+import yanagishima.model.presto.SslVerificationMode;
 
 @Configuration
 @RequiredArgsConstructor
@@ -34,6 +35,10 @@ public class YanagishimaConfig {
 
   public String getPrestoCoordinatorServer(String datasource) {
     return environment.getRequiredProperty("presto.coordinator.server." + datasource);
+  }
+
+  public SslVerificationMode getSslVerification(String datasource) {
+    return environment.getProperty("presto.ssl-verification." + datasource, SslVerificationMode.class);
   }
 
   public String getPrestoCoordinatorServerOrNull(String datasource) {

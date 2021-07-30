@@ -29,6 +29,7 @@ import yanagishima.client.presto.PrestoClient;
 import yanagishima.config.YanagishimaConfig;
 import yanagishima.exception.QueryErrorException;
 import yanagishima.model.presto.PrestoQueryResult;
+import yanagishima.model.presto.SslVerificationMode;
 import yanagishima.service.PrestoService;
 
 @Slf4j
@@ -80,12 +81,17 @@ public class CheckPrestoQueryController {
       }
 
       String coordinatorServer = config.getPrestoCoordinatorServer(datasource);
+      SslVerificationMode sslVerification = config.getSslVerification(datasource);
       PrestoClient prestoClient = null;
       if (config.isPrestoImpersonation(datasource)) {
-        prestoClient = new PrestoClient(coordinatorServer, user,
-                config.getPrestoImpersonatedUser(datasource), config.getPrestoImpersonatedPassword(datasource));
+        prestoClient = new PrestoClient(
+            coordinatorServer,
+            user,
+            config.getPrestoImpersonatedUser(datasource),
+            config.getPrestoImpersonatedPassword(datasource),
+            sslVerification);
       } else {
-        prestoClient = new PrestoClient(coordinatorServer, user, prestoUser, prestoPassword);
+        prestoClient = new PrestoClient(coordinatorServer, user, prestoUser, prestoPassword, sslVerification);
       }
       try (Response prestoResponse = prestoClient.get(queryId)) {
         if (prestoResponse.isSuccessful() && prestoResponse.body() != null) {

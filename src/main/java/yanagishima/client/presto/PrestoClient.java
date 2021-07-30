@@ -1,6 +1,8 @@
 package yanagishima.client.presto;
 
 import static io.trino.client.OkHttpUtil.basicAuth;
+import static io.trino.client.OkHttpUtil.setupInsecureSsl;
+import static yanagishima.model.presto.SslVerificationMode.NONE;
 
 import java.io.IOException;
 import java.util.Optional;
@@ -9,6 +11,7 @@ import lombok.RequiredArgsConstructor;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
+import yanagishima.model.presto.SslVerificationMode;
 
 @RequiredArgsConstructor
 public class PrestoClient {
@@ -19,6 +22,7 @@ public class PrestoClient {
   private final String userName;
   private final Optional<String> user;
   private final Optional<String> password;
+  private final SslVerificationMode sslVerification;
 
   public Response get() throws IOException {
     Request.Builder request = new okhttp3.Request.Builder().url(coordinator + "/v1/query");
@@ -43,6 +47,11 @@ public class PrestoClient {
     if (user.isPresent() && password.isPresent()) {
       client.addInterceptor(basicAuth(user.get(), password.get()));
     }
+
+    if (sslVerification == NONE) {
+      setupInsecureSsl(client);
+    }
+
     return client.build().newCall(request.build()).execute();
   }
 }
