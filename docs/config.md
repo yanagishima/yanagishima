@@ -1,4 +1,6 @@
 # Configuration
+Spring Boot is used as a main framework and MySQL instance is required. See [official documentation](https://docs.spring.io/spring-boot/docs/current/reference/html/howto.html#howto.data-access) to configure the datasource.
+
 You need to edit `application.yml` file.
 ```yaml
 # yanagishima web port
