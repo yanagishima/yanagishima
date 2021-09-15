@@ -63,7 +63,7 @@ public class QueryService {
 
   public Query insert(String datasource, String engine, String queryId, String fetchResultTimeString,
                       String queryString,
-                      String user, String status, Integer elapsedTimeMillis, Integer resultFileSize,
+                      String user, String status, Integer elapsedTimeMillis, Long resultFileSize,
                       Integer linenumber) {
     Query query = new Query();
     query.setDatasource(datasource);
@@ -114,7 +114,7 @@ public class QueryService {
       query.setUser(user);
       query.setStatus(Status.FAILED.name());
       query.setElapsedTimeMillis((int) elapsedTimeMillis);
-      query.setResultFileSize((int) resultFileSize);
+      query.setResultFileSize(resultFileSize);
       queryRepository.save(query);
     } catch (IOException e) {
       throw new RuntimeException(e);
@@ -141,7 +141,7 @@ public class QueryService {
       query.setUser(user);
       query.setStatus(Status.SUCCEED.name());
       query.setElapsedTimeMillis((int) elapsedTimeMillis);
-      query.setResultFileSize((int) resultFileSize);
+      query.setResultFileSize(resultFileSize);
       query.setLinenumber(linenumber);
       queryRepository.save(query);
     } catch (IOException e) {

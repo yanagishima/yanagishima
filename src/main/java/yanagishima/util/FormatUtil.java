@@ -8,7 +8,7 @@ import lombok.experimental.UtilityClass;
 @UtilityClass
 public class FormatUtil {
   @Nullable
-  public static String toSuccinctDataSize(Integer size) {
+  public static String toSuccinctDataSize(Long size) {
     if (size == null) {
       return null;
     }
