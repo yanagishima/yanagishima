@@ -42,7 +42,7 @@ public class Query {
   private Integer elapsedTimeMillis;
 
   @Column(name = "result_file_size")
-  private Integer resultFileSize;
+  private Long resultFileSize;
 
   @Column(name = "linenumber")
   private Integer linenumber;

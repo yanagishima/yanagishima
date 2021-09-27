@@ -7,7 +7,7 @@ query_string mediumtext,
 user varchar(256),
 status varchar(256),
 elapsed_time_millis integer,
-result_file_size integer,
+result_file_size bigint,
 linenumber integer,
 primary key(datasource, engine, query_id))
 ;
