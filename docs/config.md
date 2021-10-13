@@ -14,7 +14,7 @@ presto.datasources: your-presto
 # presto coordinator url
 presto.coordinator.server.your-presto: http://presto.coordinator:8080
 # almost same as presto coordinator url. If you use reverse proxy, specify it
-presto.redirect.server.your-presto: http://presto.coordinator:8080
+presto.redirect.server.your-presto: http://presto.coordinator:8080/ui
 # presto catalog name
 catalog.your-presto: hive
 # presto schema name
@@ -55,6 +55,7 @@ cors.enabled: false
 server.port: 8080
 presto.datasources: your-presto
 presto.coordinator.server.your-presto: http://presto.coordinator:8080
+presto.redirect.server.your-presto: http://presto.coordinator:8080/ui
 catalog.your-presto: hive
 schema.your-presto: default
 sql.query.engines: presto
@@ -65,7 +66,9 @@ sql.query.engines: presto
 server.port: 8080
 presto.datasources: presto1,presto2
 presto.coordinator.server.presto1: http://presto1.coordinator:8080
+presto.redirect.server.presto1: http://presto1.coordinator:8080/ui
 presto.coordinator.server.presto2: http://presto2.coordinator:8080
+presto.redirect.server.presto2: http://presto2.coordinator:8080/ui
 catalog.presto1: hive
 schema.presto1: default
 catalog.presto2: hive
@@ -101,6 +104,7 @@ use.jdbc.cancel.your-hive: true
 server.port: 8080
 presto.datasources: your-cluster
 presto.coordinator.server.your-cluster: http://presto.coordinator:8080
+presto.redirect.server.your-cluster: http://presto.coordinator:8080/ui
 catalog.your-cluster: hive
 schema.your-cluster: default
 hive.jdbc.url.your-cluster: jdbc:hive2://localhost:10000/default;auth=noSasl
