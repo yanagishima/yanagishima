@@ -49,13 +49,8 @@ const getters = {
 
 const actions = {
   async getRoot ({dispatch, state, rootGetters}) {
-    const {isPresto, isElasticsearch} = rootGetters
+    const {isPresto} = rootGetters
     const {catalog, schema, table} = state
-
-    if (isElasticsearch) {
-      dispatch('getTables')
-      return
-    }
 
     if (isPresto && !catalog) {
       dispatch('getCatalogs')
@@ -139,7 +134,7 @@ const actions = {
   },
   async getTables ({commit, state, rootState, rootGetters}) {
     const {datasource} = rootState.hash
-    const {authInfo, isPresto, isHive, isSpark, isElasticsearch} = rootGetters
+    const {authInfo, isPresto, isHive, isSpark} = rootGetters
     const {catalog, schema} = state
 
     let data
@@ -149,8 +144,6 @@ const actions = {
       data = await api.getTablesHive(datasource, schema, authInfo)
     } else if (isSpark) {
       data = await api.getTablesSpark(datasource, schema, authInfo)
-    } else if (isElasticsearch) {
-      data = await api.getTablesElasticsearch(datasource, authInfo)
     } else {
       throw new Error('not supported')
     }
@@ -172,14 +165,14 @@ const actions = {
   },
   async getColumns ({commit, state, rootState, rootGetters}) {
     const {datasource} = rootState.hash
-    const {authInfo, isPresto, isHive, isSpark, isElasticsearch} = rootGetters
+    const {authInfo, isPresto, isHive, isSpark} = rootGetters
     const {catalog, schema, table} = state
 
     if (isPresto && !catalog) {
       return false
     }
 
-    if (!isElasticsearch && !schema) {
+    if (!schema) {
       return false
     }
 
@@ -194,8 +187,6 @@ const actions = {
       data = await api.getColumnsHive(datasource, schema, table, authInfo)
     } else if (isSpark) {
       data = await api.getColumnsSpark(datasource, schema, table, authInfo)
-    } else if (isElasticsearch) {
-      data = await api.getColumnsElasticsearch(datasource, table, authInfo)
     } else {
       throw new Error('not supported')
     }

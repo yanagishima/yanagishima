@@ -80,7 +80,7 @@
                 class="fa fa-fw fa-times text-danger"></i></a></td>
               <td class="text-center">
                 <a target="_blank" class="btn btn-sm btn-secondary p-1"
-                   :href="buildDetailUrl(isPresto, isHive, isSpark, isElasticsearch, datasource, item.queryId)"><i class="fa fa-fw fa-info"></i></a>
+                   :href="buildDetailUrl(isPresto, isHive, isSpark, datasource, item.queryId)"><i class="fa fa-fw fa-info"></i></a>
               </td>
             </tr>
             </tbody>
@@ -130,7 +130,7 @@
               </td>
               <td>{{item.user}}</td>
               <td class="text-center"><a target="_blank" class="btn btn-sm btn-secondary p-1"
-                                         :href="buildDetailUrl(isPresto, isHive, isSpark, isElasticsearch, datasource, item.id)"><i
+                                         :href="buildDetailUrl(isPresto, isHive, isSpark, datasource, item.id)"><i
                 class="fa fa-fw fa-info"></i></a></td>
             </tr>
             </tbody>
@@ -175,7 +175,7 @@
               </td>
               <td><a href="#" @click.prevent="filterUser = item.user">{{item.user}}</a></td>
               <td class="text-center"><a target="_blank" class="btn btn-sm btn-secondary p-1"
-                                         :href="buildDetailUrl(isPresto, isHive, isSpark, isElasticsearch, datasource)"><i
+                                         :href="buildDetailUrl(isPresto, isHive, isSpark, datasource)"><i
                 class="fa fa-fw fa-info"></i></a></td>
             </tr>
             </tbody>
@@ -223,8 +223,7 @@ export default {
     ...mapGetters([
       'isPresto',
       'isHive',
-      'isSpark',
-      'isElasticsearch'
+      'isSpark'
     ]),
     isOpenQueryModel: {
       get () {

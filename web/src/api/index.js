@@ -81,9 +81,6 @@ const apis = {
   queryHistoryUser: '/queryHistoryUser?datasource={datasource}&engine={engine}',
   bookmarkUser: '/bookmarkUser',
   comment: '/comment',
-  elasticsearch: '/elasticsearch',
-  elasticsearchQueryStatus: '/elasticsearchQueryStatus',
-  translate: '/elasticsearch?translate',
   label: '/label',
   spark: '/spark',
   sparkPartition: '/sparkPartition',
@@ -243,16 +240,6 @@ export async function getTablesSpark (datasource, schema, authInfo) {
   return response.data
 }
 
-export async function getTablesElasticsearch (datasource, authInfo) {
-  const params = {
-    datasource,
-    query: `SHOW TABLES`,
-    ...authInfo
-  }
-  const response = await client.post(apis.elasticsearch, makeFormParams(params))
-  return response.data
-}
-
 export async function getColumnsPresto (datasource, catalog, schema, table, authInfo) {
   const params = {
     datasource,
@@ -282,16 +269,6 @@ export async function getColumnsSpark (datasource, schema, table, authInfo) {
     ...authInfo
   }
   const response = await client.post(apis.spark, makeFormParams(params))
-  return response.data
-}
-
-export async function getColumnsElasticsearch (datasource, table, authInfo) {
-  const params = {
-    datasource,
-    query: addHiddenQueryPrefix(`DESCRIBE "${table}"`),
-    ...authInfo
-  }
-  const response = await client.post(apis.elasticsearch, makeFormParams(params))
   return response.data
 }
 
@@ -387,26 +364,6 @@ export async function runQuerySpark (datasource, query, authInfo) {
   return response.data
 }
 
-export async function runQueryElasticsearch (datasource, query, authInfo) {
-  const params = {
-    datasource,
-    query,
-    ...authInfo
-  }
-  const response = await client.post(apis.elasticsearch, makeFormParams(params))
-  return response.data
-}
-
-export async function translateQueryElasticsearch (datasource, query, authInfo) {
-  const params = {
-    datasource,
-    query,
-    ...authInfo
-  }
-  const response = await client.post(apis.translate, makeFormParams(params))
-  return response.data
-}
-
 export async function getQueryStatusPresto (datasource, queryid, authInfo) {
   const params = {
     datasource,
@@ -436,16 +393,6 @@ export async function getQueryStatusSpark (datasource, queryid, authUserInfo) {
     ...authUserInfo
   }
   const response = await client.post(apis.sparkQueryStatus, makeFormParams(params))
-  return response.data
-}
-
-export async function getQueryStatusElasticsearch (datasource, queryid, authUserInfo) {
-  const params = {
-    datasource,
-    queryid,
-    ...authUserInfo
-  }
-  const response = await client.post(apis.elasticsearchQueryStatus, makeFormParams(params))
   return response.data
 }
 
@@ -720,16 +667,13 @@ export function buildShareDownloadUrl (publishId, isCsv, includeHeader) {
   return BASE_URL + api.format({publishId, includeHeader})
 }
 
-export function buildDetailUrl (isPresto, isHive, isSpark, isElasticsearch, datasource, queryid) {
+export function buildDetailUrl (isPresto, isHive, isSpark, datasource, queryid) {
   if (isPresto) {
     return BASE_URL + apis.detail.format({datasource, queryid})
   } else if (isHive) {
     return BASE_URL + apis.hiveQueryDetail.format({datasource, id: queryid})
   } else if (isSpark) {
     return BASE_URL + apis.sparkQueryDetail.format({datasource})
-  } else if (isElasticsearch) {
-    // dummy
-    return BASE_URL
   } else {
     throw new Error('not supported')
   }

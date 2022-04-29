@@ -61,10 +61,6 @@
               <template v-else-if="isHive || isSpark">
                 <button type="button" class="dropdown-item" :disabled="!runnable" @click="explainQuery">Explain</button>
               </template>
-              <template v-else-if="isElasticsearch">
-                <button type="button" class="dropdown-item" :disabled="!runnable" @click="translateQuery">Translate</button>
-                <button type="button" class="dropdown-item" :disabled="!runnable" @click="explainQuery">Explain</button>
-              </template>
             </div>
           </div>
         </div>
@@ -109,7 +105,6 @@ export default {
       'isPresto',
       'isHive',
       'isSpark',
-      'isElasticsearch',
       'datasourceIndex',
       'datasourceEngine'
     ]),
@@ -165,7 +160,7 @@ export default {
     convertQuery () {
       this.$store.dispatch('editor/convertQuery')
     },
-    runQuery (query, translateFlag) {
+    runQuery (query) {
       if (this.loading || !this.datasourceIndex) {
         return false
       }
@@ -190,7 +185,7 @@ export default {
         this.setInputQuery(query)
       }
 
-      this.$store.dispatch('result/runQuery', {query, translateFlag})
+      this.$store.dispatch('result/runQuery', {query})
 
       this.setTab('result')
     },

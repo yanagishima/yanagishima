@@ -130,9 +130,6 @@ export default new Vuex.Store({
     isSpark (state) {
       return state.hash.engine === 'spark'
     },
-    isElasticsearch (state) {
-      return state.hash.engine === 'elasticsearch'
-    },
     authInfo (state) {
       return state.auths[state.hash.datasource] ? {
         user: state.authUser,

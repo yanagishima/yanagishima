@@ -59,9 +59,8 @@ const getters = {}
 const actions = {
   async runQuery ({commit, dispatch, state, getters, rootState, rootGetters}, option) {
     const {datasource, engine} = rootState.hash
-    const {authInfo, isPresto, isHive, isSpark, isElasticsearch} = rootGetters
+    const {authInfo, isPresto, isHive, isSpark} = rootGetters
     const query = option && option.query ? option.query : rootState.editor.inputQuery
-    const translateFlag = option && option.translateFlag ? option.translateFlag : false
     const enableDesktopNotification = rootState.settings.desktopNotification
 
     commit('initComment')
@@ -79,12 +78,6 @@ const actions = {
         data = await api.runQueryHive(datasource, query, authInfo)
       } else if (isSpark) {
         data = await api.runQuerySpark(datasource, query, authInfo)
-      } else if (isElasticsearch) {
-        if (translateFlag) {
-          data = await api.translateQueryElasticsearch(datasource, query, authInfo)
-        } else {
-          data = await api.runQueryElasticsearch(datasource, query, authInfo)
-        }
       } else {
         throw new Error('not supported')
       }
@@ -92,7 +85,7 @@ const actions = {
       const queryid = data.queryid
       if (queryid) {
         try {
-          await dispatch('waitQueryComplete', {datasource, queryid, isPresto, isHive, isSpark, isElasticsearch})
+          await dispatch('waitQueryComplete', {datasource, queryid, isPresto, isHive, isSpark})
           await dispatch('waitHistoryComplete', {datasource, engine, queryid})
           commit('setHashItem', {queryid: queryid, engine: data.engine}, {root: true})
 
@@ -119,9 +112,9 @@ const actions = {
       commit('setLoading', {data: false})
     }
   },
-  async waitQueryComplete ({commit, rootGetters}, {datasource, queryid, isPresto, isHive, isSpark, isElasticsearch}) {
+  async waitQueryComplete ({commit, rootGetters}, {datasource, queryid, isPresto, isHive, isSpark}) {
     const {authInfo, authUserInfo} = rootGetters
-    const period = isPresto || isElasticsearch ? 500 : 5000
+    const period = isPresto ? 500 : 5000
 
     commit('setRunningQueryId', {data: queryid})
     commit('setRunningProgress', {data: -1})
@@ -138,8 +131,6 @@ const actions = {
             data = await api.getQueryStatusHive(datasource, queryid, authUserInfo)
           } else if (isSpark) {
             data = await api.getQueryStatusSpark(datasource, queryid, authUserInfo)
-          } else if (isElasticsearch) {
-            data = await api.getQueryStatusElasticsearch(datasource, queryid, authUserInfo)
           } else {
             throw new Error('not supported')
           }
@@ -155,9 +146,6 @@ const actions = {
             } else if (isHive || isSpark) {
               commit('setRunningProgress', {data: data.progress})
               commit('setRunningTime', {data: (data.elapsedTime / 1000).ceil(1) + 's'})
-            } else if (isElasticsearch) {
-              commit('setRunningProgress', {data: 0})
-              commit('setRunningTime', {data: 0})
             } else {
               throw new Error('not supported')
             }

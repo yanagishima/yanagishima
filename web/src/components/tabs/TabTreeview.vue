@@ -81,7 +81,7 @@
                   </div>
                 </div>
                 <div class="list-group list-group-flush">
-                  <template v-if="schema && filteredTables.length || isElasticsearch && filteredTables.length">
+                  <template v-if="schema && filteredTables.length">
                     <a v-for="t in filteredTables" :key="t[0]" href="#" class="list-group-item"
                        :class="{active: t[0] === table, 'table-base': isPresto && t[1] !== 'VIEW', 'table-view': isPresto && t[1] === 'VIEW'}"
                        @click.prevent="setTable(t)" :id="`table-${t[0]}`">
@@ -246,7 +246,6 @@ export default {
       'isPresto',
       'isHive',
       'isSpark',
-      'isElasticsearch',
       'datasourceEngine',
       'isMetadataService',
       'datetimePartitionFormat'
@@ -397,28 +396,6 @@ export default {
         snippets.unshift(defaultSnippet)
         return snippets
       }
-
-      if (this.isElasticsearch) {
-        const snippets = [
-          {
-            label: 'SHOW CREATE TABLE ...',
-            sql: 'SHOW CREATE TABLE "{table}"',
-            enable: ['BASE TABLE']
-          },
-          {
-            label: 'DESCRIBE ...',
-            sql: 'DESCRIBE "{table}"',
-            enable: ['BASE TABLE', 'VIEW']
-          }
-        ]
-        const defaultSnippet = {
-          label: 'SELECT * FROM ... LIMIT 100',
-          sql: 'SELECT {columns} FROM "{table}" LIMIT 100',
-          enable: ['BASE TABLE', 'VIEW']
-        }
-        snippets.unshift(defaultSnippet)
-        return snippets
-      }
     }
   },
   watch: {
@@ -524,8 +501,6 @@ export default {
         return [this.catalog, this.schema, table].join('.')
       } else if (this.isHive || this.isSpark) {
         return [this.schema, table].join('.')
-      } else if (this.isElasticsearch) {
-        return table
       } else {
         throw new Error('not supported')
       }
@@ -576,11 +551,6 @@ export default {
         }
         if (this.isSpark && this.schema) {
           const snippet = `SELECT * FROM ${this.schema}.${this.table} WHERE ${this.where} LIMIT 100`
-          this.$store.commit('editor/setInputQuery', {data: snippet})
-          return
-        }
-        if (this.isElasticsearch) {
-          const snippet = `SELECT * FROM "${this.table}" WHERE ${this.where} LIMIT 100`
           this.$store.commit('editor/setInputQuery', {data: snippet})
         }
       }
