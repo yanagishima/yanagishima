@@ -3,7 +3,7 @@
     <div class="header d-flex justify-content-between align-items-center pt-3">
       <span><strong class="mr-2">{{datasource}}</strong>as of<strong class="ml-2">{{now}}</strong></span>
       <div class="d-flex align-items-center">
-        <div class="form-check form-check-inline" v-if="isPresto">
+        <div class="form-check form-check-inline" v-if="isPresto || isTrino">
           <input class="form-check-input mr-1" type="checkbox" id="fullQueryCheckbox" v-model="isOpenQueryModel">
           <label class="form-check-label" for="fullQueryCheckbox">Full Query</label>
         </div>
@@ -31,7 +31,7 @@
           <span class="mr-2"><strong>{{orderedQlist.length}}</strong> Results</span>
           <span class="mr-2" v-if="orderedFailQlist.length"><strong>{{orderedFailQlist.length}}</strong> Fails</span>
         </div>
-        <template v-if="isPresto">
+        <template v-if="isPresto || isTrino">
           <table v-if="orderedQlist.length" class="table table-sm table-bordered table-fixed table-hover">
             <thead>
             <tr>
@@ -80,7 +80,7 @@
                 class="fa fa-fw fa-times text-danger"></i></a></td>
               <td class="text-center">
                 <a target="_blank" class="btn btn-sm btn-secondary p-1"
-                   :href="buildDetailUrl(isPresto, isHive, isSpark, isElasticsearch, datasource, item.queryId)"><i class="fa fa-fw fa-info"></i></a>
+                   :href="buildDetailUrl(isPresto, isHive, isSpark, isTrino, datasource, item.queryId)"><i class="fa fa-fw fa-info"></i></a>
               </td>
             </tr>
             </tbody>
@@ -130,7 +130,7 @@
               </td>
               <td>{{item.user}}</td>
               <td class="text-center"><a target="_blank" class="btn btn-sm btn-secondary p-1"
-                                         :href="buildDetailUrl(isPresto, isHive, isSpark, isElasticsearch, datasource, item.id)"><i
+                                         :href="buildDetailUrl(isPresto, isHive, isSpark, isTrino, datasource, item.id)"><i
                 class="fa fa-fw fa-info"></i></a></td>
             </tr>
             </tbody>
@@ -175,7 +175,7 @@
               </td>
               <td><a href="#" @click.prevent="filterUser = item.user">{{item.user}}</a></td>
               <td class="text-center"><a target="_blank" class="btn btn-sm btn-secondary p-1"
-                                         :href="buildDetailUrl(isPresto, isHive, isSpark, isElasticsearch, datasource)"><i
+                                         :href="buildDetailUrl(isPresto, isHive, isSpark, isTrino, datasource)"><i
                 class="fa fa-fw fa-info"></i></a></td>
             </tr>
             </tbody>
@@ -224,7 +224,7 @@ export default {
       'isPresto',
       'isHive',
       'isSpark',
-      'isElasticsearch'
+      'isTrino'
     ]),
     isOpenQueryModel: {
       get () {
@@ -248,7 +248,7 @@ export default {
       }
 
       let qlist
-      if (this.isPresto) {
+      if (this.isPresto || this.isTrino) {
         qlist = this.response.filter(q => {
           if ((this.filterSource === '' || this.filterSource === q.session.source) &&
             (this.filterUser === '' || this.filterUser === q.session.user)) {
@@ -307,7 +307,7 @@ export default {
       this.$store.dispatch('qlist/getQlist', {isAutoQlist: false})
     },
     isRunning (state) {
-      if (this.isPresto) {
+      if (this.isPresto || this.isTrino) {
         return !['FINISHED', 'FAILED', 'CANCELED'].includes(state)
       } else if (this.isHive) {
         return !['FINISHED', 'FAILED', 'KILLED'].includes(state)

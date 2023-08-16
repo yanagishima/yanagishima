@@ -1,18 +1,24 @@
 package yanagishima.service;
 
-import static com.google.common.base.MoreObjects.firstNonNull;
-import static com.google.common.base.Preconditions.checkArgument;
-import static com.google.common.base.Preconditions.checkState;
-import static com.google.common.base.Verify.verify;
-import static com.facebook.presto.client.OkHttpUtil.basicAuth;
-import static java.lang.String.format;
-import static java.lang.String.join;
-import static java.nio.charset.StandardCharsets.UTF_8;
-import static java.util.Collections.emptyMap;
-import static java.util.concurrent.TimeUnit.MINUTES;
-import static java.util.concurrent.TimeUnit.SECONDS;
-import static yanagishima.util.PathUtil.getResultFilePath;
-import static yanagishima.util.QueryEngine.presto;
+import com.google.common.collect.ImmutableMap;
+import io.trino.client.*;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.collect.ImmutableSet;
+import io.airlift.units.DataSize;
+import io.airlift.units.Duration;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import okhttp3.Call;
+import okhttp3.OkHttpClient;
+import org.apache.commons.csv.CSVFormat;
+import org.apache.commons.csv.CSVPrinter;
+import org.springframework.stereotype.Service;
+import yanagishima.client.fluentd.FluencyClient;
+import yanagishima.config.YanagishimaConfig;
+import yanagishima.exception.QueryErrorException;
+import yanagishima.model.trino.TrinoQueryResult;
+import yanagishima.util.Constants;
+import yanagishima.util.TypeCoerceUtil;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -21,47 +27,29 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.sql.SQLException;
 import java.time.ZoneId;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 
-import com.google.common.collect.ImmutableMap;
-import org.apache.commons.csv.CSVFormat;
-import org.apache.commons.csv.CSVPrinter;
-import org.springframework.stereotype.Service;
-
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.collect.ImmutableSet;
-
-import io.airlift.units.DataSize;
-import io.airlift.units.Duration;
-import com.facebook.presto.client.ClientSession;
-import com.facebook.presto.client.Column;
-import com.facebook.presto.client.FailureInfo;
-import com.facebook.presto.client.QueryError;
-import com.facebook.presto.client.QueryStatusInfo;
-import com.facebook.presto.client.StatementClient;
-import com.facebook.presto.client.StatementClientFactory;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import okhttp3.OkHttpClient;
-import yanagishima.client.fluentd.FluencyClient;
-import yanagishima.config.YanagishimaConfig;
-import yanagishima.exception.QueryErrorException;
-import yanagishima.model.presto.PrestoQueryResult;
-import yanagishima.util.Constants;
-import yanagishima.util.TypeCoerceUtil;
+import static io.trino.client.OkHttpUtil.basicAuth;
+import static com.google.common.base.MoreObjects.firstNonNull;
+import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkState;
+import static com.google.common.base.Verify.verify;
+import static java.lang.String.format;
+import static java.lang.String.join;
+import static java.nio.charset.StandardCharsets.UTF_8;
+import static java.util.Collections.emptyMap;
+import static java.util.concurrent.TimeUnit.MINUTES;
+import static java.util.concurrent.TimeUnit.SECONDS;
+import static yanagishima.util.PathUtil.getResultFilePath;
+import static yanagishima.util.QueryEngine.trino;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class PrestoService {
+public class TrinoService {
   private static final CSVFormat CSV_FORMAT = CSVFormat.EXCEL
       .withDelimiter('\t')
       .withNullString("\\N")
@@ -81,8 +69,8 @@ public class PrestoService {
   private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
   public String doQueryAsync(String datasource, String query, Optional<String> sessionPropertyOptional,
-                             String userName, Optional<String> prestoUser, Optional<String> prestoPassword) {
-    Map<String, String> properties = ImmutableMap.of();
+                             String userName, Optional<String> trinoUser, Optional<String> trinoPassword) {
+    Map<String, String> properties = Map.of();
     if (sessionPropertyOptional.isPresent()) {
       try {
         properties = OBJECT_MAPPER.readValue(sessionPropertyOptional.get(), Map.class);
@@ -93,7 +81,7 @@ public class PrestoService {
     }
 
     StatementClient client = getStatementClient(
-        datasource, query, userName, prestoUser, prestoPassword, properties);
+        datasource, query, userName, trinoUser, trinoPassword, properties);
     executorService.submit(new Task(client, datasource, query, userName, properties));
     return client.currentStatusInfo().getId();
   }
@@ -117,7 +105,7 @@ public class PrestoService {
     @Override
     public void run() {
       try {
-        getPrestoQueryResult(this.datasource, this.query, this.client, true, config.getSelectLimit(),
+        getTrinoQueryResult(this.datasource, this.query, this.client, true, config.getSelectLimit(),
                              this.userName, this.properties);
       } catch (QueryErrorException e) {
         log.error(e.getMessage(), e);
@@ -131,38 +119,38 @@ public class PrestoService {
     }
   }
 
-  public PrestoQueryResult doQuery(String datasource,
-                                   String query,
-                                   String userName,
-                                   Optional<String> prestoUser,
-                                   Optional<String> prestoPassword,
-                                   Map<String, String> properties,
-                                   boolean storeFlag,
-                                   int limit) throws QueryErrorException {
+  public TrinoQueryResult doQuery(String datasource,
+                                  String query,
+                                  String userName,
+                                  Optional<String> trinoUser,
+                                  Optional<String> trinoPassword,
+                                  Map<String, String> properties,
+                                  boolean storeFlag,
+                                  int limit) throws QueryErrorException {
     try (StatementClient client = getStatementClient(datasource, query, userName,
-                                                     prestoUser, prestoPassword, properties)) {
-      return getPrestoQueryResult(datasource, query, client, storeFlag, limit, userName, properties);
+                                                     trinoUser, trinoPassword, properties)) {
+      return getTrinoQueryResult(datasource, query, client, storeFlag, limit, userName, properties);
     }
   }
 
-  private PrestoQueryResult getPrestoQueryResult(
+  private TrinoQueryResult getTrinoQueryResult(
       String datasource, String query, StatementClient client, boolean storeQueryHistory,
       int limit, String userName, Map<String, String> properties) throws QueryErrorException {
     checkSecretKeyword(query, datasource, client.currentStatusInfo().getId(), userName,
-                       config.getPrestoSecretKeywords(datasource));
+                       config.getTrinoSecretKeywords(datasource));
     checkRequiredCondition(datasource, query, client.currentStatusInfo().getId(), userName,
-                           config.getPrestoMustSpecifyConditions(datasource));
+                           config.getTrinoMustSpecifyConditions(datasource));
 
-    Duration queryMaxRunTime = new Duration(config.getPrestoQueryMaxRunTimeSeconds(datasource), SECONDS);
+    Duration queryMaxRunTime = new Duration(config.getTrinoQueryMaxRunTimeSeconds(datasource), SECONDS);
     long start = System.currentTimeMillis();
     while (client.isRunning() && client.currentData().getData() == null) {
       try {
         client.advance();
       } catch (RuntimeException e) {
         QueryStatusInfo statusInfo = client.isRunning() ? client.currentStatusInfo() : client.finalStatusInfo();
-        String message = format("Query failed (#%s) in %s: presto internal error message=%s",
+        String message = format("Query failed (#%s) in %s: trino internal error message=%s",
                                 statusInfo.getId(), datasource, e.getMessage());
-        queryService.saveError(datasource, presto.name(), statusInfo.getId(), query, userName, message);
+        queryService.saveError(datasource, trino.name(), statusInfo.getId(), query, userName, message);
         throw e;
       }
 
@@ -170,12 +158,12 @@ public class PrestoService {
         String queryId = client.currentStatusInfo().getId();
         String message = format("Query failed (#%s) in %s: Query exceeded maximum time limit of %s", queryId,
                                 datasource, queryMaxRunTime.toString());
-        queryService.saveError(datasource, presto.name(), queryId, query, userName, message);
+        queryService.saveError(datasource, trino.name(), queryId, query, userName, message);
         throw new RuntimeException(message);
       }
     }
 
-    PrestoQueryResult queryResult = new PrestoQueryResult();
+    TrinoQueryResult queryResult = new TrinoQueryResult();
     // if running or finished
     if (client.isRunning() || (client.isFinished() && client.finalStatusInfo().getError() == null)) {
       QueryStatusInfo results = client.isRunning() ? client.currentStatusInfo() : client.finalStatusInfo();
@@ -191,9 +179,9 @@ public class PrestoService {
                                             start, limit, userName);
       queryResult.setRecords(rows);
       if (storeQueryHistory) {
-        queryService.save(datasource, presto.name(), query, userName, results.getId(),
+        queryService.save(datasource, trino.name(), query, userName, results.getId(),
                           queryResult.getLineNumber());
-        sessionPropertyService.insert(datasource, presto.name(), results.getId(), properties);
+        sessionPropertyService.insert(datasource, trino.name(), results.getId(), properties);
       }
       emitExecutedEvent(userName, query, results.getId(), datasource, System.currentTimeMillis() - start);
     }
@@ -207,7 +195,7 @@ public class PrestoService {
       QueryStatusInfo results = client.finalStatusInfo();
       String message = getErrorMessage(results.getError().getFailureInfo());
       if (queryResult.getQueryId() == null) {
-        queryService.saveError(datasource, presto.name(), results.getId(), query, userName, message);
+        queryService.saveError(datasource, trino.name(), results.getId(), query, userName, message);
       } else {
         Path successFile = getResultFilePath(datasource, queryResult.getQueryId(), false);
         Path errorFile = getResultFilePath(datasource, queryResult.getQueryId(), true);
@@ -243,13 +231,13 @@ public class PrestoService {
   private List<List<String>> processData(StatementClient client,
                                          String datasource,
                                          String queryId,
-                                         PrestoQueryResult queryResult,
+                                         TrinoQueryResult queryResult,
                                          List<String> columnNames,
                                          long startTime,
                                          int maxRowLimit,
                                          String userName) {
     List<List<String>> rows = new ArrayList<>();
-    Duration queryMaxRunTime = new Duration(config.getPrestoQueryMaxRunTimeSeconds(datasource), SECONDS);
+    Duration queryMaxRunTime = new Duration(config.getTrinoQueryMaxRunTimeSeconds(datasource), SECONDS);
     Path resultPath = getResultFilePath(datasource, queryId, false);
 
     int rowNumber = 0;
@@ -267,10 +255,10 @@ public class PrestoService {
             List<String> row = data.stream().map(TypeCoerceUtil::objectToString).collect(Collectors.toList());
             printer.printRecord(row);
             resultBytes += row.toString().getBytes(UTF_8).length;
-            if (resultBytes > config.getPrestoMaxResultFileByteSize()) {
+            if (resultBytes > config.getTrinoMaxResultFileByteSize()) {
               String message = format("Result file size exceeded %s bytes. queryId=%s, datasource=%s",
-                                      config.getPrestoMaxResultFileByteSize(), queryId, datasource);
-              queryService.saveError(datasource, presto.name(), client.currentStatusInfo().getId(),
+                                      config.getTrinoMaxResultFileByteSize(), queryId, datasource);
+              queryService.saveError(datasource, trino.name(), client.currentStatusInfo().getId(),
                                      client.getQuery(), userName, message);
               throw new RuntimeException(message);
             }
@@ -285,7 +273,7 @@ public class PrestoService {
           }
         }
         client.advance();
-        queryService.saveTimeout(queryMaxRunTime, startTime, datasource, presto.name(), queryId,
+        queryService.saveTimeout(queryMaxRunTime, startTime, datasource, trino.name(), queryId,
                                  client.getQuery(), userName);
       }
 
@@ -305,7 +293,7 @@ public class PrestoService {
     event.put("query", query);
     event.put("query_id", queryId);
     event.put("datasource", datasource);
-    event.put("engine", presto.name());
+    event.put("engine", trino.name());
 
     fluencyClient.emitExecuted(event);
   }
@@ -330,7 +318,7 @@ public class PrestoService {
     for (String secretKeyword : secretKeywords) {
       if (query.contains(secretKeyword)) {
         String message = "query error occurs";
-        queryService.saveError(datasource, presto.name(), id, query, username, message);
+        queryService.saveError(datasource, trino.name(), id, query, username, message);
         throw new RuntimeException(message);
       }
     }
@@ -348,7 +336,7 @@ public class PrestoService {
             if (!query.contains(partitionKey)) {
               String message = format("If you query %s, you must specify %s in where clause", table,
                                       partitionKey);
-              queryService.saveError(datasource, presto.name(), id, query, username, message);
+              queryService.saveError(datasource, trino.name(), id, query, username, message);
               throw new RuntimeException(message);
             }
           }
@@ -358,34 +346,34 @@ public class PrestoService {
   }
 
   private StatementClient getStatementClient(String datasource, String query, String userName,
-                                             Optional<String> prestoUser, Optional<String> prestoPassword,
+                                             Optional<String> trinoUser, Optional<String> trinoPassword,
                                              Map<String, String> properties) {
-    String server = config.getPrestoCoordinatorServer(datasource);
+    String server = config.getTrinoCoordinatorServer(datasource);
     String catalog = config.getCatalog(datasource);
     String schema = config.getSchema(datasource);
     String source = config.getSource(datasource);
 
-    if (prestoUser.isPresent() && prestoPassword.isPresent()) {
-      ClientSession clientSession = buildClientSession(server, prestoUser.get(), source, catalog, schema,
+    if (trinoUser.isPresent() && trinoPassword.isPresent()) {
+      ClientSession clientSession = buildClientSession(server, trinoUser.get(), source, catalog, schema,
                                                        properties);
       checkArgument(clientSession.getServer().getScheme().equalsIgnoreCase("https"),
                     "Authentication using username/password requires HTTPS to be enabled");
       OkHttpClient.Builder clientBuilder = httpClient.newBuilder();
-      clientBuilder.addInterceptor(basicAuth(prestoUser.get(), prestoPassword.get()));
-      return StatementClientFactory.newStatementClient(clientBuilder.build(), clientSession, query);
+      clientBuilder.addInterceptor(basicAuth(trinoUser.get(), trinoPassword.get()));
+        return StatementClientFactory.newStatementClient(clientBuilder.build(), clientSession, query);
     }
 
     String user = firstNonNull(userName, config.getUser(datasource));
-    Optional<String> prestoImpersonatedUser = config.getPrestoImpersonatedUser(datasource);
-    Optional<String> prestoImpersonatedPassword = config.getPrestoImpersonatedPassword(datasource);
-    if (config.isPrestoImpersonation(datasource)
-            && prestoImpersonatedUser.isPresent() && prestoImpersonatedPassword.isPresent()) {
+    Optional<String> trinoImpersonatedUser = config.getTrinoImpersonatedUser(datasource);
+    Optional<String> trinoImpersonatedPassword = config.getTrinoImpersonatedPassword(datasource);
+    if (config.isTrinoImpersonation(datasource)
+            && trinoImpersonatedUser.isPresent() && trinoImpersonatedPassword.isPresent()) {
       ClientSession clientSession = buildClientSession(server, user, source, catalog, schema,
               properties);
       checkArgument(clientSession.getServer().getScheme().equalsIgnoreCase("https"),
               "Authentication using username/password requires HTTPS to be enabled");
       OkHttpClient.Builder clientBuilder = httpClient.newBuilder();
-      clientBuilder.addInterceptor(basicAuth(prestoImpersonatedUser.get(), prestoImpersonatedPassword.get()));
+      clientBuilder.addInterceptor(basicAuth(trinoImpersonatedUser.get(), trinoImpersonatedPassword.get()));
       return StatementClientFactory.newStatementClient(clientBuilder.build(), clientSession, query);
     }
     ClientSession clientSession = buildClientSession(server, user, source, catalog, schema, properties);
@@ -394,10 +382,28 @@ public class PrestoService {
 
   private static ClientSession buildClientSession(String server, String user, String source, String catalog,
                                                   String schema, Map<String, String> properties) {
-    return new ClientSession(URI.create(server), user, source, Optional.empty(),
-            ImmutableSet.of(), null, catalog, schema, ZoneId.systemDefault().getId(),
-            Locale.getDefault(), ImmutableMap.of(), properties, emptyMap(), emptyMap(), ImmutableMap.of(),
-            null, new Duration(2, MINUTES), false, emptyMap(), emptyMap());
+    ClientSession.Builder builder = ClientSession.builder();
+    builder.server(URI.create(server));
+    builder.user(Optional.of(user));
+    builder.principal(Optional.empty());
+    builder.source(source);
+    builder.traceToken(Optional.empty());
+    builder.clientTags(ImmutableSet.of());
+    builder.clientInfo(null);
+    builder.catalog(catalog);
+    builder.schema(schema);
+    builder.path(null);
+    builder.timeZone(ZoneId.systemDefault());
+    builder.locale(Locale.getDefault());
+    builder.resourceEstimates(ImmutableMap.of());
+    builder.properties(properties);
+    builder.roles(emptyMap());
+    builder.credentials(emptyMap());
+    builder.preparedStatements(emptyMap());
+    builder.transactionId(null);
+    builder.clientRequestTimeout(new Duration(2, MINUTES));
+    builder.compressionDisabled(false);
+    return builder.build();
   }
 
   private static QueryErrorException resultsException(QueryStatusInfo results, String datasource) {

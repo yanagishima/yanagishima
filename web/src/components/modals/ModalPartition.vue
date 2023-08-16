@@ -5,7 +5,7 @@
         <div class="modal-header">
           <h5 class="modal-title">
             <strong>Partition list</strong> in
-            <template v-if="isPresto">{{catalog}}.</template>{{schema}}.{{table}}
+            <template v-if="isPresto || isTrino">{{catalog}}.</template>{{schema}}.{{table}}
           </h5>
           <button type="button" class="close" data-dismiss="modal"><span>&times;</span></button>
         </div>
@@ -77,6 +77,7 @@ export default {
     ]),
     ...mapGetters([
       'isPresto',
+      'isTrino',
       'isHive',
       'isSpark',
       'datasourceEngine'
@@ -160,7 +161,7 @@ export default {
       }
 
       let from
-      if (this.isPresto) {
+      if (this.isPresto || this.isTrino) {
         from = [this.catalog, this.schema, `"${this.table}"`]
       } else if (this.isHive) {
         from = [this.schema, `\`${this.table}\``]

@@ -33,7 +33,7 @@ public class CommentService {
     comment.setDatasource(datasource);
     comment.setEngine(engine);
     comment.setQueryid(queryId);
-    comment.setUser(user.getId());
+    comment.setUserid(user.getId());
     comment.setContent(content);
     comment.setLikeCount(0);
     comment.setUpdateTimeString(updateTimeString);
@@ -41,7 +41,7 @@ public class CommentService {
   }
 
   public void update(Comment comment, User user, String content, String updateTimeString) {
-    comment.setUser(user.getId());
+    comment.setUserid(user.getId());
     comment.setContent(content);
     comment.setUpdateTimeString(updateTimeString);
     commentRepository.save(comment);

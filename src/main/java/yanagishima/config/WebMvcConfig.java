@@ -22,11 +22,6 @@ public class WebMvcConfig implements WebMvcConfigurer {
   private final UserArgumentResolver userArgumentResolver;
 
   @Override
-  public void configureDefaultServletHandling(DefaultServletHandlerConfigurer configurer) {
-    configurer.enable();
-  }
-
-  @Override
   public void addInterceptors(InterceptorRegistry registry) {
     registry
         .addInterceptor(datasourceInterceptor)
@@ -41,7 +36,7 @@ public class WebMvcConfig implements WebMvcConfigurer {
   @Override
   public void addResourceHandlers(ResourceHandlerRegistry registry) {
     registry
-        .addResourceHandler("swagger-ui.html")
+        .addResourceHandler("swagger-ui/index.html")
         .addResourceLocations("classpath:/META-INF/resources/");
   }
 }

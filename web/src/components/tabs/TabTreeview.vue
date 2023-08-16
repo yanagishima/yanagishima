@@ -11,7 +11,7 @@
                   @click.prevent="setDatasource(d)" :class="{active: d === datasource}">{{d}}</a>
             </div>
           </div>
-          <div v-if="isPresto" class="btn-group mr-1">
+          <div v-if="isPresto || isTrino" class="btn-group mr-1">
             <button type="button" class="btn btn-sm btn-secondary dropdown-toggle" data-toggle="dropdown">
               <small class="text-muted mr-1">Catalog</small>
               <strong>{{catalog}}</strong></button>
@@ -21,12 +21,12 @@
             </div>
           </div>
           <div class="ml-auto align-self-end">
-            <input v-if="isPresto" type="text" :placeholder="`Search by Table in ${catalog}`" v-model.lazy="tableQueryModel"
+            <input v-if="isPresto || isTrino" type="text" :placeholder="`Search by Table in ${catalog}`" v-model.lazy="tableQueryModel"
                class="form-control form-control-sm" v-focus>
           </div>
       </div>
       <div class="col-6 text-right">
-        <span v-if="isPresto">
+        <span v-if="isPresto || isTrino">
           <small><i class="fa fa-fw fa-circle table-base"></i>table</small>
           <small><i class="fa fa-fw fa-circle table-view"></i>view</small>
         </span>
@@ -51,7 +51,7 @@
                   </div>
                 </div>
                 <div class="list-group list-group-flush">
-                  <template v-if="(isPresto && catalog || !isPresto) && filteredSchemata.length">
+                  <template v-if="((isPresto || isTrino) && catalog || (!isPresto && !isTrino)) && filteredSchemata.length">
                     <transition-group name="schema-list" tag="div">
                       <a v-for="s in filteredSchemata" :key="s.name" href="#" class="list-group-item pr-0"
                         :class="{active: s.name === schema, starring: !!starTargetSchema, target: s.name === starTargetSchema}"
@@ -81,9 +81,9 @@
                   </div>
                 </div>
                 <div class="list-group list-group-flush">
-                  <template v-if="schema && filteredTables.length || isElasticsearch && filteredTables.length">
+                  <template v-if="schema && filteredTables.length">
                     <a v-for="t in filteredTables" :key="t[0]" href="#" class="list-group-item"
-                       :class="{active: t[0] === table, 'table-base': isPresto && t[1] !== 'VIEW', 'table-view': isPresto && t[1] === 'VIEW'}"
+                       :class="{active: t[0] === table, 'table-base': (isPresto || isTrino) && t[1] !== 'VIEW', 'table-view': (isPresto || isTrino) && t[1] === 'VIEW'}"
                        @click.prevent="setTable(t)" :id="`table-${t[0]}`">
                       <button class="btn btn-sm btn-secondary clip px-2" v-clipboard="fullName(t[0])" @click.stop.prevent="">
                         <i class="fa fa-fw fa-clipboard"></i>
@@ -246,7 +246,7 @@ export default {
       'isPresto',
       'isHive',
       'isSpark',
-      'isElasticsearch',
+      'isTrino',
       'datasourceEngine',
       'isMetadataService',
       'datetimePartitionFormat'
@@ -292,10 +292,10 @@ export default {
       }
     },
     snippets () {
-      if (this.isPresto) {
+      if (this.isPresto || this.isTrino) {
         const snippets = [
           {
-            label: 'SHOW PRESTO VIEW DDL',
+            label: 'SHOW VIEW DDL',
             sql: "SELECT VIEW_DEFINITION FROM {catalog}.INFORMATION_SCHEMA.VIEWS WHERE table_catalog='{catalog}' AND table_schema='{schema}' AND table_name='{table}'",
             enable: ['VIEW']
           },
@@ -397,28 +397,6 @@ export default {
         snippets.unshift(defaultSnippet)
         return snippets
       }
-
-      if (this.isElasticsearch) {
-        const snippets = [
-          {
-            label: 'SHOW CREATE TABLE ...',
-            sql: 'SHOW CREATE TABLE "{table}"',
-            enable: ['BASE TABLE']
-          },
-          {
-            label: 'DESCRIBE ...',
-            sql: 'DESCRIBE "{table}"',
-            enable: ['BASE TABLE', 'VIEW']
-          }
-        ]
-        const defaultSnippet = {
-          label: 'SELECT * FROM ... LIMIT 100',
-          sql: 'SELECT {columns} FROM "{table}" LIMIT 100',
-          enable: ['BASE TABLE', 'VIEW']
-        }
-        snippets.unshift(defaultSnippet)
-        return snippets
-      }
     }
   },
   watch: {
@@ -484,10 +462,10 @@ export default {
   },
   created () {
     if (this.initialTable) {
-      if (this.isPresto || this.isHive || this.isSpark) {
+      if (this.isPresto || this.isTrino || this.isHive || this.isSpark) {
         this.$store.commit('treeview/init')
         const t = this.initialTable.split('.')
-        if (this.isPresto) {
+        if (this.isPresto || this.isTrino) {
           this.scrollTo = {catalog: t[0], schema: t[1], table: t[2]}
         } else {
           this.scrollTo = {schema: t[0], table: t[1]}
@@ -520,12 +498,10 @@ export default {
       this.$store.dispatch('treeview/getPartitions')
     },
     fullName (table) {
-      if (this.isPresto) {
+      if (this.isPresto || this.isTrino) {
         return [this.catalog, this.schema, table].join('.')
       } else if (this.isHive || this.isSpark) {
         return [this.schema, table].join('.')
-      } else if (this.isElasticsearch) {
-        return table
       } else {
         throw new Error('not supported')
       }
@@ -564,7 +540,7 @@ export default {
     },
     setUrlSnippet () {
       if (this.table && this.where) {
-        if (this.isPresto && this.catalog && this.schema) {
+        if ((this.isPresto || this.isTrino) && this.catalog && this.schema) {
           const snippet = `SELECT * FROM ${this.catalog}.${this.schema}."${this.table}" WHERE ${this.where} LIMIT 100`
           this.$store.commit('editor/setInputQuery', {data: snippet})
           return
@@ -576,11 +552,6 @@ export default {
         }
         if (this.isSpark && this.schema) {
           const snippet = `SELECT * FROM ${this.schema}.${this.table} WHERE ${this.where} LIMIT 100`
-          this.$store.commit('editor/setInputQuery', {data: snippet})
-          return
-        }
-        if (this.isElasticsearch) {
-          const snippet = `SELECT * FROM "${this.table}" WHERE ${this.where} LIMIT 100`
           this.$store.commit('editor/setInputQuery', {data: snippet})
         }
       }

@@ -18,9 +18,9 @@ public class BookmarkService {
 
   public List<Bookmark> getAll(boolean showAll, String datasource, String engine, User user) {
     if (showAll) {
-      return bookmarkRepository.findAllByEngineAndUser(engine, user.getId());
+      return bookmarkRepository.findAllByEngineAndUserid(engine, user.getId());
     }
-    return bookmarkRepository.findAllByDatasourceAndEngineAndUser(datasource, engine, user.getId());
+    return bookmarkRepository.findAllByDatasourceAndEngineAndUserid(datasource, engine, user.getId());
   }
 
   public List<Bookmark> getAll(String datasource, List<Integer> bookmarkIds) {
@@ -34,7 +34,7 @@ public class BookmarkService {
     bookmark.setQuery(query);
     bookmark.setTitle(title);
     bookmark.setEngine(engine);
-    bookmark.setUser(user.getId());
+    bookmark.setUserid(user.getId());
     bookmark.setSnippet(snippet);
 
     return bookmarkRepository.save(bookmark);

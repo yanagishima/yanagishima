@@ -24,8 +24,8 @@ public class Publish {
   @Column(name = "query_id")
   private String queryId;
 
-  @Column(name = "user")
-  private String user;
+  @Column(name = "userid")
+  private String userid;
 
   @Column(name = "viewers")
   private String viewers;

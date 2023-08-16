@@ -3,6 +3,7 @@ package yanagishima.controller;
 import static java.lang.String.format;
 import static yanagishima.util.Constants.YANAGISHIMA_COMMENT;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -18,9 +19,9 @@ import org.springframework.web.bind.annotation.RestController;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Splitter;
 
-import io.trino.sql.parser.ParsingException;
-import io.trino.sql.parser.ParsingOptions;
-import io.trino.sql.parser.SqlParser;
+import com.facebook.presto.sql.parser.ParsingException;
+import com.facebook.presto.sql.parser.ParsingOptions;
+import com.facebook.presto.sql.parser.SqlParser;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.Response;
@@ -72,7 +73,7 @@ public class CheckPrestoQueryController {
       String queryId = null;
       try {
         PrestoQueryResult prestoQueryResult = prestoService.doQuery(
-            datasource, explainQuery, user, prestoUser, prestoPassword, Map.of(), false, Integer.MAX_VALUE);
+            datasource, explainQuery, user, prestoUser, prestoPassword, Collections.emptyMap(), false, Integer.MAX_VALUE);
         queryId = prestoQueryResult.getQueryId();
       } catch (QueryErrorException e) {
         log.error(e.getMessage(), e);

@@ -1,7 +1,18 @@
 package yanagishima.controller;
 
-import static javax.servlet.http.HttpServletResponse.SC_OK;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.RequiredArgsConstructor;
+import okhttp3.Response;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+import yanagishima.annotation.DatasourceAuth;
+import yanagishima.client.trino.TrinoClient;
+import yanagishima.config.YanagishimaConfig;
+import yanagishima.model.db.Query;
+import yanagishima.service.QueryService;
 
+import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -9,25 +20,11 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-import javax.servlet.http.HttpServletRequest;
-
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
-
-import com.fasterxml.jackson.databind.ObjectMapper;
-
-import lombok.RequiredArgsConstructor;
-import okhttp3.Response;
-import yanagishima.annotation.DatasourceAuth;
-import yanagishima.client.presto.PrestoClient;
-import yanagishima.config.YanagishimaConfig;
-import yanagishima.model.db.Query;
-import yanagishima.service.QueryService;
+import static javax.servlet.http.HttpServletResponse.SC_OK;
 
 @RestController
 @RequiredArgsConstructor
-public class QueryController {
+public class TrinoQueryController {
   private static final int LIMIT = 100;
   private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
@@ -35,30 +32,30 @@ public class QueryController {
   private final YanagishimaConfig config;
 
   @DatasourceAuth
-  @PostMapping("query")
+  @PostMapping("trinoQuery")
   public Object post(@RequestParam String datasource,
                      @RequestParam Optional<String> user,
                      @RequestParam Optional<String> password,
                      HttpServletRequest request) throws IOException {
-    String coordinatorServer = config.getPrestoCoordinatorServerOrNull(datasource);
+    String coordinatorServer = config.getTrinoCoordinatorServerOrNull(datasource);
     if (coordinatorServer == null) {
       return List.of();
     }
 
     String userName = request.getHeader(config.getAuditHttpHeaderName());
     String originalJson;
-    PrestoClient prestoClient = null;
-    if (config.isPrestoImpersonation(datasource)) {
-      prestoClient = new PrestoClient(coordinatorServer, userName,
-              config.getPrestoImpersonatedUser(datasource), config.getPrestoImpersonatedPassword(datasource));
+    TrinoClient trinoClient = null;
+    if (config.isTrinoImpersonation(datasource)) {
+      trinoClient = new TrinoClient(coordinatorServer, userName,
+              config.getTrinoImpersonatedUser(datasource), config.getTrinoImpersonatedPassword(datasource));
     } else {
-      prestoClient = new PrestoClient(coordinatorServer, userName, user, password);
+      trinoClient = new TrinoClient(coordinatorServer, userName, user, password);
     }
-    try (Response prestoResponse = prestoClient.get()) {
-      originalJson = prestoResponse.body().string();
-      int code = prestoResponse.code();
+    try (Response trinoResponse = trinoClient.get()) {
+      originalJson = trinoResponse.body().string();
+      int code = trinoResponse.code();
       if (code != SC_OK) {
-        return Map.of("code", code, "error", prestoResponse.message());
+        return Map.of("code", code, "error", trinoResponse.message());
       }
     }
 
@@ -68,9 +65,9 @@ public class QueryController {
     List<Map> notRunningList = list.stream().filter(m -> !m.get("state").equals("RUNNING")).collect(
         Collectors.toList());
     runningList.sort(
-        (a, b) -> String.class.cast(b.get("queryId")).compareTo(String.class.cast(a.get("queryId"))));
+        (a, b) -> ((String) b.get("queryId")).compareTo((String) a.get("queryId")));
     notRunningList.sort(
-        (a, b) -> String.class.cast(b.get("queryId")).compareTo(String.class.cast(a.get("queryId"))));
+        (a, b) -> ((String) b.get("queryId")).compareTo((String) a.get("queryId")));
 
     List<Map> limitedList = new ArrayList<>();
     limitedList.addAll(runningList);
@@ -78,7 +75,7 @@ public class QueryController {
 
     List<String> queryIds = limitedList.stream().map(query -> (String) query.get("queryId")).collect(
         Collectors.toList());
-    List<Query> queries = queryService.getAll(datasource, "presto", queryIds);
+    List<Query> queries = queryService.getAll(datasource, "trino", queryIds);
 
     List<String> existDbQueryIds = new ArrayList<>();
     for (Query query : queries) {

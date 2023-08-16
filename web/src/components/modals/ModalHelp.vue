@@ -23,7 +23,7 @@
                 <td><kbd>Ctrl</kbd> + <kbd>T</kbd></td>
                 <td>Move to <strong>Treeview</strong></td>
               </tr>
-              <tr v-if="isPresto">
+              <tr v-if="isPresto || isTrino">
                 <td>Editor</td>
                 <td><kbd>Ctrl</kbd> + <kbd>Space</kbd></td>
                 <td><strong>Auto-complete</strong> Table/Function</td>
@@ -33,12 +33,12 @@
                 <td><kbd>Ctrl</kbd> + <kbd>Enter</kbd></td>
                 <td><strong>Run</strong> Query</td>
               </tr>
-              <tr v-if="isPresto">
+              <tr v-if="isPresto || isTrino">
                 <td>Editor</td>
                 <td><kbd>Shift</kbd> + <kbd>Enter</kbd></td>
                 <td><strong>Validate</strong> Query</td>
               </tr>
-              <tr v-if="isPresto">
+              <tr v-if="isPresto || isTrino">
                 <td>Editor</td>
                 <td><kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>F</kbd></td>
                 <td><strong>Format</strong> Query</td>
@@ -117,7 +117,8 @@ export default {
       engine: state => state.hash.engine
     }),
     ...mapGetters([
-      'isPresto'
+      'isPresto',
+      'isTrino'
     ])
   },
   methods: {

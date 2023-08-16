@@ -43,7 +43,7 @@ class ShareControllerTest {
     Publish publish = new Publish();
     publish.setPublishId(publishId);
     publish.setQueryId(getQueryId());
-    publish.setUser("Alice");
+    publish.setUserid("Alice");
 
     try (MockedStatic<DownloadUtil> util = Mockito.mockStatic(DownloadUtil.class)) {
       util.when(() -> DownloadUtil.downloadCsv(
@@ -69,7 +69,7 @@ class ShareControllerTest {
     Publish publish = new Publish();
     publish.setPublishId(publishId);
     publish.setQueryId(getQueryId());
-    publish.setUser("Alice");
+    publish.setUserid("Alice");
     publish.setViewers("Bob");
 
     try (MockedStatic<DownloadUtil> util = Mockito.mockStatic(DownloadUtil.class)) {
@@ -96,7 +96,7 @@ class ShareControllerTest {
     Publish publish = new Publish();
     publish.setPublishId(publishId);
     publish.setQueryId(getQueryId());
-    publish.setUser("Alice");
+    publish.setUserid("Alice");
 
     when(publishRepository.findByPublishId(anyString()))
         .thenReturn(Optional.of(publish));

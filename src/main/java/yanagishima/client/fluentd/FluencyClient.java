@@ -23,11 +23,7 @@ public class FluencyClient {
   public void postConstruct() {
     if (config.getFluentdExecutedTag().isPresent() || config.getFluentdFaliedTag().isPresent()
             || config.getFluentdPublishTag().isPresent()) {
-      try {
-        this.fluency = Fluency.defaultFluency(config.getFluentdHost(), config.getFluentdPort());
-      } catch (IOException e) {
-        throw new RuntimeException(e);
-      }
+      this.fluency = Fluency.defaultFluency(config.getFluentdHost(), config.getFluentdPort());
     } else {
       this.fluency = null;
     }

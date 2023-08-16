@@ -49,15 +49,10 @@ const getters = {
 
 const actions = {
   async getRoot ({dispatch, state, rootGetters}) {
-    const {isPresto, isElasticsearch} = rootGetters
+    const {isPresto, isTrino} = rootGetters
     const {catalog, schema, table} = state
 
-    if (isElasticsearch) {
-      dispatch('getTables')
-      return
-    }
-
-    if (isPresto && !catalog) {
+    if ((isPresto || isTrino) && !catalog) {
       dispatch('getCatalogs')
     } else if (!schema) {
       dispatch('getSchemata')
@@ -67,13 +62,18 @@ const actions = {
   },
   async getCatalogs ({commit, dispatch, state, rootState, rootGetters}) {
     const {datasource} = rootState.hash
-    const {authInfo, isPresto} = rootGetters
+    const {authInfo, isPresto, isTrino} = rootGetters
 
-    if (!isPresto) {
-      throw Error('getCatalogs are not supported except for presto')
+    if (!isPresto && !isTrino) {
+      throw Error('getCatalogs are not supported except for presto or trino')
     }
 
-    const data = await api.getCatalogsPresto(datasource, authInfo)
+    let data
+    if (isPresto) {
+      data = await api.getCatalogsPresto(datasource, authInfo)
+    } else if (isTrino) {
+      data = await api.getCatalogsTrino(datasource, authInfo)
+    }
 
     if (data.results && data.results.length) {
       commit('setCatalogs', {data: data.results.map(r => r[0])})
@@ -87,12 +87,14 @@ const actions = {
   },
   async getSchemata ({commit, dispatch, state, rootState, rootGetters}) {
     const {datasource} = rootState.hash
-    const {authInfo, isPresto, isHive, isSpark} = rootGetters
+    const {authInfo, isPresto, isTrino, isHive, isSpark} = rootGetters
     const {catalog} = state
 
     let allPromise
     if (isPresto) {
       allPromise = api.getSchemataPresto(datasource, catalog, authInfo)
+    } else if (isTrino) {
+      allPromise = api.getSchemataTrino(datasource, catalog, authInfo)
     } else if (isHive) {
       allPromise = api.getSchemataHive(datasource, authInfo)
     } else if (isSpark) {
@@ -139,18 +141,18 @@ const actions = {
   },
   async getTables ({commit, state, rootState, rootGetters}) {
     const {datasource} = rootState.hash
-    const {authInfo, isPresto, isHive, isSpark, isElasticsearch} = rootGetters
+    const {authInfo, isPresto, isHive, isSpark, isTrino} = rootGetters
     const {catalog, schema} = state
 
     let data
     if (isPresto) {
       data = await api.getTablesPresto(datasource, catalog, schema, authInfo)
+    } else if (isTrino) {
+      data = await api.getTablesTrino(datasource, catalog, schema, authInfo)
     } else if (isHive) {
       data = await api.getTablesHive(datasource, schema, authInfo)
     } else if (isSpark) {
       data = await api.getTablesSpark(datasource, schema, authInfo)
-    } else if (isElasticsearch) {
-      data = await api.getTablesElasticsearch(datasource, authInfo)
     } else {
       throw new Error('not supported')
     }
@@ -172,14 +174,10 @@ const actions = {
   },
   async getColumns ({commit, state, rootState, rootGetters}) {
     const {datasource} = rootState.hash
-    const {authInfo, isPresto, isHive, isSpark, isElasticsearch} = rootGetters
+    const {authInfo, isPresto, isTrino, isHive, isSpark} = rootGetters
     const {catalog, schema, table} = state
 
-    if (isPresto && !catalog) {
-      return false
-    }
-
-    if (!isElasticsearch && !schema) {
+    if ((isPresto || isTrino) && !catalog) {
       return false
     }
 
@@ -190,12 +188,12 @@ const actions = {
     let data
     if (isPresto) {
       data = await api.getColumnsPresto(datasource, catalog, schema, table, authInfo)
+    } else if (isTrino) {
+      data = await api.getColumnsTrino(datasource, catalog, schema, table, authInfo)
     } else if (isHive) {
       data = await api.getColumnsHive(datasource, schema, table, authInfo)
     } else if (isSpark) {
       data = await api.getColumnsSpark(datasource, schema, table, authInfo)
-    } else if (isElasticsearch) {
-      data = await api.getColumnsElasticsearch(datasource, table, authInfo)
     } else {
       throw new Error('not supported')
     }
@@ -227,7 +225,7 @@ const actions = {
   },
   async getPartitions ({commit, state, getters, rootState, rootGetters}) {
     const {datasource} = rootState.hash
-    const {authInfo, isPresto, isHive, isSpark} = rootGetters
+    const {authInfo, isPresto, isTrino, isHive, isSpark} = rootGetters
     const {catalog, schema, table, selectedPartitions} = state
     const {partitionKeys, columnTypesMap} = getters
 
@@ -269,6 +267,8 @@ const actions = {
     let data
     if (isPresto) {
       data = await api.getPartitionsPresto(datasource, catalog, schema, table, option, authInfo)
+    } else if (isTrino) {
+      data = await api.getPartitionsTrino(datasource, catalog, schema, table, option, authInfo)
     } else if (isHive) {
       data = await api.getPartitionsHive(datasource, schema, table, option, authInfo)
     } else if (isSpark) {

@@ -32,8 +32,8 @@ public class Query {
   @Column(name = "query_string")
   private String queryString;
 
-  @Column(name = "user")
-  private String user;
+  @Column(name = "userid")
+  private String userid;
 
   @Column(name = "status")
   private String status;

@@ -52,8 +52,12 @@ const apis = {
   tableList: '/tableList',
   presto: '/presto',
   prestoAsync: '/prestoAsync',
-  queryStatus: '/queryStatus',
-  query: '/query',
+  prestoQuery: '/prestoQuery',
+  prestoQueryStatus: '/prestoQueryStatus',
+  trino: '/trino',
+  trinoAsync: '/trinoAsync',
+  trinoQuery: '/trinoQuery',
+  trinoQueryStatus: '/trinoQueryStatus',
   history: '/history',
   historyStatus: '/historyStatus',
   queryHistory: '/queryHistory?datasource={datasource}',
@@ -64,8 +68,10 @@ const apis = {
   format: '/format',
   convertPresto: '/convertPresto',
   convertHive: '/convertHive',
-  kill: '/kill',
-  detail: '/queryDetail?datasource={datasource}&queryid={queryid}',
+  killPresto: '/killPresto',
+  killTrino: '/killTrino',
+  prestoDetail: '/prestoQueryDetail?datasource={datasource}&queryid={queryid}',
+  trinoDetail: '/trinoQueryDetail?datasource={datasource}&queryid={queryid}',
   shareHistory: '/share/shareHistory',
   shareDownload: '/share/download?publish_id={publishId}&encode=UTF-8&header={includeHeader}',
   shareCsvDownload: '/share/csvdownload?publish_id={publishId}&encode=UTF-8&header={includeHeader}',
@@ -77,14 +83,11 @@ const apis = {
   killHive: '/killHive',
   hiveQueryDetail: '/hiveQueryDetail?engine=hive&datasource={datasource}&id={id}',
   prestoPartition: '/prestoPartition',
+  trinoPartition: '/trinoPartition',
   hivePartition: '/hivePartition',
   queryHistoryUser: '/queryHistoryUser?datasource={datasource}&engine={engine}',
   bookmarkUser: '/bookmarkUser',
   comment: '/comment',
-  elasticsearch: '/elasticsearch',
-  elasticsearchQueryStatus: '/elasticsearchQueryStatus',
-  translate: '/elasticsearch?translate',
-  label: '/label',
   spark: '/spark',
   sparkPartition: '/sparkPartition',
   sparkAsync: '/sparkAsync',
@@ -145,6 +148,16 @@ export async function getCatalogsPresto (datasource, authInfo) {
   return response.data
 }
 
+export async function getCatalogsTrino (datasource, authInfo) {
+  const params = {
+    datasource,
+    query: addHiddenQueryPrefix('SHOW CATALOGS'),
+    ...authInfo
+  }
+  const response = await client.post(apis.trino, makeFormParams(params))
+  return response.data
+}
+
 export async function getSchemataPresto (datasource, catalog, authInfo) {
   const params = {
     datasource,
@@ -152,6 +165,16 @@ export async function getSchemataPresto (datasource, catalog, authInfo) {
     ...authInfo
   }
   const response = await client.post(apis.presto, makeFormParams(params))
+  return response.data
+}
+
+export async function getSchemataTrino (datasource, catalog, authInfo) {
+  const params = {
+    datasource,
+    query: addHiddenQueryPrefix(`SHOW SCHEMAS FROM ${catalog}`),
+    ...authInfo
+  }
+  const response = await client.post(apis.trino, makeFormParams(params))
   return response.data
 }
 
@@ -221,6 +244,18 @@ export async function getTablesPresto (datasource, catalog, schema, authInfo) {
   return response.data
 }
 
+export async function getTablesTrino (datasource, catalog, schema, authInfo) {
+  const params = {
+    datasource,
+    query: addHiddenQueryPrefix(
+      `SELECT table_name, table_type FROM ${catalog}.information_schema.tables
+               WHERE table_schema='${schema}' ORDER BY table_name`),
+    ...authInfo
+  }
+  const response = await client.post(apis.trino, makeFormParams(params))
+  return response.data
+}
+
 export async function getTablesHive (datasource, schema, authInfo) {
   const params = {
     engine: 'hive',
@@ -243,16 +278,6 @@ export async function getTablesSpark (datasource, schema, authInfo) {
   return response.data
 }
 
-export async function getTablesElasticsearch (datasource, authInfo) {
-  const params = {
-    datasource,
-    query: `SHOW TABLES`,
-    ...authInfo
-  }
-  const response = await client.post(apis.elasticsearch, makeFormParams(params))
-  return response.data
-}
-
 export async function getColumnsPresto (datasource, catalog, schema, table, authInfo) {
   const params = {
     datasource,
@@ -260,6 +285,16 @@ export async function getColumnsPresto (datasource, catalog, schema, table, auth
     ...authInfo
   }
   const response = await client.post(apis.presto, makeFormParams(params))
+  return response.data
+}
+
+export async function getColumnsTrino (datasource, catalog, schema, table, authInfo) {
+  const params = {
+    datasource,
+    query: addHiddenQueryPrefix(`DESCRIBE ${catalog}.${schema}."${table}"`),
+    ...authInfo
+  }
+  const response = await client.post(apis.trino, makeFormParams(params))
   return response.data
 }
 
@@ -285,16 +320,6 @@ export async function getColumnsSpark (datasource, schema, table, authInfo) {
   return response.data
 }
 
-export async function getColumnsElasticsearch (datasource, table, authInfo) {
-  const params = {
-    datasource,
-    query: addHiddenQueryPrefix(`DESCRIBE "${table}"`),
-    ...authInfo
-  }
-  const response = await client.post(apis.elasticsearch, makeFormParams(params))
-  return response.data
-}
-
 export async function getPartitionsPresto (datasource, catalog, schema, table, option, authInfo) {
   const params = {
     datasource,
@@ -305,6 +330,19 @@ export async function getPartitionsPresto (datasource, catalog, schema, table, o
     ...authInfo
   }
   const response = await client.post(apis.prestoPartition, makeFormParams(params))
+  return response.data
+}
+
+export async function getPartitionsTrino (datasource, catalog, schema, table, option, authInfo) {
+  const params = {
+    datasource,
+    catalog,
+    schema,
+    table,
+    ...option,
+    ...authInfo
+  }
+  const response = await client.post(apis.trinoPartition, makeFormParams(params))
   return response.data
 }
 
@@ -365,6 +403,16 @@ export async function runQueryPresto (datasource, query, authInfo) {
   return response.data
 }
 
+export async function runQueryTrino (datasource, query, authInfo) {
+  const params = {
+    datasource,
+    query,
+    ...authInfo
+  }
+  const response = await client.post(apis.trinoAsync, makeFormParams(params))
+  return response.data
+}
+
 export async function runQueryHive (datasource, query, authInfo) {
   const params = {
     engine: 'hive',
@@ -387,33 +435,23 @@ export async function runQuerySpark (datasource, query, authInfo) {
   return response.data
 }
 
-export async function runQueryElasticsearch (datasource, query, authInfo) {
-  const params = {
-    datasource,
-    query,
-    ...authInfo
-  }
-  const response = await client.post(apis.elasticsearch, makeFormParams(params))
-  return response.data
-}
-
-export async function translateQueryElasticsearch (datasource, query, authInfo) {
-  const params = {
-    datasource,
-    query,
-    ...authInfo
-  }
-  const response = await client.post(apis.translate, makeFormParams(params))
-  return response.data
-}
-
 export async function getQueryStatusPresto (datasource, queryid, authInfo) {
   const params = {
     datasource,
     queryid,
     ...authInfo
   }
-  const response = await client.post(apis.queryStatus, makeFormParams(params))
+  const response = await client.post(apis.prestoQueryStatus, makeFormParams(params))
+  return response.data
+}
+
+export async function getQueryStatusTrino (datasource, queryid, authInfo) {
+  const params = {
+    datasource,
+    queryid,
+    ...authInfo
+  }
+  const response = await client.post(apis.trinoQueryStatus, makeFormParams(params))
   return response.data
 }
 
@@ -436,16 +474,6 @@ export async function getQueryStatusSpark (datasource, queryid, authUserInfo) {
     ...authUserInfo
   }
   const response = await client.post(apis.sparkQueryStatus, makeFormParams(params))
-  return response.data
-}
-
-export async function getQueryStatusElasticsearch (datasource, queryid, authUserInfo) {
-  const params = {
-    datasource,
-    queryid,
-    ...authUserInfo
-  }
-  const response = await client.post(apis.elasticsearchQueryStatus, makeFormParams(params))
   return response.data
 }
 
@@ -497,7 +525,17 @@ export async function killQueryPresto (datasource, queryid, authInfo) {
     queryid,
     ...authInfo
   }
-  const response = await client.post(apis.kill, makeFormParams(params))
+  const response = await client.post(apis.killPresto, makeFormParams(params))
+  return response.data
+}
+
+export async function killQueryTrino (datasource, queryid, authInfo) {
+  const params = {
+    datasource,
+    queryid,
+    ...authInfo
+  }
+  const response = await client.post(apis.killTrino, makeFormParams(params))
   return response.data
 }
 
@@ -626,37 +664,6 @@ export async function deleteComment (datasource, engine, queryid) {
   return response.data
 }
 
-export async function getLabel (datasource, engine, queryid) {
-  const params = {
-    datasource,
-    engine,
-    queryid
-  }
-  const response = await client.get(apis.label, {params, timeout: TIMEOUT})
-  return response.data
-}
-
-export async function postLabel (datasource, engine, queryid, labelName) {
-  const params = {
-    datasource,
-    engine,
-    queryid,
-    labelName
-  }
-  const response = await client.post(apis.label, makeFormParams(params), {timeout: TIMEOUT})
-  return response.data
-}
-
-export async function deleteLabel (datasource, engine, queryid) {
-  const params = {
-    datasource,
-    engine,
-    queryid
-  }
-  const response = await client.delete(apis.label, {params, timeout: TIMEOUT})
-  return response.data
-}
-
 export async function publish (datasource, engine, queryid) {
   const params = {
     datasource,
@@ -682,7 +689,16 @@ export async function getQlistPresto (datasource, authInfo) {
     datasource,
     ...authInfo
   }
-  const response = await client.post(apis.query, makeFormParams(params))
+  const response = await client.post(apis.prestoQuery, makeFormParams(params))
+  return response.data
+}
+
+export async function getQlistTrino (datasource, authInfo) {
+  const params = {
+    datasource,
+    ...authInfo
+  }
+  const response = await client.post(apis.trinoQuery, makeFormParams(params))
   return response.data
 }
 
@@ -720,16 +736,15 @@ export function buildShareDownloadUrl (publishId, isCsv, includeHeader) {
   return BASE_URL + api.format({publishId, includeHeader})
 }
 
-export function buildDetailUrl (isPresto, isHive, isSpark, isElasticsearch, datasource, queryid) {
+export function buildDetailUrl (isPresto, isHive, isSpark, isTrino, datasource, queryid) {
   if (isPresto) {
-    return BASE_URL + apis.detail.format({datasource, queryid})
+    return BASE_URL + apis.prestoDetail.format({datasource, queryid})
   } else if (isHive) {
     return BASE_URL + apis.hiveQueryDetail.format({datasource, id: queryid})
   } else if (isSpark) {
     return BASE_URL + apis.sparkQueryDetail.format({datasource})
-  } else if (isElasticsearch) {
-    // dummy
-    return BASE_URL
+  } else if (isTrino) {
+    return BASE_URL + apis.trinoDetail.format({datasource, queryid})
   } else {
     throw new Error('not supported')
   }

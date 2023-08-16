@@ -34,7 +34,7 @@ public final class HistoryUtil {
     responseBody.put("lineNumber", query.getLinenumber());
     responseBody.put("elapsedTimeMillis", query.getElapsedTimeMillis());
     responseBody.put("rawDataSize", toSuccinctDataSize(query.getResultFileSize()));
-    responseBody.put("user", query.getUser());
+    responseBody.put("userid", query.getUserid());
 
     Map<String, String> map = new HashMap<>();
     for (SessionProperty sessionProperty : sessionPropertyList) {

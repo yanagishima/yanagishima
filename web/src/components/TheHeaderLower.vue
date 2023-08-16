@@ -4,8 +4,8 @@
       <BaseAce :code="inputQuery" :goto-line="gotoLine" :focus="focus" :min-lines="settings.minline" :max-lines="Infinity"
            :theme="settings.theme" @change-code="setInputQuery" @run-code="runQuery"
            :error-line="errorLine" :error-text="tinyErrorText" :readonly="loading"
-           :complete-words="isPresto ? completeWords : []"
-           @format-code="isPresto ? formatQuery() : () => {}" @validate-code="isPresto ? validateQuery() : () => {}"></BaseAce>
+           :complete-words="(isPresto || isTrino) ? completeWords : []"
+           @format-code="(isPresto || isTrino) ? formatQuery() : () => {}" @validate-code="(isPresto || isTrino) ? validateQuery() : () => {}"></BaseAce>
     </div>
     <fieldset v-if="variables.length" id="variables" class="mb-3">
       <legend>{{variables.length}} variables</legend>
@@ -34,7 +34,7 @@
                     data-toggle="tooltip" data-animation="false" title="Convert Query"
                     :disabled="!inputQuery.length || loading"><i class="fa fa-fw fa-exchange"></i>
             </button>
-            <button v-if="isPresto" type="button" class="btn btn-secondary px-2" @click.prevent="formatQuery"
+            <button v-if="isPresto || isTrino" type="button" class="btn btn-secondary px-2" @click.prevent="formatQuery"
                     data-toggle="tooltip" data-animation="false" title="Format Query"
                     :disabled="!inputQuery.length || loading"><i class="fa fa-fw fa-indent"></i>
             </button>
@@ -58,11 +58,7 @@
                 <button type="button" class="dropdown-item" :disabled="!runnable" @click="explainQuery">Explain (Text)</button>
                 <button type="button" class="dropdown-item" :disabled="!runnable" @click="explainGraphvizQuery">Explain (Graph)</button>
               </template>
-              <template v-else-if="isHive || isSpark">
-                <button type="button" class="dropdown-item" :disabled="!runnable" @click="explainQuery">Explain</button>
-              </template>
-              <template v-else-if="isElasticsearch">
-                <button type="button" class="dropdown-item" :disabled="!runnable" @click="translateQuery">Translate</button>
+              <template v-else-if="isTrino || isHive || isSpark">
                 <button type="button" class="dropdown-item" :disabled="!runnable" @click="explainQuery">Explain</button>
               </template>
             </div>
@@ -109,7 +105,7 @@ export default {
       'isPresto',
       'isHive',
       'isSpark',
-      'isElasticsearch',
+      'isTrino',
       'datasourceIndex',
       'datasourceEngine'
     ]),
@@ -204,9 +200,6 @@ export default {
       } else {
         throw new Error('not supported')
       }
-    },
-    translateQuery () {
-      this.runQuery(this.inputQuery, true)
     },
     addBookmarkItem () {
       this.$store.dispatch('bookmark/addBookmarkItem')

@@ -64,9 +64,9 @@ const actions = {
     }
   },
   async getCompleteWords ({commit, rootState, rootGetters}) {
-    const {isPresto} = rootGetters
+    const {isPresto, isTrino} = rootGetters
 
-    if (!isPresto) {
+    if (!(isPresto || isTrino)) {
       return false
     }
 

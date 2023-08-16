@@ -3,12 +3,12 @@ package yanagishima.controller;
 import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
 
+import io.swagger.annotations.Api;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import io.swagger.annotations.Api;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import yanagishima.annotation.DatasourceAuth;

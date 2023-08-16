@@ -6,14 +6,49 @@ server:
 spring:
   application:
     name: yanagishima
+  mvc:
+    pathmatch:
+      matching-strategy: ant_path_matcher
+  web:
+    resources:
+      static-locations: file:web
+## Choose one of the following databases
+## MySQL
   datasource:
-    driver-class-name: com.mysql.jdbc.Driver
+    driver-class-name: com.mysql.cj.jdbc.Driver
     username: root
-    password: test
-    url: jdbc:mysql://localhost:13306/test?allowPublicKeyRetrieval=true&useSSL=false
-    initialization-mode: always
-  resources:
-    static-locations: file:web
+    password: password
+    url: jdbc:mysql://localhost:3306/yanagishima?useUnicode=yes&characterEncoding=UTF-8&useSSL=false&allowPublicKeyRetrieval=true
+  sql:
+    init:
+      mode: always
+      platform: mysql
+  jpa:
+    database-platform: org.hibernate.dialect.MySQLDialect
+### PostgreSQL
+#  datasource:
+#    driver-class-name: org.postgresql.Driver
+#    username: postgres
+#    password: password
+#    url: jdbc:postgresql://localhost:5432/postgres?currentSchema=yanagishima
+#  jpa:
+#    database-platform: org.hibernate.dialect.PostgreSQLDialect
+#  sql:
+#    init:
+#      mode: always
+#      platform: postgres
+### SQLite
+#  datasource:
+#    driver-class-name: org.sqlite.JDBC
+#    url: jdbc:sqlite:yanagishima.db
+#  jpa:
+#    database-platform: org.sqlite.hibernate.dialect.SQLiteDialect
+#  sql:
+#    init:
+#      mode: always
+#      platform: sqlite
+
+
 
 # Metrics
 management:
@@ -34,7 +69,7 @@ management:
     web.exposure.include: '*'
 
 # Datasources
-sql.query.engines: presto,hive,spark
+sql.query.engines: trino
 check.datasource: false
 select.limit: 500
 audit.http.header.name: some.auth.header
@@ -42,7 +77,7 @@ use.audit.http.header.name: false
 to.values.query.limit: 500
 cors.enabled: true
 
-# Trino
+# Presto
 presto.datasources: docker-presto
 presto.query.max-run-time-seconds: 1800
 presto.max-result-file-byte-size: 1073741824
@@ -51,6 +86,16 @@ presto.coordinator.server.docker-presto: http://localhost:18080
 presto.redirect.server.docker-presto: http://localhost:18080/ui
 catalog.docker-presto: tpch
 schema.docker-presto: sf1
+
+# Trino
+trino.datasources: docker-trino
+trino.query.max-run-time-seconds: 1800
+trino.max-result-file-byte-size: 1073741824
+auth.docker-trino: false
+trino.coordinator.server.docker-trino: http://localhost:18081
+trino.redirect.server.docker-trino: http://localhost:18081/ui
+catalog.docker-trino: tpch
+schema.docker-trino: sf1
 
 # Hive
 hive.datasources: docker-hive
