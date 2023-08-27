@@ -36,6 +36,7 @@ public class PrestoClient {
   }
 
   private Response execute(Request.Builder request) throws IOException {
+    // check whether userName is empty
     if (userName != null) {
       request.addHeader(PRESTO_USER_HEADER, userName);
     }
