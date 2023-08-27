@@ -17,6 +17,7 @@ public class PrestoClient {
   private final OkHttpClient httpClient = new OkHttpClient();
   private final String coordinator;
   private final String userName;
+  // testing wheather to use presto or trino as coordinator
   private final Optional<String> user;
   private final Optional<String> password;
 
