@@ -14,6 +14,7 @@ import okhttp3.Response;
 public class PrestoClient {
   private static final String PRESTO_USER_HEADER = "X-Trino-User";
 
+  // testing method
   private final OkHttpClient httpClient = new OkHttpClient();
   private final String coordinator;
   // userName
