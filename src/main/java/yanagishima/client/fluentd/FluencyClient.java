@@ -17,6 +17,7 @@ import yanagishima.config.YanagishimaConfig;
 @RequiredArgsConstructor
 public class FluencyClient {
   private final YanagishimaConfig config;
+  // testing
   private Fluency fluency;
 
   @PostConstruct

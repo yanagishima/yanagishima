@@ -16,6 +16,7 @@ public class PrestoClient {
 
   private final OkHttpClient httpClient = new OkHttpClient();
   private final String coordinator;
+  // userName
   private final String userName;
   private final Optional<String> user;
   private final Optional<String> password;
