@@ -17,8 +17,8 @@ export default {
     buildDownloadUrl (datasource, queryid, isCsv, includeHeader) {
       return api.buildDownloadUrl(datasource, queryid, isCsv, includeHeader)
     },
-    buildDetailUrl (isPresto, isHive, isSpark, isElasticsearch, datasource, queryid) {
-      return api.buildDetailUrl(isPresto, isHive, isSpark, isElasticsearch, datasource, queryid)
+    buildDetailUrl (isPresto, isHive, isSpark, isTrino, datasource, queryid) {
+      return api.buildDetailUrl(isPresto, isHive, isSpark, isTrino, datasource, queryid)
     },
     buildShareDownloadUrl (publishId, isCsv, includeHeader) {
       return api.buildShareDownloadUrl(publishId, isCsv, includeHeader)

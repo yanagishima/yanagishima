@@ -1,29 +1,27 @@
 package yanagishima.controller;
 
-import java.util.Map;
-import java.util.Optional;
-
-import javax.servlet.http.HttpServletRequest;
-
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
-
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.Response;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 import yanagishima.annotation.DatasourceAuth;
-import yanagishima.client.presto.PrestoClient;
+import yanagishima.client.trino.TrinoClient;
 import yanagishima.config.YanagishimaConfig;
+
+import javax.servlet.http.HttpServletRequest;
+import java.util.Map;
+import java.util.Optional;
 
 @Slf4j
 @RestController
 @RequiredArgsConstructor
-public class PrestoKillController {
+public class TrinoKillController {
   private final YanagishimaConfig config;
 
   @DatasourceAuth
-  @PostMapping("killPresto")
+  @PostMapping("killTrino")
   public Map<String, Object> post(@RequestParam String datasource,
                                   @RequestParam(name = "queryid", required = false) String queryId,
                                   @RequestParam Optional<String> user,
@@ -34,16 +32,16 @@ public class PrestoKillController {
     }
 
     try {
-      String coordinatorUrl = config.getPrestoCoordinatorServer(datasource);
+      String coordinatorUrl = config.getTrinoCoordinatorServer(datasource);
       String userName = request.getHeader(config.getAuditHttpHeaderName());
-      PrestoClient prestoClient = null;
-      if (config.isPrestoImpersonation(datasource)) {
-        prestoClient = new PrestoClient(coordinatorUrl, userName,
-                config.getPrestoImpersonatedUser(datasource), config.getPrestoImpersonatedPassword(datasource));
+      TrinoClient trinoClient = null;
+      if (config.isTrinoImpersonation(datasource)) {
+        trinoClient = new TrinoClient(coordinatorUrl, userName,
+                config.getTrinoImpersonatedUser(datasource), config.getTrinoImpersonatedPassword(datasource));
       } else {
-        prestoClient = new PrestoClient(coordinatorUrl, userName, user, password);
+        trinoClient = new TrinoClient(coordinatorUrl, userName, user, password);
       }
-      Response killResponse = prestoClient.kill(queryId);
+      Response killResponse = trinoClient.kill(queryId);
       return Map.of("code", killResponse.code(), "message", killResponse.message(), "url",
                     killResponse.request().url());
     } catch (Throwable e) {

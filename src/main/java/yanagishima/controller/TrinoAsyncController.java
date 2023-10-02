@@ -1,38 +1,36 @@
 package yanagishima.controller;
 
-import static yanagishima.util.AccessControlUtil.sendForbiddenError;
+import io.trino.client.ClientException;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+import yanagishima.annotation.DatasourceAuth;
+import yanagishima.config.YanagishimaConfig;
+import yanagishima.service.TrinoService;
 
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
-
-import com.facebook.presto.client.ClientException;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import yanagishima.annotation.DatasourceAuth;
-import yanagishima.config.YanagishimaConfig;
-import yanagishima.service.PrestoService;
+import static yanagishima.util.AccessControlUtil.sendForbiddenError;
 
 @Slf4j
 @RestController
 @RequiredArgsConstructor
-public class PrestoAsyncController {
-  private final PrestoService prestoService;
+public class TrinoAsyncController {
+  private final TrinoService trinoService;
   private final YanagishimaConfig config;
 
   @DatasourceAuth
-  @PostMapping("prestoAsync")
+  @PostMapping("trinoAsync")
   public Map<String, Object> post(@RequestParam String datasource,
                                   @RequestParam(required = false) String query,
-                                  @RequestParam(name = "user") Optional<String> prestoUser,
-                                  @RequestParam(name = "password") Optional<String> prestoPassword,
+                                  @RequestParam(name = "trinoUser") Optional<String> trinoUser,
+                                  @RequestParam(name = "trinoPassword") Optional<String> trinoPassword,
                                   @RequestParam(name = "session_property") Optional<String> sessionProperty,
                                   HttpServletRequest request, HttpServletResponse response) {
     Map<String, Object> responseBody = new HashMap<>();
@@ -49,16 +47,16 @@ public class PrestoAsyncController {
       if (user != null) {
         log.info("{} executed {} in {}", user, query, datasource);
       }
-      if (prestoUser.isPresent() && prestoPassword.isPresent() && prestoUser.get().isEmpty()) {
+      if (trinoUser.isPresent() && trinoPassword.isPresent() && trinoUser.get().isEmpty()) {
         responseBody.put("error", "user is empty");
         return responseBody;
       }
       try {
-        String queryId = executeQuery(datasource, query, sessionProperty, user, prestoUser, prestoPassword);
+        String queryId = executeQuery(datasource, query, sessionProperty, user, trinoUser, trinoPassword);
         responseBody.put("queryid", queryId);
       } catch (ClientException e) {
-        if (prestoUser.isPresent()) {
-          log.error("{} failed to be authenticated", prestoUser.get());
+        if (trinoUser.isPresent()) {
+          log.error("{} failed to be authenticated", trinoUser.get());
         }
         log.error(e.getMessage(), e);
         responseBody.put("error", e.getMessage());
@@ -74,9 +72,9 @@ public class PrestoAsyncController {
   }
 
   private String executeQuery(String datasource, String query, Optional<String> sessionPropertyOptional,
-                              String user, Optional<String> prestoUser, Optional<String> prestoPassword) {
-    return prestoService.doQueryAsync(datasource, query, sessionPropertyOptional, user, prestoUser,
-                                      prestoPassword);
+                              String user, Optional<String> trinoUser, Optional<String> trinoPassword) {
+    return trinoService.doQueryAsync(datasource, query, sessionPropertyOptional, user, trinoUser,
+                                      trinoPassword);
   }
 
   private String getUsername(HttpServletRequest request) {

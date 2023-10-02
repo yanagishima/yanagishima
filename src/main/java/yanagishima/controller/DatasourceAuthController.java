@@ -50,10 +50,10 @@ public class DatasourceAuthController {
                                    .collect(Collectors.toList());
 
       Map<String, Object> context = Map.of(
-          "engines", engines,
-          "auth", config.isAuth(datasource),
-          "metadataService", false, // Deprecated
-          "datetimePartitionHasHyphen", config.isDatatimePartitionHasHyphen(datasource));
+              "engines", engines,
+              "auth", config.isAuth(datasource),
+              "metadataService", false, // Deprecated
+              "datetimePartitionHasHyphen", config.isDatatimePartitionHasHyphen(datasource));
 
       datasourceEngines.add(Map.of(datasource, context));
     }

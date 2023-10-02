@@ -12,12 +12,12 @@ import java.util.Optional;
 
 import javax.servlet.http.HttpServletResponse;
 
+import io.swagger.annotations.Api;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import io.swagger.annotations.Api;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import yanagishima.client.fluentd.FluencyClient;
@@ -57,7 +57,7 @@ public class ShareController {
     }
 
     publishService.get(publishId).ifPresent(publish -> {
-      String publishUser = publish.getUser();
+      String publishUser = publish.getUserid();
       String requestUser = user.getId();
       String viewers = publish.getViewers();
       if (!canAccessPublishedPage(publishUser, requestUser, viewers)) {
@@ -81,7 +81,7 @@ public class ShareController {
     }
 
     publishService.get(publishId).ifPresent(publish -> {
-      String publishUser = publish.getUser();
+      String publishUser = publish.getUserid();
       String requestUser = user.getId();
       String viewers = publish.getViewers();
       if (!canAccessPublishedPage(publishUser, requestUser, viewers)) {
@@ -94,23 +94,10 @@ public class ShareController {
   }
 
   @GetMapping("share/shareHistory")
-  public Map<String, Object> get(@RequestParam(name = "publish_id") String publishId, User user,
-                                 HttpServletResponse response) {
+  public Map<String, Object> get(@RequestParam(name = "publish_id") String publishId, HttpServletResponse response) {
     Map<String, Object> body = new HashMap<>();
     try {
       publishService.get(publishId).ifPresent(publish -> {
-        String publishUser = publish.getUser();
-        String requestUser = user.getId();
-        String viewers = publish.getViewers();
-        if (!canAccessPublishedPage(publishUser, requestUser, viewers)) {
-          body.put("publishUser", publishUser);
-          body.put("accessDeniedFlag", true);
-          return;
-        }
-        if (publishUser != null && publishUser.equals(requestUser)) {
-          body.put("publisherFlag", true);
-          body.put("viewers", viewers);
-        }
         String datasource = publish.getDatasource();
         body.put("datasource", datasource);
         String queryId = publish.getQueryId();
@@ -138,7 +125,7 @@ public class ShareController {
     Map<String, Object> body = new HashMap<>();
     try {
       publishService.get(publishId).ifPresent(publish -> {
-        String publishUser = publish.getUser();
+        String publishUser = publish.getUserid();
         String requestUser = user.getId();
         if (publishUser != null && publishUser.equals(requestUser)) {
           String lowerViewers = viewers.toLowerCase();
@@ -163,7 +150,7 @@ public class ShareController {
     event.put("datasource", publish.getDatasource());
     event.put("engine", publish.getEngine());
     event.put("query_id", publish.getQueryId());
-    event.put("user", publish.getUser());
+    event.put("user", publish.getUserid());
     event.put("viewers", viewers);
     event.put("path", path);
     fluencyClient.emitPublish(event);

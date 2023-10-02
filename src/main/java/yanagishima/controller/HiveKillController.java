@@ -22,7 +22,7 @@ import yanagishima.util.YarnUtil;
 @Slf4j
 @RestController
 @RequiredArgsConstructor
-public class KillHiveController {
+public class HiveKillController {
   private final StatementPool statements;
   private final YanagishimaConfig config;
 

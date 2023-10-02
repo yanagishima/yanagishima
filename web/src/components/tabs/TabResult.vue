@@ -84,7 +84,7 @@
               <div class="btn-group">
                 <a href="#" class="btn btn-sm btn-secondary" @click.prevent="killQuery"><i
                   class="fa fa-fw fa-times mr-1 text-danger"></i>Kill</a>
-                <a class="btn btn-sm btn-secondary" :href="buildDetailUrl(isPresto, isHive, isSpark, isElasticsearch, datasource, runningQueryid)"
+                <a class="btn btn-sm btn-secondary" :href="buildDetailUrl(isPresto, isHive, isSpark, isTrino, datasource, runningQueryid)"
                    :target="'_blank'"><i class="fa fa-fw fa-info"></i>Info</a>
               </div>
             </div>
@@ -246,7 +246,7 @@ export default {
       'isPresto',
       'isHive',
       'isSpark',
-      'isElasticsearch',
+      'isTrino',
       'datasourceEngine'
     ]),
     ...mapState('result', [
@@ -258,7 +258,6 @@ export default {
       'loading',
       'response',
       'error',
-      'label',
       'editLabel'
     ]),
     isPrettyModel: {
@@ -376,17 +375,6 @@ export default {
           })
         })
         .catch(() => {})
-    },
-    moveHisotryTab (label) {
-      this.$store.commit('history/setLabel', {data: label})
-      this.$store.commit('setHashItem', {tab: 'history'})
-    },
-    addLabel () {
-      this.$store.dispatch('result/postLabel', {inputLabel: this.inputLabel})
-      this.inputLabel = null
-    },
-    removeLabel () {
-      this.$store.dispatch('result/deleteLabel')
     }
   }
 }

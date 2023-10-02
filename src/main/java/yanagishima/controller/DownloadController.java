@@ -8,11 +8,11 @@ import java.util.Optional;
 
 import javax.servlet.http.HttpServletResponse;
 
+import io.swagger.annotations.Api;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import io.swagger.annotations.Api;
 import lombok.RequiredArgsConstructor;
 import yanagishima.annotation.DatasourceAuth;
 import yanagishima.config.YanagishimaConfig;

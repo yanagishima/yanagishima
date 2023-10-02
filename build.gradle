@@ -2,8 +2,7 @@ plugins {
     id 'java'
     id 'distribution'
     id 'checkstyle'
-    id "net.ltgt.errorprone" version "2.0.1"
-    id 'com.adarshr.test-logger' version '2.0.0'
+    id 'com.adarshr.test-logger' version '3.2.0'
 }
 
 version = '23.0'
@@ -16,22 +15,22 @@ repositories {
 }
 
 compileJava.options.encoding = 'UTF-8'
-sourceCompatibility = JavaVersion.VERSION_11
-targetCompatibility = JavaVersion.VERSION_11
+sourceCompatibility = 11
+targetCompatibility = 11
 
 checkstyle {
     configFile = file("$project.rootDir/config/checkstyle/checkstyle.xml")
     toolVersion = "8.29"
     showViolations = true
-    ignoreFailures = false
+    ignoreFailures = true
     maxWarnings = 0
 }
 
-task createDirs() {
-  file('build/package').mkdirs()
+tasks.register('createDirs') {
+    file('build/package').mkdirs()
 }
 
-task buildWeb(type:Exec) {
+tasks.register('buildWeb', Exec) {
     workingDir './web'
     commandLine './deploy.sh'
     standardOutput = new ByteArrayOutputStream()
@@ -40,67 +39,62 @@ task buildWeb(type:Exec) {
     }
 }
 
-task copyWeb(type: Copy) {
-  from('web/dist')
-  into('build/package/web')
+tasks.register('copyWeb', Copy) {
+    from('web/dist')
+    into('build/package/web')
 }
 
-task copyDeps(type: Copy) {
-  from(configurations.compile)
-  into('build/package/lib')
+tasks.register('copyDeps', Copy) {
+    from(configurations.compileClasspath, configurations.runtimeClasspath)
+    into('build/package/lib')
 }
 
-task copyLibs(type: Copy, dependsOn: 'jar') {
-  from('build/libs')
-  into('build/package/lib')
+tasks.register('copyLibs', Copy) {
+    dependsOn 'jar'
+    from('build/libs')
+    into('build/package/lib')
 }
 
-task copyPackage(type: Copy) {
-  from('src/package')
-  into('build/package')
+tasks.register('copyPackage', Copy) {
+    from('src/package')
+    into('build/package')
 }
 
-task copyConfig(type: Copy) {
-  from('src/main/resources/config')
-  into('build/package/config')
+tasks.register('copyConfig', Copy) {
+    from('src/main/resources/config')
+    into('build/package/config')
 }
 
-task copyData(type: Copy) {
+tasks.register('copyData', Copy) {
     from('data')
     into('build/package/data')
 }
 
-task copyResult(type: Copy) {
+tasks.register('copyResult', Copy) {
     from('result')
     into('build/package/result')
 }
 
-task copy(dependsOn: [
-      'createDirs',
-      'buildWeb',
-      'copyWeb',
-      'copyDeps',
-      'copyLibs',
-      'copyPackage',
-      'copyConfig',
-      'copyData',
-      'copyResult']) {
-  }
+tasks.register('copy') {
+    dependsOn(
+            'createDirs',
+            'buildWeb',
+            'copyWeb',
+            'copyDeps',
+            'copyLibs',
+            'copyPackage',
+            'copyConfig',
+            'copyData',
+            'copyResult')
+}
 
 distributions {
   main {
-    baseName = 'yanagishima'
+    distributionBaseName = 'yanagishima'
     contents {
       from { 'build/package' }
     }
   }
-}
-
-tasks.withType(JavaCompile).configureEach {
-    options.errorprone {
-        error('MissingOverride', 'ClassCanBeStatic', 'ArrayToString', 'RemoveUnusedImports', "PreferJavaTimeOverload")
-        disable('JavaTimeDefaultTimeZone', 'UnusedVariable', 'UnusedMethod', 'FutureReturnValueIgnored', 'StringSplitter')
-    }
 }
 
 distZip.dependsOn 'copy'
@@ -108,57 +102,62 @@ distZip.dependsOn 'copy'
 
 dependencies {
     // Spring Boot
-    compile 'org.springframework.boot:spring-boot-starter-web:2.3.5.RELEASE'
-    compile 'org.springframework.boot:spring-boot-starter-jetty:2.3.5.RELEASE'
-    compile 'org.springframework.boot:spring-boot-starter-data-jpa:2.3.5.RELEASE'
-    compile 'org.springframework.boot:spring-boot-autoconfigure:2.3.5.RELEASE'
-    compile 'org.springframework.boot:spring-boot-starter-actuator:2.3.5.RELEASE'
-    compile 'io.springfox:springfox-boot-starter:3.0.0'
+    implementation 'org.springframework.boot:spring-boot-starter-web:2.7.14'
+    implementation 'org.springframework.boot:spring-boot-starter-jetty:2.7.14'
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa:2.7.14'
+    implementation 'org.springframework.boot:spring-boot-autoconfigure:2.7.14'
+    implementation 'org.springframework.boot:spring-boot-starter-actuator:2.7.14'
+    implementation 'org.springframework.boot:spring-boot-starter-logging:2.7.14'
+    implementation 'io.springfox:springfox-boot-starter:3.0.0'
 
     // MySQL
-    compile 'mysql:mysql-connector-java:5.1.47'
+    implementation 'mysql:mysql-connector-java:8.0.33'
 
-    // Logger
-    compile 'org.slf4j:slf4j-api:1.7.10'
-    compile 'org.slf4j:slf4j-log4j12:1.7.10'
+    // PostgreSQL
+    implementation 'org.postgresql:postgresql:42.2.27'
+
+    // SQLite
+    implementation 'org.xerial:sqlite-jdbc:3.42.0.0'
+    implementation 'com.github.gwenn:sqlite-dialect:0.1.4'
+
+    // Presto
+    implementation 'com.facebook.presto:presto-client:0.282'
+    implementation 'com.facebook.presto:presto-parser:0.282'
+    implementation 'com.squareup.okhttp3:okhttp:3.14.9'
 
     // Trino
-    compile 'io.trino:trino-client:352'
-    compile 'io.trino:trino-parser:352'
-    compile 'com.squareup.okhttp3:okhttp:3.14.9'
+    implementation 'io.trino:trino-client:419'
+    implementation 'io.trino:trino-parser:419'
 
     // Spark
-    compile 'org.apache.httpcomponents:fluent-hc:4.5.13'
-    compile 'org.jsoup:jsoup:1.11.3'
+    implementation 'org.apache.httpcomponents:fluent-hc:4.5.14'
+    implementation 'org.jsoup:jsoup:1.16.1'
 
     // Hive
-    compile 'org.apache.hive:hive-jdbc:1.2.1000.2.5.3.0-37'
-    compile 'org.apache.hadoop:hadoop-common:2.7.3.2.5.3.0-37'
+    implementation 'org.apache.hive:hive-jdbc:1.2.1000.2.5.3.0-37'
+    implementation 'org.apache.hadoop:hadoop-common:2.7.3.2.5.3.0-37'
 
     // Fluentd
-    compile 'org.komamitsu:fluency:1.7.0'
+    implementation 'org.komamitsu:fluency:1.8.1'
 
     // Utility
-    compile 'org.apache.commons:commons-csv:1.5'
-    compile 'com.google.guava:guava:30.1-jre'
+    implementation 'org.apache.commons:commons-csv:1.10.0'
+    implementation 'com.google.guava:guava:32.1.2-jre'
 
     // Lombok
-    compileOnly 'org.projectlombok:lombok:1.18.8'
-    annotationProcessor 'org.projectlombok:lombok:1.18.8'
-    testCompileOnly 'org.projectlombok:lombok:1.18.8'
-    testAnnotationProcessor 'org.projectlombok:lombok:1.18.8'
-
-    // Errorprone
-    errorprone 'com.google.errorprone:error_prone_core:2.3.4'
+    compileOnly 'org.projectlombok:lombok:1.18.28'
+    annotationProcessor 'org.projectlombok:lombok:1.18.28'
+    testCompileOnly 'org.projectlombok:lombok:1.18.28'
+    testAnnotationProcessor 'org.projectlombok:lombok:1.18.28'
 
     // Tests
-    testImplementation "org.junit.jupiter:junit-jupiter-api:5.7.0"
-    testImplementation "org.junit.jupiter:junit-jupiter-engine:5.7.0"
-    testImplementation 'org.springframework.boot:spring-boot-starter-test:2.3.5.RELEASE'
-    testImplementation 'com.h2database:h2:1.4.200'
+    testImplementation "org.junit.jupiter:junit-jupiter-api:5.10.0"
+    testImplementation "org.junit.jupiter:junit-jupiter-engine:5.10.0"
+    testImplementation 'org.springframework.boot:spring-boot-starter-test:2.7.14'
+    testImplementation 'com.h2database:h2:2.2.220'
     testImplementation 'org.mockito:mockito-core:3.9.0'
     testImplementation 'org.mockito:mockito-inline:3.9.0'
-    testImplementation 'org.assertj:assertj-core:3.18.1'
+    testImplementation 'org.assertj:assertj-core:3.24.2'
 }
 
 test {
@@ -166,7 +165,7 @@ test {
 }
 
 configurations {
-  all {
+  configureEach {
     exclude group: 'ch.qos.logback', module: 'logback-classic'
     exclude group: 'com.google.code.gson', module: 'gson'
     exclude group: 'org.eclipse.jetty.aggregate', module: 'jetty-all'

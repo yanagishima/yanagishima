@@ -33,7 +33,7 @@ public class QueryService {
   private final QueryRepository queryRepository;
 
   public List<Query> getAll(String datasource, String engine, String user, String query, int limit) {
-    return queryRepository.findAllByDatasourceAndEngineAndUserAndQueryStringContainsOrderByQueryIdDesc(
+    return queryRepository.findAllByDatasourceAndEngineAndUseridAndQueryStringContainsOrderByQueryIdDesc(
         datasource, engine, user, query, PageRequest.of(0, limit));
   }
 
@@ -46,7 +46,7 @@ public class QueryService {
   }
 
   public Optional<Query> get(String queryId, String datasource, User user) {
-    return queryRepository.findByQueryIdAndDatasourceAndUser(queryId, datasource, user.getId());
+    return queryRepository.findByQueryIdAndDatasourceAndUserid(queryId, datasource, user.getId());
   }
 
   public Optional<Query> getByEngine(String queryId, String datasource, String engine) {
@@ -58,7 +58,7 @@ public class QueryService {
   }
 
   public long count(String datasource, String engine, String user) {
-    return queryRepository.countAllByDatasourceAndEngineAndUser(datasource, engine, user);
+    return queryRepository.countAllByDatasourceAndEngineAndUserid(datasource, engine, user);
   }
 
   public Query insert(String datasource, String engine, String queryId, String fetchResultTimeString,
@@ -71,7 +71,7 @@ public class QueryService {
     query.setQueryId(queryId);
     query.setFetchResultTimeString(fetchResultTimeString);
     query.setQueryString(queryString);
-    query.setUser(user);
+    query.setUserid(user);
     query.setStatus(status);
     query.setElapsedTimeMillis(elapsedTimeMillis);
     query.setResultFileSize(resultFileSize);
@@ -111,7 +111,7 @@ public class QueryService {
       query.setQueryId(queryId);
       query.setFetchResultTimeString(fetchResultTimeString);
       query.setQueryString(queryString);
-      query.setUser(user);
+      query.setUserid(user);
       query.setStatus(Status.FAILED.name());
       query.setElapsedTimeMillis((int) elapsedTimeMillis);
       query.setResultFileSize(resultFileSize);
@@ -138,7 +138,7 @@ public class QueryService {
       query.setQueryId(queryId);
       query.setFetchResultTimeString(fetchResultTimeString);
       query.setQueryString(queryString);
-      query.setUser(user);
+      query.setUserid(user);
       query.setStatus(Status.SUCCEED.name());
       query.setElapsedTimeMillis((int) elapsedTimeMillis);
       query.setResultFileSize(resultFileSize);

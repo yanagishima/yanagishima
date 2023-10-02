@@ -3,6 +3,8 @@ package yanagishima.controller;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import com.google.common.collect.ImmutableList;
+import io.swagger.annotations.Api;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -11,7 +13,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.google.common.base.Splitter;
 
-import io.swagger.annotations.Api;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import yanagishima.annotation.DatasourceAuth;
@@ -72,7 +73,7 @@ public class BookmarkController {
     try {
       List<String> bookmarkIds = SPLITTER.splitToList(bookmarkId);
       if (bookmarkIds.isEmpty()) {
-        bookmarkDto.setBookmarks(List.of());
+        bookmarkDto.setBookmarks(ImmutableList.of());
         return bookmarkDto;
       }
 

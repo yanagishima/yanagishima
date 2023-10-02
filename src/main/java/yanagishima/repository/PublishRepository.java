@@ -15,6 +15,6 @@ public interface PublishRepository extends CrudRepository<Publish, String> {
 
   Optional<Publish> findByPublishId(String publishId);
 
-  List<Publish> findAllByDatasourceAndEngineAndUserOrderByQueryIdDesc(String datasource, String engine,
-                                                                      String user, Pageable pageable);
+  List<Publish> findAllByDatasourceAndEngineAndUseridOrderByQueryIdDesc(String datasource, String engine,
+                                                                        String userid, Pageable pageable);
 }

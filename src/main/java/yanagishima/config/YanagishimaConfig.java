@@ -45,6 +45,19 @@ public class YanagishimaConfig {
     return firstNonNull(redirectStr, getPrestoCoordinatorServer(datasource));
   }
 
+  public String getTrinoCoordinatorServer(String datasource) {
+    return environment.getRequiredProperty("trino.coordinator.server." + datasource);
+  }
+
+  public String getTrinoCoordinatorServerOrNull(String datasource) {
+    return environment.getProperty("trino.coordinator.server." + datasource);
+  }
+
+  public String getTrinoRedirectServer(String datasource) {
+    String redirectStr = environment.getProperty("trino.redirect.server." + datasource);
+    return firstNonNull(redirectStr, getTrinoCoordinatorServer(datasource));
+  }
+
   public String getCatalog(String datasource) {
     return environment.getRequiredProperty("catalog." + datasource);
   }
@@ -102,22 +115,40 @@ public class YanagishimaConfig {
     return Arrays.asList(environment.getRequiredProperty("sql.query.engines").split(","));
   }
 
-  public double getQueryMaxRunTimeSeconds() {
+  public double getPrestoQueryMaxRunTimeSeconds() {
     String secondsStr = environment.getProperty("presto.query.max-run-time-seconds");
     return Double.parseDouble(firstNonNull(secondsStr, "3600"));
   }
 
-  public double getQueryMaxRunTimeSeconds(String datasource) {
+  public double getPrestoQueryMaxRunTimeSeconds(String datasource) {
     String property = environment.getProperty("presto.query.max-run-time-seconds" + "." + datasource);
     if (property == null) {
-      return getQueryMaxRunTimeSeconds();
+      return getPrestoQueryMaxRunTimeSeconds();
     }
     return Double.parseDouble(property);
   }
 
-  public long getMaxResultFileByteSize() {
+  public long getPrestoMaxResultFileByteSize() {
     String sizeStr = environment.getProperty("presto.max-result-file-byte-size");
     return Long.parseLong(firstNonNull(sizeStr, "1073741824"));
+  }
+
+  public long getTrinoMaxResultFileByteSize() {
+    String sizeStr = environment.getProperty("trino.max-result-file-byte-size");
+    return Long.parseLong(firstNonNull(sizeStr, "1073741824"));
+  }
+
+  public double getTrinoQueryMaxRunTimeSeconds() {
+    String secondsStr = environment.getProperty("trino.query.max-run-time-seconds");
+    return Double.parseDouble(firstNonNull(secondsStr, "3600"));
+  }
+
+  public double getTrinoQueryMaxRunTimeSeconds(String datasource) {
+    String property = environment.getProperty("trino.query.max-run-time-seconds" + "." + datasource);
+    if (property == null) {
+      return getPrestoQueryMaxRunTimeSeconds();
+    }
+    return Double.parseDouble(property);
   }
 
   public long getHiveMaxResultFileByteSize() {
@@ -270,6 +301,22 @@ public class YanagishimaConfig {
     return SPLITTER.splitToList(property);
   }
 
+  public List<String> getTrinoSecretKeywords(String datasource) {
+    String property = environment.getProperty("trino.secret.keywords." + datasource);
+    if (property == null) {
+      return Collections.emptyList();
+    }
+    return SPLITTER.splitToList(property);
+  }
+
+  public List<String> getTrinoMustSpecifyConditions(String datasource) {
+    String property = environment.getProperty("trino.must.specify.conditions." + datasource);
+    if (property == null) {
+      return Collections.emptyList();
+    }
+    return SPLITTER.splitToList(property);
+  }
+
   public List<String> getHiveMustSpecifyConditions(String datasource) {
     String property = environment.getProperty("hive.must.specify.conditions." + datasource);
     if (property == null) {
@@ -326,5 +373,17 @@ public class YanagishimaConfig {
 
   public Optional<String> getPrestoImpersonatedPassword(String datasource) {
     return Optional.ofNullable(environment.getProperty("presto.impersonated.password." + datasource));
+  }
+
+  public boolean isTrinoImpersonation(String datasource) {
+    return Boolean.parseBoolean(environment.getProperty("trino.impersonation." + datasource));
+  }
+
+  public Optional<String> getTrinoImpersonatedUser(String datasource) {
+    return Optional.ofNullable(environment.getProperty("trino.impersonated.user." + datasource));
+  }
+
+  public Optional<String> getTrinoImpersonatedPassword(String datasource) {
+    return Optional.ofNullable(environment.getProperty("trino.impersonated.password." + datasource));
   }
 }

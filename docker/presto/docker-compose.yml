@@ -1,0 +1,6 @@
+version: '2'
+services:
+  presto:
+    image: 'prestodb/presto:0.282'
+    ports:
+      - '18080:8080'

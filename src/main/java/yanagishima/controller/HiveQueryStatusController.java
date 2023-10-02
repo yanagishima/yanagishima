@@ -72,8 +72,8 @@ public class HiveQueryStatusController {
           throw new RuntimeException(e);
         }
       } else {
-        if (!queryOptional.isPresent()) {
-          HashMap<String, Object> retVal = new HashMap<String, Object>();
+        if (queryOptional.isEmpty()) {
+          HashMap<String, Object> retVal = new HashMap<>();
           retVal.put("state", "RUNNING");
           retVal.put("progress", 0);
           retVal.put("elapsedTime", 0);
@@ -81,7 +81,7 @@ public class HiveQueryStatusController {
         }
       }
     } else if (engine.equals("spark")) {
-      HashMap<String, Object> retVal = new HashMap<String, Object>();
+      HashMap<String, Object> retVal = new HashMap<>();
       if (queryOptional.isPresent()) {
         if (queryOptional.get().getStatus().equals(Status.SUCCEED.name())) {
           retVal.put("state", "FINISHED");

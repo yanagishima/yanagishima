@@ -27,7 +27,7 @@ public class PublishService {
   }
 
   public List<Publish> getAll(String datasource, String engine, User user, int limit) {
-    return publishRepository.findAllByDatasourceAndEngineAndUserOrderByQueryIdDesc(datasource, engine,
+    return publishRepository.findAllByDatasourceAndEngineAndUseridOrderByQueryIdDesc(datasource, engine,
             user.getId(), PageRequest.of(0, limit));
   }
 
@@ -42,7 +42,7 @@ public class PublishService {
     publish.setDatasource(datasource);
     publish.setEngine(engine);
     publish.setQueryId(queryId);
-    publish.setUser(user);
+    publish.setUserid(user);
     return publishRepository.save(publish);
   }
 

@@ -25,13 +25,13 @@ import yanagishima.config.YanagishimaConfig;
 @Slf4j
 @RestController
 @RequiredArgsConstructor
-public class QueryStatusController {
+public class PrestoQueryStatusController {
   private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
   private final YanagishimaConfig config;
 
   @DatasourceAuth
-  @PostMapping("queryStatus")
+  @PostMapping("prestoQueryStatus")
   public Map<?, ?> post(@RequestParam String datasource,
                         @RequestParam(name = "queryid", required = false) String queryId,
                         @RequestParam Optional<String> user,
@@ -69,8 +69,8 @@ public class QueryStatusController {
 
   private Map<String, String> toMap(int code, String message) {
     return Map.of(
-        "state", "FAILED",
-        "failureInfo", "",
-        "error", format("code=%d, message=%s", code, message));
+            "state", "FAILED",
+            "failureInfo", "",
+            "error", format("code=%d, message=%s", code, message));
   }
 }

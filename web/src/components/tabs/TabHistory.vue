@@ -91,7 +91,7 @@
               </td>
               <td class="text-center">
                 <a target="_blank" class="btn btn-sm btn-secondary p-1"
-                  :href="buildDetailUrl(isPresto, isHive, isSpark, isElasticsearch, datasource, h[0])"><i class="fa fa-fw fa-info"></i></a>
+                  :href="buildDetailUrl(isPresto, isHive, isSpark, isTrino, datasource, h[0])"><i class="fa fa-fw fa-info"></i></a>
               </td>
             </tr>
           </tbody>
@@ -141,7 +141,7 @@ export default {
       'isPresto',
       'isHive',
       'isSpark',
-      'isElasticsearch',
+      'isTrino',
       'datasourceEngine'
     ]),
     filterModel: {

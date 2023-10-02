@@ -31,8 +31,8 @@ public class Comment {
   @Column(name = "content")
   private String content;
 
-  @Column(name = "user")
-  private String user;
+  @Column(name = "userid")
+  private String userid;
 
   @Column(name = "like_count")
   private int likeCount;

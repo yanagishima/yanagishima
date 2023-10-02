@@ -19,7 +19,7 @@ const getters = {}
 const actions = {
   async getQlist ({commit, rootState, rootGetters}, {isAutoQlist}) {
     const {datasource} = rootState.hash
-    const {isPresto, isHive, isSpark, isElasticsearch, authInfo} = rootGetters
+    const {isPresto, isHive, isSpark, isTrino, authInfo} = rootGetters
 
     isAutoQlist = isAutoQlist || false
 
@@ -33,13 +33,12 @@ const actions = {
       let data
       if (isPresto) {
         data = await api.getQlistPresto(datasource, authInfo)
+      } else if (isTrino) {
+        data = await api.getQlistTrino(datasource)
       } else if (isHive) {
         data = await api.getQlistHive(datasource)
       } else if (isSpark) {
         data = await api.getQlistSpark(datasource)
-      } else if (isElasticsearch) {
-        commit('setLoading', {data: false})
-        return
       } else {
         throw new Error('not supported')
       }
@@ -54,9 +53,9 @@ const actions = {
     commit('setLoading', {data: false})
   },
   async autoQlist ({dispatch, rootState, rootGetters}, {enable}) {
-    const {isPresto} = rootGetters
+    const {isPresto, isTrino} = rootGetters
     const refreshPeriod = 1
-    const period = isPresto ? 1000 : 1000 * 10
+    const period = (isPresto || isTrino) ? 1000 : 1000 * 10
 
     enable = enable || false
 

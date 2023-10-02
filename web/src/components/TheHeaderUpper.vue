@@ -54,7 +54,8 @@
             <small class="dropdown-item-text text-muted ml-2">Version {{version}}</small>
             <div class="dropdown-divider my-1"></div>
             <a href="#help" class="dropdown-item mr-2" data-toggle="modal" data-target="#help">Help</a>
-            <a v-if="isPresto" href="https://prestosql.io/docs/current/" class="dropdown-item" target="_blank" rel="noopener">Presto Doc</a>
+            <a v-if="isPresto" href="https://prestodb.io/docs/current/" class="dropdown-item" target="_blank" rel="noopener">Presto Doc</a>
+            <a v-if="isTrino" href="https://trino.io/docs/current/" class="dropdown-item" target="_blank" rel="noopener">Trino Doc</a>
             <a v-if="isHive" href="https://cwiki.apache.org/confluence/display/Hive/LanguageManual" class="dropdown-item" target="_blank" rel="noopener">Hive Doc</a>
             <a v-if="isSpark" href="https://spark.apache.org/" class="dropdown-item" target="_blank" rel="noopener">Spark Doc</a>
           </div>
@@ -95,6 +96,7 @@ export default {
     }),
     ...mapGetters([
       'isPresto',
+      'isTrino',
       'isHive',
       'isSpark'
     ]),

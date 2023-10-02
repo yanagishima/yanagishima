@@ -33,8 +33,8 @@ public class Bookmark {
   @Column(name = "title")
   private String title;
 
-  @Column(name = "user")
-  private String user;
+  @Column(name = "userid")
+  private String userid;
 
   @Column(name = "snippet")
   private String snippet;

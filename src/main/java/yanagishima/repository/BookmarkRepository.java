@@ -9,9 +9,9 @@ import yanagishima.model.db.Bookmark;
 
 @Repository
 public interface BookmarkRepository extends CrudRepository<Bookmark, Long> {
-  List<Bookmark> findAllByEngineAndUser(String engine, String user);
+  List<Bookmark> findAllByEngineAndUserid(String engine, String userid);
 
-  List<Bookmark> findAllByDatasourceAndEngineAndUser(String datasource, String engine, String user);
+  List<Bookmark> findAllByDatasourceAndEngineAndUserid(String datasource, String engine, String userid);
 
   List<Bookmark> findAllByDatasourceAndBookmarkIdIn(String datasource, List<Integer> bookmarkIds);
 

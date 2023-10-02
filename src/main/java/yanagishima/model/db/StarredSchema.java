@@ -33,6 +33,6 @@ public class StarredSchema {
   @Column(name = "`schema`")
   private String schema;
 
-  @Column(name = "user")
-  private String user;
+  @Column(name = "userid")
+  private String userid;
 }

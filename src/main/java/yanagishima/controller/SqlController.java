@@ -1,22 +1,24 @@
 package yanagishima.controller;
 
-import static io.trino.sql.parser.ParsingOptions.DecimalLiteralTreatment.AS_DOUBLE;
+import static com.facebook.presto.sql.parser.ParsingOptions.DecimalLiteralTreatment.AS_DOUBLE;
 
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import io.trino.sql.SqlFormatter;
-import io.trino.sql.parser.ParsingException;
-import io.trino.sql.parser.ParsingOptions;
-import io.trino.sql.parser.SqlParser;
-import io.trino.sql.tree.Statement;
+import com.facebook.presto.sql.SqlFormatter;
+import com.facebook.presto.sql.parser.ParsingException;
+import com.facebook.presto.sql.parser.ParsingOptions;
+import com.facebook.presto.sql.parser.SqlParser;
+import com.facebook.presto.sql.tree.Statement;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import yanagishima.exception.YanagishimaParseException;
 import yanagishima.model.dto.FormatSqlDto;
 import yanagishima.model.dto.HiveQueryDto;
 import yanagishima.model.dto.PrestoQueryDto;
+
+import java.util.Optional;
 
 @Slf4j
 @RestController
@@ -50,7 +52,7 @@ public class SqlController {
   private String formatQuery(String query) {
     SqlParser sqlParser = new SqlParser();
     Statement statement = sqlParser.createStatement(query, new ParsingOptions(AS_DOUBLE));
-    return SqlFormatter.formatSql(statement);
+    return SqlFormatter.formatSql(statement, Optional.empty());
   }
 
   private static String toHiveQuery(String prestoQuery) {

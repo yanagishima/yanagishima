@@ -124,14 +124,14 @@ export default new Vuex.Store({
     isPresto (state) {
       return state.hash.engine === 'presto'
     },
+    isTrino (state) {
+      return state.hash.engine === 'trino'
+    },
     isHive (state) {
       return state.hash.engine === 'hive'
     },
     isSpark (state) {
       return state.hash.engine === 'spark'
-    },
-    isElasticsearch (state) {
-      return state.hash.engine === 'elasticsearch'
     },
     authInfo (state) {
       return state.auths[state.hash.datasource] ? {

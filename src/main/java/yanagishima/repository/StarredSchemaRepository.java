@@ -9,8 +9,8 @@ import yanagishima.model.db.StarredSchema;
 
 @Repository
 public interface StarredSchemaRepository extends CrudRepository<StarredSchema, Integer> {
-  List<StarredSchema> findAllByDatasourceAndEngineAndCatalogAndUser(
-      String datasource, String engine, String catalog, String user);
+  List<StarredSchema> findAllByDatasourceAndEngineAndCatalogAndUserid(
+      String datasource, String engine, String catalog, String userid);
 
   void deleteByStarredSchemaId(int starredSchemaId);
 }
