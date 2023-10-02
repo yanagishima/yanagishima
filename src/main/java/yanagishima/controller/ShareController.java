@@ -94,23 +94,10 @@ public class ShareController {
   }
 
   @GetMapping("share/shareHistory")
-  public Map<String, Object> get(@RequestParam(name = "publish_id") String publishId, User user,
-                                 HttpServletResponse response) {
+  public Map<String, Object> get(@RequestParam(name = "publish_id") String publishId, HttpServletResponse response) {
     Map<String, Object> body = new HashMap<>();
     try {
       publishService.get(publishId).ifPresent(publish -> {
-        String publishUser = publish.getUserid();
-        String requestUser = user.getId();
-        String viewers = publish.getViewers();
-        if (!canAccessPublishedPage(publishUser, requestUser, viewers)) {
-          body.put("publishUser", publishUser);
-          body.put("accessDeniedFlag", true);
-          return;
-        }
-        if (publishUser != null && publishUser.equals(requestUser)) {
-          body.put("publisherFlag", true);
-          body.put("viewers", viewers);
-        }
         String datasource = publish.getDatasource();
         body.put("datasource", datasource);
         String queryId = publish.getQueryId();
